@@ -1,0 +1,13 @@
+node_modules/
+out/
+release/
+dist/
+
+# Vendored model weights — regenerate with `npm run fetch-model`
+resources/models/
+
+.DS_Store
+*.log
+
+# TypeScript incremental build info
+*.tsbuildinfo

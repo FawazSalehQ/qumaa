@@ -1,0 +1,51 @@
+{
+  "name": "cv-filter",
+  "version": "0.1.0",
+  "description": "Local-first resume matching desktop app",
+  "main": "./out/main/index.js",
+  "author": "Fawaz Alqahtani",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "fetch-model": "node scripts/fetch-model.mjs",
+    "make-icon": "node scripts/make-icon.mjs",
+    "make-notices": "node scripts/make-notices.mjs",
+    "dev": "electron-vite dev",
+    "build": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json && electron-vite build",
+    "start": "electron-vite preview",
+    "build:mac": "npm run make-icon && npm run make-notices && npm run build && electron-builder --mac --arm64",
+    "build:win": "node scripts/fetch-win-deps.mjs && npm run make-icon && npm run make-notices && npm run build && electron-builder --win --x64",
+    "postinstall": "electron-builder install-app-deps",
+    "seed": "npm run build && electron out/main/seed.js",
+    "smoke": "npm run build && electron out/main/smoke.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^4.2.0",
+    "better-sqlite3": "^13.0.3",
+    "chokidar": "^4.0.3",
+    "mammoth": "^1.12.1",
+    "unpdf": "^1.8.1"
+  },
+  "devDependencies": {
+    "@fontsource-variable/cairo": "^5.3.0",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.15.3",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "^5.0.4",
+    "electron": "^43.4.1",
+    "electron-builder": "^26.15.3",
+    "electron-vite": "^5.0.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.12",
+    "vitest": "^3.2.4"
+  }
+}
