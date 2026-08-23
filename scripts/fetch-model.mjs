@@ -15,6 +15,9 @@ import { Readable } from 'node:stream'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+// Xenova's ONNX conversion of BAAI/bge-small-en-v1.5. The conversion repo
+// declares no licence of its own; the upstream BAAI model is MIT, and those
+// terms govern the weights this vendors. See THIRD-PARTY-NOTICES.md.
 const REPO = 'Xenova/bge-small-en-v1.5'
 const MODEL_ID = 'bge-small-en-v1.5'
 

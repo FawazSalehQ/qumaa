@@ -71,9 +71,16 @@ const header = `# Third-party notices
 قُمع bundles the components below. Each remains under its own licence, quoted in
 full where the package ships one.
 
-The embedding model, **BAAI/bge-small-en-v1.5**, is redistributed under the MIT
-licence from https://huggingface.co/BAAI/bge-small-en-v1.5 and is vendored into
-\`resources/models/\` at build time.
+## Embedding model
+
+The bundled weights are **bge-small-en-v1.5**, vendored into \`resources/models/\`
+by \`npm run fetch-model\`.
+
+They are downloaded from **https://huggingface.co/Xenova/bge-small-en-v1.5**, an
+ONNX conversion of the original model. That conversion repository declares no
+licence of its own and is tagged as derived from
+**https://huggingface.co/BAAI/bge-small-en-v1.5**, which is **MIT**. The MIT
+terms of the upstream model therefore govern the weights redistributed here.
 
 ---
 
