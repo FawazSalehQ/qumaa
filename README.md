@@ -1,11 +1,15 @@
 # CV Filter
 
-A self-contained macOS desktop app that ingests resumes into a local database and,
-given a pasted job description, surfaces the three best-matching candidates with
-evidence for why they matched.
+A self-contained desktop app for macOS and Windows that ingests resumes into a
+local database and, given a pasted job description, surfaces the three
+best-matching candidates with evidence for why they matched. English and Arabic
+resumes are ranked against a posting written in either language.
 
-**Nothing leaves your machine.** Embeddings are computed locally by a bundled ONNX
-model. There is no API key, and the app opens no network sockets at runtime.
+**Nothing leaves your machine by default.** Embeddings are computed locally by a
+bundled ONNX model, and with no API key configured the app opens no network
+sockets at runtime. The one exception is opt-in and off by default: an optional
+Claude rerank of the shortlist, which only runs once you paste your own API key
+into Settings and switch it on.
 
 ## Requirements
 
@@ -17,7 +21,7 @@ both require it.
 ```bash
 nvm use              # Node 22
 npm install
-npm run fetch-model  # downloads bge-small-en-v1.5 (~133MB) into resources/
+npm run fetch-model  # downloads multilingual-e5-small (~113MB) into resources/
 npm run dev
 ```
 
@@ -29,11 +33,12 @@ fresh clone.
 | Command | What it does |
 |---|---|
 | `npm run dev` | Run the app with hot reload |
-| `npm test` | Unit tests + the ranking sanity suite (87 tests) |
+| `npm test` | Unit tests + the ranking sanity suite (111 tests) |
 | `npm run smoke` | Headless integration check inside Electron: DB, embedder, real PDF/DOCX, search |
 | `npm run seed` | Dev only: fill the library with the ten-person test corpus |
-| `npm run build:mac` | Produce `release/CV Filter-<version>-arm64.dmg` (Apple Silicon) |
-| `npm run build:win` | Produce `release/CV Filter-<version>-Setup-x64.exe` (Windows 10/11 x64) |
+| `npm run bench` | Capacity benchmark: ingest, duplicate scan, and search at 500/1500/3000 resumes |
+| `npm run build:mac` | Produce `release/Qumaa-<version>-arm64.dmg` (Apple Silicon) |
+| `npm run build:win` | Produce `release/Qumaa-<version>-Setup-x64.exe` (Windows 10/11 x64) |
 
 Both installers are unsigned. On macOS the first launch needs right-click → Open.
 On Windows, SmartScreen shows a "Windows protected your PC" warning, and the user
@@ -73,9 +78,53 @@ Search blends three signals, min-max normalised across the candidate pool:
 
 Weights live in one place: `WEIGHTS` in `src/main/search/scoring.ts`.
 
-BGE models are asymmetric: the query side takes an instruction prefix, the
-passage side takes none. `src/main/embed/protocol.ts` owns that rule so callers
-cannot get it wrong.
+E5 models are trained with a prefix on **both** sides: `query: ` on the posting
+and `passage: ` on resume text. Omitting either silently degrades every score,
+so `src/main/embed/protocol.ts` owns the rule and no caller supplies its own.
+That file is also the single source of truth for the model id, and
+`src/main/embed/reindex.ts` re-embeds the whole library when it changes: vectors
+from two models are not comparable, and mixing them returns nonsense rankings
+without ever raising an error.
+
+### Beyond the ranking
+
+- **Near-duplicate detection.** Content hashing only catches byte-identical
+  text, so the same candidate reapplying with a lightly edited CV used to occupy
+  two of the three result slots. Each resume stores a document vector (the mean
+  of its chunk vectors) and a new import is flagged above 0.97 cosine. It is
+  still imported: whether a near-duplicate is a second application or a
+  different person is the recruiter's call, not the app's.
+- **Optional Claude rerank.** Off unless you add an API key. It reorders the top
+  15 local results, and any failure falls back to the local ranking rather than
+  breaking the search.
+- **Branded PDF export** of a shortlist, rendered offscreen with scripting
+  disabled and every value HTML-escaped.
+- Library sorting, filtering, and bulk delete; light, dark, and system themes.
+
+## Capacity
+
+Measured with `npm run bench` on an M-series Mac: synthetic resumes of roughly
+300 words, which is two chunks each, the same shape as a real one-page CV.
+
+| Library size | Ingest, per resume | Duplicate scan | Search | Chunks |
+|---|---|---|---|---|
+| 500 | 34 ms | 1 ms | 31 ms | 1,000 |
+| 1,500 | 36 ms | 2 ms | 34 ms | 3,000 |
+| 3,000 | 38 ms | 5 ms | 51 ms | 6,000 |
+
+At 3,000 resumes the database is 39 MB and the app sits at about 257 MB RSS.
+
+**A few thousand resumes is comfortable**, and the practical ceiling is patience
+during bulk import rather than search: importing 3,000 files takes about two
+minutes, all of it embedding, while a search over that library still returns in
+under a tenth of a second. Ingest cost per resume is flat as the library grows,
+so the import time scales linearly, not quadratically.
+
+Search is a linear scan of every chunk vector, so it grows with library size:
+the 500-to-3,000 jump costs 20 ms. Extrapolated, tens of thousands of resumes
+would push a search into the several-hundred-millisecond range, which is the
+point where an approximate vector index would start to earn its keep. Nothing in
+the schema forecloses that.
 
 ## Architecture
 
@@ -92,12 +141,44 @@ booting an app.
 
 ```
 src/main/ingest/    extract → normalize → sections → chunk → fields → pipeline
-src/main/search/    scoring.ts (pure math) + rank.ts (orchestration)
-src/main/embed/     utility-process client, worker, shared protocol
-src/main/db/        schema, vector (de)serialisation, queries
+                    plus duplicates.ts (near-duplicate scan)
+src/main/search/    scoring.ts (pure math) + rank.ts (orchestration) + rerank.ts
+src/main/embed/     utility-process client, worker, shared protocol, reindex
+src/main/export/    branded shortlist PDF
+src/main/db/        schema, migrations, vector (de)serialisation, queries
 src/renderer/       React UI (Match / Library / Settings)
 test/               vitest suites + PDF/DOCX fixtures
 ```
+
+## Brand
+
+The visual identity lives in `brand/`, vendored from the Qumaa brand kit so
+builds do not depend on anything outside the repo:
+
+- `brand/svg/` the mark and app icons
+- `brand/tokens.json` and `brand/tokens.css` the colour and type tokens
+- `brand/BRAND.md` the usage rules
+
+Colour and type values in `src/renderer/src/styles.css` are copied from those
+tokens rather than hand-picked. `paper` is the surface tone, `ink` carries text,
+and `violet` is reserved for accents and rules.
+
+`npm run make-icon` rasterises `brand/svg/appicon-ink.svg` directly rather than
+redrawing it, so the shipped icon cannot drift from the kit. The brand rules
+forbid recolouring the funnel, which is the other reason nothing here
+reconstructs the geometry.
+
+Three rules the code enforces rather than documents:
+
+- The Arabic lockup reads right to left, so the header sets `dir="rtl"` and the
+  mark lands to the right of قُمع.
+- Below 20px the mark drops its top sheet, because the two sheets stop resolving
+  as separate strokes and smear into one block.
+- Small all-caps labels use IBM Plex Mono at 0.24em tracking.
+
+Typography is IBM Plex: Sans for Latin, Sans Arabic for the wordmark, Mono for
+labels. All three are bundled, so rendering is identical on macOS and Windows and
+nothing is fetched at runtime.
 
 ## Security and licensing
 
@@ -108,9 +189,17 @@ restricts the page to its own origin, navigation away from the local page is
 blocked, and links are handed to the system browser only when the scheme is
 `http`, `https`, or `mailto`.
 
-The app opens no network sockets at runtime. `env.allowRemoteModels = false`
-stops transformers.js reaching the Hugging Face hub on a cache miss, and the
-model is vendored at build time.
+With no API key configured the app opens no network sockets at runtime.
+`env.allowRemoteModels = false` stops transformers.js reaching the Hugging Face
+hub on a cache miss, and the model is vendored at build time. Matching itself is
+entirely local: no resume text is transmitted anywhere.
+
+The optional Claude rerank is the only code path that leaves the machine, and it
+is inert until the user supplies a key and enables it. When it does run it sends
+the job description and the top 15 candidates' evidence to the Anthropic API.
+The key is stored through Electron's `safeStorage`, so it is encrypted by the OS
+keychain rather than sitting in cleartext in the SQLite file; see
+`src/main/secrets.ts`.
 
 ### Known advisories
 
@@ -130,7 +219,7 @@ advisories matter for your context, the fix is upstream in libvips.
 
 MIT, in `LICENSE`. Everything redistributed inside the installer is permissive
 (MIT, Apache-2.0, BSD-2-Clause, OFL-1.1), including the embedding model, which
-is MIT from BAAI.
+is MIT from intfloat.
 
 `npm run make-notices` regenerates `THIRD-PARTY-NOTICES.md` with the full text of
 each bundled component's licence. It runs as part of both build scripts, and the
@@ -146,9 +235,10 @@ Both follow from the no-LLM constraint:
    PDFs, since text extraction interleaves the columns. Matching never
    depends on these fields, so a mis-parsed name cannot corrupt a result.
 2. **Matching finds similarity, not judgement.** It reliably surfaces resumes
-   about the same kind of work as the posting. It cannot infer seniority from
-   accomplishments. If that becomes necessary, the clean upgrade is an LLM rerank
-   over the top ~15, and the pipeline is shaped so that slots in without rework.
+   about the same kind of work as the posting. On its own it cannot infer
+   seniority from accomplishments. That is what the optional Claude rerank over
+   the top 15 is for, and it is the only feature that sends anything off the
+   machine.
 
 Scanned image-only PDFs are rejected with a clear message rather than imported
 empty; there is no OCR.

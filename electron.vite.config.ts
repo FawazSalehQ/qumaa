@@ -23,7 +23,9 @@ export default defineConfig({
           // Headless integration check; see `npm run smoke`.
           smoke: resolve('src/main/smoke.ts'),
           // Dev-only library seeder; see `npm run seed`.
-          seed: resolve('src/main/seed.ts')
+          seed: resolve('src/main/seed.ts'),
+          // Capacity benchmark; see `npm run bench`.
+          bench: resolve('src/main/bench.ts')
         },
         output: { format: 'cjs', entryFileNames: '[name].js' }
       }

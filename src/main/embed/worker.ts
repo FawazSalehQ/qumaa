@@ -32,7 +32,7 @@ async function embed(texts: string[]): Promise<Float32Array> {
 }
 
 async function main(): Promise<void> {
-  extractor = await pipeline('feature-extraction', MODEL_ID, { dtype: 'fp32' })
+  extractor = await pipeline('feature-extraction', MODEL_ID, { dtype: 'q8' })
   send({ type: 'ready', dimensions: EMBEDDING_DIM })
 
   process.parentPort.on('message', (e) => {

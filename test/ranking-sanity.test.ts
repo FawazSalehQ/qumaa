@@ -17,7 +17,7 @@ import { normalizeText } from '../src/main/ingest/normalize.js'
 import { splitSections } from '../src/main/ingest/sections.js'
 import { chunkSections } from '../src/main/ingest/chunk.js'
 import { extractSkills } from '../src/main/ingest/skills.js'
-import { MODEL_ID, QUERY_PREFIX } from '../src/main/embed/protocol.js'
+import { MODEL_ID, PASSAGE_PREFIX, QUERY_PREFIX } from '../src/main/embed/protocol.js'
 import {
   blend,
   normalizeScores,
@@ -26,7 +26,13 @@ import {
   skillOverlap,
   type ScoredChunk
 } from '../src/main/search/scoring.js'
-import { JOB_DESCRIPTIONS, RESUMES, type Profession } from './fixtures/corpus.js'
+import {
+  ARABIC_JOB_DESCRIPTIONS,
+  ARABIC_RESUMES,
+  JOB_DESCRIPTIONS,
+  RESUMES,
+  type Profession
+} from './fixtures/corpus.js'
 
 env.allowRemoteModels = false
 env.localModelPath = resolve(__dirname, '../resources/models')
@@ -50,12 +56,12 @@ interface Indexed {
 const index: Indexed[] = []
 
 beforeAll(async () => {
-  extractor = await pipeline('feature-extraction', MODEL_ID, { dtype: 'fp32' })
+  extractor = await pipeline('feature-extraction', MODEL_ID, { dtype: 'q8' })
 
-  for (const fixture of RESUMES) {
+  for (const fixture of [...RESUMES, ...ARABIC_RESUMES]) {
     const text = normalizeText(fixture.text)
     const chunks = chunkSections(splitSections(text))
-    const vectors = await embed(chunks.map((c) => c.text))
+    const vectors = await embed(chunks.map((c) => PASSAGE_PREFIX + c.text))
     index.push({
       id: fixture.id,
       profession: fixture.profession,
@@ -91,7 +97,7 @@ async function rank(jd: string): Promise<Array<{ id: string; profession: Profess
 
 describe('ranking sanity', () => {
   it('indexes every fixture into at least one chunk', () => {
-    expect(index).toHaveLength(RESUMES.length)
+    expect(index).toHaveLength(RESUMES.length + ARABIC_RESUMES.length)
     for (const entry of index) expect(entry.chunks.length).toBeGreaterThan(0)
   })
 
@@ -136,7 +142,37 @@ describe('ranking sanity', () => {
 
   it('degrades gracefully when the job description mentions no known skills', async () => {
     const ranked = await rank('We need a hardworking person who is a great team player.')
-    expect(ranked).toHaveLength(RESUMES.length)
+    expect(ranked).toHaveLength(RESUMES.length + ARABIC_RESUMES.length)
     expect(ranked.every((r) => Number.isFinite(r.score))).toBe(true)
+  })
+})
+
+describe('multilingual retrieval', () => {
+  // The app is Arabic-named, so Arabic CVs are a first-class case rather than an
+  // edge case. The previous English-only model tokenised Arabic into fragments,
+  // which these tests exist to stop regressing.
+  for (const profession of ['backend', 'nurse', 'accountant'] as const) {
+    it(`ranks the Arabic ${profession} CV first for the Arabic ${profession} posting`, async () => {
+      const ranked = await rank(ARABIC_JOB_DESCRIPTIONS[profession])
+      expect(ranked[0].profession).toBe(profession)
+    })
+  }
+
+  it('retrieves across languages: an English posting finds the Arabic CV', async () => {
+    // Not merely "somewhere in the list": the Arabic backend CV must outrank
+    // every resume from a different profession, in either language.
+    const ranked = await rank(JOB_DESCRIPTIONS.backend)
+    const arabicBackend = ranked.findIndex((r) => r.id === 'ar-be')
+    const bestOtherProfession = ranked.findIndex((r) => r.profession !== 'backend')
+    expect(arabicBackend).toBeLessThan(bestOtherProfession)
+  })
+
+  it('retrieves across languages: an Arabic posting finds the English CVs', async () => {
+    const ranked = await rank(ARABIC_JOB_DESCRIPTIONS.nurse)
+    const top3 = ranked.slice(0, 3)
+    expect(top3.every((r) => r.profession === 'nurse')).toBe(true)
+    // and the set spans both languages rather than clustering by script
+    expect(top3.some((r) => r.id.startsWith('ar-'))).toBe(true)
+    expect(top3.some((r) => !r.id.startsWith('ar-'))).toBe(true)
   })
 })

@@ -1,14 +1,15 @@
 /**
  * Main-process handle to the embedding utility process.
  *
- * Exposes passage/query embedding, applying the BGE asymmetry rule (queries get
- * the instruction prefix, passages do not) so callers cannot get it wrong.
+ * Exposes passage/query embedding, applying the e5 prefix rule (queries and
+ * passages are prefixed differently) so callers cannot get it wrong.
  */
 import { app, utilityProcess, type UtilityProcess } from 'electron'
 import { join } from 'node:path'
 import {
   EMBEDDING_DIM,
   MODEL_ID,
+  PASSAGE_PREFIX,
   QUERY_PREFIX,
   type FromWorker,
   type ToWorker
@@ -154,9 +155,9 @@ class Embedder {
     return chained
   }
 
-  /** Resume chunks, with no prefix. */
+  /** Resume chunks. e5 wants these prefixed as passages. */
   embedPassages(texts: string[]): Promise<Float32Array[]> {
-    return this.embedAll(texts)
+    return this.embedAll(texts.map((t) => PASSAGE_PREFIX + t))
   }
 
   /** Job-description text, instruction-prefixed. */

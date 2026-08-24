@@ -24,15 +24,38 @@ function escapeRegex(s: string): string {
 }
 
 /**
- * `\b` is useless next to `+`, `#`, `.` and `/`, which appear in half these terms
- * (C++, C#, .NET, CI/CD). These explicit lookarounds treat those characters as
- * part of the token instead.
+ * Arabic word characters: letters, tatweel, diacritics and Arabic-Indic digits.
+ *
+ * Deliberately starts at U+0621 rather than U+0600, because U+060C is the Arabic
+ * comma and U+061F the question mark. Including punctuation here makes the
+ * boundary lookarounds reject a term followed by a comma, so "العناية المركزة،"
+ * silently stops matching while the bare phrase still does.
  */
+const ARABIC_WORD =
+  '\\u0621-\\u065F\\u0660-\\u0669\\u066E-\\u06D3\\u06E5-\\u06EF\\u06FA-\\u06FF\\u0750-\\u077F'
+
+/**
+ * `\b` is useless next to `+`, `#`, `.` and `/`, which appear in half these terms
+ * (C++, C#, .NET, CI/CD), and it does not understand Arabic script at all. These
+ * explicit lookarounds treat those characters as part of the token instead.
+ */
+/**
+ * Arabic attaches its conjunctions and articles directly to the following word,
+ * so "مكافحة العدوى" appears in running text as "ومكافحة العدوى". A strict word
+ * boundary rejects those, which silently loses most real matches. This permits
+ * the common proclitics (و f b k l, optionally followed by the article ال)
+ * without opening the term up to matching mid-word.
+ */
+const ARABIC_PROCLITIC = '[\\u0648\\u0641\\u0628\\u0643\\u0644]{0,2}(?:\\u0627\\u0644)?'
+
+const hasArabic = (s: string): boolean => /[\u0621-\u064A]/.test(s)
+
 function toPattern(surface: string): RegExp {
   const body = escapeRegex(surface)
   const caseSensitive = surface.length <= CASE_SENSITIVE_MAX_LEN && /^[A-Za-z]+$/.test(surface)
+  const prefix = hasArabic(surface) ? ARABIC_PROCLITIC : ''
   return new RegExp(
-    `(?<![A-Za-z0-9+#.])${body}(?![A-Za-z0-9+#])`,
+    `(?<![A-Za-z0-9+#.${ARABIC_WORD}])${prefix}${body}(?![A-Za-z0-9+#${ARABIC_WORD}])`,
     caseSensitive ? 'g' : 'gi'
   )
 }

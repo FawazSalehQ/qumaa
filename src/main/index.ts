@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto'
 import { CH } from '@shared/channels.js'
 import {
   deleteResume,
+  deleteResumes,
   getResumeDetail,
   getSetting,
   listResumes,
@@ -11,14 +12,21 @@ import {
   stats as dbStats
 } from './db/index.js'
 import { embedder, setEntryDir } from './embed/client.js'
+import { needsReindex, reindexAll } from './embed/reindex.js'
+import { backfillDocumentVectors } from './ingest/duplicates.js'
 import { collectFiles, ingestFile, ingestText } from './ingest/pipeline.js'
 import { onWatchIngest, startWatching, stopWatching } from './ingest/watcher.js'
 import { search } from './search/rank.js'
+import { shortlistHtml, writeShortlistPdf } from './export/shortlist.js'
+import { rerank } from './search/rerank.js'
+import { getApiKey, hasApiKey, setApiKey } from './secrets.js'
 import { buildMenu } from './menu.js'
 import { restoredBounds, trackWindow } from './windowState.js'
-import type { AppSettings, IngestOutcome, IngestProgress } from '@shared/types.js'
+import type { AppSettings, IngestOutcome, IngestProgress, MatchResult } from '@shared/types.js'
 
 const WATCHED_FOLDER_KEY = 'watchedFolder'
+const THEME_KEY = 'theme'
+const RERANK_KEY = 'rerankEnabled'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -136,6 +144,21 @@ function registerHandlers(): void {
     deleteResume(id)
   })
 
+  ipcMain.handle(CH.resumesDeleteMany, async (_e, ids: number[]) => {
+    // Destructive and irreversible, so it is confirmed in the main process where
+    // the dialog is native and cannot be skipped by the renderer.
+    const { response } = await dialog.showMessageBox(mainWindow!, {
+      type: 'warning',
+      buttons: ['Cancel', `Delete ${ids.length}`],
+      defaultId: 0,
+      cancelId: 0,
+      message: `Delete ${ids.length} resume${ids.length === 1 ? '' : 's'}?`,
+      detail: 'They are removed from the library. The original files are not touched.'
+    })
+    if (response !== 1) return 0
+    return deleteResumes(ids)
+  })
+
   ipcMain.handle(CH.resumesReveal, (_e, path: string) => {
     shell.showItemInFolder(path)
   })
@@ -181,9 +204,60 @@ function registerHandlers(): void {
   ipcMain.handle(CH.searchRun, (_e, jd: string) => search(jd))
 
   ipcMain.handle(
-    CH.settingsGet,
-    (): AppSettings => ({ watchedFolder: getSetting(WATCHED_FOLDER_KEY) })
+    CH.searchExport,
+    async (_e, args: { jobTitle: string; requiredSkills: string[]; results: MatchResult[] }) => {
+      const safeTitle = args.jobTitle.replace(/[^\p{L}\p{N} _-]/gu, '').trim() || 'Shortlist'
+      const { canceled, filePath } = await dialog.showSaveDialog(mainWindow!, {
+        title: 'Export shortlist',
+        defaultPath: `${safeTitle} shortlist.pdf`,
+        filters: [{ name: 'PDF', extensions: ['pdf'] }]
+      })
+      if (canceled || !filePath) return null
+
+      await writeShortlistPdf(
+        shortlistHtml({ ...args, generatedAt: new Date() }),
+        filePath
+      )
+      return filePath
+    }
   )
+
+  ipcMain.handle(
+    CH.settingsGet,
+    (): AppSettings => ({
+      watchedFolder: getSetting(WATCHED_FOLDER_KEY),
+      theme: (getSetting(THEME_KEY) as AppSettings['theme']) ?? 'system',
+      rerankEnabled: getSetting(RERANK_KEY) === 'true',
+      // The key itself is deliberately not returned: the renderer only needs to
+      // know whether one exists.
+      hasApiKey: hasApiKey()
+    })
+  )
+
+  ipcMain.handle(CH.settingsSetApiKey, (_e, key: string | null) => {
+    setApiKey(key)
+    if (!key) setSetting(RERANK_KEY, 'false')
+  })
+
+  ipcMain.handle(CH.settingsSetRerank, (_e, enabled: boolean) => {
+    // Cannot enable without a key; silently refusing would look like a bug.
+    if (enabled && !hasApiKey()) throw new Error('Add an API key first.')
+    setSetting(RERANK_KEY, String(enabled))
+  })
+
+  ipcMain.handle(
+    CH.searchRerank,
+    async (_e, args: { jobDescription: string; results: MatchResult[] }) => {
+      const apiKey = getApiKey()
+      if (!apiKey) throw new Error('No API key is configured.')
+      if (getSetting(RERANK_KEY) !== 'true') throw new Error('Reranking is not enabled.')
+      return rerank({ apiKey, ...args })
+    }
+  )
+
+  ipcMain.handle(CH.settingsSetTheme, (_e, theme: AppSettings['theme']) => {
+    setSetting(THEME_KEY, theme)
+  })
 
   ipcMain.handle(CH.settingsSetWatchedFolder, async (_e, folder: string | null) => {
     setSetting(WATCHED_FOLDER_KEY, folder)
@@ -206,10 +280,34 @@ app.whenReady().then(async () => {
   // which is opened lazily on first access.
   buildMenu(() => mainWindow)
 
-  // Warm the model in the background so the first search is not the slow one.
-  embedder.start().catch((err: unknown) => {
-    console.error('Embedder failed to start:', err)
-  })
+  // Warm the model in the background so the first search is not the slow one,
+  // then rebuild the index if the stored vectors came from a different model.
+  embedder
+    .start()
+    .then(async () => {
+      if (!needsReindex()) {
+        // Libraries created before doc_vector existed still need one each.
+        const filled = backfillDocumentVectors()
+        if (filled > 0) console.log(`Backfilled ${filled} document vectors.`)
+        return
+      }
+      console.log('Embedding model changed; rebuilding the index.')
+      const n = await reindexAll(({ done, total }) => {
+        send(CH.evIngestProgress, {
+          jobId: 'reindex',
+          processed: done,
+          total,
+          currentFile: 'Updating search index',
+          done: done >= total
+        } satisfies IngestProgress)
+      })
+      console.log(`Re-embedded ${n} passages.`)
+      backfillDocumentVectors()
+      send(CH.evReindexed, null)
+    })
+    .catch((err: unknown) => {
+      console.error('Embedder failed to start:', err)
+    })
 
   const watched = getSetting(WATCHED_FOLDER_KEY)
   if (watched) {

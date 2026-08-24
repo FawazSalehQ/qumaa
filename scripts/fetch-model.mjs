@@ -8,26 +8,33 @@
  *   resources/models/<MODEL_ID>/tokenizer.json
  *   resources/models/<MODEL_ID>/onnx/model.onnx
  */
-import { mkdir, stat, rename, rm } from 'node:fs/promises'
+import { mkdir, stat, rename, rm, readdir } from 'node:fs/promises'
 import { createWriteStream } from 'node:fs'
 import { pipeline } from 'node:stream/promises'
 import { Readable } from 'node:stream'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-// Xenova's ONNX conversion of BAAI/bge-small-en-v1.5. The conversion repo
-// declares no licence of its own; the upstream BAAI model is MIT, and those
+// Xenova's ONNX conversion of intfloat/multilingual-e5-small. The conversion
+// repo declares no licence of its own; the upstream model is MIT, and those
 // terms govern the weights this vendors. See THIRD-PARTY-NOTICES.md.
-const REPO = 'Xenova/bge-small-en-v1.5'
-const MODEL_ID = 'bge-small-en-v1.5'
+//
+// Multilingual matters here: the app is Arabic-named and Arabic CVs are a real
+// case, and the previous English-only model tokenised Arabic into meaningless
+// fragments.
+const REPO = 'Xenova/multilingual-e5-small'
+const MODEL_ID = 'multilingual-e5-small'
 
-// fp32 weights: best fidelity, CPU-native in onnxruntime-node. ~133MB.
+// int8 weights. The multilingual vocabulary is 250k tokens, which makes fp32
+// 470MB; quantised is 113MB and measurably still ranks Arabic and English
+// correctly, including cross-lingual. fp16 is not an option: onnxruntime-node
+// cannot load it on CPU.
 const FILES = [
   'config.json',
   'tokenizer.json',
   'tokenizer_config.json',
   'special_tokens_map.json',
-  'onnx/model.onnx'
+  'onnx/model_quantized.onnx'
 ]
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -94,4 +101,15 @@ async function download(file, attempt = 1) {
 
 console.log(`Fetching ${REPO} -> ${outDir}`)
 for (const f of FILES) await download(f)
+
+// Remove any previously vendored model. extraResources copies the whole models
+// directory, so a leftover would silently double the installer size.
+const modelsRoot = join(root, 'resources', 'models')
+for (const entry of await readdir(modelsRoot, { withFileTypes: true })) {
+  if (entry.isDirectory() && entry.name !== MODEL_ID) {
+    await rm(join(modelsRoot, entry.name), { recursive: true, force: true })
+    console.log(`  removed stale model: ${entry.name}`)
+  }
+}
+
 console.log('Model ready.')

@@ -1,13 +1,15 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.js'
-// Bundled by Vite into the app, so typography is identical on macOS and Windows
-// and nothing is fetched at runtime.
-import '@fontsource-variable/inter'
-// Inter ships no Arabic subset, so the brand name would otherwise fall back to
-// a different system face on each platform. Cairo covers Arabic and is
-// proportioned to sit next to Inter.
-import '@fontsource-variable/cairo'
+// The brand typefaces, bundled by Vite so rendering is identical on macOS and
+// Windows and nothing is fetched at runtime. Plex Sans has no Arabic coverage,
+// which is why the Arabic family is a separate package rather than a fallback.
+import '@fontsource-variable/ibm-plex-sans'
+import '@fontsource/ibm-plex-sans-arabic/400.css'
+import '@fontsource/ibm-plex-sans-arabic/600.css'
+// Mono is used only for the small all-caps labels the brand specifies.
+import '@fontsource/ibm-plex-mono/400.css'
+import '@fontsource/ibm-plex-mono/500.css'
 import './styles.css'
 
 createRoot(document.getElementById('root')!).render(

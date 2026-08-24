@@ -79,6 +79,15 @@ export default function CandidateCard({
         </div>
       )}
 
+      {/* Present only after a Claude rerank, and marked as a judgement rather
+          than quoted evidence so the two are never confused. */}
+      {match.llmReason && (
+        <p className="llm-reason">
+          <span className="tag">Claude</span>
+          {match.llmReason}
+        </p>
+      )}
+
       {match.evidence[0] && (
         <blockquote className="evidence">
           <span className="tag">

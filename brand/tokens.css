@@ -1,0 +1,14 @@
+:root {
+  --qumaa-ink: #2b2733;
+  --qumaa-ink-soft: #3d3949;
+  --qumaa-violet: #6d3fb0;
+  --qumaa-violet-300: #8f5fd6;
+  --qumaa-violet-200: #c0a3ea;
+  --qumaa-violet-100: #d3bef1;
+  --qumaa-paper: #f4f1f8;
+  --qumaa-white: #ffffff;
+  --qumaa-font-latin: "IBM Plex Sans", system-ui, sans-serif;
+  --qumaa-font-arabic: "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --qumaa-font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --qumaa-radius-icon: 0.22em; /* 22% of icon size */
+}

@@ -94,6 +94,28 @@ CREATE TRIGGER IF NOT EXISTS resumes_au AFTER UPDATE ON resumes BEGIN
 END;
 `
 
+/**
+ * Additive column migrations.
+ *
+ * The schema above uses CREATE TABLE IF NOT EXISTS, which does nothing to a
+ * table that already exists, so new columns have to be added explicitly for
+ * libraries created by an earlier version.
+ */
+function migrate(database: Database.Database): void {
+  const columns = new Set(
+    (database.prepare('PRAGMA table_info(resumes)').all() as Array<{ name: string }>).map(
+      (c) => c.name
+    )
+  )
+
+  // Mean of a resume's chunk vectors. Stored so near-duplicate detection reads
+  // one vector per resume instead of every chunk in the library, which made a
+  // bulk import quadratic.
+  if (!columns.has('doc_vector')) {
+    database.exec('ALTER TABLE resumes ADD COLUMN doc_vector BLOB')
+  }
+}
+
 export function getDb(): Database.Database {
   if (db) return db
   const dir = app.getPath('userData')
@@ -102,6 +124,7 @@ export function getDb(): Database.Database {
   db.pragma('journal_mode = WAL')
   db.pragma('foreign_keys = ON')
   db.exec(SCHEMA)
+  migrate(db)
   return db
 }
 
@@ -175,6 +198,15 @@ export function getResumeDetail(id: number): ResumeDetail | null {
 
 export function deleteResume(id: number): void {
   getDb().prepare('DELETE FROM resumes WHERE id = ?').run(id)
+}
+
+/** One transaction, so a bulk delete either fully happens or does not. */
+export function deleteResumes(ids: number[]): number {
+  if (ids.length === 0) return 0
+  const db = getDb()
+  const stmt = db.prepare('DELETE FROM resumes WHERE id = ?')
+  db.transaction(() => ids.forEach((id) => stmt.run(id)))()
+  return ids.length
 }
 
 export function getSetting(key: string): string | null {

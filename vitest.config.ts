@@ -7,7 +7,7 @@ export default defineConfig({
   },
   test: {
     include: ['test/**/*.test.ts'],
-    // The ranking sanity test loads a real 133MB ONNX model.
+    // The ranking sanity test loads a real 113MB ONNX model.
     testTimeout: 120_000,
     hookTimeout: 120_000
   }

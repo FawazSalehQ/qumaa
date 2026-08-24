@@ -1,14 +1,16 @@
 /** Message contract between the main process and the embedding utility process. */
 
 export const EMBEDDING_DIM = 384
-export const MODEL_ID = 'bge-small-en-v1.5'
+export const MODEL_ID = 'multilingual-e5-small'
 
 /**
- * BGE models are trained asymmetrically: the *query* side wants this instruction
- * prefix, the passage side wants none. Applying it to both (or neither) measurably
- * degrades retrieval, so it lives here as the single source of truth.
+ * e5 requires an explicit prefix on BOTH sides: "query: " for the search text and
+ * "passage: " for indexed text. This differs from BGE, which prefixed only the
+ * query. Getting it wrong does not error, it just quietly degrades every result,
+ * so both live here as the single source of truth.
  */
-export const QUERY_PREFIX = 'Represent this sentence for searching relevant passages: '
+export const QUERY_PREFIX = 'query: '
+export const PASSAGE_PREFIX = 'passage: '
 
 export type ToWorker =
   | { type: 'embed'; id: number; texts: string[] }

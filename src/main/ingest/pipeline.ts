@@ -10,6 +10,8 @@ import type { Dirent } from 'node:fs'
 import { join } from 'node:path'
 import { getDb, findByHash, rowToSummary, vectorToBlob, type ResumeRow } from '../db/index.js'
 import { embedder } from '../embed/client.js'
+import { markModel } from '../embed/reindex.js'
+import { documentVector, findNearDuplicate } from './duplicates.js'
 import { extractFile, isSupported, type Extracted } from './extract.js'
 import { normalizeText, flatten } from './normalize.js'
 import { splitSections } from './sections.js'
@@ -53,6 +55,10 @@ export async function ingestText(args: {
   const fields = extractFields(normalized, sections)
   const vectors = await embedder.embedPassages(chunks.map((c) => c.text))
 
+  // Checked before insert so the new resume cannot match itself.
+  const docVector = documentVector(vectors)
+  const similarTo = findNearDuplicate(docVector)
+
   const db = getDb()
   // One transaction: a resume is never half-indexed, so a crash mid-import
   // cannot leave a row whose chunks are missing from search.
@@ -61,10 +67,10 @@ export async function ingestText(args: {
       .prepare(
         `INSERT INTO resumes (file_path, file_name, content_hash, file_type, imported_at, raw_text,
                               name, email, phone, location, years_experience, education_level,
-                              skills_json, likely_scanned)
+                              skills_json, likely_scanned, doc_vector)
          VALUES (@file_path, @file_name, @content_hash, @file_type, @imported_at, @raw_text,
                  @name, @email, @phone, @location, @years_experience, @education_level,
-                 @skills_json, @likely_scanned)`
+                 @skills_json, @likely_scanned, @doc_vector)`
       )
       .run({
         file_path: args.filePath,
@@ -80,7 +86,8 @@ export async function ingestText(args: {
         years_experience: fields.yearsExperience,
         education_level: fields.educationLevel,
         skills_json: JSON.stringify(fields.skills),
-        likely_scanned: args.likelyScanned ? 1 : 0
+        likely_scanned: args.likelyScanned ? 1 : 0,
+        doc_vector: vectorToBlob(docVector)
       })
 
     const resumeId = Number(res.lastInsertRowid)
@@ -94,8 +101,13 @@ export async function ingestText(args: {
   })
 
   const id = insert()
+  // Tag the library with the model that produced these vectors.
+  markModel()
   const row = db.prepare('SELECT * FROM resumes WHERE id = ?').get(id) as ResumeRow
-  return { status: 'imported', resume: rowToSummary(row) }
+  const resume = rowToSummary(row)
+  // Imported either way: the user decides whether a near-duplicate is a second
+  // application or a genuinely different person.
+  return similarTo ? { status: 'near-duplicate', resume, similarTo } : { status: 'imported', resume }
 }
 
 export async function ingestFile(path: string): Promise<IngestOutcome> {

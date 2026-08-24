@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { MatchResult, SearchResponse } from '@shared/types.js'
 import CandidateCard from '../components/CandidateCard.js'
-import { FunnelMark } from '../components/Brand.js'
+import { QumaaMark } from '../components/Brand.js'
 
 /** First non-empty line of the posting, used as its label once collapsed. */
 function postingTitle(jd: string): string {
@@ -25,10 +25,35 @@ export default function MatchView({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [res, setRes] = useState<SearchResponse | null>(null)
+  const [exported, setExported] = useState<string | null>(null)
+  // Off unless the user has both stored a key and switched reranking on.
+  const [rerankAvailable, setRerankAvailable] = useState(false)
+  const [reranking, setReranking] = useState(false)
+  const [reranked, setReranked] = useState(false)
   // Once results exist the posting collapses to a summary bar so the ranking
   // owns the window; editing reopens it.
   const [editing, setEditing] = useState(true)
   const areaRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    window.api.settings.get().then((s) => setRerankAvailable(s.hasApiKey && s.rerankEnabled))
+  }, [])
+
+  const runRerank = async (): Promise<void> => {
+    if (!res || reranking) return
+    setReranking(true)
+    setError(null)
+    try {
+      const ordered = await window.api.search.rerank({ jobDescription: jd, results: res.results })
+      // Retrieval still decided who is in the list; the model only reordered it.
+      setRes({ ...res, results: ordered })
+      setReranked(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Reranking failed')
+    } finally {
+      setReranking(false)
+    }
+  }
 
   useEffect(() => {
     if (resetSignal === 0) return
@@ -49,6 +74,9 @@ export default function MatchView({
       const r = await window.api.search.run(jd)
       setRes(r)
       setEditing(false)
+      // A new search invalidates any previous rerank and export.
+      setReranked(false)
+      setExported(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Search failed')
     } finally {
@@ -79,7 +107,7 @@ export default function MatchView({
             requestAnimationFrame(() => areaRef.current?.focus())
           }}
         >
-          <FunnelMark size={16} />
+          <QumaaMark size={16} tone="color" />
           <span className="posting-title">{postingTitle(jd)}</span>
           <span className="muted">
             {res.requiredSkills.length} skill{res.requiredSkills.length === 1 ? '' : 's'} detected
@@ -132,6 +160,31 @@ export default function MatchView({
             <span className="muted">
               {res.totalCandidates} scored in {res.elapsedMs} ms
             </span>
+            {rerankAvailable && !reranked && (
+              <button
+                className="btn sm"
+                onClick={runRerank}
+                disabled={reranking || top.length === 0}
+                title="Sends the posting and the top candidates' matching passages to Anthropic"
+              >
+                {reranking ? 'Reranking…' : 'Rerank with Claude'}
+              </button>
+            )}
+            {reranked && <span className="muted">Reordered by Claude</span>}
+            <button
+              className="btn sm"
+              disabled={top.length === 0}
+              onClick={async () => {
+                const path = await window.api.search.exportPdf({
+                  jobTitle: postingTitle(jd),
+                  requiredSkills: res.requiredSkills,
+                  results: top
+                })
+                if (path) setExported(path)
+              }}
+            >
+              Export shortlist…
+            </button>
           </div>
 
           {res.requiredSkills.length > 0 && (
@@ -160,6 +213,10 @@ export default function MatchView({
                 />
               ))}
             </div>
+          )}
+
+          {exported && (
+            <p className="hint">Saved to {exported}</p>
           )}
 
           {rest.length > 0 && (

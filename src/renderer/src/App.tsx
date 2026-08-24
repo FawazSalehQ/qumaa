@@ -4,6 +4,7 @@ import MatchView from './views/MatchView.js'
 import LibraryView from './views/LibraryView.js'
 import SettingsView from './views/SettingsView.js'
 import Toasts, { type Toast } from './components/Toasts.js'
+import { useTheme } from './useTheme.js'
 import ResumeDetail from './components/ResumeDetail.js'
 import { Brand } from './components/Brand.js'
 
@@ -17,8 +18,11 @@ interface Selection {
 
 /** Turns a batch of ingest outcomes into one summary toast plus per-failure detail. */
 function summarize(outcomes: IngestOutcome[]): Toast[] {
-  const imported = outcomes.filter((o) => o.status === 'imported').length
+  const imported = outcomes.filter(
+    (o) => o.status === 'imported' || o.status === 'near-duplicate'
+  ).length
   const duplicates = outcomes.filter((o) => o.status === 'duplicate').length
+  const nearDuplicates = outcomes.filter((o) => o.status === 'near-duplicate')
   const problems = outcomes.filter((o) => o.status === 'failed' || o.status === 'unsupported')
 
   const toasts: Toast[] = []
@@ -28,6 +32,18 @@ function summarize(outcomes: IngestOutcome[]): Toast[] {
     if (duplicates) parts.push(`${duplicates} already in library`)
     toasts.push({ id: crypto.randomUUID(), kind: 'success', message: parts.join(', ') })
   }
+  // Near-duplicates are imported, so this is information rather than an error:
+  // the user decides whether it is a second application or a different person.
+  for (const nd of nearDuplicates.slice(0, 3)) {
+    if (nd.status !== 'near-duplicate') continue
+    const pct = Math.round(nd.similarTo.similarity * 100)
+    toasts.push({
+      id: crypto.randomUUID(),
+      kind: 'info',
+      message: `${nd.resume.name ?? nd.resume.fileName} looks ${pct}% like ${nd.similarTo.name ?? nd.similarTo.fileName} already in the library`
+    })
+  }
+
   // Cap the noise: a folder of 200 scans should not produce 200 toasts.
   for (const p of problems.slice(0, 4)) {
     const reason = 'reason' in p ? p.reason : 'Failed'
@@ -54,6 +70,8 @@ export default function App(): React.JSX.Element {
   /** Nested dragenter/dragleave events fire constantly; count them instead of
    *  toggling, or the overlay flickers as the cursor crosses child elements. */
   const dragDepth = useRef(0)
+  // Applies the stored theme to the document root and keeps following the OS.
+  useTheme()
 
   const pushToasts = useCallback((next: Toast[]) => {
     setToasts((prev) => [...prev, ...next])
@@ -76,9 +94,16 @@ export default function App(): React.JSX.Element {
       pushToasts(summarize([o]))
       refresh()
     })
+    const offReindex = window.api.on.reindexed(() => {
+      refresh()
+      pushToasts([
+        { id: crypto.randomUUID(), kind: 'success', message: 'Search index updated for the new model' }
+      ])
+    })
     return () => {
       offProgress()
       offWatch()
+      offReindex()
     }
   }, [refresh, pushToasts])
 

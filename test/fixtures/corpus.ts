@@ -275,3 +275,98 @@ Requirements:
 - General ledger maintenance and account reconciliation
 - Advanced Excel; SAP experience is a plus`
 }
+
+/**
+ * Arabic counterparts. The app is Arabic-named and Arabic CVs are a real case,
+ * so the multilingual model has to be exercised on them rather than assumed to
+ * work. These mirror the English professions so cross-lingual retrieval can be
+ * checked in both directions.
+ */
+export const ARABIC_RESUMES: Fixture[] = [
+  {
+    id: 'ar-be',
+    profession: 'backend',
+    text: `سارة العتيبي
+
+نبذة
+مهندسة برمجيات خلفية بخبرة تسع سنوات.
+
+الخبرة العملية
+شركة الدفع الرقمي - مهندسة برمجيات أول
+يناير 2019 - ديسمبر 2023
+صممت وشغّلت خدمات تسوية المدفوعات باستخدام Go و Python.
+قدت ترحيل أربعين خدمة إلى Kubernetes عبر ثلاث مناطق.
+مسؤولة عن تصميم قواعد بيانات PostgreSQL وأدائها.
+
+التعليم
+بكالوريوس علوم الحاسب، 2015
+
+المهارات
+Go, Python, Kubernetes, Docker, PostgreSQL, AWS, Terraform`
+  },
+  {
+    id: 'ar-rn',
+    profession: 'nurse',
+    text: `نورة القحطاني
+
+نبذة
+ممرضة مسجلة بخبرة ثماني سنوات في العناية المركزة للأطفال.
+
+الخبرة العملية
+مستشفى الملك فيصل التخصصي - ممرضة أولى
+يناير 2018 - ديسمبر 2023
+تقديم الرعاية المباشرة للأطفال الحرجين على أجهزة التنفس الصناعي.
+إعطاء الأدوية وإدارة العلاج الوريدي للحالات المعقدة.
+
+التعليم
+بكالوريوس تمريض، 2016
+
+المهارات
+العناية المركزة، إعطاء الأدوية، مكافحة العدوى`
+  },
+  {
+    id: 'ar-ac',
+    profession: 'accountant',
+    text: `خالد الشهراني
+
+نبذة
+محاسب قانوني معتمد بخبرة في التقارير المالية والتدقيق.
+
+الخبرة العملية
+شركة التدقيق العربية - مدير تدقيق
+يناير 2017 - ديسمبر 2023
+إعداد القوائم المالية الموحدة وفق المعايير الدولية IFRS.
+إدارة إقفال نهاية الشهر والسنة لعدة منشآت.
+
+التعليم
+بكالوريوس محاسبة، 2013
+
+المهارات
+IFRS, التدقيق الخارجي, التقارير المالية, SAP, Excel`
+  }
+]
+
+/** Arabic postings, mirroring JOB_DESCRIPTIONS. */
+export const ARABIC_JOB_DESCRIPTIONS: Record<Profession, string> = {
+  backend: `مهندس برمجيات خلفية أول
+
+المتطلبات:
+- خبرة خمس سنوات أو أكثر في بناء الخدمات الخلفية
+- خبرة قوية بـ Go أو Python
+- معرفة عميقة بـ Kubernetes والحاويات
+- خبرة في تشغيل PostgreSQL على نطاق واسع`,
+
+  nurse: `ممرضة مسجلة - وحدة العناية المركزة
+
+المتطلبات:
+- ترخيص تمريض سارٍ مع خبرة في العناية المركزة
+- القدرة على إدارة المرضى على أجهزة التنفس
+- مهارة في تقييم المرضى وإعطاء الأدوية`,
+
+  accountant: `محاسب تقارير مالية
+
+المتطلبات:
+- شهادة محاسب قانوني معتمد
+- معرفة قوية بمعايير IFRS والتقارير المالية
+- خبرة في إقفال نهاية الشهر والسنة`
+}

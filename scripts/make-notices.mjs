@@ -20,6 +20,8 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
 /** Everything that ends up inside the installer. Build-only tooling is excluded. */
 const BUNDLED = [
+  '@anthropic-ai/sdk',
+  'zod',
   '@huggingface/transformers',
   'onnxruntime-node',
   'better-sqlite3',
@@ -30,8 +32,9 @@ const BUNDLED = [
   'react',
   'react-dom',
   'electron',
-  '@fontsource-variable/inter',
-  '@fontsource-variable/cairo'
+  '@fontsource-variable/ibm-plex-sans',
+  '@fontsource/ibm-plex-sans-arabic',
+  '@fontsource/ibm-plex-mono'
 ]
 
 const LICENSE_FILENAMES = ['LICENSE', 'LICENSE.md', 'LICENSE.txt', 'LICENCE', 'license']
@@ -73,14 +76,14 @@ full where the package ships one.
 
 ## Embedding model
 
-The bundled weights are **bge-small-en-v1.5**, vendored into \`resources/models/\`
-by \`npm run fetch-model\`.
+The bundled weights are **multilingual-e5-small**, vendored into
+\`resources/models/\` by \`npm run fetch-model\`.
 
-They are downloaded from **https://huggingface.co/Xenova/bge-small-en-v1.5**, an
-ONNX conversion of the original model. That conversion repository declares no
+They are downloaded from **https://huggingface.co/Xenova/multilingual-e5-small**,
+an ONNX conversion of the original model. That conversion repository declares no
 licence of its own and is tagged as derived from
-**https://huggingface.co/BAAI/bge-small-en-v1.5**, which is **MIT**. The MIT
-terms of the upstream model therefore govern the weights redistributed here.
+**https://huggingface.co/intfloat/multilingual-e5-small**, which is **MIT**. The
+MIT terms of the upstream model therefore govern the weights redistributed here.
 
 ---
 

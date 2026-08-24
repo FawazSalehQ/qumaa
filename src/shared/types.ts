@@ -42,6 +42,13 @@ export interface ResumeDetail {
 export type IngestOutcome =
   | { status: 'imported'; resume: ResumeSummary }
   | { status: 'duplicate'; fileName: string; existingId: number }
+  /** Not byte-identical, but almost certainly the same candidate. Imported, and
+   *  flagged so the user can decide. */
+  | {
+      status: 'near-duplicate'
+      resume: ResumeSummary
+      similarTo: { id: number; name: string | null; fileName: string; similarity: number }
+    }
   | { status: 'unsupported'; fileName: string; reason: string }
   | { status: 'failed'; fileName: string; reason: string }
 
@@ -62,6 +69,8 @@ export interface Evidence {
 }
 
 export interface MatchResult {
+  /** One sentence from the optional Claude rerank, when it ran. */
+  llmReason?: string
   resume: ResumeSummary
   /** Final blended score, 0..1. */
   score: number
@@ -84,8 +93,15 @@ export interface SearchResponse {
   elapsedMs: number
 }
 
+export type ThemeChoice = 'system' | 'light' | 'dark'
+
 export interface AppSettings {
   watchedFolder: string | null
+  theme: ThemeChoice
+  /** Whether the optional Claude rerank is enabled. Off unless a key is set. */
+  rerankEnabled: boolean
+  /** True when a key is stored. The key itself never reaches the renderer. */
+  hasApiKey: boolean
 }
 
 export interface DbStats {

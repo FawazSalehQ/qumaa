@@ -54,10 +54,12 @@ async function run(): Promise<void> {
 
   for (const file of files) {
     const outcome = await ingestFile(file)
+    // near-duplicate also means imported, just flagged as resembling another.
+    const ok = outcome.status === 'imported' || outcome.status === 'near-duplicate'
     check(
       `imports ${basename(file)}`,
-      outcome.status === 'imported',
-      outcome.status === 'imported'
+      ok,
+      outcome.status === 'imported' || outcome.status === 'near-duplicate'
         ? `name="${outcome.resume.name}" email=${outcome.resume.email} yrs=${outcome.resume.yearsExperience} skills=${outcome.resume.skills.length}`
         : JSON.stringify(outcome)
     )
@@ -74,7 +76,27 @@ async function run(): Promise<void> {
     filePath: '',
     fileType: 'pasted'
   })
-  check('accepts pasted resume', pasted.status === 'imported')
+  check(
+    'accepts pasted resume',
+    pasted.status === 'imported' || pasted.status === 'near-duplicate'
+  )
+
+  console.log('\n5b. Near-duplicate detection')
+  // Same person, one edited date. Byte hashing cannot catch this; the document
+  // vector should.
+  const edited = await ingestText({
+    text: `Robert Iwu\nrobert@example.com\n\nWORK EXPERIENCE\nUnilever - Senior Management Accountant\nApr 2015 - Jan 2024\nPrepared corporate tax computations and VAT returns.\nMaintained the general ledger and reconciled accounts payable.\n\nEDUCATION\nCPA, 2017\n\nSKILLS\nTaxation, VAT, general ledger, financial reporting, Excel`,
+    fileName: 'Robert Iwu (edited)',
+    filePath: '',
+    fileType: 'pasted'
+  })
+  check(
+    'flags a lightly edited resume as a near-duplicate',
+    edited.status === 'near-duplicate',
+    edited.status === 'near-duplicate'
+      ? `${(edited.similarTo.similarity * 100).toFixed(1)}% like "${edited.similarTo.name}"`
+      : `got status=${edited.status}`
+  )
 
   console.log('\n6. Search round trip (semantic + FTS5 bm25 + skills)')
   const res = await search(`Senior Backend Engineer
@@ -86,7 +108,7 @@ Requirements:
 - Experience operating PostgreSQL at scale
 - Experience with AWS and infrastructure as code`)
 
-  check('scores every candidate', res.totalCandidates === 3, `${res.totalCandidates} candidates`)
+  check('scores every candidate', res.totalCandidates === 4, `${res.totalCandidates} candidates`)
   check('detects skills in the posting', res.requiredSkills.length > 0, res.requiredSkills.join(', '))
 
   const top = res.results[0]
