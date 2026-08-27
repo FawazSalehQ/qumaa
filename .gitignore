@@ -11,3 +11,8 @@ resources/models/
 
 # TypeScript incremental build info
 *.tsbuildinfo
+
+# Evaluation corpus: generated resumes, and later possibly real ones.
+# Never commit these — the repo is public.
+eval/corpus/
+eval/results/

@@ -21,6 +21,7 @@
     "postinstall": "electron-builder install-app-deps",
     "seed": "npm run build && electron out/main/seed.js",
     "bench": "npm run build && electron out/main/bench.js",
+    "eval": "npm run build && electron out/main/eval.js",
     "smoke": "npm run build && electron out/main/smoke.js",
     "test": "vitest run",
     "test:watch": "vitest"

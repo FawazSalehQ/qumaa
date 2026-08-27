@@ -25,7 +25,9 @@ export default defineConfig({
           // Dev-only library seeder; see `npm run seed`.
           seed: resolve('src/main/seed.ts'),
           // Capacity benchmark; see `npm run bench`.
-          bench: resolve('src/main/bench.ts')
+          bench: resolve('src/main/bench.ts'),
+          // Ranking-quality evaluation; see `npm run eval`.
+          eval: resolve('src/main/eval.ts')
         },
         output: { format: 'cjs', entryFileNames: '[name].js' }
       }
