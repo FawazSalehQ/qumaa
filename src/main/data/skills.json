@@ -1042,5 +1042,289 @@
     "aliases": [
       "chinese"
     ]
+  },
+  {
+    "id": "training_needs_analysis",
+    "label": "Training Needs Analysis",
+    "aliases": [
+      "tna",
+      "training needs assessment",
+      "training needs analysis",
+      "تحليل الاحتياجات التدريبية"
+    ]
+  },
+  {
+    "id": "sop",
+    "label": "SOPs",
+    "aliases": [
+      "sop",
+      "sops",
+      "standard operating procedure",
+      "standard operating procedures",
+      "work instructions",
+      "إجراءات التشغيل القياسية",
+      "إجراءات العمل"
+    ]
+  },
+  {
+    "id": "coaching",
+    "label": "Coaching",
+    "aliases": [
+      "coach",
+      "coaching",
+      "التدريب الفردي",
+      "الإرشاد"
+    ]
+  },
+  {
+    "id": "facilitation",
+    "label": "Facilitation",
+    "aliases": [
+      "facilitator",
+      "facilitating",
+      "workshop facilitation",
+      "التيسير",
+      "إدارة ورش العمل"
+    ]
+  },
+  {
+    "id": "train_the_trainer",
+    "label": "Train the Trainer",
+    "aliases": [
+      "train-the-trainer",
+      "train the trainer",
+      "ttt",
+      "تدريب المدربين"
+    ]
+  },
+  {
+    "id": "instructional_design",
+    "label": "Instructional Design",
+    "aliases": [
+      "curriculum design",
+      "courseware",
+      "training material design",
+      "تصميم المناهج",
+      "تصميم المواد التدريبية"
+    ]
+  },
+  {
+    "id": "lms",
+    "label": "LMS",
+    "aliases": [
+      "learning management system",
+      "نظام إدارة التعلم"
+    ]
+  },
+  {
+    "id": "elearning",
+    "label": "E-Learning",
+    "aliases": [
+      "elearning",
+      "e-learning",
+      "online training",
+      "التعلم الإلكتروني"
+    ]
+  },
+  {
+    "id": "performance_management",
+    "label": "Performance Management",
+    "aliases": [
+      "performance appraisal",
+      "performance review",
+      "performance evaluation",
+      "إدارة الأداء",
+      "تقييم الأداء"
+    ]
+  },
+  {
+    "id": "kpi",
+    "label": "KPIs",
+    "aliases": [
+      "kpi",
+      "kpis",
+      "key performance indicator",
+      "key performance indicators",
+      "مؤشرات الأداء"
+    ]
+  },
+  {
+    "id": "food_and_beverage",
+    "label": "Food & Beverage",
+    "aliases": [
+      "f&b",
+      "f & b",
+      "fnb",
+      "food and beverage",
+      "الأغذية والمشروبات",
+      "الأطعمة والمشروبات"
+    ]
+  },
+  {
+    "id": "haccp",
+    "label": "HACCP",
+    "aliases": [
+      "hazard analysis critical control point",
+      "هاسب",
+      "تحليل المخاطر"
+    ]
+  },
+  {
+    "id": "food_safety",
+    "label": "Food Safety",
+    "aliases": [
+      "food hygiene",
+      "food handler",
+      "food handling",
+      "سلامة الغذاء",
+      "سلامة الأغذية"
+    ]
+  },
+  {
+    "id": "front_of_house",
+    "label": "Front of House",
+    "aliases": [
+      "foh",
+      "front-of-house",
+      "الصالة"
+    ]
+  },
+  {
+    "id": "back_of_house",
+    "label": "Back of House",
+    "aliases": [
+      "boh",
+      "back-of-house",
+      "المطبخ الخلفي"
+    ]
+  },
+  {
+    "id": "restaurant_operations",
+    "label": "Restaurant Operations",
+    "aliases": [
+      "restaurant ops",
+      "branch operations",
+      "store operations",
+      "outlet operations",
+      "عمليات المطاعم",
+      "تشغيل المطاعم"
+    ]
+  },
+  {
+    "id": "menu_development",
+    "label": "Menu Development",
+    "aliases": [
+      "menu engineering",
+      "new menu",
+      "menu rollout",
+      "تطوير القوائم",
+      "هندسة القوائم"
+    ]
+  },
+  {
+    "id": "brand_standards",
+    "label": "Brand Standards",
+    "aliases": [
+      "brand standard",
+      "brand compliance",
+      "brand execution",
+      "معايير العلامة التجارية"
+    ]
+  },
+  {
+    "id": "hospitality",
+    "label": "Hospitality",
+    "aliases": [
+      "الضيافة"
+    ]
+  },
+  {
+    "id": "catering",
+    "label": "Catering",
+    "aliases": [
+      "banqueting",
+      "التموين",
+      "خدمات الطعام"
+    ]
+  },
+  {
+    "id": "culinary",
+    "label": "Culinary",
+    "aliases": [
+      "culinary arts",
+      "kitchen operations",
+      "فنون الطهي",
+      "عمليات المطبخ"
+    ]
+  },
+  {
+    "id": "barista",
+    "label": "Barista",
+    "aliases": [
+      "coffee preparation",
+      "باريستا"
+    ]
+  },
+  {
+    "id": "cost_control",
+    "label": "Cost Control",
+    "aliases": [
+      "food cost",
+      "cost of goods",
+      "cogs",
+      "ضبط التكاليف",
+      "مراقبة التكاليف"
+    ]
+  },
+  {
+    "id": "pos",
+    "label": "POS",
+    "aliases": [
+      "point of sale",
+      "نقاط البيع"
+    ]
+  },
+  {
+    "id": "franchise",
+    "label": "Franchise",
+    "aliases": [
+      "franchising",
+      "franchisee",
+      "franchisor",
+      "الامتياز التجاري",
+      "الفرنشايز"
+    ]
+  },
+  {
+    "id": "guest_experience",
+    "label": "Guest Experience",
+    "aliases": [
+      "guest service",
+      "guest satisfaction",
+      "customer experience",
+      "تجربة الضيف",
+      "تجربة العميل"
+    ]
+  },
+  {
+    "id": "health_and_safety",
+    "label": "Health & Safety",
+    "aliases": [
+      "occupational safety",
+      "hse",
+      "workplace safety",
+      "الصحة والسلامة",
+      "السلامة المهنية"
+    ]
+  },
+  {
+    "id": "mystery_shopper",
+    "label": "Mystery Shopper",
+    "aliases": [
+      "mystery shopping",
+      "secret shopper",
+      "العميل السري",
+      "التسوق الخفي"
+    ]
   }
 ]

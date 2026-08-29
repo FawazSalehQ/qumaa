@@ -106,6 +106,29 @@ export interface ScoredChunk {
   vector: Float32Array
 }
 
+/**
+ * How much a match in each section counts as *evidence*.
+ *
+ * A summary that restates the posting is a claim; the same claim inside a work
+ * history is a demonstration. Without this the ranking is trivially gamed by
+ * pasting the job description into a profile blurb, which is exactly what a
+ * keyword-stuffed CV does — and what an evaluation over 100 resumes showed it
+ * doing, with an HR administrator and a fresh graduate taking the top slots
+ * from qualified candidates.
+ *
+ * `other` stays high on purpose. It is where the section splitter puts
+ * unrecognised headings, and strong candidates who write their own headers land
+ * there; penalising it would punish good CVs for unconventional formatting.
+ */
+const SECTION_WEIGHT: Record<SectionKind, number> = {
+  experience: 1,
+  projects: 1,
+  other: 1,
+  skills: 0.92,
+  education: 0.92,
+  summary: 0.88
+}
+
 export interface SemanticResult {
   semantic: number
   evidence: Evidence[]
@@ -134,14 +157,23 @@ export function scoreSemantics(
   // unless it is all we have.
   const evidenceStart = queryVectors.length > 1 ? 1 : 0
 
+  // Raw similarity is kept alongside the weighted one: ranking should use the
+  // discounted value, but the evidence shown to a user should report how well
+  // the passage actually matched, not a number adjusted for where it sat.
+  const bestChunkRaw = new Map<number, number>()
+
   queryVectors.forEach((qv, qi) => {
     let best = -Infinity
     chunks.forEach((chunk, ci) => {
-      const sim = cosine(qv, chunk.vector)
+      const raw = cosine(qv, chunk.vector)
+      const sim = raw * SECTION_WEIGHT[chunk.section]
       if (sim > best) best = sim
       if (qi >= evidenceStart) {
         const prev = bestChunkScore.get(ci)
-        if (prev === undefined || sim > prev) bestChunkScore.set(ci, sim)
+        if (prev === undefined || sim > prev) {
+          bestChunkScore.set(ci, sim)
+          bestChunkRaw.set(ci, raw)
+        }
       }
     })
     perQueryBest.push(best)
@@ -152,10 +184,10 @@ export function scoreSemantics(
   const evidence: Evidence[] = [...bestChunkScore.entries()]
     .sort((a, b) => b[1] - a[1])
     .slice(0, EVIDENCE_PER_RESUME)
-    .map(([ci, sim]) => ({
+    .map(([ci]) => ({
       section: chunks[ci].section,
       text: chunks[ci].text,
-      similarity: sim
+      similarity: bestChunkRaw.get(ci) ?? 0
     }))
 
   return { semantic, evidence }

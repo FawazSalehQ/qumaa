@@ -197,8 +197,7 @@ export default function LibraryView({
       <header className="view-head">
         <h2>Library</h2>
         <p className="sub">
-          {resumes.length} resume{resumes.length === 1 ? '' : 's'} indexed. Drag files anywhere onto
-          this window to add more.
+          {resumes.length} resume{resumes.length === 1 ? '' : 's'}
         </p>
       </header>
 
@@ -265,7 +264,7 @@ export default function LibraryView({
             <span className="empty-mark">
               <QumaaMark size={30} tone="color" />
             </span>
-            <p className="empty-title">Your library is empty</p>
+            <p className="empty-title">No resumes yet</p>
             <p className="empty-body">
               Drag PDFs, DOCX, or text files anywhere onto this window, or pick them yourself.
             </p>

@@ -25,6 +25,8 @@ export const CH = {
   settingsSetRerank: 'settings:setRerank',
   settingsStats: 'settings:stats',
   settingsModelStatus: 'settings:modelStatus',
+  settingsRevealData: 'settings:revealData',
+  settingsDeleteAll: 'settings:deleteAll',
 
   // events (main -> renderer)
   evIngestProgress: 'ev:ingestProgress',

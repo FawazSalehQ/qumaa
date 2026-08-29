@@ -33,8 +33,10 @@ fresh clone.
 | Command | What it does |
 |---|---|
 | `npm run dev` | Run the app with hot reload |
-| `npm test` | Unit tests + the ranking sanity suite (111 tests) |
-| `npm run smoke` | Headless integration check inside Electron: DB, embedder, real PDF/DOCX, search |
+| `npm test` | Unit tests + the ranking sanity suite |
+| `npm run smoke` | Integration check inside Electron: DB, embedder, real PDF/DOCX, search, PDF export, and wipe |
+| `npm run test:ui` | Playwright flow through the real Electron UI and hardened preload boundary |
+| `npm run verify` | Unit, Electron smoke, and UI suites together |
 | `npm run seed` | Dev only: fill the library with the ten-person test corpus |
 | `npm run bench` | Capacity benchmark: ingest, duplicate scan, and search at 500/1500/3000 resumes |
 | `npm run build:mac` | Produce `release/Qumaa-<version>-arm64.dmg` (Apple Silicon) |
@@ -47,6 +49,29 @@ code-signing certificate, set via `win.certificateFile` in `electron-builder.yml
 
 The Windows installer is per-user, so it triggers no admin prompt. It lets the
 user pick the install directory and creates Start Menu and desktop shortcuts.
+
+### Where the library lives
+
+The database is created on first launch; there is no setup step and no prebuilt
+database ships inside the installer.
+
+| Platform | Path |
+|---|---|
+| macOS | `~/Library/Application Support/cv-filter/cv_filter.db` |
+| Windows | `%APPDATA%\cv-filter\cv_filter.db` |
+
+The folder is named after the package rather than the app, because Electron
+derives it from `name` in `package.json` and electron-builder writes the Arabic
+product name only into the bundle metadata. Keeping it as `cv-filter` is
+deliberate: renaming it would strand the library of everyone who already
+installed an earlier version, and an ASCII path avoids the encoding trouble that
+Arabic in Windows paths invites.
+
+**Uninstalling does not remove the library on either platform.** That is the
+right default, since reinstalling then restores it, but it does mean the data
+outlives the app unless it is removed deliberately. Two ways to do that:
+Settings has a "Delete all data" action, and the Windows uninstaller asks
+whether to remove the folder, defaulting to keeping it.
 
 ### Cross-building Windows from macOS
 
@@ -84,19 +109,27 @@ so `src/main/embed/protocol.ts` owns the rule and no caller supplies its own.
 That file is also the single source of truth for the model id, and
 `src/main/embed/reindex.ts` re-embeds the whole library when it changes: vectors
 from two models are not comparable, and mixing them returns nonsense rankings
-without ever raising an error.
+without ever raising an error. Search and every ingestion route wait for model
+startup, any required reindex, and derived-data backfills to finish.
 
 ### Beyond the ranking
 
 - **Near-duplicate detection.** Content hashing only catches byte-identical
   text, so the same candidate reapplying with a lightly edited CV used to occupy
   two of the three result slots. Each resume stores a document vector (the mean
-  of its chunk vectors) and a new import is flagged above 0.97 cosine. It is
-  still imported: whether a near-duplicate is a second application or a
-  different person is the recruiter's call, not the app's.
+  of its chunk vectors), but similarity alone is no longer enough at ordinary
+  same-profession scores. Matching email or phone needs 0.90 cosine (and a
+  shared phone cannot override conflicting full names), matching full names
+  need 0.985, and records without comparable identity need 0.995. A flagged
+  resume is still imported: whether it is a second application or a different
+  person is the recruiter's call, not the app's.
+- **Versioned skill extraction.** The bundled gazetteer has a content-derived
+  version. When aliases or domains improve, stored resumes are re-extracted from
+  their retained text before search opens, so existing libraries receive the
+  same skill coverage as new imports.
 - **Optional Claude rerank.** Off unless you add an API key. It reorders the top
-  15 local results, and any failure falls back to the local ranking rather than
-  breaking the search.
+  15 local results while preserving candidates 16 onward, and any failure falls
+  back to the local ranking rather than breaking the search.
 - **Branded PDF export** of a shortlist, rendered offscreen with scripting
   disabled and every value HTML-escaped.
 - Library sorting, filtering, and bulk delete; light, dark, and system themes.
@@ -147,7 +180,7 @@ src/main/embed/     utility-process client, worker, shared protocol, reindex
 src/main/export/    branded shortlist PDF
 src/main/db/        schema, migrations, vector (de)serialisation, queries
 src/renderer/       React UI (Match / Library / Settings)
-test/               vitest suites + PDF/DOCX fixtures
+test/               vitest suites + Electron Playwright flows + PDF/DOCX fixtures
 ```
 
 ## Brand

@@ -79,13 +79,11 @@ end convertOne
 
 tell application "Microsoft Word"
   set wasRunning to running
-  set display alerts to false
 end tell
 
 ${entries}
 
 tell application "Microsoft Word"
-  set display alerts to true
   if not wasRunning then quit saving no
 end tell
 `
@@ -95,8 +93,9 @@ try {
 } catch (err) {
   console.error('\nWord conversion failed:')
   console.error(err.stderr?.toString().trim() || err.message)
-  console.error('\nNothing was deleted. Grant Terminal automation access to Word')
-  console.error('in System Settings > Privacy & Security > Automation, then retry.')
+  console.error('\nNothing was deleted; no resume was lost.')
+  console.error('If the error mentions permission, grant Terminal automation access')
+  console.error('to Word once in System Settings > Privacy & Security > Automation.')
   process.exit(1)
 }
 

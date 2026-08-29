@@ -67,9 +67,12 @@ export default function App(): React.JSX.Element {
   const [toasts, setToasts] = useState<Toast[]>([])
   const [selected, setSelected] = useState<Selection | null>(null)
   const [resetSignal, setResetSignal] = useState(0)
+  const [libraryRevision, setLibraryRevision] = useState(0)
   /** Nested dragenter/dragleave events fire constantly; count them instead of
    *  toggling, or the overlay flickers as the cursor crosses child elements. */
   const dragDepth = useRef(0)
+  /** Tracks ingest jobs so matches are invalidated at their boundaries, not per file. */
+  const invalidatedIngestJobs = useRef(new Set<string>())
   // Applies the stored theme to the document root and keeps following the OS.
   useTheme()
 
@@ -81,21 +84,47 @@ export default function App(): React.JSX.Element {
     setResumes(await window.api.resumes.list())
   }, [])
 
+  const invalidateMatches = useCallback(() => {
+    setSelected(null)
+    setLibraryRevision((revision) => revision + 1)
+  }, [])
+
+  const refreshAfterLibraryChange = useCallback(async () => {
+    // Revoke result snapshots before waiting for the refreshed library list.
+    invalidateMatches()
+    await refresh()
+  }, [invalidateMatches, refresh])
+
   useEffect(() => {
     refresh()
   }, [refresh])
 
   useEffect(() => {
     const offProgress = window.api.on.ingestProgress((p) => {
+      const firstEvent = !invalidatedIngestJobs.current.has(p.jobId)
+      if (firstEvent) {
+        invalidatedIngestJobs.current.add(p.jobId)
+        invalidateMatches()
+      }
       setProgress(p.done ? null : p)
-      if (p.done) refresh()
+      if (p.done) {
+        invalidatedIngestJobs.current.delete(p.jobId)
+        // Also revoke a search started while a multi-file import or reindex was
+        // running. A one-event/empty job was already revoked just above.
+        if (!firstEvent) invalidateMatches()
+        refresh()
+      }
     })
     const offWatch = window.api.on.watchIngest((o) => {
       pushToasts(summarize([o]))
-      refresh()
+      if (o.status === 'imported' || o.status === 'near-duplicate') {
+        refreshAfterLibraryChange()
+      } else {
+        refresh()
+      }
     })
     const offReindex = window.api.on.reindexed(() => {
-      refresh()
+      refreshAfterLibraryChange()
       pushToasts([
         { id: crypto.randomUUID(), kind: 'success', message: 'Search index updated for the new model' }
       ])
@@ -104,8 +133,9 @@ export default function App(): React.JSX.Element {
       offProgress()
       offWatch()
       offReindex()
+      invalidatedIngestJobs.current.clear()
     }
-  }, [refresh, pushToasts])
+  }, [invalidateMatches, refresh, refreshAfterLibraryChange, pushToasts])
 
   const ingestPaths = useCallback(
     async (paths: string[]) => {
@@ -244,19 +274,22 @@ export default function App(): React.JSX.Element {
           <MatchView
             resumeCount={resumes.length}
             resetSignal={resetSignal}
+            libraryRevision={libraryRevision}
             onOpenCandidate={(m) => setSelected({ resume: m.resume, match: m })}
           />
         )}
         {tab === 'library' && (
           <LibraryView
             resumes={resumes}
-            onChanged={refresh}
+            onChanged={refreshAfterLibraryChange}
             onIngestPaths={ingestPaths}
             onToast={pushToasts}
             onOpenResume={(r) => setSelected({ resume: r })}
           />
         )}
-        {tab === 'settings' && <SettingsView onToast={pushToasts} onChanged={refresh} />}
+        {tab === 'settings' && (
+          <SettingsView onToast={pushToasts} onChanged={refreshAfterLibraryChange} />
+        )}
       </main>
 
       {selected && (
@@ -266,8 +299,7 @@ export default function App(): React.JSX.Element {
           match={selected.match}
           onClose={() => setSelected(null)}
           onDeleted={() => {
-            setSelected(null)
-            refresh()
+            refreshAfterLibraryChange()
           }}
         />
       )}

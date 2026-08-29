@@ -2,6 +2,9 @@ node_modules/
 out/
 release/
 dist/
+test-results/
+playwright-report/
+.local/
 
 # Vendored model weights — regenerate with `npm run fetch-model`
 resources/models/

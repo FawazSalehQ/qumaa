@@ -100,6 +100,9 @@ win:
     - '!node_modules/@img/sharp-libvips-linux*/**'
 
 nsis:
+  # Asks, on uninstall only, whether to remove the resume library from
+  # %APPDATA%. Defaults to keeping it; see the script for why.
+  include: build/installer.nsh
   # Per-user install, so no UAC admin prompt is needed.
   oneClick: false
   perMachine: false

@@ -1,0 +1,51 @@
+name: Verify
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-package:
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS arm64
+            os: macos-15
+            package_script: package:dir:mac
+            executable: release/mac-arm64/قُمع.app/Contents/MacOS/قُمع
+          - name: Windows x64
+            os: windows-latest
+            package_script: package:dir:win
+            executable: release/win-unpacked/قُمع.exe
+
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/cache@v4
+        with:
+          path: resources/models
+          key: qumaa-model-${{ hashFiles('scripts/fetch-model.mjs') }}
+
+      - run: npm ci
+      - run: npm run fetch-model
+      - run: npm test
+      - run: npm run smoke
+      - run: npm run test:ui:built
+      - run: npm run ${{ matrix.package_script }}
+      - name: Launch and test packaged application
+        run: npm run test:ui:built
+        env:
+          QUMAA_E2E_EXECUTABLE: ${{ matrix.executable }}

@@ -11,7 +11,6 @@
 import { app, dialog, Menu, shell, type BrowserWindow, type MenuItemConstructorOptions } from 'electron'
 import { CH } from '@shared/channels.js'
 import type { MenuCommand } from '@shared/types.js'
-import { MODEL_ID } from './embed/protocol.js'
 import { stats } from './db/index.js'
 
 const isMac = process.platform === 'darwin'
@@ -20,10 +19,9 @@ function aboutDetail(): string {
   const { resumeCount, chunkCount } = stats()
   return [
     `Version ${app.getVersion()}`,
-    `Embedding model: ${MODEL_ID} (384 dimensions, runs locally)`,
     `Library: ${resumeCount} resumes, ${chunkCount} indexed passages`,
     '',
-    'All processing happens on this machine. No resume text is sent anywhere.'
+    'This application runs locally.'
   ].join('\n')
 }
 

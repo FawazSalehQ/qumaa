@@ -256,7 +256,10 @@ async function main(): Promise<void> {
           tier: tierOfId.get(r.resume.id) ?? 4,
           file: nameOfId.get(r.resume.id) ?? r.resume.fileName,
           score: r.score,
-          breakdown: r.breakdown
+          breakdown: r.breakdown,
+          // Which sections the winning passages came from. A candidate whose
+          // every match sits in a summary is asserting, not evidencing.
+          evidence: r.evidence.map((e) => ({ section: e.section, similarity: e.similarity }))
         }))
       },
       null,

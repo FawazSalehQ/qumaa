@@ -14,6 +14,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { z } from 'zod'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import type { MatchResult } from '@shared/types.js'
+import { mergeRerankedResults } from './rerankOrder.js'
 
 /** Reranking more than this wastes tokens; retrieval is reliable at the top. */
 export const RERANK_LIMIT = 15
@@ -83,14 +84,15 @@ export interface RerankOptions {
 }
 
 /**
- * Returns the shortlist reordered, each entry carrying the model's reason.
+ * Returns the complete local result list with the shortlist window reordered;
+ * entries the model ranked carry its reason.
  *
  * Throws on API failure so the caller can fall back to the local ranking and
  * tell the user, rather than silently presenting an unranked list as ranked.
  */
 export async function rerank(opts: RerankOptions): Promise<RerankedResult[]> {
   const shortlist = opts.results.slice(0, RERANK_LIMIT)
-  if (shortlist.length <= 1) return shortlist
+  if (shortlist.length <= 1) return opts.results
 
   const client = new Anthropic({ apiKey: opts.apiKey })
 
@@ -113,20 +115,7 @@ export async function rerank(opts: RerankOptions): Promise<RerankedResult[]> {
   const parsed = response.parsed_output
   if (!parsed) throw new Error('The model did not return a usable ranking.')
 
-  // Reorder by the model's ranking, ignoring ids it invented and appending any
-  // candidate it dropped, so the caller always gets the full shortlist back.
-  const seen = new Set<number>()
-  const ordered: RerankedResult[] = []
-
-  for (const entry of [...parsed.ranking].sort((a, b) => a.rank - b.rank)) {
-    const original = shortlist[entry.id]
-    if (!original || seen.has(entry.id)) continue
-    seen.add(entry.id)
-    ordered.push({ ...original, llmReason: entry.reason })
-  }
-  shortlist.forEach((m, i) => {
-    if (!seen.has(i)) ordered.push(m)
-  })
-
-  return ordered
+  // Retrieval owns membership. Claude may reorder only the bounded window;
+  // every local result beyond it must remain available in the UI.
+  return mergeRerankedResults(opts.results, parsed.ranking, RERANK_LIMIT)
 }

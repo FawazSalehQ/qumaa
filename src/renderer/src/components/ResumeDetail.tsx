@@ -108,7 +108,7 @@ export default function ResumeDetail({ resume, match, onClose, onDeleted }: Prop
         <div className="detail-body">
           {match && (
             <section>
-              <h3>Why this ranked here</h3>
+              <h3>Score breakdown</h3>
               <p className="reading">{readScore(match)}</p>
               <div className="score-bars">
                 <Bar label="Semantic" value={match.breakdown.semantic} />

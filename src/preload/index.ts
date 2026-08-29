@@ -74,7 +74,12 @@ const api = {
     setRerank: (enabled: boolean): Promise<void> =>
       ipcRenderer.invoke(CH.settingsSetRerank, enabled),
     stats: (): Promise<DbStats> => ipcRenderer.invoke(CH.settingsStats),
-    modelStatus: (): Promise<ModelStatus> => ipcRenderer.invoke(CH.settingsModelStatus)
+    modelStatus: (): Promise<ModelStatus> => ipcRenderer.invoke(CH.settingsModelStatus),
+    /** No path argument: main reveals its own data folder, not one the
+        renderer names. */
+    revealData: (): Promise<void> => ipcRenderer.invoke(CH.settingsRevealData),
+    /** Resolves true when the user confirmed and the wipe happened. */
+    deleteAll: (): Promise<boolean> => ipcRenderer.invoke(CH.settingsDeleteAll)
   },
 
   on: {

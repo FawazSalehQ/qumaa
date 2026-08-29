@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
-import type { MatchResult, SearchResponse } from '@shared/types.js'
+import { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react'
+import type { MatchResult } from '@shared/types.js'
 import CandidateCard from '../components/CandidateCard.js'
 import { QumaaMark } from '../components/Brand.js'
+import { displayedResult, initialMatchSession, matchSessionReducer } from '../matchSession.js'
 
 /** First non-empty line of the posting, used as its label once collapsed. */
 function postingTitle(jd: string): string {
@@ -14,103 +15,110 @@ interface Props {
   onOpenCandidate: (m: MatchResult) => void
   /** Bumped by the New Search menu command to reset this view. */
   resetSignal: number
+  /** Bumped whenever resumes or their search index may have changed. */
+  libraryRevision: number
+}
+
+function errorMessage(err: unknown, fallback: string): string {
+  return err instanceof Error ? err.message : fallback
 }
 
 export default function MatchView({
   resumeCount,
   onOpenCandidate,
-  resetSignal
+  resetSignal,
+  libraryRevision
 }: Props): React.JSX.Element {
-  const [jd, setJd] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [res, setRes] = useState<SearchResponse | null>(null)
-  const [exported, setExported] = useState<string | null>(null)
+  const [session, dispatch] = useReducer(matchSessionReducer, undefined, initialMatchSession)
   // Off unless the user has both stored a key and switched reranking on.
   const [rerankAvailable, setRerankAvailable] = useState(false)
-  const [reranking, setReranking] = useState(false)
-  const [reranked, setReranked] = useState(false)
-  // Once results exist the posting collapses to a summary bar so the ranking
-  // owns the window; editing reopens it.
-  const [editing, setEditing] = useState(true)
   const areaRef = useRef<HTMLTextAreaElement>(null)
+  const nextRequestId = useRef(0)
+  const previousLibraryRevision = useRef(libraryRevision)
+
+  const jd = session.draftPosting
+  const busy = session.pendingSearch !== null
+  const reranking = session.pendingRerank !== null
+  // Results stay stored while the user edits so Cancel can restore them, but
+  // they are hidden until the immutable posting snapshot is visible again.
+  const snapshot = displayedResult(session)
+  const res = snapshot?.response ?? null
 
   useEffect(() => {
     window.api.settings.get().then((s) => setRerankAvailable(s.hasApiKey && s.rerankEnabled))
   }, [])
 
   const runRerank = async (): Promise<void> => {
-    if (!res || reranking) return
-    setReranking(true)
-    setError(null)
+    const source = session.result
+    if (!source || session.editing || reranking) return
+    const requestId = ++nextRequestId.current
+    dispatch({ type: 'rerank-started', requestId, resultKey: source.key })
     try {
-      const ordered = await window.api.search.rerank({ jobDescription: jd, results: res.results })
-      // Retrieval still decided who is in the list; the model only reordered it.
-      setRes({ ...res, results: ordered })
-      setReranked(true)
+      const ordered = await window.api.search.rerank({
+        jobDescription: source.posting,
+        results: source.response.results
+      })
+      dispatch({ type: 'rerank-succeeded', requestId, results: ordered })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Reranking failed')
-    } finally {
-      setReranking(false)
+      dispatch({ type: 'rerank-failed', requestId, message: errorMessage(err, 'Reranking failed') })
     }
   }
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (resetSignal === 0) return
-    setJd('')
-    setRes(null)
-    setError(null)
-    setEditing(true)
-    areaRef.current?.focus()
+    dispatch({ type: 'reset' })
+    const frame = requestAnimationFrame(() => areaRef.current?.focus())
+    return () => cancelAnimationFrame(frame)
   }, [resetSignal])
+
+  // A result is a snapshot of both the library and its vector index. Revoke it
+  // before paint when either changes; completions from older async work then no-op
+  // because the reducer no longer holds their request ids.
+  useLayoutEffect(() => {
+    if (previousLibraryRevision.current === libraryRevision) return
+    previousLibraryRevision.current = libraryRevision
+    dispatch({ type: 'results-invalidated' })
+  }, [libraryRevision])
 
   const run = async (): Promise<void> => {
     // resumeCount is checked here too, not just on the button: the Cmd+Enter
     // shortcut would otherwise run a search the disabled button forbids.
     if (!jd.trim() || busy || resumeCount === 0) return
-    setBusy(true)
-    setError(null)
+    const requestId = ++nextRequestId.current
+    const posting = jd
+    dispatch({ type: 'search-started', requestId, posting })
     try {
-      const r = await window.api.search.run(jd)
-      setRes(r)
-      setEditing(false)
-      // A new search invalidates any previous rerank and export.
-      setReranked(false)
-      setExported(null)
+      const response = await window.api.search.run(posting)
+      dispatch({ type: 'search-succeeded', requestId, response })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Search failed')
-    } finally {
-      setBusy(false)
+      dispatch({ type: 'search-failed', requestId, message: errorMessage(err, 'Search failed') })
     }
   }
 
   const top = res?.results.slice(0, 3) ?? []
   const rest = res?.results.slice(3) ?? []
-  const collapsed = res !== null && !editing
 
   return (
     <>
-      {!collapsed && (
+      {!snapshot && (
         <header className="view-head">
-          <h2>Match a job description</h2>
-          <p className="sub">
-            Paste the posting below. Everything runs locally, so no resume text leaves this machine.
-          </p>
+          <h2>Match</h2>
         </header>
       )}
 
-      {collapsed ? (
+      {snapshot ? (
         <button
           className="posting-bar"
           onClick={() => {
-            setEditing(true)
+            dispatch({ type: 'edit-started' })
             requestAnimationFrame(() => areaRef.current?.focus())
           }}
         >
           <QumaaMark size={16} tone="color" />
-          <span className="posting-title">{postingTitle(jd)}</span>
+          <span className="posting-title">{postingTitle(snapshot.posting)}</span>
           <span className="muted">
-            {res.requiredSkills.length} skill{res.requiredSkills.length === 1 ? '' : 's'} detected
+            {snapshot.response.requiredSkills.length} skill
+            {snapshot.response.requiredSkills.length === 1 ? '' : 's'} detected
           </span>
           <span className="spacer" />
           <span className="posting-edit">Edit</span>
@@ -121,8 +129,9 @@ export default function MatchView({
             ref={areaRef}
             rows={10}
             value={jd}
-            placeholder="Paste the full job description here, including the requirements list…"
-            onChange={(e) => setJd(e.target.value)}
+            placeholder="Paste the job description"
+            disabled={busy}
+            onChange={(e) => dispatch({ type: 'draft-changed', posting: e.target.value })}
             onKeyDown={(e) => {
               if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') run()
             }}
@@ -136,8 +145,8 @@ export default function MatchView({
             >
               {busy ? 'Searching…' : 'Find matches'}
             </button>
-            {res && (
-              <button className="btn" onClick={() => setEditing(false)}>
+            {session.result && (
+              <button className="btn" onClick={() => dispatch({ type: 'edit-cancelled' })}>
                 Cancel
               </button>
             )}
@@ -150,9 +159,9 @@ export default function MatchView({
         </>
       )}
 
-      {error && <div className="card error-card">{error}</div>}
+      {session.error && <div className="card error-card">{session.error}</div>}
 
-      {res && (
+      {res && snapshot && (
         <div className="results">
           <div className="row results-head">
             <h3>Top {top.length}</h3>
@@ -160,7 +169,7 @@ export default function MatchView({
             <span className="muted">
               {res.totalCandidates} scored in {res.elapsedMs} ms
             </span>
-            {rerankAvailable && !reranked && (
+            {rerankAvailable && !snapshot.reranked && (
               <button
                 className="btn sm"
                 onClick={runRerank}
@@ -170,17 +179,28 @@ export default function MatchView({
                 {reranking ? 'Reranking…' : 'Rerank with Claude'}
               </button>
             )}
-            {reranked && <span className="muted">Reordered by Claude</span>}
+            {snapshot.reranked && <span className="muted">Reordered by Claude</span>}
             <button
               className="btn sm"
               disabled={top.length === 0}
               onClick={async () => {
-                const path = await window.api.search.exportPdf({
-                  jobTitle: postingTitle(jd),
-                  requiredSkills: res.requiredSkills,
-                  results: top
-                })
-                if (path) setExported(path)
+                const source = snapshot
+                try {
+                  const path = await window.api.search.exportPdf({
+                    jobTitle: postingTitle(source.posting),
+                    requiredSkills: source.response.requiredSkills,
+                    results: source.response.results.slice(0, 3)
+                  })
+                  if (path) {
+                    dispatch({ type: 'export-succeeded', resultKey: source.key, path })
+                  }
+                } catch (err) {
+                  dispatch({
+                    type: 'export-failed',
+                    resultKey: source.key,
+                    message: errorMessage(err, 'Export failed')
+                  })
+                }
               }}
             >
               Export shortlist…
@@ -189,7 +209,7 @@ export default function MatchView({
 
           {res.requiredSkills.length > 0 && (
             <div className="detected">
-              <span className="muted">Skills detected in this posting</span>
+              <span className="muted">Requirements</span>
               <div className="chips">
                 {res.requiredSkills.map((s) => (
                   <span key={s} className="chip">
@@ -201,7 +221,7 @@ export default function MatchView({
           )}
 
           {top.length === 0 ? (
-            <div className="empty">No resumes to rank.</div>
+            <div className="empty">No resumes yet</div>
           ) : (
             <div className="podium">
               {top.map((m, i) => (
@@ -215,8 +235,8 @@ export default function MatchView({
             </div>
           )}
 
-          {exported && (
-            <p className="hint">Saved to {exported}</p>
+          {session.exported && (
+            <p className="hint">Saved to {session.exported}</p>
           )}
 
           {rest.length > 0 && (

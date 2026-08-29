@@ -30,6 +30,7 @@ export interface ResumeRow {
   years_experience: number | null
   education_level: EducationLevel | null
   skills_json: string
+  skills_version: string
   likely_scanned: number
 }
 
@@ -60,6 +61,7 @@ CREATE TABLE IF NOT EXISTS resumes (
   years_experience REAL,
   education_level  TEXT,
   skills_json      TEXT NOT NULL DEFAULT '[]',
+  skills_version   TEXT NOT NULL DEFAULT '',
   likely_scanned   INTEGER NOT NULL DEFAULT 0
 );
 
@@ -113,6 +115,13 @@ function migrate(database: Database.Database): void {
   // bulk import quadratic.
   if (!columns.has('doc_vector')) {
     database.exec('ALTER TABLE resumes ADD COLUMN doc_vector BLOB')
+  }
+
+  // Skill matches are derived from the bundled gazetteer. Keep the version on
+  // each resume so additions and corrected aliases can be backfilled from the
+  // stored raw text without asking for the original file again.
+  if (!columns.has('skills_version')) {
+    database.exec("ALTER TABLE resumes ADD COLUMN skills_version TEXT NOT NULL DEFAULT ''")
   }
 }
 
@@ -222,6 +231,25 @@ export function setSetting(key: string, value: string | null): void {
       'INSERT INTO settings(key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
     )
     .run(key, value)
+}
+
+/**
+ * Removes every resume and every setting, leaving a valid empty database.
+ *
+ * Deliberately SQL rather than unlinking the file: better-sqlite3 holds the
+ * handle open, and Windows refuses to delete an open file, so unlinking would
+ * work on macOS and fail on Windows. Emptying the tables behaves identically on
+ * both, and VACUUM returns the space so the file does not stay large.
+ */
+export function deleteAllData(): void {
+  const d = getDb()
+  // Chunks cascade from resumes; the FTS triggers keep the index in step.
+  d.transaction(() => {
+    d.prepare('DELETE FROM resumes').run()
+    d.prepare('DELETE FROM settings').run()
+  })()
+  // VACUUM cannot run inside a transaction.
+  d.exec('VACUUM')
 }
 
 export function stats(): DbStats {

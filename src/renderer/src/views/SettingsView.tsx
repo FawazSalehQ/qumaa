@@ -21,6 +21,9 @@ export default function SettingsView({
   const [rerankOn, setRerankOn] = useState(false)
   const [keyDraft, setKeyDraft] = useState('')
   const [stats, setStats] = useState<DbStats | null>(null)
+  const revealLabel = navigator.userAgent.includes('Mac')
+    ? 'Show in Finder'
+    : 'Show in Explorer'
   const [model, setModel] = useState<ModelStatus | null>(null)
   const { theme, setTheme } = useTheme()
 
@@ -40,6 +43,23 @@ export default function SettingsView({
   useEffect(() => {
     load()
   }, [load])
+
+  /**
+   * Main owns the confirmation dialog, so this only reacts to the answer.
+   * Nothing is written back afterwards, including the theme: re-saving a
+   * preference here would leave a settings row behind and make the wipe a lie.
+   * The window keeps its current appearance until the next launch.
+   */
+  const wipe = useCallback(async () => {
+    const done = await window.api.settings.deleteAll()
+    if (!done) return
+    setWatched(null)
+    setHasKey(false)
+    setRerankOn(false)
+    setKeyDraft('')
+    await Promise.all([load(), onChanged()])
+    onToast([{ id: crypto.randomUUID(), kind: 'success', message: 'All data deleted.' }])
+  }, [load, onChanged, onToast])
 
   const chooseWatched = async (): Promise<void> => {
     const folder = await window.api.ingest.pickFolder()
@@ -65,7 +85,7 @@ export default function SettingsView({
     <>
       <header className="view-head">
         <h2>Settings</h2>
-        <p className="sub">Everything is stored on this machine.</p>
+        <p className="sub">Everything is stored on this machine. Nothing is sent anywhere unless you turn on rerank below.</p>
       </header>
 
       <div className="card">
@@ -113,12 +133,15 @@ export default function SettingsView({
         </div>
 
         <div className="setting">
-          <div className="label">Embedding model</div>
-          <div className="desc">Runs locally. The app never contacts the network.</div>
+          <div className="label">Matching</div>
+          <div className="desc">This application runs locally.</div>
+          {/* The model's identity is an implementation detail. Its *state* is not:
+              a failure has to stay visible, or a broken search looks like a
+              ranking problem rather than a model that never loaded. */}
           <div className="muted">
             {model === null && 'Checking…'}
-            {model?.state === 'loading' && 'Loading model…'}
-            {model?.state === 'ready' && `bge-small-en-v1.5 · ${model.dimensions} dimensions · ready`}
+            {model?.state === 'loading' && 'Starting…'}
+            {model?.state === 'ready' && 'Ready'}
             {model?.state === 'error' && (
               <span style={{ color: 'var(--bad)' }}>Error: {model.message}</span>
             )}
@@ -184,13 +207,24 @@ export default function SettingsView({
         </div>
 
         <div className="setting">
-          <div className="label">Database</div>
+          <div className="label">Data</div>
           <div className="desc">
             {stats
               ? `${stats.resumeCount} resumes · ${stats.chunkCount} indexed passages · ${formatBytes(stats.dbSizeBytes)}`
               : 'Loading…'}
           </div>
           {stats && <code>{stats.dbPath}</code>}
+          {/* Uninstalling leaves this folder in place on both platforms, so the
+              app has to be the thing that can remove it. */}
+          <div className="desc">Uninstalling the app does not remove this data.</div>
+          <div className="row">
+            <button className="btn sm" onClick={() => void window.api.settings.revealData()}>
+              {revealLabel}
+            </button>
+            <button className="btn sm danger" onClick={() => void wipe()}>
+              Delete all data…
+            </button>
+          </div>
         </div>
       </div>
     </>

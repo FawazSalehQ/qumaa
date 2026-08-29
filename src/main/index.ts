@@ -1,8 +1,10 @@
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
-import { basename, join } from 'node:path'
+import { basename, isAbsolute, join } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { CH } from '@shared/channels.js'
 import {
+  dbPath,
+  deleteAllData,
   deleteResume,
   deleteResumes,
   getResumeDetail,
@@ -12,21 +14,42 @@ import {
   stats as dbStats
 } from './db/index.js'
 import { embedder, setEntryDir } from './embed/client.js'
-import { needsReindex, reindexAll } from './embed/reindex.js'
+import { indexReadiness, type IndexInitializationPhase } from './embed/readiness.js'
+import { markEmptyIndexCurrent, needsReindex, reindexAll } from './embed/reindex.js'
 import { backfillDocumentVectors } from './ingest/duplicates.js'
 import { collectFiles, ingestFile, ingestText } from './ingest/pipeline.js'
+import { backfillResumeSkills } from './ingest/skills-backfill.js'
 import { onWatchIngest, startWatching, stopWatching } from './ingest/watcher.js'
 import { search } from './search/rank.js'
 import { shortlistHtml, writeShortlistPdf } from './export/shortlist.js'
 import { rerank } from './search/rerank.js'
 import { getApiKey, hasApiKey, setApiKey } from './secrets.js'
 import { buildMenu } from './menu.js'
+import { SharedExclusiveGate } from './shared-exclusive-gate.js'
 import { restoredBounds, trackWindow } from './windowState.js'
-import type { AppSettings, IngestOutcome, IngestProgress, MatchResult } from '@shared/types.js'
+import type {
+  AppSettings,
+  IngestOutcome,
+  IngestProgress,
+  MatchResult,
+  ModelStatus
+} from '@shared/types.js'
+
+// Test-only isolation hook. UI/package smoke runs with a throwaway absolute
+// directory so it cannot read or mutate the developer's real resume library.
+const e2eUserData = process.env.QUMAA_E2E_USER_DATA?.trim()
+if (e2eUserData) {
+  if (!isAbsolute(e2eUserData)) {
+    throw new Error('QUMAA_E2E_USER_DATA must be an absolute path.')
+  }
+  app.setPath('userData', e2eUserData)
+}
 
 const WATCHED_FOLDER_KEY = 'watchedFolder'
 const THEME_KEY = 'theme'
 const RERANK_KEY = 'rerankEnabled'
+/** Coordinates complete manual imports with the destructive full-library wipe. */
+const libraryMutationGate = new SharedExclusiveGate()
 
 let mainWindow: BrowserWindow | null = null
 
@@ -107,8 +130,58 @@ function send(channel: string, payload: unknown): void {
   }
 }
 
+async function initializeSearchIndex(
+  setPhase: (phase: IndexInitializationPhase) => void
+): Promise<void> {
+  await embedder.start()
+
+  let rebuilt = false
+  // An empty library has no vector provenance to migrate; establish its marker
+  // before opening ingestion. A non-empty mismatch must be rebuilt in full.
+  const empty = markEmptyIndexCurrent()
+  if (!empty && needsReindex()) {
+    rebuilt = true
+    setPhase('reindexing')
+    console.log('Embedding model changed; rebuilding the index.')
+    const n = await reindexAll(({ done, total }) => {
+      send(CH.evIngestProgress, {
+        jobId: 'reindex',
+        processed: done,
+        total,
+        currentFile: 'Updating search index',
+        done: done >= total
+      } satisfies IngestProgress)
+    })
+    console.log(`Re-embedded ${n} passages.`)
+  }
+
+  // Reindex clears these derived vectors. Older libraries may also have been
+  // created before the column existed.
+  setPhase('backfilling-vectors')
+  const vectorsFilled = backfillDocumentVectors()
+  if (vectorsFilled > 0) console.log(`Backfilled ${vectorsFilled} document vectors.`)
+
+  setPhase('backfilling-skills')
+  const skills = backfillResumeSkills()
+  if (skills.updated > 0) {
+    console.log(
+      `Refreshed skills for ${skills.updated} resumes (${skills.version.slice(0, 19)}…).`
+    )
+  }
+
+  if (rebuilt) send(CH.evReindexed, null)
+}
+
+function modelStatus(): ModelStatus {
+  const readiness = indexReadiness.getStatus()
+  if (readiness.state === 'error') return { state: 'error', message: readiness.message }
+  if (readiness.state !== 'ready') return { state: 'loading' }
+  return embedder.getStatus()
+}
+
 /** Ingests a list of paths sequentially, streaming progress to the renderer. */
-async function ingestPaths(paths: string[]): Promise<IngestOutcome[]> {
+async function ingestPathsWithoutGate(paths: string[]): Promise<IngestOutcome[]> {
+  await indexReadiness.waitUntilReady()
   const jobId = randomUUID()
   const outcomes: IngestOutcome[] = []
 
@@ -136,15 +209,23 @@ async function ingestPaths(paths: string[]): Promise<IngestOutcome[]> {
 }
 
 function registerHandlers(): void {
-  ipcMain.handle(CH.resumesList, () => listResumes())
+  ipcMain.handle(CH.resumesList, async () => {
+    await indexReadiness.waitUntilReady()
+    return listResumes()
+  })
 
-  ipcMain.handle(CH.resumesGet, (_e, id: number) => getResumeDetail(id))
+  ipcMain.handle(CH.resumesGet, async (_e, id: number) => {
+    await indexReadiness.waitUntilReady()
+    return getResumeDetail(id)
+  })
 
-  ipcMain.handle(CH.resumesDelete, (_e, id: number) => {
+  ipcMain.handle(CH.resumesDelete, async (_e, id: number) => {
+    await indexReadiness.waitUntilReady()
     deleteResume(id)
   })
 
   ipcMain.handle(CH.resumesDeleteMany, async (_e, ids: number[]) => {
+    await indexReadiness.waitUntilReady()
     // Destructive and irreversible, so it is confirmed in the main process where
     // the dialog is native and cannot be skipped by the renderer.
     const { response } = await dialog.showMessageBox(mainWindow!, {
@@ -168,12 +249,19 @@ function registerHandlers(): void {
     if (err) throw new Error(err)
   })
 
-  ipcMain.handle(CH.ingestFiles, (_e, paths: string[]) => ingestPaths(paths))
+  ipcMain.handle(CH.ingestFiles, (_e, paths: string[]) =>
+    libraryMutationGate.runShared(() => ingestPathsWithoutGate(paths))
+  )
 
-  ipcMain.handle(CH.ingestFolder, async (_e, folder: string) => {
-    const files = await collectFiles(folder)
-    return ingestPaths(files)
-  })
+  ipcMain.handle(CH.ingestFolder, (_e, folder: string) =>
+    libraryMutationGate.runShared(async () => {
+      await indexReadiness.waitUntilReady()
+      // Collection belongs inside the shared operation. Otherwise a wipe can
+      // land after collection and the saved paths can repopulate the library.
+      const files = await collectFiles(folder)
+      return ingestPathsWithoutGate(files)
+    })
+  )
 
   ipcMain.handle(CH.ingestPickFolder, async () => {
     const res = await dialog.showOpenDialog({
@@ -193,15 +281,21 @@ function registerHandlers(): void {
   })
 
   ipcMain.handle(CH.ingestText, (_e, args: { text: string; label: string }) =>
-    ingestText({
-      text: args.text,
-      fileName: args.label || 'Pasted resume',
-      filePath: '',
-      fileType: 'pasted'
+    libraryMutationGate.runShared(async () => {
+      await indexReadiness.waitUntilReady()
+      return ingestText({
+        text: args.text,
+        fileName: args.label || 'Pasted resume',
+        filePath: '',
+        fileType: 'pasted'
+      })
     })
   )
 
-  ipcMain.handle(CH.searchRun, (_e, jd: string) => search(jd))
+  ipcMain.handle(CH.searchRun, async (_e, jd: string) => {
+    await indexReadiness.waitUntilReady()
+    return search(jd)
+  })
 
   ipcMain.handle(
     CH.searchExport,
@@ -265,8 +359,43 @@ function registerHandlers(): void {
     else await stopWatching()
   })
 
+  // Reveals the app's own data folder. Takes no path from the renderer, so
+  // there is nothing here that could be pointed somewhere else.
+  ipcMain.handle(CH.settingsRevealData, () => {
+    shell.showItemInFolder(dbPath())
+  })
+
+  ipcMain.handle(CH.settingsDeleteAll, async () => {
+    const { resumeCount } = dbStats()
+    // Irreversible, so the confirmation is native and states exactly what goes.
+    const { response } = await dialog.showMessageBox(mainWindow!, {
+      type: 'warning',
+      buttons: ['Cancel', 'Delete everything'],
+      defaultId: 0,
+      cancelId: 0,
+      message: 'Delete all data?',
+      detail:
+        `This removes all ${resumeCount} resume${resumeCount === 1 ? '' : 's'} from the library, ` +
+        'along with your settings, watched folder, and saved API key. ' +
+        'The original resume files on disk are not touched. This cannot be undone.'
+    })
+    if (response !== 1) return false
+
+    return libraryMutationGate.runExclusive(async () => {
+      // Existing manual imports finish before exclusive access is granted, and
+      // later imports cannot start until deletion and marker repair complete.
+      // The watcher has its own invalidation/drain path inside this boundary.
+      await stopWatching()
+      deleteAllData()
+      // Readiness remains open after a wipe, so restore internal provenance for
+      // the now-empty index before a new resume can be ingested.
+      markEmptyIndexCurrent()
+      return true
+    })
+  })
+
   ipcMain.handle(CH.settingsStats, () => dbStats())
-  ipcMain.handle(CH.settingsModelStatus, () => embedder.getStatus())
+  ipcMain.handle(CH.settingsModelStatus, () => modelStatus())
 }
 
 // Must run from the entry file itself; see setEntryDir's comment.
@@ -280,39 +409,17 @@ app.whenReady().then(async () => {
   // which is opened lazily on first access.
   buildMenu(() => mainWindow)
 
-  // Warm the model in the background so the first search is not the slow one,
-  // then rebuild the index if the stored vectors came from a different model.
-  embedder
-    .start()
+  // Model loading, vector migration, and all derived-data backfills form one
+  // readiness boundary. Search and every ingest path wait for the entire chain.
+  indexReadiness
+    .start(initializeSearchIndex)
     .then(async () => {
-      if (!needsReindex()) {
-        // Libraries created before doc_vector existed still need one each.
-        const filled = backfillDocumentVectors()
-        if (filled > 0) console.log(`Backfilled ${filled} document vectors.`)
-        return
-      }
-      console.log('Embedding model changed; rebuilding the index.')
-      const n = await reindexAll(({ done, total }) => {
-        send(CH.evIngestProgress, {
-          jobId: 'reindex',
-          processed: done,
-          total,
-          currentFile: 'Updating search index',
-          done: done >= total
-        } satisfies IngestProgress)
-      })
-      console.log(`Re-embedded ${n} passages.`)
-      backfillDocumentVectors()
-      send(CH.evReindexed, null)
+      const watched = getSetting(WATCHED_FOLDER_KEY)
+      if (watched) await startWatching(watched)
     })
     .catch((err: unknown) => {
-      console.error('Embedder failed to start:', err)
+      console.error('Search index failed to initialize:', err)
     })
-
-  const watched = getSetting(WATCHED_FOLDER_KEY)
-  if (watched) {
-    startWatching(watched).catch((err: unknown) => console.error('Watcher failed:', err))
-  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

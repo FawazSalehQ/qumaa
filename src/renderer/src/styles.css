@@ -13,17 +13,21 @@
   --violet-100: #d3bef1;
   --paper: #f4f1f8;
 
-  /* Applied roles */
-  /* paper against white is only 1.12:1, so cards did not separate from the
-     surface. This deepens the surface while staying inside the paper family. */
-  --bg: #eae4f3;
+  /* Applied roles.
+     Ink-forward, per BRAND.md: violet is for accents and rules, not fields.
+     Surfaces are white and separation comes from hairlines rather than from a
+     tinted background or elevation, which is what keeps a dense table legible. */
+  --bg: #ffffff;
   --bg-chrome: #ffffff;
   --bg-raised: #ffffff;
   --bg-input: #ffffff;
-  --bg-hover: #faf8fc;
+  /* `paper` earns its keep here instead: header strips, hover, zebra. */
+  --bg-hover: var(--paper);
+  --bg-strip: #faf9fc;
 
-  --border: #e4dff0;
-  --border-strong: #cfc6e2;
+  /* Hairlines carry all the structure, so they must read at 1px. */
+  --border: #e2dfe8;
+  --border-strong: #c8c3d4;
 
   --text: var(--ink);
   --text-dim: var(--ink-soft);
@@ -62,13 +66,17 @@
   --s5: 24px;
   --s6: 32px;
 
-  /* Brand icon corner radius is 22% of size; surfaces echo it more gently. */
-  --radius: 12px;
-  --radius-sm: 8px;
+  /* Two values only. The brand tile keeps its 22% curve; UI surfaces stay
+     nearly square, which is what separates an instrument from a consumer app. */
+  --radius: 4px;
+  --radius-sm: 3px;
 
-  --shadow-sm: 0 1px 2px rgba(43, 39, 51, 0.06);
-  --shadow-md: 0 2px 10px rgba(43, 39, 51, 0.08);
-  --shadow-lg: 0 10px 32px rgba(43, 39, 51, 0.15);
+  /* Elevation is deliberately off. Borders do the separating; a field of
+     floating cards is the look this design is moving away from. The panel is
+     the one exception, because it genuinely floats above the page. */
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
   --shadow-panel: -14px 0 44px rgba(43, 39, 51, 0.18);
 }
 
@@ -78,14 +86,15 @@
  * tokens are redefined; the brand values above stay fixed.
  */
 :root[data-theme='dark'] {
-  --bg: #221e29;
-  --bg-chrome: #2b2733;
-  --bg-raised: #322d3b;
-  --bg-input: #2b2733;
-  --bg-hover: #383243;
+  --bg: #1c1922;
+  --bg-chrome: #1c1922;
+  --bg-raised: #1c1922;
+  --bg-input: #232029;
+  --bg-hover: #262230;
+  --bg-strip: #232029;
 
-  --border: #3e3849;
-  --border-strong: #514a5e;
+  --border: #35303f;
+  --border-strong: #4a4356;
 
   --text: #f1eef6;
   --text-dim: #b7b0c4;
@@ -106,9 +115,9 @@
   --warn: #d9a854;
   --warn-soft: #3a3122;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 10px 32px rgba(0, 0, 0, 0.45);
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
   --shadow-panel: -14px 0 44px rgba(0, 0, 0, 0.5);
 }
 
@@ -146,7 +155,7 @@ body {
   color: var(--text);
   font-family: var(--font-latin);
   font-size: var(--fs-base);
-  line-height: 1.55;
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
 }
@@ -159,7 +168,7 @@ button {
 /* One on-brand focus ring everywhere, replacing the OS default. */
 :focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline-offset: 1px;
   border-radius: var(--radius-sm);
 }
 
@@ -445,7 +454,7 @@ textarea {
 
 textarea:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  box-shadow: none;
   outline: none;
 }
 
@@ -467,7 +476,7 @@ input[type='text'] {
 
 input[type='text']:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  box-shadow: none;
   outline: none;
 }
 
@@ -632,13 +641,12 @@ input[type='text']:focus {
   position: relative;
   box-shadow: var(--shadow-md);
   cursor: pointer;
-  transition: transform 0.14s, box-shadow 0.14s, border-color 0.14s;
+  transition: background-color 0.1s, border-color 0.1s;
 }
 
 .candidate:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--accent-border);
+  background: var(--bg-strip);
+  border-color: var(--border-strong);
 }
 
 .candidate.top {
@@ -857,18 +865,20 @@ table {
 
 th {
   text-align: left;
-  color: var(--text-faint);
+  color: var(--text-dim);
   font-weight: 600;
   font-size: var(--fs-xs);
   text-transform: uppercase;
-  padding: var(--s3);
-  border-bottom: 1px solid var(--border);
-  background: var(--bg-chrome);
+  padding: var(--s2) var(--s3);
+  border-bottom: 1px solid var(--border-strong);
+  background: var(--bg-strip);
   position: sticky;
   top: 0;
   z-index: 1;
   font-family: var(--font-mono);
-  letter-spacing: 0.24em;
+  /* The kit's 0.24em tracking is for standalone section labels. At column-header
+     size it smears the word, so headers take a tighter setting. */
+  letter-spacing: 0.08em;
 }
 
 th:first-child {
@@ -880,9 +890,20 @@ th:last-child {
 }
 
 td {
-  padding: var(--s3);
+  padding: var(--s2) var(--s3);
   border-bottom: 1px solid var(--border);
   vertical-align: top;
+}
+
+/* Numerals are data. Mono with tabular figures so a column of scores or years
+   aligns on the digit and can be compared by eye down the page. */
+td.num,
+.score-bar-value,
+.score-ring .val,
+.tab .count {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'zero' 1;
 }
 
 tbody tr:last-child td {
@@ -1215,5 +1236,5 @@ input[type='password'] {
 
 input[type='password']:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  box-shadow: none;
 }
