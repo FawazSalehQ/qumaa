@@ -97,7 +97,7 @@ export async function rerank(opts: RerankOptions): Promise<RerankedResult[]> {
   const client = new Anthropic({ apiKey: opts.apiKey })
 
   const response = await client.messages.parse({
-    model: 'claude-opus-5',
+    model: 'claude-sonnet-5',
     max_tokens: 8000,
     system: SYSTEM,
     thinking: { type: 'adaptive' },
