@@ -6,7 +6,7 @@
  * rather than duplicating logic, so they reuse the same code paths as the buttons.
  *
  * The Edit submenu is not optional decoration: without those roles, Cmd/Ctrl+C
- * and +V stop working in the job description box on macOS.
+ * and +V stop working in the job-posting fields on macOS.
  */
 import { app, dialog, Menu, shell, type BrowserWindow, type MenuItemConstructorOptions } from 'electron'
 import { CH } from '@shared/channels.js'

@@ -1,30 +1,31 @@
 import type { MatchResult, SearchResponse } from '@shared/types.js'
+import { emptyJobPosting, type JobPosting, type JobPostingField } from './jobPosting.js'
 
 export interface ResultSnapshot {
   /** Changes after every accepted search or rerank. */
   key: number
   /** Immutable posting used to produce this response. */
-  posting: string
+  posting: JobPosting
   response: SearchResponse
   reranked: boolean
 }
 
 export interface MatchSession {
-  /** Editable text; never used for an existing result's rerank or export. */
-  draftPosting: string
+  /** Editable fields; never used for an existing result's rerank or export. */
+  draftPosting: JobPosting
   result: ResultSnapshot | null
   editing: boolean
   exported: string | null
   error: string | null
-  pendingSearch: { requestId: number; posting: string } | null
+  pendingSearch: { requestId: number; posting: JobPosting } | null
   pendingRerank: { requestId: number; resultKey: number } | null
 }
 
 export type MatchSessionAction =
-  | { type: 'draft-changed'; posting: string }
+  | { type: 'draft-field-changed'; field: JobPostingField; value: string }
   | { type: 'edit-started' }
   | { type: 'edit-cancelled' }
-  | { type: 'search-started'; requestId: number; posting: string }
+  | { type: 'search-started'; requestId: number; posting: JobPosting }
   | { type: 'search-succeeded'; requestId: number; response: SearchResponse }
   | { type: 'search-failed'; requestId: number; message: string }
   | { type: 'rerank-started'; requestId: number; resultKey: number }
@@ -37,7 +38,7 @@ export type MatchSessionAction =
 
 export function initialMatchSession(): MatchSession {
   return {
-    draftPosting: '',
+    draftPosting: emptyJobPosting(),
     result: null,
     editing: true,
     exported: null,
@@ -62,14 +63,17 @@ export function matchSessionReducer(
   action: MatchSessionAction
 ): MatchSession {
   switch (action.type) {
-    case 'draft-changed':
-      return { ...state, draftPosting: action.posting }
+    case 'draft-field-changed':
+      return {
+        ...state,
+        draftPosting: { ...state.draftPosting, [action.field]: action.value }
+      }
 
     case 'edit-started':
       if (!state.result) return state
       return {
         ...state,
-        draftPosting: state.result.posting,
+        draftPosting: { ...state.result.posting },
         editing: true,
         error: null,
         pendingRerank: null
@@ -79,30 +83,32 @@ export function matchSessionReducer(
       if (!state.result) return state
       return {
         ...state,
-        draftPosting: state.result.posting,
+        draftPosting: { ...state.result.posting },
         editing: false,
         error: null,
         pendingSearch: null,
         pendingRerank: null
       }
 
-    case 'search-started':
+    case 'search-started': {
+      const posting = { ...action.posting }
       return {
         ...state,
         error: null,
-        pendingSearch: { requestId: action.requestId, posting: action.posting },
+        pendingSearch: { requestId: action.requestId, posting },
         pendingRerank: null
       }
+    }
 
     case 'search-succeeded': {
       const pending = state.pendingSearch
       if (!pending || pending.requestId !== action.requestId) return state
       return {
         ...state,
-        draftPosting: pending.posting,
+        draftPosting: { ...pending.posting },
         result: {
           key: action.requestId,
-          posting: pending.posting,
+          posting: { ...pending.posting },
           response: action.response,
           reranked: false
         },

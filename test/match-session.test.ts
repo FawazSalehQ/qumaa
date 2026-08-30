@@ -6,6 +6,7 @@ import {
   matchSessionReducer,
   type MatchSession
 } from '../src/renderer/src/matchSession.js'
+import type { JobPosting } from '../src/renderer/src/jobPosting.js'
 
 function candidate(id: number): MatchResult {
   return {
@@ -41,11 +42,21 @@ function response(...ids: number[]): SearchResponse {
   }
 }
 
-function searched(posting = 'Original posting'): MatchSession {
+function posting(overrides: Partial<JobPosting> = {}): JobPosting {
+  return {
+    position: 'Original position',
+    jobDescription: 'Original description',
+    requirements: 'Original requirements',
+    educationAndCertifications: 'Original education',
+    ...overrides
+  }
+}
+
+function searched(value = posting()): MatchSession {
   const started = matchSessionReducer(initialMatchSession(), {
     type: 'search-started',
     requestId: 1,
-    posting
+    posting: value
   })
   return matchSessionReducer(started, {
     type: 'search-succeeded',
@@ -59,31 +70,32 @@ describe('matchSessionReducer', () => {
     const result = searched()
     const editing = matchSessionReducer(result, { type: 'edit-started' })
     const changed = matchSessionReducer(editing, {
-      type: 'draft-changed',
-      posting: 'Unsubmitted revision'
+      type: 'draft-field-changed',
+      field: 'requirements',
+      value: 'Unsubmitted revision'
     })
 
-    expect(changed.draftPosting).toBe('Unsubmitted revision')
-    expect(changed.result?.posting).toBe('Original posting')
+    expect(changed.draftPosting.requirements).toBe('Unsubmitted revision')
+    expect(changed.result?.posting).toEqual(posting())
     expect(changed.editing).toBe(true)
     expect(displayedResult(changed)).toBeNull()
 
     const cancelled = matchSessionReducer(changed, { type: 'edit-cancelled' })
-    expect(cancelled.draftPosting).toBe('Original posting')
+    expect(cancelled.draftPosting).toEqual(posting())
     expect(cancelled.editing).toBe(false)
-    expect(displayedResult(cancelled)?.posting).toBe('Original posting')
+    expect(displayedResult(cancelled)?.posting).toEqual(posting())
   })
 
   it('ignores a late search after reset or after a newer request starts', () => {
     const first = matchSessionReducer(initialMatchSession(), {
       type: 'search-started',
       requestId: 1,
-      posting: 'First'
+      posting: posting({ position: 'First' })
     })
     const second = matchSessionReducer(first, {
       type: 'search-started',
       requestId: 2,
-      posting: 'Second'
+      posting: posting({ position: 'Second' })
     })
     const lateFirst = matchSessionReducer(second, {
       type: 'search-succeeded',
@@ -135,7 +147,7 @@ describe('matchSessionReducer', () => {
     })
 
     expect(reranked.result?.key).toBe(2)
-    expect(reranked.result?.posting).toBe('Original posting')
+    expect(reranked.result?.posting).toEqual(posting())
     expect(reranked.result?.reranked).toBe(true)
 
     const staleExport = matchSessionReducer(reranked, {
@@ -148,14 +160,42 @@ describe('matchSessionReducer', () => {
   })
 
   it('invalidates cards and pending work while preserving the draft for a fresh search', () => {
-    const local = searched('Keep this posting')
+    const draft = posting({ position: 'Keep this position' })
+    const local = searched(draft)
     const invalidated = matchSessionReducer(local, { type: 'results-invalidated' })
 
     expect(invalidated.result).toBeNull()
     expect(invalidated.pendingSearch).toBeNull()
     expect(invalidated.pendingRerank).toBeNull()
     expect(invalidated.exported).toBeNull()
-    expect(invalidated.draftPosting).toBe('Keep this posting')
+    expect(invalidated.draftPosting).toEqual(draft)
     expect(invalidated.editing).toBe(true)
+  })
+
+  it('copies postings at async and result boundaries so later edits cannot leak', () => {
+    const submitted = posting()
+    const started = matchSessionReducer(initialMatchSession(), {
+      type: 'search-started',
+      requestId: 1,
+      posting: submitted
+    })
+
+    submitted.position = 'Mutated outside the reducer'
+    expect(started.pendingSearch?.posting.position).toBe('Original position')
+
+    const changed = matchSessionReducer(started, {
+      type: 'draft-field-changed',
+      field: 'educationAndCertifications',
+      value: 'Unsaved education edit'
+    })
+    const completed = matchSessionReducer(changed, {
+      type: 'search-succeeded',
+      requestId: 1,
+      response: response(1)
+    })
+
+    expect(completed.result?.posting).toEqual(posting())
+    expect(completed.draftPosting).toEqual(posting())
+    expect(completed.result?.posting).not.toBe(completed.draftPosting)
   })
 })

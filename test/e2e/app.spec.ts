@@ -55,27 +55,46 @@ Training, coaching, facilitation, SOPs, food safety, restaurant operations`)
   await expect(page.getByText('Taylor Morgan', { exact: true }).first()).toBeVisible()
   await page.getByRole('button', { name: 'Match', exact: true }).click()
 
-  const originalPosting = `Restaurant Training Manager
+  const originalPosting = {
+    position: 'Restaurant Training Manager',
+    jobDescription: 'Lead training and onboarding programs across a multi-branch restaurant group.',
+    requirements: `Design onboarding and staff training programs
+Coach restaurant teams across multiple branches
+Maintain SOPs and food-safety standards`,
+    education: 'Food-safety trainer certification preferred'
+  }
 
-Requirements:
-- Design onboarding and staff training programs
-- Coach restaurant teams across multiple branches
-- Maintain SOPs and food-safety standards`
-
-  await page.getByPlaceholder('Paste the job description').fill(originalPosting)
+  await expect(page.getByRole('button', { name: 'Find matches' })).toBeDisabled()
+  await page.getByLabel('Position').fill(originalPosting.position)
+  await page.getByLabel('Job Description').fill(originalPosting.jobDescription)
+  await page.getByLabel('Requirements').fill(originalPosting.requirements)
+  await page.getByLabel('Education and Certifications').fill(originalPosting.education)
   await page.getByRole('button', { name: 'Find matches' }).click()
   await expect(page.getByRole('button', { name: 'Open details for Taylor Morgan' })).toBeVisible()
 
   await page.getByRole('button', { name: /Restaurant Training Manager/ }).click()
-  await page.getByPlaceholder('Paste the job description').fill('A different unsaved posting')
+  await page.getByLabel('Position').fill('A different unsaved position')
+  await page.getByLabel('Job Description').fill('A different unsaved description')
+  await page.getByLabel('Requirements').fill('Different unsaved requirements')
+  await page.getByLabel('Education and Certifications').fill('Different unsaved education')
   await page.getByRole('button', { name: 'Cancel' }).click()
   await expect(page.getByRole('button', { name: /Restaurant Training Manager/ })).toBeVisible()
-  await expect(page.getByText('A different unsaved posting')).toHaveCount(0)
+  await expect(page.getByText('A different unsaved position')).toHaveCount(0)
+
+  await page.getByRole('button', { name: /Restaurant Training Manager/ }).click()
+  await expect(page.getByLabel('Position')).toHaveValue(originalPosting.position)
+  await expect(page.getByLabel('Job Description')).toHaveValue(originalPosting.jobDescription)
+  await expect(page.getByLabel('Requirements')).toHaveValue(originalPosting.requirements)
+  await expect(page.getByLabel('Education and Certifications')).toHaveValue(originalPosting.education)
+  await page.getByRole('button', { name: 'Cancel' }).click()
 
   await page.getByRole('button', { name: 'Open details for Taylor Morgan' }).click()
   await page.locator('.detail-foot').getByRole('button', { name: 'Delete' }).click()
 
-  await expect(page.getByPlaceholder('Paste the job description')).toBeVisible()
+  await expect(page.getByLabel('Position')).toHaveValue(originalPosting.position)
+  await expect(page.getByLabel('Job Description')).toHaveValue(originalPosting.jobDescription)
+  await expect(page.getByLabel('Requirements')).toHaveValue(originalPosting.requirements)
+  await expect(page.getByLabel('Education and Certifications')).toHaveValue(originalPosting.education)
   await expect(page.getByRole('button', { name: 'Open details for Taylor Morgan' })).toHaveCount(0)
   await expect(page.getByText(/Import some resumes first/)).toBeVisible()
 })

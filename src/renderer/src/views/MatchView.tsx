@@ -2,13 +2,12 @@ import { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react'
 import type { MatchResult } from '@shared/types.js'
 import CandidateCard from '../components/CandidateCard.js'
 import { QumaaMark } from '../components/Brand.js'
+import {
+  formatJobPosting,
+  hasJobPostingContent,
+  jobPostingTitle
+} from '../jobPosting.js'
 import { displayedResult, initialMatchSession, matchSessionReducer } from '../matchSession.js'
-
-/** First non-empty line of the posting, used as its label once collapsed. */
-function postingTitle(jd: string): string {
-  const line = jd.split('\n').map((l) => l.trim()).find(Boolean) ?? 'Job description'
-  return line.length > 80 ? `${line.slice(0, 80)}…` : line
-}
 
 interface Props {
   resumeCount: number
@@ -32,11 +31,12 @@ export default function MatchView({
   const [session, dispatch] = useReducer(matchSessionReducer, undefined, initialMatchSession)
   // Off unless the user has both stored a key and switched reranking on.
   const [rerankAvailable, setRerankAvailable] = useState(false)
-  const areaRef = useRef<HTMLTextAreaElement>(null)
+  const positionRef = useRef<HTMLInputElement>(null)
   const nextRequestId = useRef(0)
   const previousLibraryRevision = useRef(libraryRevision)
 
-  const jd = session.draftPosting
+  const posting = session.draftPosting
+  const canSearch = hasJobPostingContent(posting)
   const busy = session.pendingSearch !== null
   const reranking = session.pendingRerank !== null
   // Results stay stored while the user edits so Cancel can restore them, but
@@ -55,7 +55,7 @@ export default function MatchView({
     dispatch({ type: 'rerank-started', requestId, resultKey: source.key })
     try {
       const ordered = await window.api.search.rerank({
-        jobDescription: source.posting,
+        jobDescription: formatJobPosting(source.posting),
         results: source.response.results
       })
       dispatch({ type: 'rerank-succeeded', requestId, results: ordered })
@@ -67,7 +67,7 @@ export default function MatchView({
   useLayoutEffect(() => {
     if (resetSignal === 0) return
     dispatch({ type: 'reset' })
-    const frame = requestAnimationFrame(() => areaRef.current?.focus())
+    const frame = requestAnimationFrame(() => positionRef.current?.focus())
     return () => cancelAnimationFrame(frame)
   }, [resetSignal])
 
@@ -83,12 +83,12 @@ export default function MatchView({
   const run = async (): Promise<void> => {
     // resumeCount is checked here too, not just on the button: the Cmd+Enter
     // shortcut would otherwise run a search the disabled button forbids.
-    if (!jd.trim() || busy || resumeCount === 0) return
+    if (!canSearch || busy || resumeCount === 0) return
     const requestId = ++nextRequestId.current
-    const posting = jd
-    dispatch({ type: 'search-started', requestId, posting })
+    const submittedPosting = { ...posting }
+    dispatch({ type: 'search-started', requestId, posting: submittedPosting })
     try {
-      const response = await window.api.search.run(posting)
+      const response = await window.api.search.run(formatJobPosting(submittedPosting))
       dispatch({ type: 'search-succeeded', requestId, response })
     } catch (err) {
       dispatch({ type: 'search-failed', requestId, message: errorMessage(err, 'Search failed') })
@@ -111,11 +111,13 @@ export default function MatchView({
           className="posting-bar"
           onClick={() => {
             dispatch({ type: 'edit-started' })
-            requestAnimationFrame(() => areaRef.current?.focus())
+            requestAnimationFrame(() => positionRef.current?.focus())
           }}
         >
           <QumaaMark size={16} tone="color" />
-          <span className="posting-title">{postingTitle(snapshot.posting)}</span>
+          <span className="posting-title" dir="auto">
+            {jobPostingTitle(snapshot.posting)}
+          </span>
           <span className="muted">
             {snapshot.response.requiredSkills.length} skill
             {snapshot.response.requiredSkills.length === 1 ? '' : 's'} detected
@@ -124,42 +126,127 @@ export default function MatchView({
           <span className="posting-edit">Edit</span>
         </button>
       ) : (
-        <>
-          <textarea
-            ref={areaRef}
-            rows={10}
-            value={jd}
-            placeholder="Paste the job description"
-            disabled={busy}
-            onChange={(e) => dispatch({ type: 'draft-changed', posting: e.target.value })}
-            onKeyDown={(e) => {
-              if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') run()
-            }}
-          />
+        <form
+          className="posting-form"
+          onSubmit={(e) => {
+            e.preventDefault()
+            void run()
+          }}
+          onKeyDown={(e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+              e.preventDefault()
+              void run()
+            }
+          }}
+        >
+          <fieldset className="posting-fields" disabled={busy}>
+            <div className="posting-field">
+              <label htmlFor="match-position">Position</label>
+              <input
+                ref={positionRef}
+                id="match-position"
+                type="text"
+                dir="auto"
+                value={posting.position}
+                placeholder="e.g. Senior Accountant"
+                onChange={(e) =>
+                  dispatch({
+                    type: 'draft-field-changed',
+                    field: 'position',
+                    value: e.target.value
+                  })
+                }
+              />
+            </div>
+
+            <div className="posting-field">
+              <label htmlFor="match-description">Job Description</label>
+              <textarea
+                id="match-description"
+                rows={6}
+                dir="auto"
+                value={posting.jobDescription}
+                placeholder="Describe the role and its responsibilities"
+                onChange={(e) =>
+                  dispatch({
+                    type: 'draft-field-changed',
+                    field: 'jobDescription',
+                    value: e.target.value
+                  })
+                }
+              />
+            </div>
+
+            <div className="posting-field">
+              <label htmlFor="match-requirements">Requirements</label>
+              <textarea
+                id="match-requirements"
+                rows={5}
+                dir="auto"
+                value={posting.requirements}
+                placeholder="List required skills and experience, one item per line"
+                onChange={(e) =>
+                  dispatch({
+                    type: 'draft-field-changed',
+                    field: 'requirements',
+                    value: e.target.value
+                  })
+                }
+              />
+            </div>
+
+            <div className="posting-field">
+              <label htmlFor="match-education">Education and Certifications</label>
+              <textarea
+                id="match-education"
+                rows={4}
+                dir="auto"
+                value={posting.educationAndCertifications}
+                placeholder="List required degrees, licenses, and certifications"
+                onChange={(e) =>
+                  dispatch({
+                    type: 'draft-field-changed',
+                    field: 'educationAndCertifications',
+                    value: e.target.value
+                  })
+                }
+              />
+            </div>
+          </fieldset>
 
           <div className="row toolbar">
             <button
+              type="submit"
               className="btn primary"
-              onClick={run}
-              disabled={busy || !jd.trim() || resumeCount === 0}
+              disabled={busy || !canSearch || resumeCount === 0}
             >
               {busy ? 'Searching…' : 'Find matches'}
             </button>
             {session.result && (
-              <button className="btn" onClick={() => dispatch({ type: 'edit-cancelled' })}>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => dispatch({ type: 'edit-cancelled' })}
+              >
                 Cancel
               </button>
             )}
             <span className="muted">
               {resumeCount === 0
                 ? 'Import some resumes first by dragging them anywhere onto this window.'
-                : `Searching ${resumeCount} resume${resumeCount === 1 ? '' : 's'} · ⌘↵`}
+                : `Searching ${resumeCount} resume${resumeCount === 1 ? '' : 's'} · ${
+                    window.api.platform === 'darwin' ? '⌘↵' : 'Ctrl+Enter'
+                  }`}
             </span>
           </div>
-        </>
+        </form>
       )}
 
-      {session.error && <div className="card error-card">{session.error}</div>}
+      {session.error && (
+        <div className="card error-card" role="alert">
+          {session.error}
+        </div>
+      )}
 
       {res && snapshot && (
         <div className="results">
@@ -174,7 +261,7 @@ export default function MatchView({
                 className="btn sm"
                 onClick={runRerank}
                 disabled={reranking || top.length === 0}
-                title="Sends the posting and the top candidates' matching passages to Anthropic"
+                title="Sends the posting fields and the top candidates' matching passages to Anthropic"
               >
                 {reranking ? 'Reranking…' : 'Rerank with Claude'}
               </button>
@@ -187,7 +274,7 @@ export default function MatchView({
                 const source = snapshot
                 try {
                   const path = await window.api.search.exportPdf({
-                    jobTitle: postingTitle(source.posting),
+                    jobTitle: jobPostingTitle(source.posting),
                     requiredSkills: source.response.requiredSkills,
                     results: source.response.results.slice(0, 3)
                   })

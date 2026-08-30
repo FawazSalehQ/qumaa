@@ -480,6 +480,53 @@ input[type='text']:focus {
   outline: none;
 }
 
+/* ---------- structured job posting ---------- */
+
+.posting-form {
+  display: grid;
+  gap: var(--s4);
+}
+
+.posting-fields {
+  display: grid;
+  gap: var(--s4);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.posting-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.posting-field label {
+  color: var(--text);
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.posting-field input[type='text'],
+.posting-field textarea {
+  width: 100%;
+  text-align: start;
+}
+
+/* The generic focus rules above remove the OS outline. Restore the branded
+   keyboard focus treatment after them for every posting field. */
+.posting-field input[type='text']:focus-visible,
+.posting-field textarea:focus-visible {
+  border-color: var(--accent);
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.posting-form .toolbar {
+  margin-bottom: 0;
+}
+
 /* ---------- collapsed job description ---------- */
 
 .posting-bar {
@@ -510,10 +557,12 @@ input[type='text']:focus {
 }
 
 .posting-title {
+  min-width: 0;
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: start;
 }
 
 .posting-edit {
