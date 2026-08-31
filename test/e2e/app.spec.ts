@@ -53,6 +53,10 @@ Training, coaching, facilitation, SOPs, food safety, restaurant operations`)
   await page.getByRole('button', { name: 'Add to library' }).click()
 
   await expect(page.getByText('Taylor Morgan', { exact: true }).first()).toBeVisible()
+  const addedToast = page.locator('.toast.success').filter({ hasText: 'Added Taylor Morgan' })
+  await expect(addedToast).toBeVisible()
+  await addedToast.click()
+  await expect(addedToast).toHaveCount(0)
   await page.getByRole('button', { name: 'Match', exact: true }).click()
 
   const originalPosting = {
