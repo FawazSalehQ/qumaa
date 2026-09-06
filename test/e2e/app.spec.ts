@@ -270,6 +270,18 @@ test('exposes the hardened renderer boundary', async () => {
 })
 
 test('shows the exact redacted Claude request in a keyboard-contained consent dialog', async () => {
+  // This test exercises the consent UI, then cancels before any request. An
+  // ad-hoc packaged app or CI runner may have no unlocked OS credential store.
+  // Keep only this process's synthetic fixture independent of host Keychain;
+  // production secret handling and its fail-closed paths have separate tests.
+  await application.evaluate(({ safeStorage }) => {
+    safeStorage.isEncryptionAvailable = () => true
+    safeStorage.encryptString = (value: string) => {
+      if (value !== 'sk-ant-api03-e2e-placeholder') throw new Error('Unexpected consent-test credential')
+      return Buffer.from('opaque-consent-ui-fixture')
+    }
+    safeStorage.decryptString = () => { throw new Error('The consent UI test must never send a request') }
+  })
   await page.evaluate(async () => {
     await window.api.ingest.text(
       `Private Candidate One\none@example.com\n+966 50 111 2233\n\nWORK EXPERIENCE\nSenior engineer from 2019 to 2025. Led a TypeScript platform migration, coached developers, and operated reliable cloud services.\n\nSKILLS\nTypeScript, AWS`,
