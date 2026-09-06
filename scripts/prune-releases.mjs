@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /** Remove superseded local installers only after the selected platform has a replacement. */
 import { lstatSync, readFileSync, readdirSync, unlinkSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
