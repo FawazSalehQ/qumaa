@@ -1,9 +1,5 @@
-export interface JobPosting {
-  position: string
-  jobDescription: string
-  requirements: string
-  educationAndCertifications: string
-}
+import type { JobPosting } from '@shared/recruiting.js'
+export type { JobPosting } from '@shared/recruiting.js'
 
 export type JobPostingField = keyof JobPosting
 

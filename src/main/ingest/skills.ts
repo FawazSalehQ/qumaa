@@ -95,5 +95,3 @@ export function extractSkills(text: string): string[] {
   }
   return found
 }
-
-export const SKILL_COUNT = SKILLS.length

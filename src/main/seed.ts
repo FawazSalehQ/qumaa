@@ -35,7 +35,7 @@ async function run(): Promise<void> {
     const name = fixture.text.split('\n')[0].trim()
     const o = await ingestText({
       text: fixture.text,
-      fileName: `${name.toLowerCase().replace(/\s+/g, '-')}.txt`,
+      fileName: `${name.toLowerCase().replace(/\s+/g, '-')}.md`,
       filePath: '',
       fileType: 'pasted'
     })
@@ -46,12 +46,19 @@ async function run(): Promise<void> {
   console.log(`\nLibrary now holds ${s.resumeCount} resumes / ${s.chunkCount} chunks.`)
 }
 
-app.whenReady().then(async () => {
-  try {
-    await run()
-    app.exit(0)
-  } catch (err) {
-    console.error(err)
-    app.exit(1)
-  }
-})
+// The real library shares Qumaa's instance lock, including while restore or
+// deletion is in progress. Acquire it before loading any database/ingest code.
+if (!app.requestSingleInstanceLock()) {
+  console.error('Cannot seed while Qumaa or another seeder is running. Close it and retry.')
+  app.exit(1)
+} else {
+  app.whenReady().then(async () => {
+    try {
+      await run()
+      app.exit(0)
+    } catch (err) {
+      console.error(err)
+      app.exit(1)
+    }
+  })
+}

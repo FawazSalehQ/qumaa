@@ -1,6 +1,6 @@
 {
   "name": "cv-filter",
-  "version": "0.1.0-beta.1",
+  "version": "0.1.0-beta.2",
   "description": "Local-first resume matching desktop app",
   "main": "./out/main/index.js",
   "author": "Fawaz Alqahtani",
@@ -11,15 +11,16 @@
   },
   "scripts": {
     "fetch-model": "node scripts/fetch-model.mjs",
+    "verify-model": "node scripts/fetch-model.mjs --verify-only",
     "make-icon": "node scripts/make-icon.mjs",
     "make-notices": "node scripts/make-notices.mjs",
     "dev": "electron-vite dev",
     "build": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json && electron-vite build",
     "start": "electron-vite preview",
-    "build:mac": "npm run make-icon && npm run make-notices && npm run build && electron-builder --mac --arm64",
-    "build:win": "node scripts/fetch-win-deps.mjs && npm run make-icon && npm run make-notices && npm run build && electron-builder --win --x64",
-    "package:dir:mac": "npm run make-icon && npm run make-notices && npm run build && electron-builder --mac --arm64 --dir",
-    "package:dir:win": "npm run make-icon && npm run make-notices && npm run build && electron-builder --win --x64 --dir",
+    "build:mac": "npm run verify-model && npm run make-icon && npm run make-notices && npm run build && electron-builder --mac --arm64",
+    "build:win": "npm run verify-model && node scripts/fetch-win-deps.mjs && npm run make-icon && npm run make-notices && npm run build && electron-builder --win --x64",
+    "package:dir:mac": "npm run verify-model && npm run make-icon && npm run make-notices && npm run build && electron-builder --mac --arm64 --dir",
+    "package:dir:win": "npm run verify-model && node scripts/fetch-win-deps.mjs && npm run make-icon && npm run make-notices && npm run build && electron-builder --win --x64 --dir",
     "postinstall": "electron-builder install-app-deps",
     "seed": "npm run build && electron out/main/seed.js",
     "bench": "npm run build && electron out/main/bench.js",
@@ -29,7 +30,7 @@
     "test:watch": "vitest",
     "test:ui": "npm run build && playwright test",
     "test:ui:built": "playwright test",
-    "verify": "npm test && npm run smoke && npm run test:ui:built"
+    "verify": "npm run verify-model && npm test && npm run smoke && npm run test:ui:built"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

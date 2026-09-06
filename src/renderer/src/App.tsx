@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { MatchResult, IngestOutcome, IngestProgress, ResumeSummary } from '@shared/types.js'
 import MatchView from './views/MatchView.js'
+import JobsView from './views/JobsView.js'
 import LibraryView from './views/LibraryView.js'
 import SettingsView from './views/SettingsView.js'
 import Toasts, { type Toast } from './components/Toasts.js'
@@ -8,7 +9,7 @@ import { useTheme } from './useTheme.js'
 import ResumeDetail from './components/ResumeDetail.js'
 import { Brand } from './components/Brand.js'
 
-type Tab = 'match' | 'library' | 'settings'
+type Tab = 'jobs' | 'match' | 'library' | 'settings'
 
 /** Which candidate the slide-over is showing, and its match context if any. */
 interface Selection {
@@ -60,7 +61,7 @@ function summarize(outcomes: IngestOutcome[]): Toast[] {
 }
 
 export default function App(): React.JSX.Element {
-  const [tab, setTab] = useState<Tab>('match')
+  const [tab, setTab] = useState<Tab>('jobs')
   const [resumes, setResumes] = useState<ResumeSummary[]>([])
   const [progress, setProgress] = useState<IngestProgress | null>(null)
   const [dragging, setDragging] = useState(false)
@@ -68,16 +69,23 @@ export default function App(): React.JSX.Element {
   const [selected, setSelected] = useState<Selection | null>(null)
   const [resetSignal, setResetSignal] = useState(0)
   const [libraryRevision, setLibraryRevision] = useState(0)
+  const [profileRevision, setProfileRevision] = useState(0)
+  const [workspaceEpoch, setWorkspaceEpoch] = useState(0)
   /** Nested dragenter/dragleave events fire constantly; count them instead of
    *  toggling, or the overlay flickers as the cursor crosses child elements. */
   const dragDepth = useRef(0)
   /** Tracks ingest jobs so matches are invalidated at their boundaries, not per file. */
   const invalidatedIngestJobs = useRef(new Set<string>())
-  // Applies the stored theme to the document root and keeps following the OS.
-  useTheme()
+  // One owner applies the stored theme and follows the OS. Passing its state to
+  // Settings avoids mounting a second, potentially stale system-theme listener.
+  const { theme, setTheme } = useTheme()
 
   const pushToasts = useCallback((next: Toast[]) => {
     setToasts((prev) => [...prev, ...next])
+  }, [])
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts((current) => current.filter((toast) => toast.id !== id))
   }, [])
 
   const refresh = useCallback(async () => {
@@ -137,10 +145,10 @@ export default function App(): React.JSX.Element {
     }
   }, [invalidateMatches, refresh, refreshAfterLibraryChange, pushToasts])
 
-  const ingestPaths = useCallback(
-    async (paths: string[]) => {
-      if (paths.length === 0) return
-      const outcomes = await window.api.ingest.files(paths)
+  const ingestDroppedFiles = useCallback(
+    async (files: File[]) => {
+      if (files.length === 0) return
+      const outcomes = await window.api.ingest.files(files)
       pushToasts(summarize(outcomes))
       await refresh()
     },
@@ -150,22 +158,30 @@ export default function App(): React.JSX.Element {
   const importViaDialog = useCallback(
     async (kind: 'files' | 'folder') => {
       if (kind === 'files') {
-        await ingestPaths(await window.api.ingest.pickFiles())
+        const outcomes = await window.api.ingest.pickFiles()
+        pushToasts(summarize(outcomes))
+        await refresh()
         return
       }
-      const folder = await window.api.ingest.pickFolder()
-      if (!folder) return
-      pushToasts(summarize(await window.api.ingest.folder(folder)))
+      pushToasts(summarize(await window.api.ingest.folder()))
       await refresh()
     },
-    [ingestPaths, pushToasts, refresh]
+    [pushToasts, refresh]
   )
+
+  const handleSettingsChanged = useCallback(async (resetWorkspace = false) => {
+    if (resetWorkspace) setWorkspaceEpoch((epoch) => epoch + 1)
+    await refreshAfterLibraryChange()
+  }, [refreshAfterLibraryChange])
 
   /* ---------- menu commands ---------- */
 
   useEffect(() => {
     return window.api.on.menuCommand((command) => {
       switch (command) {
+        case 'goto-jobs':
+          setTab('jobs')
+          break
         case 'new-search':
           setTab('match')
           setSelected(null)
@@ -211,7 +227,7 @@ export default function App(): React.JSX.Element {
       setDragging(false)
       const files = Array.from(e.dataTransfer?.files ?? [])
       // File.path was removed in Electron 32; the preload resolves paths via webUtils.
-      ingestPaths(files.map((f) => window.api.ingest.pathForFile(f)).filter(Boolean))
+      ingestDroppedFiles(files)
     }
 
     window.addEventListener('dragenter', onDragEnter)
@@ -224,7 +240,7 @@ export default function App(): React.JSX.Element {
       window.removeEventListener('dragleave', onDragLeave)
       window.removeEventListener('drop', onDrop)
     }
-  }, [ingestPaths])
+  }, [ingestDroppedFiles])
 
   return (
     <div className="app">
@@ -233,6 +249,13 @@ export default function App(): React.JSX.Element {
       <header className={`topbar ${window.api.platform === 'darwin' ? 'draggable' : ''}`}>
         <Brand />
         <nav className="tabs">
+          <button
+            className={`tab ${tab === 'jobs' ? 'active' : ''}`}
+            onClick={() => setTab('jobs')}
+            aria-current={tab === 'jobs' ? 'page' : undefined}
+          >
+            Jobs
+          </button>
           <button
             className={`tab ${tab === 'match' ? 'active' : ''}`}
             onClick={() => setTab('match')}
@@ -270,6 +293,15 @@ export default function App(): React.JSX.Element {
           </div>
         )}
 
+        <div hidden={tab !== 'jobs'}>
+          <JobsView
+            key={workspaceEpoch}
+            resumes={resumes}
+            libraryRevision={libraryRevision + profileRevision}
+            onOpenCandidate={(m) => setSelected({ resume: m.resume, match: m })}
+            onToast={pushToasts}
+          />
+        </div>
         {tab === 'match' && (
           <MatchView
             resumeCount={resumes.length}
@@ -281,22 +313,29 @@ export default function App(): React.JSX.Element {
         {tab === 'library' && (
           <LibraryView
             resumes={resumes}
+            profileRevision={profileRevision}
             onChanged={refreshAfterLibraryChange}
-            onIngestPaths={ingestPaths}
+            onImport={importViaDialog}
             onToast={pushToasts}
             onOpenResume={(r) => setSelected({ resume: r })}
           />
         )}
         {tab === 'settings' && (
-          <SettingsView onToast={pushToasts} onChanged={refreshAfterLibraryChange} />
+          <SettingsView
+            theme={theme}
+            onThemeChange={setTheme}
+            onToast={pushToasts}
+            onChanged={handleSettingsChanged}
+          />
         )}
       </main>
 
       {selected && (
         <ResumeDetail
-          key={selected.resume.id}
+          key={`${selected.resume.id}:${selected.resume.recordKey}`}
           resume={selected.resume}
           match={selected.match}
+          onProfileChanged={() => setProfileRevision((revision) => revision + 1)}
           onClose={() => setSelected(null)}
           onDeleted={() => {
             refreshAfterLibraryChange()
@@ -307,11 +346,11 @@ export default function App(): React.JSX.Element {
       {dragging && (
         <div className="drop-overlay">
           <div>Drop resumes to import</div>
-          <div className="hint">PDF, DOCX, TXT or Markdown</div>
+          <div className="hint">PDF, DOCX or Markdown</div>
         </div>
       )}
 
-      <Toasts toasts={toasts} onDismiss={(id) => setToasts((t) => t.filter((x) => x.id !== id))} />
+      <Toasts toasts={toasts} onDismiss={dismissToast} />
     </div>
   )
 }

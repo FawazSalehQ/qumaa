@@ -3,25 +3,34 @@
  * and pasted text all funnel through `ingestText`, so dedupe and field extraction
  * behave identically no matter how a resume arrived.
  */
-import { createHash } from 'node:crypto'
 import { basename } from 'node:path'
-import { readdir, stat } from 'node:fs/promises'
-import type { Dirent } from 'node:fs'
+import { opendir } from 'node:fs/promises'
+import type { Dir } from 'node:fs'
 import { join } from 'node:path'
-import { getDb, findByHash, rowToSummary, vectorToBlob, type ResumeRow } from '../db/index.js'
+import {
+  getDb,
+  findByHash,
+  recordResumeInserted,
+  RESUME_ROW_COLUMNS,
+  resumeCapacityError,
+  rowToSummary,
+  vectorToBlob,
+  type ResumeRow
+} from '../db/index.js'
 import { embedder } from '../embed/client.js'
 import { documentVector, findNearDuplicate } from './duplicates.js'
-import { extractFile, isSupported, type Extracted } from './extract.js'
-import { normalizeText, flatten } from './normalize.js'
-import { splitSections } from './sections.js'
-import { chunkSections } from './chunk.js'
-import { extractFields } from './fields.js'
+import {
+  extractFile,
+  extractValidatedFile,
+  isSupported,
+  MAX_EXTRACTED_TEXT_CHARS,
+  type Extracted
+} from './extract.js'
+import type { ValidatedFileSource } from './source-file.js'
+import { deriveResumeText } from './derive.js'
+import { DATABASE_LIMITS } from '../db/migrations.js'
 import { SKILL_GAZETTEER_VERSION } from './skills-backfill-plan.js'
-import type { FileType, IngestOutcome } from '@shared/types.js'
-
-function hashText(text: string): string {
-  return createHash('sha256').update(flatten(text)).digest('hex')
-}
+import type { IngestOutcome } from '@shared/types.js'
 
 /**
  * Ingests already-extracted text. Returns `duplicate` without touching the model
@@ -32,27 +41,56 @@ export async function ingestText(args: {
   text: string
   fileName: string
   filePath: string
-  fileType: FileType
-  likelyScanned?: boolean
+  fileType: Extracted['fileType'] | 'pasted'
 }): Promise<IngestOutcome> {
-  const normalized = normalizeText(args.text)
-  if (!normalized.trim()) {
-    return { status: 'failed', fileName: args.fileName, reason: 'No text could be extracted' }
+  if (
+    args.filePath.length > DATABASE_LIMITS.filePathChars ||
+    args.filePath.includes('\0') ||
+    args.fileName.length === 0 ||
+    args.fileName.length > DATABASE_LIMITS.labelChars ||
+    /[\u0000-\u001f\u007f]/.test(args.fileName)
+  ) {
+    return {
+      status: 'failed',
+      fileName:
+        args.fileName.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, DATABASE_LIMITS.labelChars) ||
+        'Resume',
+      reason: 'Resume source path or filename exceeds Qumaa\'s safety limit or contains control characters.'
+    }
+  }
+  if (args.text.length > MAX_EXTRACTED_TEXT_CHARS) {
+    return {
+      status: 'failed',
+      fileName: args.fileName,
+      reason: 'Resume text exceeds Qumaa\'s 500,000 character safety limit.'
+    }
+  }
+  let derived: ReturnType<typeof deriveResumeText>
+  try {
+    derived = deriveResumeText(args.text)
+  } catch (error) {
+    return {
+      status: 'failed',
+      fileName: args.fileName,
+      reason: error instanceof Error ? error.message : 'Could not process resume text'
+    }
   }
 
-  const hash = hashText(normalized)
+  const { normalized, contentHash: hash, chunks, fields } = derived
   const existing = findByHash(hash)
   if (existing) {
     return { status: 'duplicate', fileName: args.fileName, existingId: existing.id }
   }
-
-  const sections = splitSections(normalized)
-  const chunks = chunkSections(sections)
-  if (chunks.length === 0) {
-    return { status: 'failed', fileName: args.fileName, reason: 'Document too short to index' }
+  const chunkTextChars = chunks.reduce((total, chunk) => total + chunk.text.length, 0)
+  const initialCapacityError = resumeCapacityError(
+    normalized.length,
+    chunks.length,
+    chunkTextChars
+  )
+  if (initialCapacityError) {
+    return { status: 'failed', fileName: args.fileName, reason: initialCapacityError }
   }
 
-  const fields = extractFields(normalized, sections)
   const vectors = await embedder.embedPassages(chunks.map((c) => c.text))
 
   // Checked before insert so the new resume cannot match itself.
@@ -66,15 +104,22 @@ export async function ingestText(args: {
   const db = getDb()
   // One transaction: a resume is never half-indexed, so a crash mid-import
   // cannot leave a row whose chunks are missing from search.
-  const insert = db.transaction(() => {
+  const insert = db.transaction((): number | string => {
+    const capacityError = resumeCapacityError(
+      normalized.length,
+      chunks.length,
+      chunkTextChars
+    )
+    if (capacityError) return capacityError
+
     const res = db
       .prepare(
         `INSERT INTO resumes (file_path, file_name, content_hash, file_type, imported_at, raw_text,
                               name, email, phone, location, years_experience, education_level,
-                              skills_json, skills_version, likely_scanned, doc_vector)
+                              skills_json, skills_version, doc_vector)
          VALUES (@file_path, @file_name, @content_hash, @file_type, @imported_at, @raw_text,
                  @name, @email, @phone, @location, @years_experience, @education_level,
-                 @skills_json, @skills_version, @likely_scanned, @doc_vector)`
+                 @skills_json, @skills_version, @doc_vector)`
       )
       .run({
         file_path: args.filePath,
@@ -91,7 +136,6 @@ export async function ingestText(args: {
         education_level: fields.educationLevel,
         skills_json: JSON.stringify(fields.skills),
         skills_version: SKILL_GAZETTEER_VERSION,
-        likely_scanned: args.likelyScanned ? 1 : 0,
         doc_vector: vectorToBlob(docVector)
       })
 
@@ -105,23 +149,35 @@ export async function ingestText(args: {
     return resumeId
   })
 
-  const id = insert()
-  const row = db.prepare('SELECT * FROM resumes WHERE id = ?').get(id) as ResumeRow
+  const inserted = insert()
+  if (typeof inserted === 'string') {
+    return { status: 'failed', fileName: args.fileName, reason: inserted }
+  }
+  const id = inserted
+  recordResumeInserted(normalized.length, chunks.length, chunkTextChars)
+  const row = db
+    .prepare(`SELECT ${RESUME_ROW_COLUMNS} FROM resumes WHERE id = ?`)
+    .get(id) as ResumeRow
   const resume = rowToSummary(row)
   // Imported either way: the user decides whether a near-duplicate is a second
   // application or a genuinely different person.
   return similarTo ? { status: 'near-duplicate', resume, similarTo } : { status: 'imported', resume }
 }
 
-export async function ingestFile(path: string): Promise<IngestOutcome> {
+async function ingestFileSource(
+  path: string,
+  validatedSource?: ValidatedFileSource
+): Promise<IngestOutcome> {
   const fileName = basename(path)
   if (!isSupported(path)) {
-    return { status: 'unsupported', fileName, reason: 'Only PDF, DOCX, TXT and MD are supported' }
+    return { status: 'unsupported', fileName, reason: 'Only PDF, DOCX and Markdown are supported' }
   }
 
   let extracted: Extracted
   try {
-    extracted = await extractFile(path)
+    extracted = validatedSource
+      ? await extractValidatedFile(validatedSource)
+      : await extractFile(path)
   } catch (err) {
     return {
       status: 'failed',
@@ -142,36 +198,56 @@ export async function ingestFile(path: string): Promise<IngestOutcome> {
     text: extracted.text,
     fileName,
     filePath: path,
-    fileType: extracted.fileType,
-    likelyScanned: extracted.likelyScanned
+    fileType: extracted.fileType
   })
 }
 
-/** Recursively collects supported resume files, skipping hidden directories. */
-export async function collectFiles(dir: string, acc: string[] = []): Promise<string[]> {
-  let entries: Dirent[]
-  try {
-    entries = await readdir(dir, { withFileTypes: true })
-  } catch {
-    return acc
-  }
-
-  for (const entry of entries) {
-    if (entry.name.startsWith('.')) continue
-    const full = join(dir, entry.name)
-    if (entry.isDirectory()) {
-      await collectFiles(full, acc)
-    } else if (entry.isFile() && isSupported(full)) {
-      acc.push(full)
-    }
-  }
-  return acc
+export function ingestFile(path: string): Promise<IngestOutcome> {
+  return ingestFileSource(path)
 }
 
-export async function fileExists(path: string): Promise<boolean> {
-  try {
-    return (await stat(path)).isFile()
-  } catch {
-    return false
+export function ingestValidatedFile(source: ValidatedFileSource): Promise<IngestOutcome> {
+  return ingestFileSource(source.canonicalPath, source)
+}
+
+/** Recursively collects supported resume files, skipping hidden directories. */
+export const MAX_FOLDER_FILES = 5_000
+const MAX_FOLDER_DEPTH = 16
+const MAX_FOLDER_ENTRIES = 50_000
+
+export async function collectFiles(dir: string): Promise<string[]> {
+  const files: string[] = []
+  let visitedEntries = 0
+
+  const visit = async (current: string, depth: number): Promise<void> => {
+    if (depth > MAX_FOLDER_DEPTH) {
+      throw new Error(`Folder nesting exceeds Qumaa's ${MAX_FOLDER_DEPTH}-level safety limit.`)
+    }
+    let directory: Dir
+    try {
+      directory = await opendir(current)
+    } catch {
+      return
+    }
+
+    // Stream entries instead of materialising an attacker-sized directory.
+    for await (const entry of directory) {
+      if (++visitedEntries > MAX_FOLDER_ENTRIES) {
+        throw new Error(`Folder traversal exceeds Qumaa's ${MAX_FOLDER_ENTRIES}-entry safety limit.`)
+      }
+      if (entry.name.startsWith('.')) continue
+      const full = join(current, entry.name)
+      if (entry.isDirectory()) {
+        await visit(full, depth + 1)
+      } else if (entry.isFile() && isSupported(full)) {
+        if (files.length >= MAX_FOLDER_FILES) {
+          throw new Error(`Folder contains more than ${MAX_FOLDER_FILES} supported resume files.`)
+        }
+        files.push(full)
+      }
+    }
   }
+
+  await visit(dir, 0)
+  return files
 }

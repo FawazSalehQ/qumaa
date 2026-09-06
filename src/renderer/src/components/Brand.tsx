@@ -6,18 +6,16 @@
  * The brand rules forbid recolouring the funnel, so the two sheet tints are
  * fixed and only the funnel body follows the surrounding colour.
  */
-export type MarkTone = 'color' | 'white' | 'ink'
+type MarkTone = 'color' | 'white'
 
 const SHEET_TOP = { x: 28, y: 10, w: 52, h: 14, r: 5 }
 const SHEET_BOTTOM = { x: 22, y: 21, w: 60, h: 14, r: 5 }
 const FUNNEL = '14,34 86,34 57,70 57,90 43,90 43,70'
 
-/** Sheet fills per tone. Single-colour use swaps the tints for opacities of the
- *  base colour, which is what the brand kit's mark-white and mark-ink do. */
+/** Sheet fills per tone. The white mark uses opacities of its base colour. */
 const TONES: Record<MarkTone, { top: string; bottom: string; funnel: string; topOp?: number; bottomOp?: number }> = {
   color: { top: '#8f5fd6', bottom: '#c0a3ea', funnel: '#2b2733' },
-  white: { top: '#ffffff', bottom: '#ffffff', funnel: '#ffffff', topOp: 0.4, bottomOp: 0.68 },
-  ink: { top: '#2b2733', bottom: '#2b2733', funnel: '#2b2733', topOp: 0.35, bottomOp: 0.6 }
+  white: { top: '#ffffff', bottom: '#ffffff', funnel: '#ffffff', topOp: 0.4, bottomOp: 0.68 }
 }
 
 /**
@@ -37,7 +35,7 @@ export function QumaaMark({
   const small = size < SMALL_SIZE_PX
 
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true" className="qumaa-mark">
+    <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true">
       {!small && <rect {...rect(SHEET_TOP)} fill={t.top} opacity={t.topOp} />}
       <rect {...rect(SHEET_BOTTOM)} fill={t.bottom} opacity={t.bottomOp} />
       <polygon points={FUNNEL} fill={t.funnel} />
@@ -54,7 +52,7 @@ function rect(s: { x: number; y: number; w: number; h: number; r: number }) {
  * `brand/svg/appicon-ink.svg`. Used wherever the identity needs to read as a
  * product badge rather than a glyph.
  */
-export function QumaaAppIcon({ size = 28 }: { size?: number }): React.JSX.Element {
+function QumaaAppIcon({ size = 28 }: { size?: number }): React.JSX.Element {
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true" className="qumaa-appicon">
       <rect width="100" height="100" rx="22" fill="#2b2733" />

@@ -7,7 +7,7 @@ function contactLine(m: MatchResult): string {
     m.resume.phone,
     m.resume.location,
     m.resume.yearsExperience !== null ? `${m.resume.yearsExperience} yrs` : null,
-    m.resume.educationLevel && m.resume.educationLevel !== 'none' ? m.resume.educationLevel : null
+    m.resume.educationLevel
   ]
     .filter(Boolean)
     .join(' · ')

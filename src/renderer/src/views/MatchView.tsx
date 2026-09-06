@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react'
-import type { MatchResult } from '@shared/types.js'
+import type { ClaudeRerankPreview, MatchResult } from '@shared/types.js'
 import CandidateCard from '../components/CandidateCard.js'
 import { QumaaMark } from '../components/Brand.js'
 import {
@@ -18,6 +18,13 @@ interface Props {
   libraryRevision: number
 }
 
+interface PendingClaudeConsent {
+  sessionId: string
+  resultKey: number
+  preview: ClaudeRerankPreview
+  approvalToken: string
+}
+
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof Error ? err.message : fallback
 }
@@ -31,7 +38,13 @@ export default function MatchView({
   const [session, dispatch] = useReducer(matchSessionReducer, undefined, initialMatchSession)
   // Off unless the user has both stored a key and switched reranking on.
   const [rerankAvailable, setRerankAvailable] = useState(false)
+  const [previewingRerank, setPreviewingRerank] = useState(false)
+  const [previewError, setPreviewError] = useState<string | null>(null)
+  const [pendingConsent, setPendingConsent] = useState<PendingClaudeConsent | null>(null)
   const positionRef = useRef<HTMLInputElement>(null)
+  const rerankButtonRef = useRef<HTMLButtonElement>(null)
+  const consentDialogRef = useRef<HTMLElement>(null)
+  const consentCancelRef = useRef<HTMLButtonElement>(null)
   const nextRequestId = useRef(0)
   const previousLibraryRevision = useRef(libraryRevision)
 
@@ -48,15 +61,17 @@ export default function MatchView({
     window.api.settings.get().then((s) => setRerankAvailable(s.hasApiKey && s.rerankEnabled))
   }, [])
 
-  const runRerank = async (): Promise<void> => {
-    const source = session.result
-    if (!source || session.editing || reranking) return
+  const executeRerank = async (request: {
+    sessionId: string
+    resultKey: number
+    approvalToken?: string
+  }): Promise<void> => {
     const requestId = ++nextRequestId.current
-    dispatch({ type: 'rerank-started', requestId, resultKey: source.key })
+    dispatch({ type: 'rerank-started', requestId, resultKey: request.resultKey })
     try {
       const ordered = await window.api.search.rerank({
-        jobDescription: formatJobPosting(source.posting),
-        results: source.response.results
+        sessionId: request.sessionId,
+        approvalToken: request.approvalToken
       })
       dispatch({ type: 'rerank-succeeded', requestId, results: ordered })
     } catch (err) {
@@ -64,8 +79,94 @@ export default function MatchView({
     }
   }
 
+  const runRerank = async (): Promise<void> => {
+    const source = session.result
+    if (!source || session.editing || reranking || previewingRerank) return
+    const request = {
+      sessionId: source.response.sessionId,
+      resultKey: source.key
+    }
+
+    setPreviewError(null)
+    setPreviewingRerank(true)
+    try {
+      const review = await window.api.search.previewRerank(request)
+      if (review.consentRequired) {
+        setPendingConsent({
+          ...request,
+          preview: review.preview,
+          approvalToken: review.approvalToken
+        })
+      } else {
+        await executeRerank({ ...request, approvalToken: review.approvalToken })
+      }
+    } catch (error) {
+      setPreviewError(errorMessage(error, 'Could not prepare the Claude request'))
+    } finally {
+      setPreviewingRerank(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!pendingConsent) return
+    const previousFocus = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : rerankButtonRef.current
+    const dialog = consentDialogRef.current
+
+    const focusable = (): HTMLElement[] =>
+      dialog
+        ? Array.from(
+            dialog.querySelectorAll<HTMLElement>(
+              'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            )
+          )
+        : []
+
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        setPendingConsent(null)
+        requestAnimationFrame(() => rerankButtonRef.current?.focus())
+        return
+      }
+      if (event.key !== 'Tab') return
+      const items = focusable()
+      if (items.length === 0) {
+        event.preventDefault()
+        dialog?.focus()
+        return
+      }
+      const first = items[0]
+      const last = items[items.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+    const keepFocusInside = (event: FocusEvent): void => {
+      if (dialog && event.target instanceof Node && !dialog.contains(event.target)) {
+        consentCancelRef.current?.focus()
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('focusin', keepFocusInside)
+    consentCancelRef.current?.focus()
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('focusin', keepFocusInside)
+      previousFocus?.focus()
+    }
+  }, [pendingConsent])
+
   useLayoutEffect(() => {
     if (resetSignal === 0) return
+    setPendingConsent(null)
+    setPreviewError(null)
     dispatch({ type: 'reset' })
     const frame = requestAnimationFrame(() => positionRef.current?.focus())
     return () => cancelAnimationFrame(frame)
@@ -77,6 +178,8 @@ export default function MatchView({
   useLayoutEffect(() => {
     if (previousLibraryRevision.current === libraryRevision) return
     previousLibraryRevision.current = libraryRevision
+    setPendingConsent(null)
+    setPreviewError(null)
     dispatch({ type: 'results-invalidated' })
   }, [libraryRevision])
 
@@ -114,7 +217,7 @@ export default function MatchView({
             requestAnimationFrame(() => positionRef.current?.focus())
           }}
         >
-          <QumaaMark size={16} tone="color" />
+          <QumaaMark size={16} />
           <span className="posting-title" dir="auto">
             {jobPostingTitle(snapshot.posting)}
           </span>
@@ -242,9 +345,9 @@ export default function MatchView({
         </form>
       )}
 
-      {session.error && (
+      {(session.error || previewError) && (
         <div className="card error-card" role="alert">
-          {session.error}
+          {session.error ?? previewError}
         </div>
       )}
 
@@ -258,12 +361,17 @@ export default function MatchView({
             </span>
             {rerankAvailable && !snapshot.reranked && (
               <button
+                ref={rerankButtonRef}
                 className="btn sm"
                 onClick={runRerank}
-                disabled={reranking || top.length === 0}
+                disabled={reranking || previewingRerank || top.length < 2}
                 title="Sends the posting fields and the top candidates' matching passages to Anthropic"
               >
-                {reranking ? 'Reranking…' : 'Rerank with Claude'}
+                {reranking
+                  ? 'Reranking…'
+                  : previewingRerank
+                    ? 'Preparing preview…'
+                    : 'Rerank with Claude'}
               </button>
             )}
             {snapshot.reranked && <span className="muted">Reordered by Claude</span>}
@@ -313,7 +421,7 @@ export default function MatchView({
             <div className="podium">
               {top.map((m, i) => (
                 <CandidateCard
-                  key={m.resume.id}
+                  key={`${m.resume.id}:${m.resume.recordKey}`}
                   match={m}
                   rank={i + 1}
                   onOpen={() => onOpenCandidate(m)}
@@ -342,7 +450,11 @@ export default function MatchView({
                 </thead>
                 <tbody>
                   {rest.map((m, i) => (
-                    <tr key={m.resume.id} className="clickable" onClick={() => onOpenCandidate(m)}>
+                    <tr
+                      key={`${m.resume.id}:${m.resume.recordKey}`}
+                      className="clickable"
+                      onClick={() => onOpenCandidate(m)}
+                    >
                       <td className="muted num">{i + 4}</td>
                       <td>
                         <div className="cell-title">{m.resume.name ?? m.resume.fileName}</div>
@@ -359,6 +471,64 @@ export default function MatchView({
               </table>
             </details>
           )}
+        </div>
+      )}
+
+      {pendingConsent && (
+        <div className="consent-backdrop">
+          <section
+            ref={consentDialogRef}
+            className="consent-dialog card"
+            role="dialog"
+            tabIndex={-1}
+            aria-modal="true"
+            aria-labelledby="claude-consent-title"
+          >
+            <h3 id="claude-consent-title">Review data sent to Anthropic</h3>
+            <p>
+              Claude reranking sends this posting and redacted evidence for{' '}
+              {pendingConsent.preview.candidateCount} candidates to Anthropic using{' '}
+              {pendingConsent.preview.model}. Qumaa redacts detected names, contact details,
+              locations, filenames, and local paths. Years of experience, education, and
+              matched or missing skills are included. Your API key is never part of the request
+              body. Review the complete payload below before continuing.
+            </p>
+            <h4>Exact outbound request</h4>
+            <pre className="consent-payload">
+              {JSON.stringify(pendingConsent.preview.requestBody, null, 2)}
+            </pre>
+            <div className="row consent-actions">
+              <span className="muted">
+                Standard matching remains local. This approval is remembered until the data policy
+                changes.
+              </span>
+              <span className="spacer" />
+              <button
+                ref={consentCancelRef}
+                className="btn"
+                onClick={() => {
+                  setPendingConsent(null)
+                  requestAnimationFrame(() => rerankButtonRef.current?.focus())
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn primary"
+                onClick={() => {
+                  const request = pendingConsent
+                  setPendingConsent(null)
+                  void executeRerank({
+                    sessionId: request.sessionId,
+                    resultKey: request.resultKey,
+                    approvalToken: request.approvalToken
+                  })
+                }}
+              >
+                Approve and send
+              </button>
+            </div>
+          </section>
         </div>
       )}
     </>

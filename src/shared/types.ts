@@ -1,17 +1,16 @@
 /** Types shared across main, preload, and renderer. Keep this dependency-free. */
 
-export type FileType = 'pdf' | 'docx' | 'txt' | 'md' | 'pasted'
-
 export type SectionKind = 'summary' | 'experience' | 'education' | 'skills' | 'projects' | 'other'
 
-export type EducationLevel = 'phd' | 'masters' | 'bachelors' | 'associate' | 'none'
+export type EducationLevel = 'phd' | 'masters' | 'bachelors' | 'associate'
 
 /** A resume row as shown in the Library view (no raw text, no vectors). */
 export interface ResumeSummary {
   id: number
+  /** Content-bound record identity used to reject stale numeric ids after restore. */
+  recordKey: string
   fileName: string
   filePath: string
-  fileType: FileType
   importedAt: number
   name: string | null
   email: string | null
@@ -20,22 +19,17 @@ export interface ResumeSummary {
   yearsExperience: number | null
   educationLevel: EducationLevel | null
   skills: string[]
-  /** True when a PDF yielded almost no text, probably a scan needing OCR. */
-  likelyScanned: boolean
 }
 
-/** One indexed passage of a resume, as stored. */
-export interface ResumePassage {
-  section: SectionKind
-  ordinal: number
-  text: string
+export interface ResumeRef {
+  id: number
+  recordKey: string
 }
 
 /** Everything the detail panel shows for one resume. */
 export interface ResumeDetail {
-  summary: ResumeSummary
   rawText: string
-  passages: ResumePassage[]
+  passageCount: number
 }
 
 /** Outcome of attempting to ingest one file. */
@@ -86,11 +80,40 @@ export interface MatchResult {
 }
 
 export interface SearchResponse {
+  /** Opaque handle to the immutable main-process result snapshot. */
+  sessionId: string
   results: MatchResult[]
   /** Skills parsed out of the job description. */
   requiredSkills: string[]
   totalCandidates: number
   elapsedMs: number
+}
+
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue }
+
+/** Renderer-safe description of the exact request body sent for Claude reranking. */
+export interface ClaudeRerankPreview {
+  consentVersion: string
+  provider: 'Anthropic'
+  model: 'claude-sonnet-5'
+  candidateCount: number
+  totalResultCount: number
+  /** The API key is constructor state and is deliberately absent from this body. */
+  requestBody: { [key: string]: JsonValue }
+}
+
+export interface ClaudeRerankReview {
+  preview: ClaudeRerankPreview
+  /** True when this outbound-data policy has not yet been accepted on this device. */
+  consentRequired: boolean
+  /** One-use main-process capability bound to this exact preview. */
+  approvalToken: string
 }
 
 export type ThemeChoice = 'system' | 'light' | 'dark'
@@ -102,6 +125,9 @@ export interface AppSettings {
   rerankEnabled: boolean
   /** True when a key is stored. The key itself never reaches the renderer. */
   hasApiKey: boolean
+  /** Detectable without decrypting or prompting the operating-system keychain. */
+  apiKeyStatus: 'none' | 'protected' | 'migration-needed'
+  claudeConsentGranted: boolean
 }
 
 export interface DbStats {
@@ -111,16 +137,24 @@ export interface DbStats {
   dbSizeBytes: number
 }
 
+export interface BackupSummary {
+  schemaVersion: number
+  resumeCount: number
+  chunkCount: number
+  path: string
+}
+
 /** Commands the application menu sends to the renderer. */
 export type MenuCommand =
   | 'new-search'
   | 'import-files'
   | 'import-folder'
   | 'goto-match'
+  | 'goto-jobs'
   | 'goto-library'
   | 'goto-settings'
 
 export type ModelStatus =
   | { state: 'loading' }
-  | { state: 'ready'; dimensions: number }
+  | { state: 'ready' }
   | { state: 'error'; message: string }

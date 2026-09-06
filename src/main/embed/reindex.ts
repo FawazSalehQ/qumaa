@@ -11,19 +11,19 @@
  */
 import { getDb, getSetting, setSetting, vectorToBlob } from '../db/index.js'
 import { embedder } from './client.js'
-import { MODEL_ID } from './protocol.js'
+import { MODEL_VECTOR_ID } from './protocol.js'
 
 const MODEL_KEY = 'embeddingModel'
-// v2 distinguishes a library committed under the guarded readiness protocol
-// from the old plain MODEL_ID marker, which ingestion could overwrite midway
-// through a rebuild. Existing libraries reindex once to rule out latent mixing.
-const COMMITTED_MARKER = `complete:2:${MODEL_ID}`
-const REINDEXING_MARKER = `reindexing:2:${MODEL_ID}`
+// v3 includes the immutable model revision as well as the guarded readiness
+// protocol. Existing libraries reindex once because their previously mutable
+// `main` download cannot be proven byte-identical after the fact.
+const COMMITTED_MARKER = `complete:3:${MODEL_VECTOR_ID}`
+const REINDEXING_MARKER = `reindexing:3:${MODEL_VECTOR_ID}`
 
 /** Chunks per transaction. Small enough to keep memory flat on a big library. */
 const BATCH = 64
 
-export interface ReindexProgress {
+interface ReindexProgress {
   done: number
   total: number
 }
@@ -47,6 +47,16 @@ export function markEmptyIndexCurrent(): boolean {
   if (c !== 0) return false
   setSetting(MODEL_KEY, COMMITTED_MARKER)
   return true
+}
+
+/**
+ * Publishes the current model marker after a caller has rebuilt every passage
+ * and every vector from canonical source text. This is intentionally separate
+ * from `markEmptyIndexCurrent`: a non-empty index must earn the marker only at
+ * the very end of its complete rebuild.
+ */
+export function markCompletedIndexRebuild(): void {
+  setSetting(MODEL_KEY, COMMITTED_MARKER)
 }
 
 /** True when the library holds vectors from a different model than the current one. */

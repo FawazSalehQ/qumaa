@@ -1,7 +1,7 @@
 import type { MatchResult, SearchResponse } from '@shared/types.js'
 import { emptyJobPosting, type JobPosting, type JobPostingField } from './jobPosting.js'
 
-export interface ResultSnapshot {
+interface ResultSnapshot {
   /** Changes after every accepted search or rerank. */
   key: number
   /** Immutable posting used to produce this response. */
@@ -10,7 +10,7 @@ export interface ResultSnapshot {
   reranked: boolean
 }
 
-export interface MatchSession {
+interface MatchSession {
   /** Editable fields; never used for an existing result's rerank or export. */
   draftPosting: JobPosting
   result: ResultSnapshot | null
@@ -21,7 +21,7 @@ export interface MatchSession {
   pendingRerank: { requestId: number; resultKey: number } | null
 }
 
-export type MatchSessionAction =
+type MatchSessionAction =
   | { type: 'draft-field-changed'; field: JobPostingField; value: string }
   | { type: 'edit-started' }
   | { type: 'edit-cancelled' }

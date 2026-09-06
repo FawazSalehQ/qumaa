@@ -35,12 +35,12 @@ const MARK = `<svg viewBox="0 0 100 100" width="34" height="34">
   <polygon points="14,34 86,34 57,70 57,90 43,90 43,70" fill="#fff"/>
 </svg>`
 
-function candidateBlock(m: MatchResult, rank: number): string {
+function candidateBlock(m: MatchResult, rank: number, note?: string): string {
   const r = m.resume
   const contact = [r.email, r.phone, r.location].filter(Boolean).map(String).map(esc).join(' &middot; ')
   const facts = [
     r.yearsExperience !== null ? `${r.yearsExperience} years` : null,
-    r.educationLevel && r.educationLevel !== 'none' ? r.educationLevel : null
+    r.educationLevel
   ]
     .filter(Boolean)
     .map((x) => esc(String(x)))
@@ -93,6 +93,7 @@ function candidateBlock(m: MatchResult, rank: number): string {
         </blockquote>`
       )
       .join('')}
+    ${note ? `<section class="recruiter-note"><strong>Recruiter notes</strong><p>${esc(note)}</p></section>` : ''}
   </article>`
 }
 
@@ -101,6 +102,8 @@ export function shortlistHtml(args: {
   requiredSkills: string[]
   results: MatchResult[]
   generatedAt: Date
+  notes?: Record<string, string>
+  curated?: boolean
 }): string {
   const date = args.generatedAt.toLocaleDateString('en-GB', {
     year: 'numeric',
@@ -111,6 +114,7 @@ export function shortlistHtml(args: {
   return `<!doctype html><html><head><meta charset="utf-8"><style>
     @page { margin: 18mm 16mm; }
     * { box-sizing: border-box; }
+    .recruiter-note p { white-space: pre-wrap; overflow-wrap: anywhere; }
     body {
       font-family: 'IBM Plex Sans', system-ui, sans-serif;
       color: ${INK}; margin: 0; font-size: 11pt; line-height: 1.5;
@@ -183,10 +187,10 @@ export function shortlistHtml(args: {
         : 'No named skills were identified in this posting.'
     }</p>
 
-    ${args.results.map((m, i) => candidateBlock(m, i + 1)).join('')}
+    ${args.results.map((m, i) => candidateBlock(m, i + 1, args.notes?.[m.resume.recordKey])).join('')}
 
     <footer>
-      Ranked locally by similarity to the posting, not by judgement of seniority.
+      ${args.curated ? 'Selected and ordered by the recruiter. Scores show local similarity to the posting.' : 'Ranked locally by similarity to the posting, not by judgement of seniority.'}
       Every quoted passage is verbatim from the candidate's own document.
     </footer>
   </body></html>`

@@ -6,21 +6,13 @@
  * backfilled. Callers wait on this barrier, which only opens after the whole
  * initialization sequence succeeds.
  */
-export type IndexInitializationPhase =
-  | 'starting-model'
-  | 'reindexing'
-  | 'backfilling-vectors'
-  | 'backfilling-skills'
-
-export type IndexReadinessStatus =
+type IndexReadinessStatus =
   | { state: 'idle' }
-  | { state: 'loading'; phase: IndexInitializationPhase }
+  | { state: 'loading' }
   | { state: 'ready' }
   | { state: 'error'; message: string }
 
-type Initializer = (
-  setPhase: (phase: IndexInitializationPhase) => void
-) => Promise<void>
+type Initializer = () => Promise<void>
 
 export class IndexReadiness {
   private completion: Promise<void> | null = null
@@ -34,13 +26,10 @@ export class IndexReadiness {
   start(initializer: Initializer): Promise<void> {
     if (this.completion) return this.completion
 
-    this.status = { state: 'loading', phase: 'starting-model' }
-    const setPhase = (phase: IndexInitializationPhase): void => {
-      if (this.status.state === 'loading') this.status = { state: 'loading', phase }
-    }
+    this.status = { state: 'loading' }
 
     this.completion = Promise.resolve()
-      .then(() => initializer(setPhase))
+      .then(initializer)
       .then(
         () => {
           this.status = { state: 'ready' }

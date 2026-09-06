@@ -7,15 +7,26 @@ export interface Toast {
 }
 
 /** Auto-dismisses after a delay; errors linger longer since they need reading. */
-function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }): React.JSX.Element {
+function ToastItem({
+  toast,
+  onDismiss
+}: {
+  toast: Toast
+  onDismiss: (id: string) => void
+}): React.JSX.Element {
   useEffect(() => {
     const ms = toast.kind === 'error' ? 8000 : 4000
-    const t = setTimeout(onDismiss, ms)
+    const t = setTimeout(() => onDismiss(toast.id), ms)
     return () => clearTimeout(t)
-  }, [toast.kind, onDismiss])
+  }, [toast.id, toast.kind, onDismiss])
 
   return (
-    <div className={`toast ${toast.kind}`} onClick={onDismiss}>
+    <div
+      className={`toast ${toast.kind}`}
+      role={toast.kind === 'error' ? 'alert' : 'status'}
+      aria-live={toast.kind === 'error' ? 'assertive' : 'polite'}
+      onClick={() => onDismiss(toast.id)}
+    >
       {toast.message}
     </div>
   )
@@ -31,7 +42,7 @@ export default function Toasts({
   return (
     <div className="toasts">
       {toasts.map((t) => (
-        <ToastItem key={t.id} toast={t} onDismiss={() => onDismiss(t.id)} />
+        <ToastItem key={t.id} toast={t} onDismiss={onDismiss} />
       ))}
     </div>
   )

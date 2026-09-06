@@ -1,9 +1,10 @@
-# CV Filter
+# Qumaa · قُمع
 
-A self-contained desktop app for macOS and Windows that ingests resumes into a
-local database and, given a pasted job description, surfaces the three
-best-matching candidates with evidence for why they matched. English and Arabic
-resumes are ranked against a posting written in either language.
+A self-contained desktop app for macOS and Windows that stores resumes in a
+local database and surfaces the best-matching candidates with evidence. Each
+search keeps the position, job description, requirements, and education or
+certification criteria in separate fields. English and Arabic resumes can be
+ranked against a posting written in either language.
 
 **Nothing leaves your machine by default.** Embeddings are computed locally by a
 bundled ONNX model, and with no API key configured the app opens no network
@@ -21,18 +22,48 @@ both require it.
 ```bash
 nvm use              # Node 22
 npm install
-npm run fetch-model  # downloads multilingual-e5-small (~113MB) into resources/
+npm run fetch-model  # downloads multilingual-e5-small (~135MB) into resources/
 npm run dev
 ```
 
-`fetch-model` is a one-time step. The weights are gitignored; re-run it after a
-fresh clone.
+`fetch-model` is required once after a fresh clone because the weights are
+gitignored. It downloads from the immutable revision in
+`scripts/model-manifest.json` and checks the size and SHA-256 of every file,
+including an existing CI cache. Packaging also runs `verify-model` and fails
+before producing an installer if a model file is missing or has changed.
+
+Qumaa accepts digital PDF, DOCX, and Markdown (`.md` or `.markdown`) resumes.
+PDFs must contain a usable text layer. Image-only scans and other file types are
+outside the supported scope; the app does not perform OCR.
+
+## Recruiting workflow
+
+1. Import CVs into **Library**, then create a vacancy in **Jobs**.
+2. Save the posting and its required/preferred criteria; refresh local matches.
+3. Review source evidence, save job-specific notes and decisions, and compare
+   two to four candidates against the same requirements.
+4. Choose and order your shortlist, then export it as a PDF or Excel-compatible CSV.
+5. Reopen the saved job later. New CVs make its matches stale without erasing
+   recruiter decisions; refresh when ready to review the new library.
+
+Candidate details include a separate recruiter profile for corrections, screening
+notes, availability, salary expectations, notice period, and tags. Link updated
+CVs explicitly as versions of the same candidate to retain their review history.
+Requirement passages are suggestions for human review; absent CV text never
+automatically disqualifies a candidate. **Match** remains available for a quick
+search, including the optional Claude rerank.
+
+Portable backups include jobs, profiles, and reviews. Cached matching results are
+rebuilt after restoring the library. See [FEATURE_IMPLEMENTATION.md](FEATURE_IMPLEMENTATION.md)
+for the integration plan and verification scope.
 
 ## Scripts
 
 | Command | What it does |
 |---|---|
 | `npm run dev` | Run the app with hot reload |
+| `npm run fetch-model` | Download or repair the pinned, SHA-256-verified local model |
+| `npm run verify-model` | Verify the complete local model without using the network |
 | `npm test` | Unit tests + the ranking sanity suite |
 | `npm run smoke` | Integration check inside Electron: DB, embedder, real PDF/DOCX, search, PDF export, and wipe |
 | `npm run test:ui` | Playwright flow through the real Electron UI and hardened preload boundary |
@@ -89,9 +120,15 @@ platform's prebuilt binaries in a single package.
 
 ## How matching works
 
-Ingest: extract text (`unpdf` / `mammoth`) → normalise → split into labelled
-sections → chunk into ~200-word overlapping windows → embed each chunk → store
-vectors as BLOBs in SQLite alongside heuristically extracted fields.
+Ingest: extract text (`unpdf` for PDF, `mammoth` for DOCX, direct reading for
+Markdown) → normalise → split into labelled sections → chunk into ~200-word
+overlapping windows → embed each chunk → store vectors as BLOBs in SQLite
+alongside heuristically extracted fields.
+
+Search combines the four posting fields into one query while keeping the fields
+separate in the interface and in the saved result context. This lets reviewers
+edit or revisit the exact posting that produced a result without mixing it with
+a later search.
 
 Search blends three signals, min-max normalised across the candidate pool:
 
@@ -179,7 +216,8 @@ src/main/search/    scoring.ts (pure math) + rank.ts (orchestration) + rerank.ts
 src/main/embed/     utility-process client, worker, shared protocol, reindex
 src/main/export/    branded shortlist PDF
 src/main/db/        schema, migrations, vector (de)serialisation, queries
-src/renderer/       React UI (Match / Library / Settings)
+src/main/recruiting/ saved jobs, candidate profiles, reviews, and version history
+src/renderer/       React UI (Jobs / Match / Library / Settings)
 test/               vitest suites + Electron Playwright flows + PDF/DOCX fixtures
 ```
 
@@ -219,8 +257,7 @@ The renderer runs with `sandbox: true`, `contextIsolation: true`, and
 `nodeIntegration: false`. It reaches the main process only through the named
 operations in `src/preload/index.ts`; `ipcRenderer` is never exposed. A CSP
 restricts the page to its own origin, navigation away from the local page is
-blocked, and links are handed to the system browser only when the scheme is
-`http`, `https`, or `mailto`.
+blocked, and attempts to open additional windows are denied.
 
 With no API key configured the app opens no network sockets at runtime.
 `env.allowRemoteModels = false` stops transformers.js reaching the Hugging Face
@@ -229,10 +266,9 @@ entirely local: no resume text is transmitted anywhere.
 
 The optional Claude rerank is the only code path that leaves the machine, and it
 is inert until the user supplies a key and enables it. When it does run it sends
-the job description and the top 15 candidates' evidence to the Anthropic API.
-The key is stored through Electron's `safeStorage`, so it is encrypted by the OS
-keychain rather than sitting in cleartext in the SQLite file; see
-`src/main/secrets.ts`.
+the structured posting and the top 15 candidates' redacted evidence to the
+Anthropic API. New keys are stored through Electron's `safeStorage`; an older
+plaintext key cannot be used until the user protects or removes it.
 
 ### Known advisories
 
@@ -272,9 +308,6 @@ Both follow from the no-LLM constraint:
    seniority from accomplishments. That is what the optional Claude rerank over
    the top 15 is for, and it is the only feature that sends anything off the
    machine.
-
-Scanned image-only PDFs are rejected with a clear message rather than imported
-empty; there is no OCR.
 
 ## Packaging notes
 

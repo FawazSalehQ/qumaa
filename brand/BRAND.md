@@ -16,12 +16,12 @@ at 16px the top sheet drops away so the mark stays legible.
 IBM Plex Sans (Latin) · IBM Plex Sans Arabic (Arabic) · IBM Plex Mono (labels, all-caps, 0.24em tracking).
 
 ## Folder
+
 - `svg/` — vector mark and app icons (mark-color, mark-ink, mark-white, appicon-ink, appicon-violet)
-- `png/` — app icons 1024→32, lockups (RTL, LTR, stacked, dark) at 1600/800px, mark
-- `favicon/` — favicon.ico (16/32/48), favicon-32.png, apple-touch-icon.png
-- `web/` — favicon HTML snippet, tokens.css
-- `templates/` — Qumaa-Letterhead.docx, Qumaa-Deck.pptx, Qumaa-Letterhead.pdf
-- `_masters/` — 4x source captures (regenerate other sizes from these)
+- `tokens.json` — brand colour and typography reference
+- `tokens.css` — brand tokens as CSS custom properties
+
+`npm run make-icon` generates `build/icon.png` from `svg/appicon-ink.svg`.
 
 ## Rules
 - Clear space: 25% of the icon height on every side.

@@ -1,8 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import {
-  IndexReadiness,
-  type IndexInitializationPhase
-} from '../src/main/embed/readiness.js'
+import { IndexReadiness } from '../src/main/embed/readiness.js'
 
 function deferred(): {
   promise: Promise<void>
@@ -16,22 +13,19 @@ function deferred(): {
 }
 
 describe('IndexReadiness', () => {
-  it('holds callers until every initialization phase is complete', async () => {
+  it('holds callers until the complete initialization task finishes', async () => {
     const work = deferred()
     const barrier = new IndexReadiness()
-    const initialize = vi.fn(
-      async (setPhase: (phase: IndexInitializationPhase) => void) => {
-        setPhase('reindexing')
-        await work.promise
-      }
-    )
+    const initialize = vi.fn(async () => {
+      await work.promise
+    })
 
     const started = barrier.start(initialize)
     const waiting = barrier.waitUntilReady()
     await Promise.resolve()
 
     expect(initialize).toHaveBeenCalledOnce()
-    expect(barrier.getStatus()).toEqual({ state: 'loading', phase: 'reindexing' })
+    expect(barrier.getStatus()).toEqual({ state: 'loading' })
 
     work.resolve()
     await expect(waiting).resolves.toBeUndefined()

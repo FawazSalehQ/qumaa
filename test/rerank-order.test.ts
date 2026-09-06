@@ -6,9 +6,9 @@ function candidate(id: number): MatchResult {
   return {
     resume: {
       id,
+      recordKey: id.toString(16).padStart(64, '0'),
       fileName: `candidate-${id}.pdf`,
       filePath: `/resumes/candidate-${id}.pdf`,
-      fileType: 'pdf',
       importedAt: id,
       name: `Candidate ${id}`,
       email: null,
@@ -16,8 +16,7 @@ function candidate(id: number): MatchResult {
       location: null,
       yearsExperience: null,
       educationLevel: null,
-      skills: [],
-      likelyScanned: false
+      skills: []
     },
     score: 1 - id / 100,
     breakdown: { semantic: 0.8, lexical: 0.5, skills: 1 },

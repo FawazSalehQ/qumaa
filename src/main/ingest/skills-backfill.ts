@@ -6,8 +6,7 @@ import {
   type StoredResumeSkills
 } from './skills-backfill-plan.js'
 
-export interface SkillBackfillResult {
-  checked: number
+interface SkillBackfillResult {
   updated: number
   version: string
 }
@@ -23,7 +22,6 @@ export function backfillResumeSkills(): SkillBackfillResult {
     .prepare(
       `SELECT id,
               raw_text AS rawText,
-              skills_json AS skillsJson,
               skills_version AS skillsVersion
        FROM resumes
        WHERE skills_version != ?
@@ -42,7 +40,6 @@ export function backfillResumeSkills(): SkillBackfillResult {
   }
 
   return {
-    checked: rows.length,
     updated: updates.length,
     version: SKILL_GAZETTEER_VERSION
   }

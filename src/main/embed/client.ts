@@ -8,7 +8,6 @@ import { app, utilityProcess, type UtilityProcess } from 'electron'
 import { join } from 'node:path'
 import {
   EMBEDDING_DIM,
-  MODEL_ID,
   PASSAGE_PREFIX,
   QUERY_PREFIX,
   type FromWorker,
@@ -34,6 +33,12 @@ export function setEntryDir(dir: string): void {
   entryDir = dir
 }
 
+/** Worker clients share the entry directory registered by each main entry point. */
+export function getEntryDir(): string {
+  if (!entryDir) throw new Error('setEntryDir() was not called by the main entry point')
+  return entryDir
+}
+
 interface Pending {
   resolve: (vectors: Float32Array[]) => void
   reject: (err: Error) => void
@@ -54,8 +59,7 @@ class Embedder {
   }
 
   private baseDir(): string {
-    if (!entryDir) throw new Error('setEntryDir() was not called by the main entry point')
-    return entryDir
+    return getEntryDir()
   }
 
   private modelDir(): string {
@@ -84,7 +88,7 @@ class Embedder {
 
       child.on('message', (msg: FromWorker) => {
         if (msg.type === 'ready') {
-          this.status = { state: 'ready', dimensions: msg.dimensions }
+          this.status = { state: 'ready' }
           resolve()
           return
         }
@@ -104,7 +108,7 @@ class Embedder {
           this.pending.delete(msg.id)
           // Split the flat buffer back into one vector per input text.
           const vectors: Float32Array[] = []
-          for (let i = 0; i < msg.count; i++) {
+          for (let i = 0; i < p.count; i++) {
             vectors.push(msg.vectors.slice(i * EMBEDDING_DIM, (i + 1) * EMBEDDING_DIM))
           }
           p.resolve(vectors)
@@ -113,6 +117,8 @@ class Embedder {
 
       child.on('exit', (code) => {
         const err = new Error(`Embedding process exited (code ${code})`)
+        // Reject startup too if the worker died before sending its ready message.
+        reject(err)
         for (const p of this.pending.values()) p.reject(err)
         this.pending.clear()
         this.child = null
@@ -173,4 +179,3 @@ class Embedder {
 }
 
 export const embedder = new Embedder()
-export { EMBEDDING_DIM, MODEL_ID }

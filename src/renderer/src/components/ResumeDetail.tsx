@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { MatchResult, ResumeDetail as Detail, ResumeSummary } from '@shared/types.js'
 import ScoreRing from './ScoreRing.js'
+import RecruiterProfile from './RecruiterProfile.js'
 
 /**
  * Slide-over showing everything known about one candidate.
@@ -14,6 +15,7 @@ interface Props {
   match?: MatchResult
   onClose: () => void
   onDeleted: () => void
+  onProfileChanged?: () => void
 }
 
 /** Turns the three component scores into a sentence, so the numbers mean something. */
@@ -60,19 +62,19 @@ function Field({ label, value }: { label: string; value: string | null }): React
   )
 }
 
-export default function ResumeDetail({ resume, match, onClose, onDeleted }: Props): React.JSX.Element {
+export default function ResumeDetail({ resume, match, onClose, onDeleted, onProfileChanged }: Props): React.JSX.Element {
   const [detail, setDetail] = useState<Detail | null>(null)
   const [showAllText, setShowAllText] = useState(false)
 
   useEffect(() => {
     let live = true
-    window.api.resumes.get(resume.id).then((d) => {
+    window.api.resumes.get(resume).then((d) => {
       if (live) setDetail(d)
     })
     return () => {
       live = false
     }
-  }, [resume.id])
+  }, [resume])
 
   // Esc closes, matching every other slide-over the user has met.
   useEffect(() => {
@@ -84,8 +86,8 @@ export default function ResumeDetail({ resume, match, onClose, onDeleted }: Prop
   }, [onClose])
 
   const remove = async (): Promise<void> => {
-    await window.api.resumes.remove(resume.id)
-    onDeleted()
+    const deleted = await window.api.resumes.remove(resume)
+    if (deleted) onDeleted()
   }
 
   const contact = [resume.email, resume.phone, resume.location].filter(Boolean).join('  ·  ')
@@ -106,6 +108,7 @@ export default function ResumeDetail({ resume, match, onClose, onDeleted }: Prop
         </header>
 
         <div className="detail-body">
+          <RecruiterProfile key={resume.recordKey} resume={resume} onChanged={onProfileChanged} />
           {match && (
             <section>
               <h3>Score breakdown</h3>
@@ -147,7 +150,7 @@ export default function ResumeDetail({ resume, match, onClose, onDeleted }: Prop
           )}
 
           <section>
-            <h3>Extracted details</h3>
+            <h3>CV extraction</h3>
             <dl className="fields">
               <Field label="Name" value={resume.name} />
               <Field label="Email" value={resume.email} />
@@ -178,7 +181,7 @@ export default function ResumeDetail({ resume, match, onClose, onDeleted }: Prop
           <section>
             <h3>
               Full text{' '}
-              {detail && <span className="muted">({detail.passages.length} indexed passages)</span>}
+              {detail && <span className="muted">({detail.passageCount} indexed passages)</span>}
             </h3>
             {detail ? (
               <>
@@ -196,10 +199,10 @@ export default function ResumeDetail({ resume, match, onClose, onDeleted }: Prop
         <footer className="detail-foot">
           {resume.filePath && (
             <>
-              <button className="btn" onClick={() => window.api.resumes.open(resume.filePath)}>
+              <button className="btn" onClick={() => window.api.resumes.open(resume)}>
                 Open file
               </button>
-              <button className="btn" onClick={() => window.api.resumes.reveal(resume.filePath)}>
+              <button className="btn" onClick={() => window.api.resumes.reveal(resume)}>
                 Reveal
               </button>
             </>

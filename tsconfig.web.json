@@ -17,9 +17,13 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["src/shared/*"],
-      "@renderer/*": ["src/renderer/src/*"]
+      "@shared/*": ["src/shared/*"]
     }
   },
-  "include": ["src/renderer/src/**/*", "src/shared/**/*", "src/preload/*.d.ts"]
+  "include": [
+    "src/renderer/src/**/*",
+    "src/shared/**/*",
+    "src/preload/*.d.ts",
+    "src/preload/bridge-input.ts"
+  ]
 }

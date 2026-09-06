@@ -124,6 +124,7 @@ export function buildMenu(getWindow: () => BrowserWindow | null): void {
     {
       label: '&View',
       submenu: [
+        { label: 'Jobs', accelerator: 'CmdOrCtrl+4', click: send('goto-jobs') },
         { label: 'Match', accelerator: 'CmdOrCtrl+1', click: send('goto-match') },
         { label: 'Library', accelerator: 'CmdOrCtrl+2', click: send('goto-library') },
         { label: 'Settings', accelerator: 'CmdOrCtrl+3', click: send('goto-settings') },

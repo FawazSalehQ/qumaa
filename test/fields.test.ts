@@ -83,6 +83,16 @@ describe('extractFields', () => {
     expect(fields.phone?.replace(/\D/g, '')).toContain('966501234567')
   })
 
+  it('does not persist contact matches beyond stored-field limits', () => {
+    const oversizedEmail = `${'a'.repeat(510)}@x.co`
+    const oversizedPhone = Array.from({ length: 9 }, () => '1').join('.-'.repeat(20))
+    const text = normalizeText(`Jane Doe\n${oversizedEmail}\n${oversizedPhone}`)
+    const oversized = extractFields(text, splitSections(text))
+
+    expect(oversized.email).toBeNull()
+    expect(oversized.phone).toBeNull()
+  })
+
   it('finds the location', () => {
     expect(fields.location).toBe('Riyadh, Saudi Arabia')
   })

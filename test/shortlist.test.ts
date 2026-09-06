@@ -4,14 +4,15 @@ import type { MatchResult } from '../src/shared/types.js'
 vi.mock('electron', () => ({ BrowserWindow: vi.fn() }))
 
 import { shortlistHtml } from '../src/main/export/shortlist.js'
+import { shortlistCsv } from '../src/main/export/shortlist-csv.js'
 
 function result(overrides: Partial<MatchResult> = {}): MatchResult {
   return {
     resume: {
       id: 1,
+      recordKey: 'a'.repeat(64),
       fileName: 'candidate.pdf',
       filePath: '/candidate.pdf',
-      fileType: 'pdf',
       importedAt: 1,
       name: 'Candidate One',
       email: 'candidate@example.com',
@@ -19,8 +20,7 @@ function result(overrides: Partial<MatchResult> = {}): MatchResult {
       location: 'Riyadh',
       yearsExperience: 7,
       educationLevel: 'bachelors',
-      skills: ['Training'],
-      likelyScanned: false
+      skills: ['Training']
     },
     score: 0.91,
     breakdown: { semantic: 0.9, lexical: 0.8, skills: 1 },
@@ -57,6 +57,7 @@ describe('shortlistHtml', () => {
     const html = shortlistHtml({
       jobTitle: payload,
       requiredSkills: [payload],
+      notes: { ['a'.repeat(64)]: payload },
       results: [
         result({
           resume: {
@@ -75,5 +76,30 @@ describe('shortlistHtml', () => {
     expect(html).not.toContain(payload)
     expect(html).not.toContain('<script>')
     expect(html).toContain('&lt;script&gt;window.pwned = true&lt;/script&gt;')
+  })
+})
+
+describe('shortlist CSV', () => {
+  it('preserves recruiter selection order, Arabic, multiline notes, and quoted cells', () => {
+    const csv = shortlistCsv({
+      jobTitle: 'مدير التدريب',
+      results: [result({ resume: { ...result().resume, name: 'Candidate, "One"' } })],
+      notes: { ['a'.repeat(64)]: 'Discussed availability\nCan start in October' }
+    })
+    expect(csv.startsWith('\ufeff')).toBe(true)
+    expect(csv).toContain('"مدير التدريب","1","Candidate, ""One"""')
+    expect(csv).toContain('"Discussed availability\nCan start in October"')
+  })
+
+  it('neutralizes spreadsheet formulas in candidate data and notes', () => {
+    const csv = shortlistCsv({
+      jobTitle: '=SUM(1,2)',
+      results: [result({ resume: { ...result().resume, name: '@SUM(1)', phone: '+966501234567' } })],
+      notes: { ['a'.repeat(64)]: '  =HYPERLINK("https://example.invalid")' }
+    })
+    expect(csv).toContain('"\'=SUM(1,2)"')
+    expect(csv).toContain('"\'@SUM(1)"')
+    expect(csv).toContain('"\'+966501234567"')
+    expect(csv).toContain('"\'  =HYPERLINK(')
   })
 })

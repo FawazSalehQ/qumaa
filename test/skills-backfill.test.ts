@@ -39,11 +39,10 @@ describe('skill backfill planning', () => {
     const extract = vi.fn((text: string) => (text.includes('Python') ? ['python'] : []))
     const updates = planSkillBackfill(
       [
-        { id: 1, rawText: 'Python', skillsJson: '[]', skillsVersion: 'old' },
+        { id: 1, rawText: 'Python', skillsVersion: 'old' },
         {
           id: 2,
           rawText: 'SQL',
-          skillsJson: '["sql"]',
           skillsVersion: SKILL_GAZETTEER_VERSION
         }
       ],

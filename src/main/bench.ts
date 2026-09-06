@@ -93,14 +93,14 @@ Requirements:
     for (; imported < target; imported++) {
       await ingestText({
         text: syntheticResume(imported),
-        fileName: `candidate-${imported}.txt`,
+        fileName: `candidate-${imported}.md`,
         filePath: '',
         fileType: 'pasted'
       })
     }
     const perResume = ms(t0) / (target - (SIZES[SIZES.indexOf(target) - 1] ?? 0))
 
-    // Isolate the near-duplicate scan: it reads every chunk in the library.
+    // Isolate the near-duplicate scan over the stored document vectors.
     const [probe] = await embedder.embedPassages(['a probe passage for timing'])
     const t1 = process.hrtime.bigint()
     findNearDuplicate(documentVector([probe]))
@@ -125,12 +125,14 @@ Requirements:
 }
 
 app.whenReady().then(async () => {
+  let exitCode = 0
   try {
     await main()
   } catch (err) {
+    exitCode = 1
     console.error('BENCH FAILED:', err)
   } finally {
     rmSync(scratch, { recursive: true, force: true })
-    app.exit(0)
+    app.exit(exitCode)
   }
 })

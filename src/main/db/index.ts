@@ -3,26 +3,24 @@ import Database from 'better-sqlite3'
 import { app } from 'electron'
 import { join } from 'node:path'
 import { mkdirSync, statSync } from 'node:fs'
-import { EMBEDDING_DIM } from '../embed/protocol.js'
 import { skillLabels } from '../ingest/skills.js'
+import { DATABASE_LIMITS, migrateDatabase } from './migrations.js'
+import { pruneStaleDatabaseArtifacts, recoverInterruptedRestore } from './replacement.js'
+import { pruneRecruitingRecords } from '../recruiting/storage.js'
 import type {
   DbStats,
   EducationLevel,
-  FileType,
   ResumeDetail,
-  ResumePassage,
-  ResumeSummary,
-  SectionKind
+  ResumeRef,
+  ResumeSummary
 } from '@shared/types.js'
 
 export interface ResumeRow {
   id: number
+  content_hash: string
   file_path: string
   file_name: string
-  content_hash: string
-  file_type: FileType
   imported_at: number
-  raw_text: string
   name: string | null
   email: string | null
   phone: string | null
@@ -30,115 +28,134 @@ export interface ResumeRow {
   years_experience: number | null
   education_level: EducationLevel | null
   skills_json: string
-  skills_version: string
-  likely_scanned: number
 }
 
-export interface ChunkRow {
-  id: number
-  resume_id: number
-  section: SectionKind
-  ordinal: number
-  text: string
-  embedding: Buffer
-}
+/** The narrow row shape used by Library and search; excludes CV text and vectors. */
+export const RESUME_ROW_COLUMNS = `id, content_hash, file_path, file_name, imported_at, name, email, phone,
+  location, years_experience, education_level, skills_json`
 
 let db: Database.Database | null = null
+let recoveryChecked = false
+let libraryUsage: LibraryUsage | null = null
 
-const SCHEMA = `
-CREATE TABLE IF NOT EXISTS resumes (
-  id            INTEGER PRIMARY KEY,
-  file_path     TEXT    NOT NULL,
-  file_name     TEXT    NOT NULL,
-  content_hash  TEXT    NOT NULL UNIQUE,
-  file_type     TEXT    NOT NULL,
-  imported_at   INTEGER NOT NULL,
-  raw_text      TEXT    NOT NULL,
-  name             TEXT,
-  email            TEXT,
-  phone            TEXT,
-  location         TEXT,
-  years_experience REAL,
-  education_level  TEXT,
-  skills_json      TEXT NOT NULL DEFAULT '[]',
-  skills_version   TEXT NOT NULL DEFAULT '',
-  likely_scanned   INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS chunks (
-  id        INTEGER PRIMARY KEY,
-  resume_id INTEGER NOT NULL REFERENCES resumes(id) ON DELETE CASCADE,
-  section   TEXT    NOT NULL,
-  ordinal   INTEGER NOT NULL,
-  text      TEXT    NOT NULL,
-  embedding BLOB    NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_chunks_resume ON chunks(resume_id);
-
-CREATE TABLE IF NOT EXISTS settings (
-  key   TEXT PRIMARY KEY,
-  value TEXT
-);
-
--- External-content FTS5 over resumes.raw_text, giving us bm25() for free.
-CREATE VIRTUAL TABLE IF NOT EXISTS resumes_fts
-  USING fts5(raw_text, content='resumes', content_rowid='id', tokenize='porter unicode61');
-
-CREATE TRIGGER IF NOT EXISTS resumes_ai AFTER INSERT ON resumes BEGIN
-  INSERT INTO resumes_fts(rowid, raw_text) VALUES (new.id, new.raw_text);
-END;
-CREATE TRIGGER IF NOT EXISTS resumes_ad AFTER DELETE ON resumes BEGIN
-  INSERT INTO resumes_fts(resumes_fts, rowid, raw_text) VALUES ('delete', old.id, old.raw_text);
-END;
-CREATE TRIGGER IF NOT EXISTS resumes_au AFTER UPDATE ON resumes BEGIN
-  INSERT INTO resumes_fts(resumes_fts, rowid, raw_text) VALUES ('delete', old.id, old.raw_text);
-  INSERT INTO resumes_fts(rowid, raw_text) VALUES (new.id, new.raw_text);
-END;
-`
-
-/**
- * Additive column migrations.
- *
- * The schema above uses CREATE TABLE IF NOT EXISTS, which does nothing to a
- * table that already exists, so new columns have to be added explicitly for
- * libraries created by an earlier version.
- */
-function migrate(database: Database.Database): void {
-  const columns = new Set(
-    (database.prepare('PRAGMA table_info(resumes)').all() as Array<{ name: string }>).map(
-      (c) => c.name
-    )
-  )
-
-  // Mean of a resume's chunk vectors. Stored so near-duplicate detection reads
-  // one vector per resume instead of every chunk in the library, which made a
-  // bulk import quadratic.
-  if (!columns.has('doc_vector')) {
-    database.exec('ALTER TABLE resumes ADD COLUMN doc_vector BLOB')
-  }
-
-  // Skill matches are derived from the bundled gazetteer. Keep the version on
-  // each resume so additions and corrected aliases can be backfilled from the
-  // stored raw text without asking for the original file again.
-  if (!columns.has('skills_version')) {
-    database.exec("ALTER TABLE resumes ADD COLUMN skills_version TEXT NOT NULL DEFAULT ''")
-  }
+interface LibraryUsage {
+  resumeCount: number
+  chunkCount: number
+  rawTextChars: number
+  chunkTextChars: number
 }
 
 export function getDb(): Database.Database {
   if (db) return db
   const dir = app.getPath('userData')
   mkdirSync(dir, { recursive: true })
-  db = new Database(join(dir, 'cv_filter.db'))
-  db.pragma('journal_mode = WAL')
-  db.pragma('foreign_keys = ON')
-  db.exec(SCHEMA)
-  migrate(db)
-  return db
+  const path = join(dir, 'cv_filter.db')
+  if (!recoveryChecked) {
+    recoverInterruptedRestore(path)
+    pruneStaleDatabaseArtifacts(path)
+    recoveryChecked = true
+  }
+
+  const opened = new Database(path)
+  try {
+    opened.pragma('journal_mode = WAL')
+    opened.pragma('foreign_keys = ON')
+    // Deleted or replaced values (especially a migrated legacy plaintext API
+    // key) must be overwritten in database pages instead of left recoverable
+    // on the freelist.
+    opened.pragma('secure_delete = ON')
+    migrateDatabase(opened)
+    db = opened
+    return opened
+  } catch (error) {
+    opened.close()
+    throw error
+  }
 }
 
 export function dbPath(): string {
   return join(app.getPath('userData'), 'cv_filter.db')
+}
+
+/**
+ * Checkpoints and closes the managed connection before an atomic restore.
+ * Callers must reopen it with `getDb`, including on failure.
+ */
+export function closeDbForMaintenance(): void {
+  if (!db) return
+  checkpointWalOrThrow('The library database is still in use and could not be safely replaced.')
+  db.close()
+  db = null
+  libraryUsage = null
+}
+
+/** Flushes sanitised pages and removes old WAL frames, failing if another reader blocks it. */
+export function checkpointWalOrThrow(message: string): void {
+  const checkpoint = getDb().pragma('wal_checkpoint(TRUNCATE)') as Array<{
+    busy: number
+    log: number
+    checkpointed: number
+  }>
+  const result = checkpoint[0]
+  if (!result || result.busy !== 0 || result.log !== result.checkpointed) {
+    throw new Error(message)
+  }
+}
+
+function currentLibraryUsage(): LibraryUsage {
+  if (libraryUsage) return libraryUsage
+  libraryUsage = getDb()
+    .prepare(
+      `SELECT
+         (SELECT COUNT(*) FROM resumes) AS resumeCount,
+         (SELECT COUNT(*) FROM chunks) AS chunkCount,
+         (SELECT COALESCE(SUM(length(raw_text)), 0) FROM resumes) AS rawTextChars,
+         (SELECT COALESCE(SUM(length(text)), 0) FROM chunks) AS chunkTextChars`
+    )
+    .get() as LibraryUsage
+  return libraryUsage
+}
+
+/**
+ * Checks the same aggregate invariants used at startup/restore. Call again
+ * inside the insert transaction because embedding yields to other imports.
+ */
+export function resumeCapacityError(
+  rawTextChars: number,
+  chunkCount: number,
+  chunkTextChars: number
+): string | null {
+  const usage = currentLibraryUsage()
+  if (usage.resumeCount + 1 > DATABASE_LIMITS.resumes) {
+    return `The library has reached Qumaa's ${DATABASE_LIMITS.resumes}-resume safety limit.`
+  }
+  if (usage.chunkCount + chunkCount > DATABASE_LIMITS.chunks) {
+    return `The library would exceed Qumaa's ${DATABASE_LIMITS.chunks}-passage safety limit.`
+  }
+  if (usage.rawTextChars + rawTextChars > DATABASE_LIMITS.totalRawTextChars) {
+    return 'The library would exceed Qumaa\'s total resume-text safety limit.'
+  }
+  if (usage.chunkTextChars + chunkTextChars > DATABASE_LIMITS.totalChunkTextChars) {
+    return 'The library would exceed Qumaa\'s total passage-text safety limit.'
+  }
+  return null
+}
+
+/** Updates the in-process aggregate immediately after a committed insert. */
+export function recordResumeInserted(
+  rawTextChars: number,
+  chunkCount: number,
+  chunkTextChars: number
+): void {
+  const usage = currentLibraryUsage()
+  usage.resumeCount++
+  usage.chunkCount += chunkCount
+  usage.rawTextChars += rawTextChars
+  usage.chunkTextChars += chunkTextChars
+}
+
+function invalidateLibraryUsage(): void {
+  libraryUsage = null
 }
 
 /* ---------- vector (de)serialisation ---------- */
@@ -160,9 +177,9 @@ export function blobToVector(b: Buffer): Float32Array {
 export function rowToSummary(r: ResumeRow): ResumeSummary {
   return {
     id: r.id,
+    recordKey: r.content_hash,
     fileName: r.file_name,
     filePath: r.file_path,
-    fileType: r.file_type,
     importedAt: r.imported_at,
     name: r.name,
     email: r.email,
@@ -172,8 +189,7 @@ export function rowToSummary(r: ResumeRow): ResumeSummary {
     educationLevel: r.education_level,
     // Stored as canonical ids; surfaced as display labels so the Library and the
     // Match cards name skills the same way ("CI/CD", not "cicd").
-    skills: skillLabels(JSON.parse(r.skills_json) as string[]),
-    likelyScanned: r.likely_scanned === 1
+    skills: skillLabels(JSON.parse(r.skills_json) as string[])
   }
 }
 
@@ -187,35 +203,63 @@ export function findByHash(hash: string): { id: number } | undefined {
 
 export function listResumes(): ResumeSummary[] {
   const rows = getDb()
-    .prepare('SELECT * FROM resumes ORDER BY imported_at DESC')
+    .prepare(`SELECT ${RESUME_ROW_COLUMNS} FROM resumes ORDER BY imported_at DESC`)
     .all() as ResumeRow[]
   return rows.map(rowToSummary)
 }
 
-/** Full record for the detail panel. Embeddings are deliberately not returned. */
-export function getResumeDetail(id: number): ResumeDetail | null {
-  const db = getDb()
-  const row = db.prepare('SELECT * FROM resumes WHERE id = ?').get(id) as ResumeRow | undefined
-  if (!row) return null
-
-  const passages = db
-    .prepare('SELECT section, ordinal, text FROM chunks WHERE resume_id = ? ORDER BY ordinal')
-    .all(id) as ResumePassage[]
-
-  return { summary: rowToSummary(row), rawText: row.raw_text, passages }
+/** Only the text and count rendered by the detail panel; chunk bodies stay in main. */
+export function getResumeDetail(ref: ResumeRef): ResumeDetail | null {
+  const row = getDb()
+    .prepare(
+      `SELECT raw_text AS rawText,
+              (SELECT COUNT(*) FROM chunks WHERE resume_id = resumes.id) AS passageCount
+       FROM resumes
+       WHERE id = ? AND content_hash = ?`
+    )
+    .get(ref.id, ref.recordKey) as ResumeDetail | undefined
+  return row ?? null
 }
 
-export function deleteResume(id: number): void {
-  getDb().prepare('DELETE FROM resumes WHERE id = ?').run(id)
+/** Resolves a stored source path from a trusted database id, never renderer input. */
+export function getResumeFilePath(ref: ResumeRef): string | null {
+  const row = getDb()
+    .prepare('SELECT file_path AS filePath FROM resumes WHERE id = ? AND content_hash = ?')
+    .get(ref.id, ref.recordKey) as
+    | { filePath: string }
+    | undefined
+  return row?.filePath || null
+}
+
+export function deleteResume(ref: ResumeRef): boolean {
+  const d = getDb()
+  const deleted = d.transaction(() => {
+    const removed = d.prepare('DELETE FROM resumes WHERE id = ? AND content_hash = ?').run(ref.id, ref.recordKey).changes === 1
+    if (removed) pruneRecruitingRecords(d)
+    return removed
+  })()
+  if (deleted) invalidateLibraryUsage()
+  return deleted
 }
 
 /** One transaction, so a bulk delete either fully happens or does not. */
-export function deleteResumes(ids: number[]): number {
-  if (ids.length === 0) return 0
+export function deleteResumes(refs: ResumeRef[]): number {
+  if (refs.length === 0) return 0
   const db = getDb()
-  const stmt = db.prepare('DELETE FROM resumes WHERE id = ?')
-  db.transaction(() => ids.forEach((id) => stmt.run(id)))()
-  return ids.length
+  const exists = db.prepare(
+    'SELECT 1 FROM resumes WHERE id = ? AND content_hash = ?'
+  )
+  const remove = db.prepare('DELETE FROM resumes WHERE id = ? AND content_hash = ?')
+  const deleted = db.transaction(() => {
+    if (refs.some((ref) => !exists.get(ref.id, ref.recordKey))) {
+      throw new Error('The library changed before deletion. Refresh it and select again.')
+    }
+    refs.forEach((ref) => remove.run(ref.id, ref.recordKey))
+    pruneRecruitingRecords(db)
+    return refs.length
+  })()
+  if (deleted > 0) invalidateLibraryUsage()
+  return deleted
 }
 
 export function getSetting(key: string): string | null {
@@ -247,9 +291,15 @@ export function deleteAllData(): void {
   d.transaction(() => {
     d.prepare('DELETE FROM resumes').run()
     d.prepare('DELETE FROM settings').run()
+    d.prepare('DELETE FROM recruiting_records').run()
   })()
   // VACUUM cannot run inside a transaction.
   d.exec('VACUUM')
+  checkpointWalOrThrow('Qumaa could not finish securely deleting all library data.')
+  libraryUsage = { resumeCount: 0, chunkCount: 0, rawTextChars: 0, chunkTextChars: 0 }
+  // Older beta restore code retained full rollback databases indefinitely.
+  // Wiping data must also remove those abandoned private copies.
+  pruneStaleDatabaseArtifacts(dbPath())
 }
 
 export function stats(): DbStats {
@@ -264,5 +314,3 @@ export function stats(): DbStats {
   }
   return { resumeCount, chunkCount, dbPath: dbPath(), dbSizeBytes: size }
 }
-
-export { EMBEDDING_DIM }

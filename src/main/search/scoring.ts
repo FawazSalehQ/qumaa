@@ -129,7 +129,7 @@ const SECTION_WEIGHT: Record<SectionKind, number> = {
   summary: 0.88
 }
 
-export interface SemanticResult {
+interface SemanticResult {
   semantic: number
   evidence: Evidence[]
 }

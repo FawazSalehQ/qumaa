@@ -24,7 +24,6 @@
     "src/preload/**/*",
     "src/shared/**/*",
     "electron.vite.config.ts",
-    "scripts/**/*",
     "test/fixtures/**/*"
   ]
 }

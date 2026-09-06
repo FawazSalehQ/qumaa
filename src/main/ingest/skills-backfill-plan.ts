@@ -9,7 +9,7 @@ import { createHash } from 'node:crypto'
 import skillsData from '../data/skills.json'
 import { extractSkills } from './skills.js'
 
-export interface SkillDefinition {
+interface SkillDefinition {
   id: string
   label: string
   aliases: string[]
@@ -18,11 +18,10 @@ export interface SkillDefinition {
 export interface StoredResumeSkills {
   id: number
   rawText: string
-  skillsJson: string
   skillsVersion: string
 }
 
-export interface SkillUpdate {
+interface SkillUpdate {
   id: number
   skillsJson: string
   skillsVersion: string

@@ -6,7 +6,7 @@
  * because Electron's `app` API is not available inside a utilityProcess.
  */
 import { env, pipeline, type FeatureExtractionPipeline } from '@huggingface/transformers'
-import { EMBEDDING_DIM, MODEL_ID, type FromWorker, type ToWorker } from './protocol.js'
+import { MODEL_ID, type FromWorker, type ToWorker } from './protocol.js'
 
 const modelDir = process.env.CV_FILTER_MODEL_DIR
 if (!modelDir) throw new Error('CV_FILTER_MODEL_DIR not set')
@@ -33,7 +33,7 @@ async function embed(texts: string[]): Promise<Float32Array> {
 
 async function main(): Promise<void> {
   extractor = await pipeline('feature-extraction', MODEL_ID, { dtype: 'q8' })
-  send({ type: 'ready', dimensions: EMBEDDING_DIM })
+  send({ type: 'ready' })
 
   process.parentPort.on('message', (e) => {
     const msg = e.data as ToWorker
@@ -44,7 +44,7 @@ async function main(): Promise<void> {
       // Serialised implicitly: each handler awaits before the next runs to
       // completion is not guaranteed, but ORT sessions are re-entrant-safe here.
       embed(msg.texts)
-        .then((vectors) => send({ type: 'result', id: msg.id, vectors, count: msg.texts.length }))
+        .then((vectors) => send({ type: 'result', id: msg.id, vectors }))
         .catch((err: unknown) =>
           send({ type: 'error', id: msg.id, message: err instanceof Error ? err.message : String(err) })
         )

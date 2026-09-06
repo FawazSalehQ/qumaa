@@ -6,9 +6,15 @@
 import chokidar, { type FSWatcher } from 'chokidar'
 import { basename } from 'node:path'
 import { indexReadiness } from '../embed/readiness.js'
+import { maintenance } from '../maintenance.js'
 import { isSupported } from './extract.js'
-import { collectFiles, ingestFile, fileExists } from './pipeline.js'
+import { collectFiles, ingestValidatedFile } from './pipeline.js'
 import { GenerationQueue } from './generation-queue.js'
+import {
+  canonicalizeWatchedRoot,
+  validateWatchedFileSource,
+  type ValidatedWatchRoot
+} from './source-file.js'
 import type { IngestOutcome } from '@shared/types.js'
 
 type Listener = (outcome: IngestOutcome) => void
@@ -19,28 +25,40 @@ let listener: Listener = () => {}
 const queue = new GenerationQueue()
 /** Serialises start/change/stop requests, including concurrent settings calls. */
 let transition: Promise<void> = Promise.resolve()
+/**
+ * Groups a whole watcher lifecycle change (stop/drain, database maintenance,
+ * and optional restart). Without this outer lock a concurrent Settings change
+ * can restart the watcher in the gap before restore/delete becomes exclusive.
+ */
+let lifecycle: Promise<void> = Promise.resolve()
 
 export function onWatchIngest(fn: Listener): void {
   listener = fn
 }
 
-function enqueue(path: string, generation: number): void {
+function enqueue(path: string, generation: number, watchedRoot: ValidatedWatchRoot): void {
   queue.enqueue(
     generation,
-    async (): Promise<IngestOutcome | null> => {
-      // Editors and copy operations fire events before the file is complete;
-      // a short settle plus an existence check avoids reading a partial file.
-      if (!(await fileExists(path))) return null
-      try {
-        return await ingestFile(path)
-      } catch (err) {
-        return {
-          status: 'failed',
-          fileName: basename(path),
-          reason: err instanceof Error ? err.message : 'Ingest failed'
+    (): Promise<IngestOutcome | null> =>
+      maintenance.runOperation(async () => {
+        // Revalidate each asynchronous event immediately before ingestion. The
+        // returned canonical path and identity are verified again on open.
+        let source
+        try {
+          source = await validateWatchedFileSource(watchedRoot, path)
+        } catch {
+          return null
         }
-      }
-    },
+        try {
+          return await ingestValidatedFile(source)
+        } catch (err) {
+          return {
+            status: 'failed',
+            fileName: basename(path),
+            reason: err instanceof Error ? err.message : 'Ingest failed'
+          }
+        }
+      }),
     (outcome) => {
       // Duplicates are the normal case on a catch-up scan, so stay quiet about them.
       if (outcome && outcome.status !== 'duplicate') listener(outcome)
@@ -51,6 +69,15 @@ function enqueue(path: string, generation: number): void {
 function serializeTransition(action: () => Promise<void>): Promise<void> {
   const run = transition.then(action, action)
   transition = run.catch(() => undefined)
+  return run
+}
+
+export function withWatcherLifecycle<T>(action: () => Promise<T>): Promise<T> {
+  const run = lifecycle.then(action, action)
+  lifecycle = run.then(
+    () => undefined,
+    () => undefined
+  )
   return run
 }
 
@@ -75,13 +102,15 @@ export function startWatching(folder: string): Promise<void> {
 
     // Catch-up scan first, so the folder's existing contents are indexed even
     // though chokidar's `ignoreInitial` suppresses add events for them.
-    const files = await collectFiles(folder)
+    const watchedRoot = await canonicalizeWatchedRoot(folder)
+    const files = await collectFiles(watchedRoot.canonicalPath)
     if (!queue.isCurrent(generation)) return
-    for (const file of files) enqueue(file, generation)
+    for (const file of files) enqueue(file, generation, watchedRoot)
 
     if (!queue.isCurrent(generation)) return
-    const nextWatcher = chokidar.watch(folder, {
+    const nextWatcher = chokidar.watch(watchedRoot.canonicalPath, {
       ignoreInitial: true,
+      followSymlinks: false,
       ignored: (p) => basename(p).startsWith('.'),
       awaitWriteFinish: { stabilityThreshold: 1500, pollInterval: 200 },
       depth: 8
@@ -89,7 +118,9 @@ export function startWatching(folder: string): Promise<void> {
     watcher = nextWatcher
 
     nextWatcher.on('add', (path) => {
-      if (queue.isCurrent(generation) && isSupported(path)) enqueue(path, generation)
+      if (queue.isCurrent(generation) && isSupported(path)) {
+        enqueue(path, generation, watchedRoot)
+      }
     })
   })
 }

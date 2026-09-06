@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { chunkSections } from '../src/main/ingest/chunk.js'
+import { chunkSections, MAX_CHUNKS_PER_RESUME } from '../src/main/ingest/chunk.js'
 import type { Section } from '../src/main/ingest/sections.js'
 
 const words = (n: number, token = 'word'): string =>
@@ -49,5 +49,13 @@ describe('chunkSections', () => {
     // A 3-word document is the only chunk, so it survives; a 3-word tail after a
     // real chunk would not.
     expect(chunkSections(sections)).toHaveLength(1)
+  })
+
+  it('bounds the number of passages one resume can create', () => {
+    const sections: Section[] = Array.from(
+      { length: MAX_CHUNKS_PER_RESUME + 1 },
+      (_, index) => ({ kind: 'experience', text: words(12, `s${index}-`), start: index })
+    )
+    expect(() => chunkSections(sections)).toThrow('searchable passages')
   })
 })

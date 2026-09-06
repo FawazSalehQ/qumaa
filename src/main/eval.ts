@@ -6,8 +6,8 @@
  * corpus, runs one real posting, and grades the ranking against the labels.
  *
  * Ground truth lives in the filename (`t1_03_hannah_reid.docx`). That is safe
- * because nothing in ranking reads a filename: FTS5 indexes only `raw_text`,
- * and the scorer sees chunk embeddings, `raw_text`, and extracted skills.
+ * because nothing in ranking reads a filename: it consumes FTS scores, chunk
+ * embeddings and text, and extracted skills.
  *
  * Uses a throwaway userData directory, so the real library is never touched.
  */
@@ -66,7 +66,7 @@ async function main(): Promise<void> {
   let files: string[]
   try {
     files = readdirSync(CORPUS)
-      .filter((f) => /\.(pdf|docx|txt|md)$/i.test(f) && !f.startsWith('~$'))
+      .filter((f) => /\.(pdf|docx|md|markdown)$/i.test(f) && !f.startsWith('~$'))
       .sort()
   } catch {
     console.error(`No corpus at ${CORPUS}`)
@@ -84,10 +84,15 @@ async function main(): Promise<void> {
   if (unlabelled.length > 0) {
     // Without a tier there is nothing to grade against, and a silently
     // ungraded corpus would produce confident but meaningless numbers.
-    console.error(`${unlabelled.length} file(s) have no t<n>_ tier prefix, e.g. ${unlabelled[0]}`)
-    console.error('Rename them or the results cannot be graded. See eval/README.md.')
-    app.exit(1)
-    return
+    if (process.env.QUMAA_EVAL_IGNORE_UNLABELLED === '1') {
+      console.warn(`Ignoring ${unlabelled.length} explicitly unlabelled file(s).`)
+      files = files.filter((file) => tierOf(file) !== null)
+    } else {
+      console.error(`${unlabelled.length} file(s) have no t<n>_ tier prefix, e.g. ${unlabelled[0]}`)
+      console.error('Rename them or the results cannot be graded. See eval/README.md.')
+      app.exit(1)
+      return
+    }
   }
 
   console.log(`Loading model...`)

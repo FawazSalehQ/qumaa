@@ -12,6 +12,7 @@ const TARGET_WORDS = 200
 const OVERLAP_WORDS = 50
 /** Below this, a window is noise rather than signal (e.g. a trailing address). */
 const MIN_WORDS = 12
+export const MAX_CHUNKS_PER_RESUME = 512
 
 export interface Chunk {
   section: SectionKind
@@ -44,6 +45,9 @@ export function chunkSections(sections: Section[]): Chunk[] {
     for (const text of windowsOf(section.text)) {
       if (text.split(/\s+/).length < MIN_WORDS && chunks.length > 0) continue
       chunks.push({ section: section.kind, ordinal: ordinal++, text })
+      if (chunks.length > MAX_CHUNKS_PER_RESUME) {
+        throw new Error(`Resume produces more than ${MAX_CHUNKS_PER_RESUME} searchable passages.`)
+      }
     }
   }
 

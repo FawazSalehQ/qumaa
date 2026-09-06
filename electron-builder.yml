@@ -30,6 +30,13 @@ afterPack: scripts/adhoc-sign.cjs
 files:
   - out/**
   - package.json
+  # Development entry points are built for local verification but are never
+  # launched by the installed application.
+  - '!out/main/bench.js'
+  - '!out/main/eval.js'
+  - '!out/main/seed.js'
+  - '!out/main/smoke.js'
+  - '!out/main/chunks/corpus-*.js'
   - '!node_modules/onnxruntime-web/**'
 
 # Native modules cannot be dlopen'd from inside an asar archive.
@@ -41,8 +48,8 @@ asarUnpack:
 
 extraResources:
   # Vendored model, so the packaged app is fully offline on every platform.
-  - from: resources/models
-    to: models
+  - from: resources/models/multilingual-e5-small
+    to: models/multilingual-e5-small
     # extraResources copies verbatim, so macOS folder metadata would otherwise
     # be packaged along with the weights.
     filter:
@@ -71,6 +78,11 @@ mac:
   files:
     - out/**
     - package.json
+    - '!out/main/bench.js'
+    - '!out/main/eval.js'
+    - '!out/main/seed.js'
+    - '!out/main/smoke.js'
+    - '!out/main/chunks/corpus-*.js'
     - '!node_modules/onnxruntime-web/**'
     - '!node_modules/onnxruntime-node/bin/napi-v6/linux/**'
     - '!node_modules/onnxruntime-node/bin/napi-v6/win32/**'
@@ -89,6 +101,11 @@ win:
   files:
     - out/**
     - package.json
+    - '!out/main/bench.js'
+    - '!out/main/eval.js'
+    - '!out/main/seed.js'
+    - '!out/main/smoke.js'
+    - '!out/main/chunks/corpus-*.js'
     - '!node_modules/onnxruntime-web/**'
     - '!node_modules/onnxruntime-node/bin/napi-v6/linux/**'
     - '!node_modules/onnxruntime-node/bin/napi-v6/darwin/**'

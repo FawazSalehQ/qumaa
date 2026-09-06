@@ -4,6 +4,7 @@
  * search result.
  */
 import type { EducationLevel } from '@shared/types.js'
+import { DATABASE_LIMITS } from '../db/migrations.js'
 import { extractSkills } from './skills.js'
 import { sectionText, type Section } from './sections.js'
 
@@ -22,11 +23,13 @@ export interface ExtractedFields {
 const EMAIL_RE = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/
 // Deliberately permissive: international formats vary wildly. Requires 9+ digits
 // so it does not swallow years, postcodes, or "24/7".
-const PHONE_RE = /(?:\+\d{1,3}[\s.-]?)?(?:\(\d{1,4}\)[\s.-]?)?\d[\d\s.-]{7,}\d/
+const PHONE_RE = /(?:\+\p{Nd}{1,3}[\s.-]?)?(?:\(\p{Nd}{1,4}\)[\s.-]?)?\p{Nd}[\p{Nd}\s.-]{7,}\p{Nd}/u
 
-function firstMatch(text: string, re: RegExp): string | null {
+function firstMatch(text: string, re: RegExp, maxChars: number): string | null {
   const m = text.match(re)
-  return m ? m[0].trim() : null
+  if (!m) return null
+  const value = m[0].trim()
+  return value.length <= maxChars ? value : null
 }
 
 function extractPhone(text: string): string | null {
@@ -35,8 +38,15 @@ function extractPhone(text: string): string | null {
     if (/\b(19|20)\d{2}\s*[-–—]\s*((19|20)\d{2}|present)/i.test(line)) continue
     const m = line.match(PHONE_RE)
     if (m) {
-      const digits = m[0].replace(/\D/g, '')
-      if (digits.length >= 9 && digits.length <= 15) return m[0].trim()
+      const digits = m[0].match(/\p{Nd}/gu) ?? []
+      const value = m[0].trim()
+      if (
+        digits.length >= 9 &&
+        digits.length <= 15 &&
+        value.length <= DATABASE_LIMITS.phoneChars
+      ) {
+        return value
+      }
     }
   }
   return null
@@ -45,10 +55,10 @@ function extractPhone(text: string): string | null {
 /* ---------- name ---------- */
 
 const NOT_A_NAME =
-  /\b(resume|curriculum\s+vitae|cv|profile|summary|objective|contact|address|phone|email|linkedin|github|portfolio)\b/i
+  /(?:\b(resume|curriculum\s+vitae|cv|profile|summary|objective|contact|address|phone|email|linkedin|github|portfolio)\b|السيرة\s+الذاتية|ملخص|الملف\s+الشخصي|الهدف|بيانات\s+الاتصال|العنوان|الهاتف|الجوال|البريد\s+الإلكتروني|المهارات|الخبرات)/i
 
 /** Titles and suffixes we strip before deciding if a line looks like a name. */
-const NAME_AFFIX = /^(mr|mrs|ms|miss|dr|prof|eng)\.?\s+/i
+const NAME_AFFIX = /^(?:(?:mr|mrs|ms|miss|dr|prof|eng)\.?|السيد(?:ة)?|د\.?|دكتور(?:ة)?|م\.?|مهندس(?:ة)?)\s+/i
 
 function looksLikeName(line: string): boolean {
   const t = line.trim().replace(NAME_AFFIX, '')
@@ -63,7 +73,8 @@ function looksLikeName(line: string): boolean {
   // ("FAWAZ ALQAHTANI"). Both are overwhelmingly common resume headers.
   const allTitle = words.every((w) => /^[A-Z][a-zA-Z'’-]*$/.test(w))
   const allUpper = words.every((w) => /^[A-Z][A-Z'’-]*$/.test(w)) && t === t.toUpperCase()
-  return allTitle || allUpper
+  const allArabic = words.every((w) => /^[\p{Script=Arabic}\p{M}'’ـ-]+$/u.test(w))
+  return allTitle || allUpper || allArabic
 }
 
 function extractName(text: string): string | null {
@@ -82,6 +93,10 @@ function extractName(text: string): string | null {
 
 // "Riyadh, Saudi Arabia" / "London, UK" / "Austin, TX"
 const LOCATION_RE = /\b([A-Z][a-zA-Z.'-]+(?:\s+[A-Z][a-zA-Z.'-]+)?),\s*([A-Z]{2,}|[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\b/
+const ARABIC_LOCATION_LABEL =
+  /(?:العنوان|الموقع|مكان\s+الإقامة|المدينة|الدولة)\s*[:：-]?\s*([\p{Script=Arabic}\p{M}][\p{Script=Arabic}\p{M}\s،,-]{1,80})/u
+const ARABIC_PLACE =
+  /(?:الرياض|جدة|مكة|مكة\s+المكرمة|المدينة\s+المنورة|الدمام|الخبر|الظهران|أبها|تبوك|دبي|أبو\s+ظبي|الدوحة|الكويت|مسقط|المنامة|المملكة\s+العربية\s+السعودية|السعودية|الإمارات|قطر|الكويت|عمان|البحرين)/u
 
 /**
  * "Charge Nurse, ICU" and "Distributed Computing, Imperial College" both match
@@ -92,15 +107,21 @@ const NOT_A_PLACE =
   /\b(nurse|engineer|manager|director|analyst|developer|consultant|officer|assistant|specialist|accountant|intern|lead|head|president|hospital|university|college|school|institute|clinic|corp|corporation|inc|ltd|llc|gmbh|plc|company|department|unit|team|science|engineering|computing|studies|degree|bsc|msc|mba|phd)\b/i
 
 function candidateLocation(line: string): string | null {
+  const arabicLabelled = line.match(ARABIC_LOCATION_LABEL)
+  if (arabicLabelled) {
+    const value = arabicLabelled[1].trim().split(/\s{2,}|[|•]/u)[0]
+    if (value) return value
+  }
   const m = line.match(LOCATION_RE)
   if (!m) return null
-  return NOT_A_PLACE.test(m[0]) ? null : m[0].trim()
+  const value = m[0].trim()
+  return NOT_A_PLACE.test(value) || value.length > DATABASE_LIMITS.labelChars ? null : value
 }
 
 function extractLocation(text: string): string | null {
   // A line explicitly labelled as an address is the most trustworthy source.
   for (const line of text.split('\n').slice(0, 15)) {
-    if (!/address|location/i.test(line)) continue
+    if (!/address|location|العنوان|الموقع|مكان\s+الإقامة|المدينة|الدولة/i.test(line)) continue
     const found = candidateLocation(line)
     if (found) return found
   }
@@ -108,6 +129,8 @@ function extractLocation(text: string): string | null {
   for (const line of text.split('\n').slice(0, 8)) {
     const found = candidateLocation(line)
     if (found) return found
+    const arabic = line.match(ARABIC_PLACE)
+    if (arabic) return arabic[0]
   }
   return null
 }
@@ -218,7 +241,7 @@ export function extractFields(fullText: string, sections: Section[]): ExtractedF
 
   return {
     name: extractName(fullText),
-    email: firstMatch(fullText, EMAIL_RE),
+    email: firstMatch(fullText, EMAIL_RE, DATABASE_LIMITS.emailChars),
     phone: extractPhone(fullText),
     location: extractLocation(fullText),
     yearsExperience: years,

@@ -1,7 +1,7 @@
 /**
  * The API key is the one secret this app stores, so the storage format matters:
- * a key written by an older version must keep working, and a machine where the
- * OS keychain is unavailable or refuses must not lose the user's key.
+ * a key written by an older version must migrate safely, while a machine where
+ * protected storage is unavailable must never fall back to plaintext.
  *
  * `electron` and the database are mocked so this runs without booting an app.
  */
@@ -11,13 +11,17 @@ const store = new Map<string, string | null>()
 const safeStorage = {
   available: true,
   throwOnAvailable: false,
+  throwOnEncrypt: false,
   isEncryptionAvailable: vi.fn(() => {
     if (safeStorage.throwOnAvailable) throw new Error('keychain unavailable')
     return safeStorage.available
   }),
   // Reversible stand-in for real OS encryption: the test only cares that the
   // stored bytes are not the plaintext and that they round trip.
-  encryptString: vi.fn((s: string) => Buffer.from(`CIPHER(${s})`)),
+  encryptString: vi.fn((s: string) => {
+    if (safeStorage.throwOnEncrypt) throw new Error('encryption failed')
+    return Buffer.from(`CIPHER(${s})`)
+  }),
   decryptString: vi.fn((b: Buffer) => {
     const m = /^CIPHER\((.*)\)$/s.exec(b.toString())
     if (!m) throw new Error('not decryptable')
@@ -25,8 +29,29 @@ const safeStorage = {
   })
 }
 
+const database = {
+  exec: vi.fn(),
+  pragma: vi.fn(() => [{ busy: 0, log: 0, checkpointed: 0 }]),
+  prepare: vi.fn((sql: string) => ({
+    run: (key: string, value?: string | null) => {
+      if (sql.startsWith('DELETE')) store.delete(key)
+      else if (value === null || value === undefined) store.delete(key)
+      else store.set(key, value)
+      return { changes: 1 }
+    }
+  })),
+  transaction: <T>(fn: () => T) => () => fn()
+}
+
 vi.mock('electron', () => ({ safeStorage }))
 vi.mock('../src/main/db/index.js', () => ({
+  checkpointWalOrThrow: () => {
+    const result = database.pragma('wal_checkpoint(TRUNCATE)')[0]
+    if (!result || result.busy !== 0 || result.log !== result.checkpointed) {
+      throw new Error('checkpoint failed')
+    }
+  },
+  getDb: () => database,
   getSetting: (k: string) => store.get(k) ?? null,
   setSetting: (k: string, v: string | null) => {
     if (v === null) store.delete(k)
@@ -34,7 +59,14 @@ vi.mock('../src/main/db/index.js', () => ({
   }
 }))
 
-const { getApiKey, hasApiKey, setApiKey } = await import('../src/main/secrets.js')
+const {
+  finishPendingSecretCleanup,
+  getApiKey,
+  getApiKeyStatus,
+  hasApiKey,
+  protectLegacyApiKey,
+  setApiKey
+} = await import('../src/main/secrets.js')
 
 const KEY = 'anthropicApiKey'
 const SECRET = 'sk-ant-api03-not-a-real-key'
@@ -43,6 +75,7 @@ beforeEach(() => {
   store.clear()
   safeStorage.available = true
   safeStorage.throwOnAvailable = false
+  safeStorage.throwOnEncrypt = false
   vi.clearAllMocks()
 })
 
@@ -66,38 +99,71 @@ describe('API key storage', () => {
     vi.clearAllMocks()
 
     expect(hasApiKey()).toBe(true)
+    expect(getApiKeyStatus()).toBe('protected')
     expect(safeStorage.decryptString).not.toHaveBeenCalled()
     expect(safeStorage.isEncryptionAvailable).not.toHaveBeenCalled()
   })
 
-  it('reads back a cleartext key written by an earlier version', () => {
+  it('reports a cleartext key as migration-needed without using it', () => {
     store.set(KEY, SECRET)
-    expect(getApiKey()).toBe(SECRET)
+    expect(getApiKeyStatus()).toBe('migration-needed')
+    expect(hasApiKey()).toBe(false)
+    expect(() => getApiKey()).toThrow('Protect the API key')
   })
 
-  it('re-encrypts a cleartext key in place on first read', () => {
+  it('protects a cleartext key only through the deliberate migration action', () => {
     store.set(KEY, SECRET)
-    getApiKey()
+    expect(protectLegacyApiKey()).toBe(true)
     expect(store.get(KEY)!.startsWith('enc.v1:')).toBe(true)
+    expect(store.get('credentialCleanupPending')).toBe('true')
     expect(getApiKey()).toBe(SECRET)
   })
 
-  it('keeps the key when the keychain is unavailable', () => {
+  it('refuses a new key without modifying storage when encryption is unavailable', () => {
     safeStorage.available = false
-    setApiKey(SECRET)
-    expect(getApiKey()).toBe(SECRET)
+    store.set(KEY, 'enc.v1:existing')
+
+    expect(() => setApiKey(SECRET)).toThrow('Protected credential storage is unavailable')
+    expect(store.get(KEY)).toBe('enc.v1:existing')
   })
 
-  it('keeps the key when the keychain throws', () => {
+  it('refuses a new key without writing plaintext when the keychain throws', () => {
     safeStorage.throwOnAvailable = true
-    setApiKey(SECRET)
-    expect(getApiKey()).toBe(SECRET)
+
+    expect(() => setApiKey(SECRET)).toThrow('Protected credential storage is unavailable')
+    expect(store.has(KEY)).toBe(false)
   })
 
-  it('reports an undecryptable value as absent instead of throwing', () => {
+  it('preserves an existing value if OS encryption itself fails', () => {
+    store.set(KEY, 'enc.v1:existing')
+    safeStorage.throwOnEncrypt = true
+
+    expect(() => setApiKey(SECRET)).toThrow('Protected credential storage is unavailable')
+    expect(store.get(KEY)).toBe('enc.v1:existing')
+  })
+
+  it('does not rewrite a legacy plaintext key when encryption is unavailable', () => {
+    store.set(KEY, SECRET)
+    safeStorage.available = false
+
+    expect(() => protectLegacyApiKey()).toThrow('Protected credential storage is unavailable')
+    expect(store.get(KEY)).toBe(SECRET)
+    expect(safeStorage.encryptString).not.toHaveBeenCalled()
+  })
+
+  it('surfaces an actionable error for an undecryptable protected value', () => {
     store.set(KEY, 'enc.v1:' + Buffer.from('garbage').toString('base64'))
-    expect(() => getApiKey()).not.toThrow()
-    expect(getApiKey()).toBeNull()
+    expect(() => getApiKey()).toThrow('Remove it and add it again')
+  })
+
+  it('vacuum-checkpoints legacy plaintext remnants before clearing the retry marker', () => {
+    store.set(KEY, SECRET)
+    protectLegacyApiKey()
+
+    expect(finishPendingSecretCleanup()).toBe(true)
+    expect(database.exec).toHaveBeenCalledWith('VACUUM')
+    expect(database.pragma).toHaveBeenCalledWith('wal_checkpoint(TRUNCATE)')
+    expect(store.has('credentialCleanupPending')).toBe(false)
   })
 
   it('clears the key', () => {

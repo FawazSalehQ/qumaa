@@ -17,9 +17,8 @@ const fakeDb = vi.hoisted(() => ({ rows: [] as FakeRow[] }))
 vi.mock('../src/main/db/index.js', () => ({
   blobToVector: (value: Float32Array): Float32Array => value,
   getDb: () => ({
-    prepare: (sql: string) => ({
-      all: (...args: number[]) =>
-        sql.includes('id != ?') ? fakeDb.rows.filter((row) => row.id !== args[0]) : fakeDb.rows
+    prepare: () => ({
+      all: () => fakeDb.rows
     })
   })
 }))
@@ -213,20 +212,5 @@ describe('findNearDuplicate', () => {
 
     expect(match).toMatchObject({ id: 1, fileName: 'jane-old.pdf' })
     expect(match?.similarity).toBeCloseTo(0.98)
-  })
-
-  it('honors excludeId', () => {
-    fakeDb.rows = [
-      {
-        id: 7,
-        name: null,
-        email: null,
-        phone: null,
-        fileName: 'self.pdf',
-        doc_vector: unitVector(1)
-      }
-    ]
-
-    expect(findNearDuplicate(new Float32Array([1, 0]), NONE, 7)).toBeNull()
   })
 })

@@ -1,44 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ResumeSummary } from '@shared/types.js'
+import { candidateWithProfile, type CandidateProfile } from '@shared/recruiting.js'
 import type { Toast } from '../components/Toasts.js'
 import { QumaaMark } from '../components/Brand.js'
-
-/** Last path segment, tolerating both POSIX and Windows separators. */
-function basename(p: string): string {
-  return p.split(/[\\/]/).filter(Boolean).pop() ?? p
-}
-
-type SortKey = 'name' | 'years' | 'education' | 'imported'
-
-/** Nulls always sort last regardless of direction: an unparsed field is absence
- *  of information, not a low value, and burying it keeps the useful rows on top. */
-function compare(a: ResumeSummary, b: ResumeSummary, key: SortKey): number {
-  const nullsLast = (x: unknown, y: unknown): number | null => {
-    const xn = x === null || x === undefined
-    const yn = y === null || y === undefined
-    if (xn && yn) return 0
-    if (xn) return 1
-    if (yn) return -1
-    return null
-  }
-  switch (key) {
-    case 'name': {
-      const n = nullsLast(a.name, b.name)
-      return n ?? (a.name as string).localeCompare(b.name as string)
-    }
-    case 'years': {
-      const n = nullsLast(a.yearsExperience, b.yearsExperience)
-      return n ?? (a.yearsExperience as number) - (b.yearsExperience as number)
-    }
-    case 'education': {
-      const rank = { phd: 4, masters: 3, bachelors: 2, associate: 1, none: 0 }
-      const n = nullsLast(a.educationLevel, b.educationLevel)
-      return n ?? rank[a.educationLevel!] - rank[b.educationLevel!]
-    }
-    case 'imported':
-      return a.importedAt - b.importedAt
-  }
-}
+import { compareResumes, type LibrarySortKey } from '../librarySort.js'
+import '../components/recruiter-profile.css'
 
 function SortHeader({
   label,
@@ -48,10 +14,10 @@ function SortHeader({
   onSort
 }: {
   label: string
-  k: SortKey
-  sort: SortKey
+  k: LibrarySortKey
+  sort: LibrarySortKey
   asc: boolean
-  onSort: (k: SortKey) => void
+  onSort: (k: LibrarySortKey) => void
 }): React.JSX.Element {
   const active = sort === k
   return (
@@ -69,59 +35,87 @@ function SortHeader({
 interface Props {
   resumes: ResumeSummary[]
   onChanged: () => Promise<void>
-  onIngestPaths: (paths: string[]) => Promise<void>
+  onImport: (kind: 'files' | 'folder') => Promise<void>
   onToast: (t: Toast[]) => void
   onOpenResume: (r: ResumeSummary) => void
+  profileRevision?: number
 }
 
 export default function LibraryView({
   resumes,
   onChanged,
-  onIngestPaths,
+  onImport,
   onToast,
-  onOpenResume
+  onOpenResume,
+  profileRevision = 0
 }: Props): React.JSX.Element {
   const [filter, setFilter] = useState('')
-  const [sort, setSort] = useState<SortKey>('imported')
+  const [sort, setSort] = useState<LibrarySortKey>('imported')
   const [asc, setAsc] = useState(false)
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [pasting, setPasting] = useState(false)
   const [pasteText, setPasteText] = useState('')
   const [pasteLabel, setPasteLabel] = useState('')
+  const [profiles, setProfiles] = useState<CandidateProfile[]>([])
+  const [minimumYears, setMinimumYears] = useState('')
+  const [education, setEducation] = useState('')
+  const [withNotes, setWithNotes] = useState(false)
+  const [availability, setAvailability] = useState('')
+
+  useEffect(() => {
+    let active = true
+    window.api.recruiting.listProfiles().then((next) => {
+      if (active) setProfiles(next)
+    }).catch((error: unknown) => {
+      if (!active) return
+      setProfiles([])
+      onToast([{ id: crypto.randomUUID(), kind: 'error', message: error instanceof Error ? error.message : 'Could not load recruiter profiles.' }])
+    })
+    return () => { active = false }
+  }, [resumes, profileRevision, onToast])
+
+  const profilesByRecord = useMemo(() => new Map(
+    profiles.flatMap((profile) => profile.recordKeys.map((key) => [key, profile] as const))
+  ), [profiles])
+
+  // A restore can reuse numeric ids for different records. Selection belongs
+  // to one rendered library snapshot and must never carry into the next one.
+  useEffect(() => setSelected(new Set()), [resumes])
 
   const shown = useMemo(() => {
     const q = filter.trim().toLowerCase()
-    const matched = q
-      ? resumes.filter((r) =>
-          [r.name, r.fileName, r.email, r.location, ...r.skills]
-            .filter(Boolean)
-            .some((v) => String(v).toLowerCase().includes(q))
-        )
-      : resumes
+    const matched = resumes.map((resume) => candidateWithProfile(resume, profilesByRecord.get(resume.recordKey)))
+      .filter((r) => {
+        const profile = profilesByRecord.get(r.recordKey)
+        if (minimumYears !== '' && (r.yearsExperience === null || r.yearsExperience < Number(minimumYears))) return false
+        if (education && r.educationLevel !== education) return false
+        if (withNotes && !profile?.note.trim()) return false
+        if (availability === 'recorded' && !profile?.availability.trim()) return false
+        if (availability === 'missing' && profile?.availability.trim()) return false
+        return !q || [r.name, r.fileName, r.email, r.phone, r.location, ...r.skills,
+          profile?.expectedSalary, profile?.noticePeriod, profile?.availability,
+          profile?.preferredLocation, profile?.note, ...(profile?.tags ?? [])]
+          .filter(Boolean).some((value) => String(value).toLowerCase().includes(q))
+      })
     // Copy before sorting: the prop array belongs to the parent.
-    return [...matched].sort((a, b) => (asc ? 1 : -1) * compare(a, b, sort))
-  }, [resumes, filter, sort, asc])
+    return [...matched].sort((a, b) => compareResumes(a, b, sort, asc))
+  }, [resumes, profilesByRecord, filter, minimumYears, education, withNotes, availability, sort, asc])
+
+  const hasFilters = Boolean(filter || minimumYears || education || withNotes || availability)
+  const clearFilters = (): void => {
+    setFilter('')
+    setMinimumYears('')
+    setEducation('')
+    setWithNotes(false)
+    setAvailability('')
+  }
 
   const pickFiles = async (): Promise<void> => {
-    await onIngestPaths(await window.api.ingest.pickFiles())
+    await onImport('files')
   }
 
   const pickFolder = async (): Promise<void> => {
-    const folder = await window.api.ingest.pickFolder()
-    if (!folder) return
-    const outcomes = await window.api.ingest.folder(folder)
-    const imported = outcomes.filter(
-      (o) => o.status === 'imported' || o.status === 'near-duplicate'
-    ).length
-    const dupes = outcomes.filter((o) => o.status === 'duplicate').length
-    onToast([
-      {
-        id: crypto.randomUUID(),
-        kind: 'success',
-        message: `${basename(folder)}: ${imported} imported, ${dupes} already present`
-      }
-    ])
-    await onChanged()
+    await onImport('folder')
   }
 
   const submitPaste = async (): Promise<void> => {
@@ -152,7 +146,7 @@ export default function LibraryView({
     await onChanged()
   }
 
-  const toggleSort = (key: SortKey): void => {
+  const toggleSort = (key: LibrarySortKey): void => {
     if (sort === key) setAsc((a) => !a)
     else {
       setSort(key)
@@ -176,8 +170,8 @@ export default function LibraryView({
   }
 
   const removeSelected = async (): Promise<void> => {
-    const ids = [...selected]
-    const deleted = await window.api.resumes.removeMany(ids)
+    const selectedResumes = resumes.filter((resume) => selected.has(resume.id))
+    const deleted = await window.api.resumes.removeMany(selectedResumes)
     if (deleted > 0) {
       onToast([
         { id: crypto.randomUUID(), kind: 'success', message: `Deleted ${deleted} resumes` }
@@ -188,8 +182,8 @@ export default function LibraryView({
   }
 
   const remove = async (r: ResumeSummary): Promise<void> => {
-    await window.api.resumes.remove(r.id)
-    await onChanged()
+    const deleted = await window.api.resumes.remove(r)
+    if (deleted) await onChanged()
   }
 
   return (
@@ -198,6 +192,7 @@ export default function LibraryView({
         <h2>Library</h2>
         <p className="sub">
           {resumes.length} resume{resumes.length === 1 ? '' : 's'}
+          {hasFilters && ` · ${shown.length} shown`}
         </p>
       </header>
 
@@ -225,12 +220,41 @@ export default function LibraryView({
         <span className="spacer" />
         <input
           type="text"
-          placeholder="Filter by name, skill, email…"
+          aria-label="Search candidates and screening information"
+          placeholder="Name, skill, screening details…"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           style={{ width: 240 }}
         />
       </div>
+
+      {resumes.length > 0 && (
+        <div className="row library-filters" aria-label="Candidate filters">
+          <label htmlFor="library-minimum-years">Experience
+            <input id="library-minimum-years" type="number" min="0" max="100" step="0.5" placeholder="Min."
+              value={minimumYears} onChange={(event) => setMinimumYears(event.target.value)} aria-label="Minimum years of experience" />
+            years
+          </label>
+          <label htmlFor="library-education">Education
+            <select id="library-education" value={education} onChange={(event) => setEducation(event.target.value)}>
+              <option value="">Any level</option>
+              <option value="associate">Associate</option>
+              <option value="bachelors">Bachelor’s</option>
+              <option value="masters">Master’s</option>
+              <option value="phd">PhD</option>
+            </select>
+          </label>
+          <label htmlFor="library-availability">Availability
+            <select id="library-availability" value={availability} onChange={(event) => setAvailability(event.target.value)}>
+              <option value="">Any</option>
+              <option value="recorded">Recorded</option>
+              <option value="missing">Not recorded</option>
+            </select>
+          </label>
+          <label><input type="checkbox" checked={withNotes} onChange={(event) => setWithNotes(event.target.checked)} />With screening notes</label>
+          {hasFilters && <button className="btn sm" onClick={clearFilters}>Clear filters</button>}
+        </div>
+      )}
 
       {pasting && (
         <div className="card" style={{ marginBottom: 16 }}>
@@ -262,11 +286,11 @@ export default function LibraryView({
         resumes.length === 0 ? (
           <div className="empty">
             <span className="empty-mark">
-              <QumaaMark size={30} tone="color" />
+              <QumaaMark size={30} />
             </span>
             <p className="empty-title">No resumes yet</p>
             <p className="empty-body">
-              Drag PDFs, DOCX, or text files anywhere onto this window, or pick them yourself.
+              Drag PDF, DOCX, or Markdown files anywhere onto this window, or pick them yourself.
             </p>
             <div className="row empty-actions">
               <button className="btn primary" onClick={pickFiles}>
@@ -280,10 +304,10 @@ export default function LibraryView({
         ) : (
           <div className="empty">
             <p className="empty-title">No matches</p>
-            <p className="empty-body">Nothing in the library matches “{filter}”.</p>
+            <p className="empty-body">No candidates match the current search and filters.</p>
             <div className="row empty-actions">
-              <button className="btn" onClick={() => setFilter('')}>
-                Clear filter
+              <button className="btn" onClick={clearFilters}>
+                Clear filters
               </button>
             </div>
           </div>
@@ -319,7 +343,7 @@ export default function LibraryView({
               <tr
                 key={r.id}
                 className={`clickable ${selected.has(r.id) ? 'selected' : ''}`}
-                onClick={() => onOpenResume(r)}
+                onClick={() => onOpenResume(resumes.find((original) => original.recordKey === r.recordKey) ?? r)}
               >
                 {/* Selecting must not also open the detail panel. */}
                 <td onClick={(e) => e.stopPropagation()}>
@@ -335,9 +359,12 @@ export default function LibraryView({
                     {r.name ?? <span className="muted">Unknown name</span>}
                   </div>
                   <div className="cell-sub">
-                    {r.fileName}{' '}
-                    {r.likelyScanned && <span className="warn-badge">no text layer</span>}
+                    {r.fileName}
                   </div>
+                  {profilesByRecord.has(r.recordKey) && <span className="library-profile-badge">Recruiter profile</span>}
+                  {(profilesByRecord.get(r.recordKey)?.recordKeys.length ?? 0) > 1 && (
+                    <span className="cell-sub"> · {profilesByRecord.get(r.recordKey)?.recordKeys.length} CV versions</span>
+                  )}
                 </td>
                 <td className="cell-sub">
                   {r.email && <div>{r.email}</div>}
@@ -357,7 +384,7 @@ export default function LibraryView({
                     {r.filePath && (
                       <button
                         className="btn sm"
-                        onClick={() => window.api.resumes.reveal(r.filePath)}
+                        onClick={() => window.api.resumes.reveal(r)}
                       >
                         Reveal
                       </button>

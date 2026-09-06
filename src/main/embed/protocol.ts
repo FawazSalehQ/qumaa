@@ -2,6 +2,10 @@
 
 export const EMBEDDING_DIM = 384
 export const MODEL_ID = 'multilingual-e5-small'
+/** Must match scripts/model-manifest.json; included in vector provenance so an
+ * intentional model-file update cannot mix old and new vectors silently. */
+export const MODEL_REVISION = '761b726dd34fb83930e26aab4e9ac3899aa1fa78'
+export const MODEL_VECTOR_ID = `${MODEL_ID}@${MODEL_REVISION}`
 
 /**
  * e5 requires an explicit prefix on BOTH sides: "query: " for the search text and
@@ -17,7 +21,7 @@ export type ToWorker =
   | { type: 'shutdown' }
 
 export type FromWorker =
-  | { type: 'ready'; dimensions: number }
+  | { type: 'ready' }
   | { type: 'error'; id: number | null; message: string }
   /** `vectors` is a flat Float32Array of texts.length * EMBEDDING_DIM. */
-  | { type: 'result'; id: number; vectors: Float32Array; count: number }
+  | { type: 'result'; id: number; vectors: Float32Array }

@@ -1,0 +1,25 @@
+import { describe, expect, it } from 'vitest'
+import { isPortableSetting, PORTABLE_SETTING_KEYS } from '../src/main/db/backup-policy.js'
+
+describe('portable backup policy', () => {
+  it('keeps only cross-machine non-secret settings', () => {
+    expect(PORTABLE_SETTING_KEYS).toEqual(['theme'])
+    expect(isPortableSetting('theme')).toBe(true)
+  })
+
+  it.each([
+    'anthropicApiKey',
+    'credentialCleanupPending',
+    'embeddingModel',
+    'watchedFolder',
+    'windowState',
+    'rerankEnabled',
+    'claudeRerankConsent',
+    'futureSetting'
+  ])(
+    'excludes %s',
+    (key) => {
+      expect(isPortableSetting(key)).toBe(false)
+    }
+  )
+})

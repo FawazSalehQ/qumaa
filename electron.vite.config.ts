@@ -16,10 +16,12 @@ export default defineConfig({
     },
     build: {
       rollupOptions: {
-        // Second entry: the embedding worker, forked via utilityProcess.
+        // Workers are forked via utilityProcess so expensive/untrusted parsing
+        // and model inference cannot stall or exhaust the main process.
         input: {
           index: resolve('src/main/index.ts'),
           'embed-worker': resolve('src/main/embed/worker.ts'),
+          'extraction-worker': resolve('src/main/ingest/extraction-worker.ts'),
           // Headless integration check; see `npm run smoke`.
           smoke: resolve('src/main/smoke.ts'),
           // Dev-only library seeder; see `npm run seed`.
@@ -45,7 +47,6 @@ export default defineConfig({
     root: 'src/renderer',
     resolve: {
       alias: {
-        '@renderer': resolve('src/renderer/src'),
         '@shared': resolve('src/shared')
       }
     },

@@ -32,18 +32,15 @@ export const NAME_IDENTITY_THRESHOLD = 0.985
  */
 export const NO_IDENTITY_THRESHOLD = 0.995
 
-/** Backwards-compatible name for callers that display the fallback threshold. */
-export const NEAR_DUPLICATE_THRESHOLD = NO_IDENTITY_THRESHOLD
-
-export interface DuplicateIdentity {
+interface DuplicateIdentity {
   name: string | null
   email: string | null
   phone: string | null
 }
 
-export type DuplicateBasis = 'email' | 'phone' | 'name' | 'document' | null
+type DuplicateBasis = 'email' | 'phone' | 'name' | 'document' | null
 
-export interface DuplicateDecision {
+interface DuplicateDecision {
   duplicate: boolean
   /** The strongest signal that justified the decision. */
   basis: DuplicateBasis
@@ -159,7 +156,7 @@ export function decideNearDuplicate(
     : { duplicate: false, basis: null }
 }
 
-export interface NearDuplicate {
+interface NearDuplicate {
   id: number
   name: string | null
   fileName: string
@@ -202,17 +199,16 @@ function dot(a: Float32Array, b: Float32Array): number {
  */
 export function findNearDuplicate(
   vector: Float32Array,
-  identity: DuplicateIdentity | null = null,
-  excludeId?: number
+  identity: DuplicateIdentity | null = null
 ): NearDuplicate | null {
   const db = getDb()
   const rows = db
     .prepare(
       `SELECT id, name, email, phone, file_name AS fileName, doc_vector
        FROM resumes
-       WHERE doc_vector IS NOT NULL${excludeId ? ' AND id != ?' : ''}`
+       WHERE doc_vector IS NOT NULL`
     )
-    .all(...(excludeId ? [excludeId] : [])) as Array<{
+    .all() as Array<{
     id: number
     name: string | null
     email: string | null

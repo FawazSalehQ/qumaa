@@ -12,9 +12,9 @@ function candidate(id: number): MatchResult {
   return {
     resume: {
       id,
-      fileName: `${id}.txt`,
+      recordKey: id.toString(16).padStart(64, '0'),
+      fileName: `${id}.md`,
       filePath: '',
-      fileType: 'txt',
       importedAt: id,
       name: `Candidate ${id}`,
       email: null,
@@ -22,8 +22,7 @@ function candidate(id: number): MatchResult {
       location: null,
       yearsExperience: null,
       educationLevel: null,
-      skills: [],
-      likelyScanned: false
+      skills: []
     },
     score: 0.5,
     breakdown: { semantic: 0.5, lexical: 0.5, skills: 0.5 },
@@ -35,6 +34,7 @@ function candidate(id: number): MatchResult {
 
 function response(...ids: number[]): SearchResponse {
   return {
+    sessionId: '00000000-0000-4000-8000-000000000001',
     results: ids.map(candidate),
     requiredSkills: ['typescript'],
     totalCandidates: ids.length,

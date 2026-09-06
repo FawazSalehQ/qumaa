@@ -28,8 +28,14 @@ function sharpVersion() {
   return JSON.parse(readFileSync(p, 'utf8')).version
 }
 
-/** The build is only safe if the actual binary and its libvips DLLs are present. */
-function verify() {
+/** The build is only safe if the exact Sharp companion version and binaries are present. */
+function verify(expectedVersion) {
+  try {
+    const installed = JSON.parse(readFileSync(join(dest, 'package.json'), 'utf8'))
+    if (installed.name !== pkg || installed.version !== expectedVersion) return false
+  } catch {
+    return false
+  }
   const lib = join(dest, 'lib')
   if (!existsSync(join(lib, 'sharp-win32-x64.node'))) return false
   return readdirSync(lib).some((f) => f.endsWith('.dll'))
@@ -37,7 +43,7 @@ function verify() {
 
 const version = sharpVersion()
 
-if (verify()) {
+if (verify(version)) {
   console.log(`${pkg}@${version}: already present`)
   process.exit(0)
 }
@@ -59,7 +65,7 @@ try {
   rmSync(scratch, { recursive: true, force: true })
 }
 
-if (!verify()) {
+if (!verify(version)) {
   console.error(`\n${pkg} was fetched but has no usable binary. Refusing to build.`)
   process.exit(1)
 }

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { DbStats, ModelStatus, ThemeChoice } from '@shared/types.js'
 import type { Toast } from '../components/Toasts.js'
-import { useTheme } from '../useTheme.js'
 
 function formatBytes(n: number): string {
   if (n < 1024) return `${n} B`
@@ -9,23 +8,33 @@ function formatBytes(n: number): string {
   return `${(n / 1024 ** 2).toFixed(1)} MB`
 }
 
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback
+}
+
 export default function SettingsView({
+  theme,
+  onThemeChange,
   onToast,
   onChanged
 }: {
+  theme: ThemeChoice
+  onThemeChange: (theme: ThemeChoice) => void
   onToast: (t: Toast[]) => void
-  onChanged: () => Promise<void>
+  onChanged: (resetWorkspace?: boolean) => Promise<void>
 }): React.JSX.Element {
   const [watched, setWatched] = useState<string | null>(null)
   const [hasKey, setHasKey] = useState(false)
+  const [keyStatus, setKeyStatus] = useState<'none' | 'protected' | 'migration-needed'>('none')
   const [rerankOn, setRerankOn] = useState(false)
+  const [consentGranted, setConsentGranted] = useState(false)
   const [keyDraft, setKeyDraft] = useState('')
   const [stats, setStats] = useState<DbStats | null>(null)
-  const revealLabel = navigator.userAgent.includes('Mac')
+  const [dataAction, setDataAction] = useState<'backup' | 'restore' | null>(null)
+  const revealLabel = window.api.platform === 'darwin'
     ? 'Show in Finder'
     : 'Show in Explorer'
   const [model, setModel] = useState<ModelStatus | null>(null)
-  const { theme, setTheme } = useTheme()
 
   const load = useCallback(async () => {
     const [settings, s, m] = await Promise.all([
@@ -35,7 +44,9 @@ export default function SettingsView({
     ])
     setWatched(settings.watchedFolder)
     setHasKey(settings.hasApiKey)
+    setKeyStatus(settings.apiKeyStatus)
     setRerankOn(settings.rerankEnabled)
+    setConsentGranted(settings.claudeConsentGranted)
     setStats(s)
     setModel(m)
   }, [])
@@ -55,16 +66,17 @@ export default function SettingsView({
     if (!done) return
     setWatched(null)
     setHasKey(false)
+    setKeyStatus('none')
     setRerankOn(false)
+    setConsentGranted(false)
     setKeyDraft('')
-    await Promise.all([load(), onChanged()])
+    await Promise.all([load(), onChanged(true)])
     onToast([{ id: crypto.randomUUID(), kind: 'success', message: 'All data deleted.' }])
   }, [load, onChanged, onToast])
 
   const chooseWatched = async (): Promise<void> => {
-    const folder = await window.api.ingest.pickFolder()
+    const folder = await window.api.settings.chooseWatchedFolder()
     if (!folder) return
-    await window.api.settings.setWatchedFolder(folder)
     onToast([
       {
         id: crypto.randomUUID(),
@@ -77,27 +89,86 @@ export default function SettingsView({
   }
 
   const clearWatched = async (): Promise<void> => {
-    await window.api.settings.setWatchedFolder(null)
+    await window.api.settings.stopWatchingFolder()
     await load()
+  }
+
+  const backUp = async (): Promise<void> => {
+    setDataAction('backup')
+    try {
+      const result = await window.api.settings.backup()
+      if (result) {
+        onToast([
+          {
+            id: crypto.randomUUID(),
+            kind: 'success',
+            message: `Backed up ${result.resumeCount} resume${result.resumeCount === 1 ? '' : 's'}.`
+          }
+        ])
+      }
+    } catch (error) {
+      onToast([
+        {
+          id: crypto.randomUUID(),
+          kind: 'error',
+          message: errorMessage(error, 'Backup failed')
+        }
+      ])
+    } finally {
+      setDataAction(null)
+    }
+  }
+
+  const restore = async (): Promise<void> => {
+    setDataAction('restore')
+    try {
+      const result = await window.api.settings.restore()
+      if (!result) return
+      const restoredSettings = await window.api.settings.get()
+      setWatched(restoredSettings.watchedFolder)
+      setHasKey(restoredSettings.hasApiKey)
+      setKeyStatus(restoredSettings.apiKeyStatus)
+      setRerankOn(restoredSettings.rerankEnabled)
+      setConsentGranted(restoredSettings.claudeConsentGranted)
+      onThemeChange(restoredSettings.theme)
+      await Promise.all([load(), onChanged(true)])
+      onToast([
+        {
+          id: crypto.randomUUID(),
+          kind: 'success',
+          message: `Restored ${result.resumeCount} resume${result.resumeCount === 1 ? '' : 's'}.`
+        }
+      ])
+    } catch (error) {
+      onToast([
+        {
+          id: crypto.randomUUID(),
+          kind: 'error',
+          message: errorMessage(error, 'Restore failed')
+        }
+      ])
+    } finally {
+      setDataAction(null)
+    }
   }
 
   return (
     <>
       <header className="view-head">
         <h2>Settings</h2>
-        <p className="sub">Everything is stored on this machine. Nothing is sent anywhere unless you turn on rerank below.</p>
+        <p className="sub">Manage your workspace, appearance, and local data.</p>
       </header>
 
-      <div className="card">
-        <div className="setting">
-          <div className="label">Watched folder</div>
+      <div className="settings-grid">
+        <section className="card setting setting-wide" aria-labelledby="watched-folder-heading">
+          <h3 id="watched-folder-heading">Watched folder</h3>
           <div className="desc">
             New resumes dropped into this folder are imported automatically. Files added while the
             app was closed are picked up on the next launch.
           </div>
           {watched ? (
-            <div className="row">
-              <code>{watched}</code>
+            <div className="row setting-actions">
+              <code className="setting-path">{watched}</code>
               <span className="spacer" />
               <button className="btn sm" onClick={chooseWatched}>
                 Change
@@ -111,53 +182,103 @@ export default function SettingsView({
               Choose folder…
             </button>
           )}
-        </div>
+        </section>
 
-        <div className="setting">
-          <div className="label">Appearance</div>
+        <section className="card setting" aria-labelledby="appearance-heading">
+          <h3 id="appearance-heading">Appearance</h3>
           <div className="desc">
-            The brand supports a dark context, so both are first class. System follows your
-            machine and keeps following it.
+            Choose a theme, or follow your device’s appearance automatically.
           </div>
-          <div className="row segmented">
+          <div className="row segmented" role="group" aria-label="Appearance">
             {(['system', 'light', 'dark'] as ThemeChoice[]).map((t) => (
               <button
                 key={t}
                 className={`btn sm ${theme === t ? 'primary' : ''}`}
-                onClick={() => setTheme(t)}
+                aria-pressed={theme === t}
+                onClick={() => onThemeChange(t)}
               >
                 {t[0].toUpperCase() + t.slice(1)}
               </button>
             ))}
           </div>
-        </div>
+        </section>
 
-        <div className="setting">
-          <div className="label">Matching</div>
-          <div className="desc">This application runs locally.</div>
+        <section className="card setting" aria-labelledby="matching-heading">
+          <h3 id="matching-heading">Local matching</h3>
+          <div className="desc">Your resumes and standard matching stay on this device.</div>
           {/* The model's identity is an implementation detail. Its *state* is not:
               a failure has to stay visible, or a broken search looks like a
               ranking problem rather than a model that never loaded. */}
-          <div className="muted">
-            {model === null && 'Checking…'}
-            {model?.state === 'loading' && 'Starting…'}
-            {model?.state === 'ready' && 'Ready'}
+          <div className={`model-status ${model?.state ?? 'loading'}`} role="status">
+            <span className="status-dot" aria-hidden="true" />
+            {model === null && 'Checking availability…'}
+            {model?.state === 'loading' && 'Starting local matching…'}
+            {model?.state === 'ready' && 'Ready to match'}
             {model?.state === 'error' && (
-              <span style={{ color: 'var(--bad)' }}>Error: {model.message}</span>
+              <span>Matching unavailable: {model.message}</span>
             )}
           </div>
-        </div>
+        </section>
 
-        <div className="setting">
-          <div className="label">Claude rerank</div>
+        <section className="card setting setting-wide" aria-labelledby="rerank-heading">
+          <div className="row setting-heading">
+            <h3 id="rerank-heading">Claude rerank</h3>
+            <span className="setting-badge">Optional</span>
+          </div>
           <div className="desc">
             <strong>This is the only feature that sends data off your machine.</strong> When you
-            run it, the job description and the matching passages from the top {15} candidates are
-            sent to Anthropic. Everything else, including the whole search, stays local. Off unless
-            you add a key and switch it on.
+            run it, the job posting and redacted matching passages from up to {15} candidates are
+            sent to Anthropic. Qumaa removes detected names, contact details, locations, filenames,
+            and local paths; years of experience, education, and matched or missing skills are also
+            included. The complete request is shown before first use. Everything else stays local.
+            Off unless you add a key and switch it on.
           </div>
 
-          {hasKey ? (
+          {keyStatus === 'migration-needed' ? (
+            <div className="credential-warning" role="alert">
+              <p>
+                An older Qumaa version saved this API key without operating-system protection.
+                Protect or remove it before Claude reranking can be used.
+              </p>
+              <div className="row">
+                <button
+                  className="btn"
+                  onClick={async () => {
+                    try {
+                      await window.api.settings.protectLegacyApiKey()
+                      await load()
+                      onToast([
+                        {
+                          id: crypto.randomUUID(),
+                          kind: 'success',
+                          message: 'The existing API key is now protected by the operating system.'
+                        }
+                      ])
+                    } catch (error) {
+                      onToast([
+                        {
+                          id: crypto.randomUUID(),
+                          kind: 'error',
+                          message: errorMessage(error, 'Could not protect the existing API key')
+                        }
+                      ])
+                    }
+                  }}
+                >
+                  Protect existing key
+                </button>
+                <button
+                  className="btn danger"
+                  onClick={async () => {
+                    await window.api.settings.setApiKey(null)
+                    await load()
+                  }}
+                >
+                  Remove key
+                </button>
+              </div>
+            </div>
+          ) : hasKey ? (
             <div className="row">
               <span className="muted">API key stored</span>
               <label className="row toggle">
@@ -165,18 +286,56 @@ export default function SettingsView({
                   type="checkbox"
                   checked={rerankOn}
                   onChange={async (e) => {
-                    await window.api.settings.setRerank(e.target.checked)
-                    await load()
+                    try {
+                      await window.api.settings.setRerank(e.target.checked)
+                      await load()
+                    } catch (error) {
+                      onToast([
+                        {
+                          id: crypto.randomUUID(),
+                          kind: 'error',
+                          message: errorMessage(error, 'Could not change the rerank setting')
+                        }
+                      ])
+                    }
                   }}
                 />
                 Enable reranking
               </label>
               <span className="spacer" />
+              {consentGranted && (
+                <button
+                  className="btn sm"
+                  onClick={async () => {
+                    await window.api.settings.resetRerankConsent()
+                    await load()
+                    onToast([
+                      {
+                        id: crypto.randomUUID(),
+                        kind: 'info',
+                        message: 'Qumaa will show the full Claude sharing preview next time.'
+                      }
+                    ])
+                  }}
+                >
+                  Review sharing again
+                </button>
+              )}
               <button
                 className="btn sm danger"
                 onClick={async () => {
-                  await window.api.settings.setApiKey(null)
-                  await load()
+                  try {
+                    await window.api.settings.setApiKey(null)
+                    await load()
+                  } catch (error) {
+                    onToast([
+                      {
+                        id: crypto.randomUUID(),
+                        kind: 'error',
+                        message: errorMessage(error, 'Could not remove the API key')
+                      }
+                    ])
+                  }
                 }}
               >
                 Remove key
@@ -184,48 +343,122 @@ export default function SettingsView({
             </div>
           ) : (
             <div className="row">
+              <label className="sr-only" htmlFor="anthropic-api-key">
+                Anthropic API key
+              </label>
               <input
+                id="anthropic-api-key"
                 type="password"
                 placeholder="sk-ant-…"
                 value={keyDraft}
                 onChange={(e) => setKeyDraft(e.target.value)}
-                style={{ width: 320 }}
+                className="api-key-input"
               />
               <button
                 className="btn"
                 disabled={!keyDraft.trim()}
                 onClick={async () => {
-                  await window.api.settings.setApiKey(keyDraft)
-                  setKeyDraft('')
-                  await load()
+                  try {
+                    await window.api.settings.setApiKey(keyDraft)
+                    setKeyDraft('')
+                    await load()
+                    onToast([
+                      {
+                        id: crypto.randomUUID(),
+                        kind: 'success',
+                        message: 'API key saved in protected operating-system storage.'
+                      }
+                    ])
+                  } catch (error) {
+                    onToast([
+                      {
+                        id: crypto.randomUUID(),
+                        kind: 'error',
+                        message: errorMessage(error, 'Could not save the API key securely')
+                      }
+                    ])
+                  }
                 }}
               >
                 Save key
               </button>
             </div>
           )}
-        </div>
+        </section>
 
-        <div className="setting">
-          <div className="label">Data</div>
-          <div className="desc">
-            {stats
-              ? `${stats.resumeCount} resumes · ${stats.chunkCount} indexed passages · ${formatBytes(stats.dbSizeBytes)}`
-              : 'Loading…'}
-          </div>
-          {stats && <code>{stats.dbPath}</code>}
+        <section className="card setting setting-wide" aria-labelledby="data-heading">
+          <h3 id="data-heading">Library &amp; backups</h3>
+          {stats ? (
+            <dl className="storage-stats">
+              <div><dt>Resumes</dt><dd>{stats.resumeCount.toLocaleString()}</dd></div>
+              <div><dt>Indexed passages</dt><dd>{stats.chunkCount.toLocaleString()}</dd></div>
+              <div><dt>Library size</dt><dd>{formatBytes(stats.dbSizeBytes)}</dd></div>
+            </dl>
+          ) : <div className="desc">Loading library information…</div>}
+          {stats && <code className="setting-path">{stats.dbPath}</code>}
           {/* Uninstalling leaves this folder in place on both platforms, so the
               app has to be the thing that can remove it. */}
           <div className="desc">Uninstalling the app does not remove this data.</div>
+          <div className="desc">
+            Portable backups include resume text, saved jobs, recruiter profiles, review notes,
+            and portable preferences. On restore, Qumaa rebuilds the search index; refresh your
+            saved jobs to generate updated matches. API keys, watched
+            folders, original-file paths, consent, and window position are excluded. Backup files
+            are not encrypted, so store them securely.
+          </div>
           <div className="row">
+            <button className="btn sm" disabled={dataAction !== null} onClick={() => void backUp()}>
+              {dataAction === 'backup' ? 'Backing up…' : 'Back up…'}
+            </button>
+            <button className="btn sm" disabled={dataAction !== null} onClick={() => void restore()}>
+              {dataAction === 'restore' ? 'Restoring…' : 'Restore…'}
+            </button>
             <button className="btn sm" onClick={() => void window.api.settings.revealData()}>
               {revealLabel}
             </button>
+          </div>
+          <div className="setting-danger">
+            <div>
+              <div className="label">Delete local data</div>
+              <p className="desc">Remove the library and reset your preferences.</p>
+            </div>
             <button className="btn sm danger" onClick={() => void wipe()}>
               Delete all data…
             </button>
           </div>
-        </div>
+        </section>
+
+        <footer className="settings-creator setting-wide">
+          <div>
+            <span className="creator-label">Created by</span>
+            <span className="creator-name">Fawaz Aljathnan</span>
+          </div>
+          <a
+            className="creator-link"
+            href="https://linkedin.com/fawazsalehq"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="View Fawaz Aljathnan on LinkedIn (opens in your browser)"
+            onClick={(event) => {
+              event.preventDefault()
+              void window.api.settings.openLinkedIn().catch((error: unknown) => {
+                onToast([{
+                  id: crypto.randomUUID(),
+                  kind: 'error',
+                  message: errorMessage(error, 'Could not open LinkedIn')
+                }])
+              })
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M20.45 2H3.55C2.69 2 2 2.68 2 3.53v16.94C2 21.32 2.69 22 3.55 22h16.9c.86 0 1.55-.68 1.55-1.53V3.53C22 2.68 21.31 2 20.45 2ZM7.93 18.75H4.98V9.2h2.95v9.55ZM6.46 7.9a1.71 1.71 0 1 1 0-3.42 1.71 1.71 0 0 1 0 3.42Zm12.29 10.85H15.8V14.1c0-1.11-.02-2.54-1.55-2.54-1.55 0-1.79 1.21-1.79 2.46v4.73H9.51V9.2h2.83v1.31h.04c.39-.75 1.36-1.55 2.79-1.55 2.99 0 3.58 1.97 3.58 4.53v5.26Z" />
+            </svg>
+            <span>LinkedIn</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M7 17 17 7M7 7h10v10" />
+            </svg>
+          </a>
+        </footer>
       </div>
     </>
   )

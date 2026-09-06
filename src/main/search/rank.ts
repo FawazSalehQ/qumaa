@@ -7,7 +7,13 @@
  * `Kubernetes` or a `CPA` licence needs those to count as the hard requirements
  * they are, which is what the lexical and skill components restore.
  */
-import { getDb, blobToVector, rowToSummary, type ResumeRow } from '../db/index.js'
+import {
+  getDb,
+  blobToVector,
+  RESUME_ROW_COLUMNS,
+  rowToSummary,
+  type ResumeRow
+} from '../db/index.js'
 import { embedder } from '../embed/client.js'
 import { extractSkills, skillLabels } from '../ingest/skills.js'
 import {
@@ -41,11 +47,14 @@ function lexicalScores(jd: string): Map<number, number> {
   return scores
 }
 
-export async function search(jobDescription: string, limit = 50): Promise<SearchResponse> {
+export async function search(
+  jobDescription: string,
+  limit = 50
+): Promise<Omit<SearchResponse, 'sessionId'>> {
   const started = Date.now()
   const db = getDb()
 
-  const resumeRows = db.prepare('SELECT * FROM resumes').all() as ResumeRow[]
+  const resumeRows = db.prepare(`SELECT ${RESUME_ROW_COLUMNS} FROM resumes`).all() as ResumeRow[]
   if (resumeRows.length === 0) {
     return { results: [], requiredSkills: [], totalCandidates: 0, elapsedMs: Date.now() - started }
   }
@@ -118,5 +127,3 @@ export async function search(jobDescription: string, limit = 50): Promise<Search
     elapsedMs: Date.now() - started
   }
 }
-
-export { WEIGHTS } from './scoring.js'

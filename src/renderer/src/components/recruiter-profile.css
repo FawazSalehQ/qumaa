@@ -1,0 +1,237 @@
+.recruiter-profile {
+  padding: var(--s4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-strip);
+}
+
+.recruiter-section-head {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin-bottom: var(--s2);
+}
+
+.recruiter-section-head h3,
+.recruiter-section-head h4 {
+  margin: 0;
+}
+
+.recruiter-help,
+.recruiter-empty {
+  margin: 0 0 var(--s3);
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+}
+
+.recruiter-empty {
+  color: var(--text-faint);
+}
+
+.recruiter-form {
+  display: grid;
+  gap: var(--s4);
+}
+
+.recruiter-form fieldset {
+  min-width: 0;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.recruiter-form legend {
+  padding: 0;
+  margin-bottom: var(--s2);
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.recruiter-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s3);
+}
+
+.recruiter-fields label {
+  display: grid;
+  gap: 5px;
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  min-width: 0;
+}
+
+.recruiter-fields input,
+.recruiter-fields select,
+.recruiter-fields textarea {
+  width: 100%;
+  font-weight: 400;
+  font-size: var(--fs-md);
+}
+
+.recruiter-fields input[type='number'] {
+  min-width: 0;
+  min-height: 38px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: var(--s2) var(--s3);
+  font: inherit;
+}
+
+.recruiter-field-wide {
+  grid-column: 1 / -1;
+}
+
+.recruiter-actions {
+  flex-wrap: wrap;
+}
+
+.recruiter-message {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  flex-wrap: wrap;
+  padding: var(--s2) var(--s3);
+  margin: 0 0 var(--s3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
+}
+
+.recruiter-message.error {
+  color: var(--bad);
+  border-color: var(--bad);
+}
+
+.recruiter-message.success {
+  color: var(--good);
+  background: var(--good-soft);
+  border-color: var(--good-border);
+}
+
+.recruiter-confirmed {
+  margin-top: var(--s2);
+}
+
+.recruiter-note {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin-top: var(--s3);
+  padding: var(--s3);
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-md);
+}
+
+.resume-versions {
+  margin-top: var(--s4);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--border);
+}
+
+.version-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.version-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: var(--s2) 0;
+}
+
+.version-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.version-list li > div {
+  min-width: 0;
+}
+
+.version-name,
+.version-date {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.version-name {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+
+.version-date {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+  margin-top: 2px;
+}
+
+.version-linker {
+  display: grid;
+  gap: var(--s2);
+  margin-top: var(--s3);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--border);
+}
+
+.version-linker label {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+
+.version-linker .btn {
+  justify-self: start;
+}
+
+.library-filters {
+  flex-wrap: wrap;
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-strip);
+  margin-bottom: var(--s4);
+}
+
+.library-filters > label {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+}
+
+.library-filters input[type='number'] {
+  width: 74px;
+  min-height: 32px;
+  padding: 5px var(--s2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  color: var(--text);
+  background: var(--bg-input);
+}
+
+.library-profile-badge {
+  display: inline-block;
+  margin: 3px 5px 0 0;
+  font-size: var(--fs-xs);
+  color: var(--good);
+}
+
+@media (max-width: 520px) {
+  .recruiter-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .recruiter-profile {
+    padding: var(--s3);
+  }
+}

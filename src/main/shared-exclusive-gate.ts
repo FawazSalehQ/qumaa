@@ -55,10 +55,10 @@ export class SharedExclusiveGate {
     if (this.waiters[0]?.mode === 'exclusive') {
       const waiter = this.waiters.shift()!
       this.activeExclusive = true
-      waiter.grant(this.once(() => {
+      waiter.grant(() => {
         this.activeExclusive = false
         this.drain()
-      }))
+      })
       return
     }
 
@@ -70,18 +70,9 @@ export class SharedExclusiveGate {
   private grantShared(): void {
     const waiter = this.waiters.shift()!
     this.activeShared++
-    waiter.grant(this.once(() => {
+    waiter.grant(() => {
       this.activeShared--
       if (this.activeShared === 0) this.drain()
-    }))
-  }
-
-  private once(release: () => void): Release {
-    let released = false
-    return () => {
-      if (released) return
-      released = true
-      release()
-    }
+    })
   }
 }

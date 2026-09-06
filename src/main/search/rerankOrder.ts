@@ -1,6 +1,6 @@
 import type { MatchResult } from '@shared/types.js'
 
-export interface ModelRankingEntry {
+interface ModelRankingEntry {
   id: number
   rank: number
   reason: string
