@@ -331,19 +331,33 @@ test('shows the exact redacted Claude request in a keyboard-contained consent di
 })
 
 test('allows only one process to own a Qumaa data directory', async () => {
-  const primary = application.process()
-  const second = spawn(primary.spawnfile, primary.spawnargs.slice(1), {
-    cwd: ROOT,
-    env: {
-      ...process.env,
-      QUMAA_E2E_USER_DATA: scratch,
-      ELECTRON_DISABLE_SECURITY_WARNINGS: 'true'
-    },
-    stdio: 'ignore'
+  const launch = await application.evaluate(({ app }) => {
+    ;(globalThis as any).secondLaunchCount = 0
+    app.on('second-instance', () => { (globalThis as any).secondLaunchCount += 1 })
+    return { executable: process.execPath, args: app.isPackaged ? [] : [app.getAppPath()] }
   })
+  // Launch as a user would. Replaying Playwright's --require loader and debug
+  // transport arguments without its environment/pipes can abort before Qumaa
+  // starts, particularly on Windows, and never exercises the instance lock.
+  const secondEnv: NodeJS.ProcessEnv = {
+    ...process.env,
+    QUMAA_E2E_USER_DATA: scratch,
+    ELECTRON_DISABLE_SECURITY_WARNINGS: 'true'
+  }
+  delete secondEnv.ELECTRON_RUN_AS_NODE
+  delete secondEnv.NODE_OPTIONS
+  const second = spawn(launch.executable, launch.args, {
+    cwd: ROOT,
+    env: secondEnv,
+    shell: false,
+    stdio: ['ignore', 'ignore', 'pipe']
+  })
+  let stderr = ''
+  second.stderr?.on('data', (chunk) => { stderr = (stderr + String(chunk)).slice(-8_000) })
   const [code, signal] = (await once(second, 'exit')) as [number | null, NodeJS.Signals | null]
   expect(signal).toBeNull()
-  expect(code).toBe(0)
+  expect(code, stderr).toBe(0)
+  await expect.poll(() => application.evaluate(() => (globalThis as any).secondLaunchCount)).toBe(1)
   expect(application.windows()).toHaveLength(1)
 })
 
