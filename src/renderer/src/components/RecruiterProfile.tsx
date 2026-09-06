@@ -1,6 +1,9 @@
+import { useI18n } from '../i18n.js'
 import { useEffect, useId, useState } from 'react'
 import type { EducationLevel, ResumeSummary } from '@shared/types.js'
 import { profileForResume, type CandidateProfile, type SaveProfileInput } from '@shared/recruiting.js'
+import { bidiValue, recruitingError } from './recruiting/helpers.js'
+import LocalizedNumberInput from './LocalizedNumberInput.js'
 import './recruiter-profile.css'
 
 interface Props {
@@ -51,6 +54,7 @@ function errorMessage(error: unknown): string {
 }
 
 export default function RecruiterProfile({ resume, onChanged }: Props): React.JSX.Element {
+  const { t, language, formatNumber, formatDate } = useI18n()
   const fieldId = useId()
   const [profile, setProfile] = useState<CandidateProfile | undefined>()
   const [draft, setDraft] = useState<ProfileDraft>(() => draftFrom())
@@ -176,8 +180,8 @@ export default function RecruiterProfile({ resume, onChanged }: Props): React.JS
   const confirmedFields: Array<[string, string | null | undefined]> = [
     ['Name', profile?.name], ['Email', profile?.email], ['Phone', profile?.phone],
     ['Location', profile?.location],
-    ['Experience', profile?.yearsExperience === null || profile?.yearsExperience === undefined ? null : `${profile.yearsExperience} years`],
-    ['Education', profile?.educationLevel], ['Skills', profile?.skills?.join(', ')],
+    ['Experience', profile?.yearsExperience === null || profile?.yearsExperience === undefined ? null : t('{count} years', { count: profile.yearsExperience })],
+    ['Education', profile?.educationLevel ? t({ associate: 'Associate', bachelors: 'Bachelor’s', masters: 'Master’s', phd: 'PhD' }[profile.educationLevel]) : null], ['Skills', profile?.skills?.join(', ')],
     ['Expected salary', profile?.expectedSalary], ['Notice period', profile?.noticePeriod],
     ['Availability', profile?.availability], ['Preferred location', profile?.preferredLocation]
   ]
@@ -185,70 +189,70 @@ export default function RecruiterProfile({ resume, onChanged }: Props): React.JS
   return (
     <section className="recruiter-profile" aria-labelledby={`${fieldId}-heading`}>
       <div className="row recruiter-section-head">
-        <h3 id={`${fieldId}-heading`}>Recruiter profile</h3>
+        <h3 id={`${fieldId}-heading`}>{t("Recruiter profile")}</h3>
         {!loading && !loadFailed && !editing && (
           <button className="btn sm" disabled={busy} onClick={() => { setEditing(true); setLinking(false); setNotice(null) }}>
-            {profile ? 'Edit profile' : 'Add details'}
+            {profile ? t('Edit profile') : t('Add details')}
           </button>
         )}
       </div>
-      <p className="recruiter-help">Confirmed details and screening notes follow this candidate across jobs.</p>
+      <p className="recruiter-help">{t("Confirmed details and screening notes follow this candidate across jobs.")}</p>
       {error && (
         <div className="recruiter-message error" role="alert">
-          {error}
+          {recruitingError(error, t, language)}
           {loadFailed && (
-            <button className="btn sm" onClick={() => setLoadRevision((value) => value + 1)}>Retry</button>
+            <button className="btn sm" onClick={() => setLoadRevision((value) => value + 1)}>{t("Retry")}</button>
           )}
         </div>
       )}
-      {notice && <p className="recruiter-message success" role="status">{notice}</p>}
-      {loading ? <p className="muted">Loading candidate history…</p> : loadFailed ? null : editing ? (
+      {notice && <p className="recruiter-message success" role="status">{t(notice)}</p>}
+      {loading ? <p className="muted">{t("Loading candidate history…")}</p> : loadFailed ? null : editing ? (
         <form className="recruiter-form" onSubmit={(event) => { event.preventDefault(); void save() }}>
           <fieldset disabled={busy}>
-            <legend>Correct or confirm CV details</legend>
-            <p className="recruiter-help">Leave a field blank to use the CV extraction shown below. The original CV stays available.</p>
+            <legend>{t("Correct or confirm CV details")}</legend>
+            <p className="recruiter-help">{t("Leave a field blank to use the CV extraction shown below. The original CV stays available.")}</p>
             <div className="recruiter-fields">
               {([
-                ['name', 'Name', resume.name], ['email', 'Email', resume.email],
-                ['phone', 'Phone', resume.phone], ['location', 'Location', resume.location]
+                ['name', t('Name'), resume.name], ['email', t('Email'), resume.email],
+                ['phone', t('Phone'), resume.phone], ['location', t('Location'), resume.location]
               ] as const).map(([key, label, extracted]) => (
                 <label key={key} htmlFor={`${fieldId}-${key}`}>
                   {label}
-                  <input id={`${fieldId}-${key}`} type="text" dir="auto" value={draft[key]}
-                    placeholder={extracted ? `CV: ${extracted}` : 'Not stated in CV'} onChange={(event) => update(key, event.target.value)} />
+                  <input id={`${fieldId}-${key}`} type="text" dir={key === 'email' || key === 'phone' ? 'ltr' : 'auto'} value={draft[key]}
+                    placeholder={extracted ? t('CV: {value}', { value: bidiValue(extracted, language) }) : t('Not stated in CV')} onChange={(event) => update(key, event.target.value)} />
                 </label>
               ))}
               <label htmlFor={`${fieldId}-experience`}>
-                Years of experience
-                <input id={`${fieldId}-experience`} type="number" min="0" max="100" step="0.5"
-                  value={draft.yearsExperience} placeholder={resume.yearsExperience === null ? 'Not stated in CV' : `CV: ${resume.yearsExperience}`}
-                  onChange={(event) => update('yearsExperience', event.target.value)} />
+                {t("Years of experience")}
+                <LocalizedNumberInput id={`${fieldId}-experience`} min={0} max={100} step={0.5}
+                  value={draft.yearsExperience} placeholder={resume.yearsExperience === null ? t('Not stated in CV') : t('CV: {value}', { value: resume.yearsExperience })}
+                  onChangeValue={(value) => update('yearsExperience', value)} />
               </label>
               <label htmlFor={`${fieldId}-education`}>
-                Education
+                {t("Education")}
                 <select id={`${fieldId}-education`} value={draft.educationLevel} onChange={(event) => update('educationLevel', event.target.value as EducationLevel | '')}>
-                  <option value="">Use CV extraction</option>
-                  <option value="associate">Associate</option>
-                  <option value="bachelors">Bachelor’s</option>
-                  <option value="masters">Master’s</option>
-                  <option value="phd">PhD</option>
+                  <option value="">{t("Use CV extraction")}</option>
+                  <option value="associate">{t("Associate")}</option>
+                  <option value="bachelors">{t("Bachelor’s")}</option>
+                  <option value="masters">{t("Master’s")}</option>
+                  <option value="phd">{t("PhD")}</option>
                 </select>
               </label>
               <label className="recruiter-field-wide" htmlFor={`${fieldId}-skills`}>
-                Confirmed skills
+                {t("Confirmed skills")}
                 <input id={`${fieldId}-skills`} type="text" dir="auto" value={draft.skills}
-                  placeholder="Comma-separated; blank uses CV skills" onChange={(event) => update('skills', event.target.value)} />
+                  placeholder={t("Comma-separated; blank uses CV skills")} onChange={(event) => update('skills', event.target.value)} />
               </label>
             </div>
           </fieldset>
           <fieldset disabled={busy}>
-            <legend>Screening information</legend>
+            <legend>{t("Screening information")}</legend>
             <div className="recruiter-fields">
               {([
-                ['expectedSalary', 'Expected salary', 'e.g. SAR 15,000 / month'],
-                ['noticePeriod', 'Notice period', 'e.g. 30 days'],
-                ['availability', 'Availability', 'e.g. Available from October'],
-                ['preferredLocation', 'Preferred location', 'e.g. Riyadh or remote']
+                ['expectedSalary', t('Expected salary'), t('e.g. SAR 15,000 / month')],
+                ['noticePeriod', t('Notice period'), t('e.g. 30 days')],
+                ['availability', t('Availability'), t('e.g. Available from October')],
+                ['preferredLocation', t('Preferred location'), t('e.g. Riyadh or remote')]
               ] as const).map(([key, label, placeholder]) => (
                 <label key={key} htmlFor={`${fieldId}-${key}`}>
                   {label}
@@ -257,20 +261,20 @@ export default function RecruiterProfile({ resume, onChanged }: Props): React.JS
                 </label>
               ))}
               <label className="recruiter-field-wide" htmlFor={`${fieldId}-tags`}>
-                Tags
+                {t("Tags")}
                 <input id={`${fieldId}-tags`} type="text" dir="auto" value={draft.tags}
-                  placeholder="e.g. Finance, Talent pool" onChange={(event) => update('tags', event.target.value)} />
+                  placeholder={t("e.g. Finance, Talent pool")} onChange={(event) => update('tags', event.target.value)} />
               </label>
               <label className="recruiter-field-wide" htmlFor={`${fieldId}-note`}>
-                Screening notes
+                {t("Screening notes")}
                 <textarea id={`${fieldId}-note`} rows={4} dir="auto" value={draft.note}
-                  placeholder="Record confirmed information and follow-up questions" onChange={(event) => update('note', event.target.value)} />
+                  placeholder={t("Record confirmed information and follow-up questions")} onChange={(event) => update('note', event.target.value)} />
               </label>
             </div>
           </fieldset>
           <div className="row recruiter-actions">
-            <button type="submit" className="btn primary" disabled={busy}>{busy ? 'Saving…' : 'Save profile'}</button>
-            <button type="button" className="btn" disabled={busy} onClick={() => { setDraft(draftFrom(profile)); setEditing(false); setError(null) }}>Cancel</button>
+            <button type="submit" className="btn primary" disabled={busy}>{busy ? t('Saving…') : t('Save profile')}</button>
+            <button type="button" className="btn" disabled={busy} onClick={() => { setDraft(draftFrom(profile)); setEditing(false); setError(null) }}>{t("Cancel")}</button>
           </div>
         </form>
       ) : (
@@ -278,24 +282,24 @@ export default function RecruiterProfile({ resume, onChanged }: Props): React.JS
           {confirmedFields.some(([, value]) => value) ? (
             <dl className="fields recruiter-confirmed">
               {confirmedFields.filter(([, value]) => value).map(([label, value]) => (
-                <div className="field" key={label}><dt>{label}</dt><dd dir="auto">{value}</dd></div>
+                <div className="field" key={label}><dt>{t(label)}</dt><dd dir={label === 'Email' || label === 'Phone' ? 'ltr' : 'auto'}>{value}</dd></div>
               ))}
             </dl>
-          ) : <p className="recruiter-empty">No recruiter-confirmed details yet.</p>}
+          ) : <p className="recruiter-empty">{t("No recruiter-confirmed details yet.")}</p>}
           {profile?.tags.length ? (
-            <div className="chips">{profile.tags.map((tag) => <span className="chip" key={tag}>{tag}</span>)}</div>
+            <div className="chips">{profile.tags.map((tag) => <span className="chip" key={tag} dir="auto">{tag}</span>)}</div>
           ) : null}
           {profile?.note && <div className="recruiter-note" dir="auto">{profile.note}</div>}
-          {profile && <p className="hint">Last updated {new Date(profile.updatedAt).toLocaleString()}</p>}
+          {profile && <p className="hint">{t('Last updated {date}', { date: formatDate(profile.updatedAt, { dateStyle: 'medium', timeStyle: 'short' }) })}</p>}
         </>
       )}
 
       {!loading && !loadFailed && !editing && (
         <div className="resume-versions">
           <div className="row recruiter-section-head">
-            <h4>Resume history <span className="muted">({versions.length})</span></h4>
+            <h4>{t("Resume history")} <span className="muted">({formatNumber(versions.length)})</span></h4>
             <button className="btn sm" disabled={busy || library.length < 2} onClick={() => { setLinking((value) => !value); setError(null) }}>
-              {linking ? 'Cancel linking' : 'Link another CV'}
+              {linking ? t('Cancel linking') : t('Link another CV')}
             </button>
           </div>
           <ul className="version-list">
@@ -303,32 +307,32 @@ export default function RecruiterProfile({ resume, onChanged }: Props): React.JS
               <li key={version.recordKey}>
                 <div>
                   <span className="version-name" dir="auto">{version.fileName}</span>
-                  <span className="version-date">Imported {new Date(version.importedAt).toLocaleDateString()}{version.recordKey === resume.recordKey ? ' · Current resume' : ''}</span>
+                  <span className="version-date">{t(version.recordKey === resume.recordKey ? 'Imported {date} · Current resume' : 'Imported {date}', { date: formatDate(version.importedAt) })}</span>
                 </div>
                 {version.recordKey !== resume.recordKey && (
-                  <button className="btn sm" disabled={busy} aria-label={`Unlink ${version.fileName}`} onClick={() => void unlinkVersion(version)}>Unlink</button>
+                  <button className="btn sm" disabled={busy} aria-label={t('Unlink {name}', { name: version.fileName })} onClick={() => void unlinkVersion(version)}>{t("Unlink")}</button>
                 )}
               </li>
             ))}
           </ul>
-          {versions.length > 1 && <p className="hint">Unlinking keeps a copy of the shared recruiter profile and job reviews with each separate candidate. You can edit them independently afterward.</p>}
+          {versions.length > 1 && <p className="hint">{t("Unlinking keeps a copy of the shared recruiter profile and job reviews with each separate candidate. You can edit them independently afterward.")}</p>}
           {linking && (
             <div className="version-linker">
-              <p className="recruiter-help">Choose an imported CV that belongs to this same person. Both source documents remain in your library.</p>
-              <label htmlFor={`${fieldId}-version-filter`}>Find a CV</label>
-              <input id={`${fieldId}-version-filter`} type="text" value={versionQuery} placeholder="Search name, email, or filename"
+              <p className="recruiter-help">{t("Choose an imported CV that belongs to this same person. Both source documents remain in your library.")}</p>
+              <label htmlFor={`${fieldId}-version-filter`}>{t("Find a CV")}</label>
+              <input id={`${fieldId}-version-filter`} type="text" dir="auto" value={versionQuery} placeholder={t("Search name, email, or filename")}
                 onChange={(event) => { setVersionQuery(event.target.value); setVersionKey('') }} disabled={busy} />
-              <label htmlFor={`${fieldId}-version`}>Resume to link</label>
+              <label htmlFor={`${fieldId}-version`}>{t("Resume to link")}</label>
               <select id={`${fieldId}-version`} value={versionKey} disabled={busy} onChange={(event) => setVersionKey(event.target.value)}>
-                <option value="">Select a resume…</option>
+                <option value="">{t("Select a resume…")}</option>
                 {availableVersions.slice(0, 100).map((version) => (
-                  <option value={version.recordKey} key={version.recordKey}>{version.name ?? version.fileName} — {version.fileName}</option>
+                  <option value={version.recordKey} key={version.recordKey} dir="auto">{version.name ?? version.fileName} — {version.fileName}</option>
                 ))}
               </select>
-              {availableVersions.length === 0 && <p className="hint">No other resumes match this search.</p>}
-              {availableVersions.length > 100 && <p className="hint">Showing 100 resumes. Refine the search to find another.</p>}
-              {selectedVersion && <p className="recruiter-help">Link <strong>{selectedVersion.name ?? selectedVersion.fileName}</strong> to <strong>{profile?.name ?? resume.name ?? resume.fileName}</strong>.</p>}
-              <button className="btn" disabled={busy || !versionKey} onClick={() => void linkVersion()}>{busy ? 'Linking…' : 'Link as same person'}</button>
+              {availableVersions.length === 0 && <p className="hint">{t("No other resumes match this search.")}</p>}
+              {availableVersions.length > 100 && <p className="hint">{t("Showing 100 resumes. Refine the search to find another.")}</p>}
+              {selectedVersion && <p className="recruiter-help">{t('Link {version} to {candidate}.', { version: bidiValue(selectedVersion.name ?? selectedVersion.fileName, language), candidate: bidiValue(profile?.name ?? resume.name ?? resume.fileName, language) })}</p>}
+              <button className="btn" disabled={busy || !versionKey} onClick={() => void linkVersion()}>{busy ? t('Linking…') : t('Link as same person')}</button>
             </div>
           )}
         </div>

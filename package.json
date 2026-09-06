@@ -1,6 +1,6 @@
 {
   "name": "cv-filter",
-  "version": "0.1.0-beta.2",
+  "version": "0.1.0-beta.3",
   "description": "Local-first resume matching desktop app",
   "main": "./out/main/index.js",
   "author": "Fawaz Alqahtani",
@@ -17,8 +17,8 @@
     "dev": "electron-vite dev",
     "build": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json && electron-vite build",
     "start": "electron-vite preview",
-    "build:mac": "npm run verify-model && npm run make-icon && npm run make-notices && npm run build && electron-builder --mac --arm64",
-    "build:win": "npm run verify-model && node scripts/fetch-win-deps.mjs && npm run make-icon && npm run make-notices && npm run build && electron-builder --win --x64",
+    "build:mac": "npm run verify-model && npm run make-icon && npm run make-notices && npm run build && electron-builder --mac --arm64 && node scripts/prune-releases.mjs mac",
+    "build:win": "npm run verify-model && node scripts/fetch-win-deps.mjs && npm run make-icon && npm run make-notices && npm run build && electron-builder --win --x64 && node scripts/prune-releases.mjs win",
     "package:dir:mac": "npm run verify-model && npm run make-icon && npm run make-notices && npm run build && electron-builder --mac --arm64 --dir",
     "package:dir:win": "npm run verify-model && node scripts/fetch-win-deps.mjs && npm run make-icon && npm run make-notices && npm run build && electron-builder --win --x64 --dir",
     "postinstall": "electron-builder install-app-deps",

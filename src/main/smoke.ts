@@ -491,6 +491,7 @@ Requirements:
     validatePortableBackup
   } = await import('./db/backup.js')
   setSetting('theme', 'dark')
+  setSetting('language', 'ar')
   setSetting('anthropicApiKey', 'must-not-leave-this-machine')
   setSetting('watchedFolder', '/machine-specific/resumes')
   setSetting('windowState', '{"x":10,"y":20}')
@@ -542,7 +543,7 @@ Requirements:
   ).count
   const backedRecruitingKinds = (backupDb.prepare('SELECT kind FROM recruiting_records GROUP BY kind ORDER BY kind').all() as Array<{ kind: string }>).map((row) => row.kind)
   backupDb.close()
-  check('keeps only portable settings', backupKeys.join(',') === 'theme', backupKeys.join(','))
+  check('keeps only portable settings', backupKeys.join(',') === 'language,theme', backupKeys.join(','))
   check('removes source paths from the portable copy', backedPaths === 0, `${backedPaths} paths`)
   check('backs up recruiter work while excluding derived search snapshots', backedRecruitingKinds.join(',') === 'job,profile,review')
 
@@ -984,9 +985,11 @@ Requirements:
   const exportedCount = stats().resumeCount
   getDb().prepare('DELETE FROM resumes WHERE id = (SELECT MAX(id) FROM resumes)').run()
   setSetting('theme', 'light')
+  setSetting('language', 'en')
   const restored = await restorePortableBackup(backupPath)
   check('restores the exported library', stats().resumeCount === exportedCount)
   check('restores portable preferences', getSetting('theme') === 'dark')
+  check('restores the interface language', getSetting('language') === 'ar')
   check('does not restore an API key', getSetting('anthropicApiKey') === null)
   check('does not restore a watched folder', getSetting('watchedFolder') === null)
   check('does not restore machine window state', getSetting('windowState') === null)
@@ -1034,6 +1037,7 @@ Requirements:
   check('removes every resume', stats().resumeCount === 0, `${stats().resumeCount} left`)
   check('removes every chunk', stats().chunkCount === 0, `${stats().chunkCount} left`)
   check('removes stored settings', getSetting('theme') === null, String(getSetting('theme')))
+  check('removes the interface language preference', getSetting('language') === null)
   check('removes saved jobs and recruiter records', recruiting.listJobs().length === 0 && recruiting.listProfiles().length === 0)
   const databaseArtifacts = [dbPath(), `${dbPath()}-wal`, `${dbPath()}-shm`]
     .filter(existsSync)

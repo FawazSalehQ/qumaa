@@ -113,6 +113,8 @@ const api = {
       ipcRenderer.invoke(CH.settingsSetWatchedFolder, null),
     setTheme: (theme: AppSettings['theme']): Promise<void> =>
       ipcRenderer.invoke(CH.settingsSetTheme, theme),
+    setLanguage: (language: AppSettings['language']): Promise<AppSettings['language']> =>
+      ipcRenderer.invoke(CH.settingsSetLanguage, language),
     /** Write-only: the key is never read back into the renderer. */
     setApiKey: (key: string | null): Promise<void> =>
       ipcRenderer.invoke(CH.settingsSetApiKey, key),

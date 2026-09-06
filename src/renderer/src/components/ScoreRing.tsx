@@ -6,6 +6,7 @@ export default function ScoreRing({
   value: number
   size?: number
 }): React.JSX.Element {
+  const { formatNumber } = useI18n()
   const stroke = size * 0.077
   const r = size / 2 - stroke
   const circumference = 2 * Math.PI * r
@@ -34,8 +35,9 @@ export default function ScoreRing({
         />
       </svg>
       <span className="val" style={{ fontSize: size * 0.27 }}>
-        {Math.round(value * 100)}
+        {formatNumber(Math.round(value * 100))}
       </span>
     </div>
   )
 }
+import { useI18n } from '../i18n.js'

@@ -119,6 +119,7 @@ export interface ClaudeRerankReview {
 export type ThemeChoice = 'system' | 'light' | 'dark'
 
 export interface AppSettings {
+  language: import('./i18n.js').Language
   watchedFolder: string | null
   theme: ThemeChoice
   /** Whether the optional Claude rerank is enabled. Off unless a key is set. */

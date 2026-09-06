@@ -6,6 +6,13 @@ search keeps the position, job description, requirements, and education or
 certification criteria in separate fields. English and Arabic resumes can be
 ranked against a posting written in either language.
 
+The interface is available in **English and Arabic**. Choose
+**Settings → Language → العربية** to switch immediately to the Arabic RTL
+layout. Existing installations start in English; the choice is saved on this
+device and included in portable backups. Candidate text and saved job content
+keep their original language. Arabic and Persian digits are accepted in
+experience fields, and Arabic exports include bundled fonts for offline use.
+
 **Nothing leaves your machine by default.** Embeddings are computed locally by a
 bundled ONNX model, and with no API key configured the app opens no network
 sockets at runtime. The one exception is opt-in and off by default: an optional
@@ -72,6 +79,18 @@ for the integration plan and verification scope.
 | `npm run bench` | Capacity benchmark: ingest, duplicate scan, and search at 500/1500/3000 resumes |
 | `npm run build:mac` | Produce `release/Qumaa-<version>-arm64.dmg` (Apple Silicon) |
 | `npm run build:win` | Produce `release/Qumaa-<version>-Setup-x64.exe` (Windows 10/11 x64) |
+
+Each successful `build:mac` or `build:win` removes superseded local installers for
+that platform. Cleanup can also be run with `node scripts/prune-releases.mjs mac`
+or `node scripts/prune-releases.mjs win` after verifying a replacement.
+The command reads the current version from `package.json` and operates only in
+this repository's `release/` directory. It requires that platform's current
+installer to exist as a nonempty regular file before removing other versions of
+the same installer and their blockmaps. The other platform, current version,
+unrelated files, symlinks, and build directories stay in place. An old checksum
+manifest is removed only when neither platform's installer for that version
+remains. Version numbers and timestamps are not compared because this project
+has renumbered historical releases.
 
 Both installers are unsigned. On macOS the first launch needs right-click → Open.
 On Windows, SmartScreen shows a "Windows protected your PC" warning, and the user

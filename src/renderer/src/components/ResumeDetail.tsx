@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { useI18n } from '../i18n.js'
+import type { Translator } from '@shared/i18n.js'
 import type { MatchResult, ResumeDetail as Detail, ResumeSummary } from '@shared/types.js'
 import ScoreRing from './ScoreRing.js'
 import RecruiterProfile from './RecruiterProfile.js'
@@ -19,50 +21,53 @@ interface Props {
 }
 
 /** Turns the three component scores into a sentence, so the numbers mean something. */
-function readScore(m: MatchResult): string {
+function readScore(m: MatchResult, t: Translator, formatNumber: (value: number) => string, separator: string): string {
   const { semantic, lexical, skills } = m.breakdown
   const parts: string[] = []
 
-  if (semantic >= 0.75) parts.push('their experience closely resembles the work described')
-  else if (semantic >= 0.4) parts.push('their experience partly resembles the work described')
-  else parts.push('their experience is a weak fit for the work described')
+  if (semantic >= 0.75) parts.push(t('their experience closely resembles the work described'))
+  else if (semantic >= 0.4) parts.push(t('their experience partly resembles the work described'))
+  else parts.push(t('their experience is a weak fit for the work described'))
 
-  if (m.matchedSkills.length && !m.missingSkills.length) parts.push('and they have every listed skill')
+  if (m.matchedSkills.length && !m.missingSkills.length) parts.push(t('and they have every listed skill'))
   else if (m.matchedSkills.length)
-    parts.push(`and they have ${m.matchedSkills.length} of ${m.matchedSkills.length + m.missingSkills.length} listed skills`)
-  else if (m.missingSkills.length) parts.push('but none of the listed skills were found')
+    parts.push(t('and they have {matched} of {total} listed skills', { matched: formatNumber(m.matchedSkills.length), total: formatNumber(m.matchedSkills.length + m.missingSkills.length) }))
+  else if (m.missingSkills.length) parts.push(t('but none of the listed skills were found'))
 
-  if (lexical >= 0.75) parts.push('with strong keyword overlap')
-  else if (lexical <= 0.25) parts.push('with little keyword overlap')
+  if (lexical >= 0.75) parts.push(t('with strong keyword overlap'))
+  else if (lexical <= 0.25) parts.push(t('with little keyword overlap'))
 
   if (skills < 1 && m.missingSkills.length) {
-    return `${parts.join(', ')}. Missing: ${m.missingSkills.join(', ')}.`
+    return t('{reading}. Missing: {skills}.', { reading: parts.join(separator), skills: m.missingSkills.join(separator) })
   }
-  return `${parts.join(', ')}.`
+  return `${parts.join(separator)}.`
 }
 
 function Bar({ label, value }: { label: string; value: number }): React.JSX.Element {
+  const { formatNumber } = useI18n()
   return (
     <div className="score-bar">
       <span className="score-bar-label">{label}</span>
       <span className="score-bar-track">
         <span className="score-bar-fill" style={{ width: `${Math.round(value * 100)}%` }} />
       </span>
-      <span className="score-bar-value">{Math.round(value * 100)}</span>
+      <span className="score-bar-value">{formatNumber(Math.round(value * 100))}</span>
     </div>
   )
 }
 
-function Field({ label, value }: { label: string; value: string | null }): React.JSX.Element {
+function Field({ label, value, dir = 'auto' }: { label: string; value: string | null; dir?: 'auto' | 'ltr' }): React.JSX.Element {
+  const { t } = useI18n()
   return (
     <div className="field">
       <dt>{label}</dt>
-      <dd className={value ? '' : 'muted'}>{value || 'n/a'}</dd>
+      <dd className={value ? '' : 'muted'}><bdi dir={dir}>{value || t('n/a')}</bdi></dd>
     </div>
   )
 }
 
 export default function ResumeDetail({ resume, match, onClose, onDeleted, onProfileChanged }: Props): React.JSX.Element {
+  const { t, formatNumber, language } = useI18n()
   const [detail, setDetail] = useState<Detail | null>(null)
   const [showAllText, setShowAllText] = useState(false)
 
@@ -90,19 +95,23 @@ export default function ResumeDetail({ resume, match, onClose, onDeleted, onProf
     if (deleted) onDeleted()
   }
 
-  const contact = [resume.email, resume.phone, resume.location].filter(Boolean).join('  ·  ')
+  const contact = [
+    { value: resume.email, direction: 'ltr' },
+    { value: resume.phone, direction: 'ltr' },
+    { value: resume.location, direction: 'auto' }
+  ].filter((item) => item.value)
 
   return (
     <>
       <div className="scrim" onClick={onClose} />
-      <aside className="detail" role="dialog" aria-label={`Details for ${resume.name ?? resume.fileName}`}>
+      <aside className="detail" role="dialog" aria-label={t('Details for {name}', { name: resume.name ?? resume.fileName })}>
         <header className="detail-head">
           <div>
-            <h2>{resume.name ?? resume.fileName}</h2>
-            <div className="detail-sub">{contact || resume.fileName}</div>
+            <h2 dir="auto">{resume.name ?? resume.fileName}</h2>
+            <div className="detail-sub">{contact.length ? contact.map((item, index) => <span key={index}>{index > 0 && '  ·  '}<bdi dir={item.direction}>{item.value}</bdi></span>) : <bdi>{resume.fileName}</bdi>}</div>
           </div>
           {match && <ScoreRing value={match.score} size={56} />}
-          <button className="icon-btn" onClick={onClose} aria-label="Close">
+          <button className="icon-btn" onClick={onClose} aria-label={t('Close')}>
             ×
           </button>
         </header>
@@ -111,23 +120,23 @@ export default function ResumeDetail({ resume, match, onClose, onDeleted, onProf
           <RecruiterProfile key={resume.recordKey} resume={resume} onChanged={onProfileChanged} />
           {match && (
             <section>
-              <h3>Score breakdown</h3>
-              <p className="reading">{readScore(match)}</p>
+              <h3>{t('Score breakdown')}</h3>
+              <p className="reading">{readScore(match, t, formatNumber, language === 'ar' ? '، ' : ', ')}</p>
               <div className="score-bars">
-                <Bar label="Semantic" value={match.breakdown.semantic} />
-                <Bar label="Keyword" value={match.breakdown.lexical} />
-                <Bar label="Skills" value={match.breakdown.skills} />
+                <Bar label={t('Semantic')} value={match.breakdown.semantic} />
+                <Bar label={t('Keyword')} value={match.breakdown.lexical} />
+                <Bar label={t('Skills')} value={match.breakdown.skills} />
               </div>
               {(match.matchedSkills.length > 0 || match.missingSkills.length > 0) && (
                 <div className="chips">
                   {match.matchedSkills.map((s) => (
                     <span key={s} className="chip matched">
-                      {s}
+                      <bdi>{s}</bdi>
                     </span>
                   ))}
                   {match.missingSkills.map((s) => (
                     <span key={s} className="chip missing">
-                      {s}
+                      <bdi>{s}</bdi>
                     </span>
                   ))}
                 </div>
@@ -137,41 +146,40 @@ export default function ResumeDetail({ resume, match, onClose, onDeleted, onProf
 
           {match && match.evidence.length > 0 && (
             <section>
-              <h3>Matching passages</h3>
+              <h3>{t('Matching passages')}</h3>
               {match.evidence.map((e, i) => (
                 <blockquote className="evidence" key={i}>
                   <span className="tag">
-                    {e.section} · {Math.round(e.similarity * 100)}% match
+                    {t(e.section)} · {t('{score}% match', { score: formatNumber(Math.round(e.similarity * 100)) })}
                   </span>
-                  <q>{e.text}</q>
+                  <q dir="auto">{e.text}</q>
                 </blockquote>
               ))}
             </section>
           )}
 
           <section>
-            <h3>CV extraction</h3>
+            <h3>{t('CV extraction')}</h3>
             <dl className="fields">
-              <Field label="Name" value={resume.name} />
-              <Field label="Email" value={resume.email} />
-              <Field label="Phone" value={resume.phone} />
-              <Field label="Location" value={resume.location} />
+              <Field label={t('Name')} value={resume.name} />
+              <Field label={t('Email')} value={resume.email} dir="ltr" />
+              <Field label={t('Phone')} value={resume.phone} dir="ltr" />
+              <Field label={t('Location')} value={resume.location} />
               <Field
-                label="Experience"
-                value={resume.yearsExperience !== null ? `${resume.yearsExperience} years` : null}
+                label={t('Experience')}
+                value={resume.yearsExperience !== null ? t('{count} years', { count: formatNumber(resume.yearsExperience) }) : null}
               />
-              <Field label="Education" value={resume.educationLevel} />
-              <Field label="Source" value={resume.fileName} />
+              <Field label={t('Education')} value={resume.educationLevel ? t(resume.educationLevel) : null} />
+              <Field label={t('Source')} value={resume.fileName} />
             </dl>
             <p className="hint">
-              These fields are parsed heuristically and can be wrong on unusually formatted
-              resumes. Ranking never uses them.
+              {t('These fields are parsed heuristically and can be wrong on unusually formatted resumes. Ranking never uses them.')}
             </p>
             {resume.skills.length > 0 && (
               <div className="chips">
                 {resume.skills.map((s) => (
                   <span key={s} className="chip">
-                    {s}
+                    <bdi>{s}</bdi>
                   </span>
                 ))}
               </div>
@@ -180,18 +188,18 @@ export default function ResumeDetail({ resume, match, onClose, onDeleted, onProf
 
           <section>
             <h3>
-              Full text{' '}
-              {detail && <span className="muted">({detail.passageCount} indexed passages)</span>}
+              {t('Full text')}{' '}
+              {detail && <span className="muted">({t('{count} indexed passages', { count: formatNumber(detail.passageCount) })})</span>}
             </h3>
             {detail ? (
               <>
-                <pre className={`raw-text ${showAllText ? 'expanded' : ''}`}>{detail.rawText}</pre>
+                <pre dir="auto" className={`raw-text ${showAllText ? 'expanded' : ''}`}>{detail.rawText}</pre>
                 <button className="btn sm" onClick={() => setShowAllText((v) => !v)}>
-                  {showAllText ? 'Collapse' : 'Show all'}
+                  {t(showAllText ? 'Collapse' : 'Show all')}
                 </button>
               </>
             ) : (
-              <p className="muted">Loading…</p>
+              <p className="muted">{t('Loading…')}</p>
             )}
           </section>
         </div>
@@ -200,16 +208,16 @@ export default function ResumeDetail({ resume, match, onClose, onDeleted, onProf
           {resume.filePath && (
             <>
               <button className="btn" onClick={() => window.api.resumes.open(resume)}>
-                Open file
+                {t('Open file')}
               </button>
               <button className="btn" onClick={() => window.api.resumes.reveal(resume)}>
-                Reveal
+                {t('Reveal')}
               </button>
             </>
           )}
           <span className="spacer" />
           <button className="btn danger" onClick={remove}>
-            Delete
+            {t('Delete')}
           </button>
         </footer>
       </aside>

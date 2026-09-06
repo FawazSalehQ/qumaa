@@ -8,6 +8,7 @@ import { recruitingSchemas } from './recruiting/schema.js'
 import { parseIpc } from './ipc-validation.js'
 import { shortlistHtml, writeShortlistPdf } from './export/shortlist.js'
 import { shortlistCsv } from './export/shortlist-csv.js'
+import { currentLanguage, nativeText as t } from './language.js'
 
 /** Reading/editing recruiter records stays available if model startup fails. */
 function operation<T>(work: () => T | Promise<T>): Promise<T> {
@@ -42,11 +43,11 @@ export function registerRecruitingHandlers(getWindow: () => BrowserWindow): void
     const args = parseIpc(recruitingSchemas.exportShortlist, input, 'shortlist export')
     // Capture the exact selected shortlist before the save dialog yields.
     const shortlist = await operation(() => recruiting.getShortlistExport(args.jobId))
-    const title = shortlist.jobTitle.replace(/[^\p{L}\p{N} _-]/gu, '').trim() || 'Shortlist'
+    const title = shortlist.jobTitle.replace(/[^\p{L}\p{N} _-]/gu, '').trim() || t('Shortlist')
     const { canceled, filePath } = await dialog.showSaveDialog(getWindow(), {
-      title: 'Export selected shortlist',
-      defaultPath: `${title} shortlist.${args.format}`,
-      filters: [{ name: args.format === 'pdf' ? 'PDF' : 'CSV (Excel compatible)', extensions: [args.format] }]
+      title: t("Export selected shortlist"),
+      defaultPath: `${title} ${t('shortlist')}.${args.format}`,
+      filters: [{ name: args.format === 'pdf' ? 'PDF' : t('CSV (Excel compatible)'), extensions: [args.format] }]
     })
     if (canceled || !filePath) return null
     await operation(async () => {
@@ -54,9 +55,9 @@ export function registerRecruitingHandlers(getWindow: () => BrowserWindow): void
         throw new Error('The shortlist changed while the save dialog was open. Review it and export again.')
       }
       if (args.format === 'pdf') {
-        await writeShortlistPdf(shortlistHtml({ ...shortlist, generatedAt: new Date(), curated: true }), filePath)
+        await writeShortlistPdf(shortlistHtml({ ...shortlist, language: currentLanguage(), generatedAt: new Date(), curated: true }), filePath)
       } else {
-        await writeFile(filePath, shortlistCsv(shortlist), { encoding: 'utf8', mode: 0o600 })
+        await writeFile(filePath, shortlistCsv(shortlist, currentLanguage()), { encoding: 'utf8', mode: 0o600 })
       }
     })
     return filePath

@@ -203,7 +203,7 @@ button {
    children opt back out below. */
 .topbar.draggable {
   -webkit-app-region: drag;
-  padding-left: 84px; /* clear the traffic lights */
+  /* native controls */ padding-left: 84px; /* clear the traffic lights */
 }
 
 .topbar.draggable button,
@@ -268,7 +268,7 @@ button {
 
 .tab .count {
   color: var(--text-faint);
-  margin-left: var(--s1);
+  margin-inline-start: var(--s1);
   font-variant-numeric: tabular-nums;
   font-weight: 500;
   display: inline-block;
@@ -574,10 +574,10 @@ select:disabled {
   align-items: center;
   gap: var(--s3);
   width: 100%;
-  text-align: left;
+  text-align: start;
   background: var(--bg-raised);
   border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
+  border-inline-start: 3px solid var(--accent);
   border-radius: var(--radius);
   padding: var(--s3) var(--s4);
   color: var(--text);
@@ -587,7 +587,7 @@ select:disabled {
 
 .posting-bar:hover {
   border-color: var(--accent-border);
-  border-left-color: var(--accent);
+  border-inline-start-color: var(--accent);
 }
 
 .posting-title {
@@ -742,7 +742,7 @@ select:disabled {
 .candidate .rank {
   position: absolute;
   top: -10px;
-  left: var(--s4);
+  inset-inline-start: var(--s4);
   background: var(--accent);
   color: #ffffff;
   font-size: var(--fs-xs);
@@ -877,7 +877,7 @@ select:disabled {
 .score-bar-value {
   font-size: var(--fs-sm);
   font-weight: 600;
-  text-align: right;
+  text-align: end;
   font-variant-numeric: tabular-nums;
   color: var(--text-dim);
 }
@@ -891,8 +891,9 @@ select:disabled {
 /* ---------- evidence ---------- */
 
 .evidence {
-  border-left: 3px solid var(--accent-border);
-  padding: var(--s1) 0 var(--s1) var(--s3);
+  border-inline-start: 3px solid var(--accent-border);
+  padding-block: var(--s1);
+  padding-inline: var(--s3) 0;
   margin: 0 0 var(--s2);
   color: var(--text-dim);
   font-size: var(--fs-md);
@@ -948,7 +949,7 @@ table {
 }
 
 th {
-  text-align: left;
+  text-align: start;
   color: var(--text-dim);
   font-weight: 600;
   font-size: var(--fs-xs);
@@ -966,11 +967,11 @@ th {
 }
 
 th:first-child {
-  border-top-left-radius: var(--radius);
+  border-start-start-radius: var(--radius);
 }
 
 th:last-child {
-  border-top-right-radius: var(--radius);
+  border-start-end-radius: var(--radius);
 }
 
 td {
@@ -995,11 +996,11 @@ tbody tr:last-child td {
 }
 
 tbody tr:last-child td:first-child {
-  border-bottom-left-radius: var(--radius);
+  border-end-start-radius: var(--radius);
 }
 
 tbody tr:last-child td:last-child {
-  border-bottom-right-radius: var(--radius);
+  border-end-end-radius: var(--radius);
 }
 
 tbody tr:hover {
@@ -1028,7 +1029,7 @@ tbody tr.clickable {
 
 .num {
   font-variant-numeric: tabular-nums;
-  text-align: right;
+  text-align: end;
 }
 
 .strong {
@@ -1052,14 +1053,14 @@ tbody tr.clickable {
 .detail {
   position: fixed;
   top: 0;
-  right: 0;
+  inset-inline-end: 0;
   bottom: 0;
   width: min(560px, 92vw);
   z-index: 151;
   display: flex;
   flex-direction: column;
   background: var(--bg-chrome);
-  border-left: 1px solid var(--border);
+  border-inline-start: 1px solid var(--border);
   box-shadow: var(--shadow-panel);
   animation: slide-in 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -1072,7 +1073,7 @@ tbody tr.clickable {
 
 @keyframes slide-in {
   from {
-    transform: translateX(16px);
+    transform: translateX(var(--panel-entry, 16px));
     opacity: 0;
   }
 }
@@ -1175,7 +1176,7 @@ tbody tr.clickable {
 .toasts {
   position: fixed;
   bottom: 20px;
-  right: 20px;
+  inset-inline-end: 20px;
   display: flex;
   flex-direction: column;
   gap: 9px;
@@ -1186,7 +1187,7 @@ tbody tr.clickable {
 .toast {
   background: var(--bg-raised);
   border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
+  border-inline-start: 3px solid var(--accent);
   border-radius: var(--radius-sm);
   padding: 11px var(--s3);
   font-size: var(--fs-md);
@@ -1195,11 +1196,11 @@ tbody tr.clickable {
 }
 
 .toast.error {
-  border-left-color: var(--bad);
+  border-inline-start-color: var(--bad);
 }
 
 .toast.success {
-  border-left-color: var(--good);
+  border-inline-start-color: var(--good);
 }
 
 /* ---------- settings ---------- */
@@ -1582,7 +1583,7 @@ input[type='checkbox'] {
 @media (max-width: 800px) {
   .topbar {
     gap: var(--s3);
-    padding-right: var(--s4);
+    padding-inline-end: var(--s4);
   }
 
   .tab {
@@ -1625,4 +1626,40 @@ input[type='checkbox'] {
   .settings-creator {
     padding-inline: var(--s4);
   }
+}
+
+
+/* Interface direction follows the chosen language; candidate content keeps its own direction. */
+:root[lang='ar'] {
+  --font-latin: 'IBM Plex Sans Arabic', 'IBM Plex Sans Variable', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Sans Arabic', 'IBM Plex Mono', monospace;
+  --panel-entry: -16px;
+  --shadow-panel: 14px 0 44px rgba(43, 39, 51, 0.18);
+}
+:root[lang='ar'] body { line-height: 1.7; }
+:root[lang='ar'] :is(h1, h2, h3, h4, .tag, .label, .tab, .chip, .score-bar-label, th, .creator-label, .setting-badge) {
+  letter-spacing: normal;
+  text-transform: none;
+}
+:root[dir='rtl'] .topbar.draggable { padding-inline-start: var(--s5); padding-left: 84px; }
+.bidi-ltr, .setting-path, .api-key-input, .consent-payload {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+bdi, [dir='auto'] { unicode-bidi: isolate; }
+.setting-path, .api-key-input { text-align: start; }
+:root[lang='ar'] :is(input, textarea, select) { font: inherit; }
+input:not([type='checkbox']):not([type='radio']), textarea { min-width: 0; }
+.topbar .tabs { min-width: 0; flex-wrap: wrap; }
+.row, .setting-actions { min-width: 0; }
+.setting-path { max-width: 100%; overflow-wrap: anywhere; }
+.detail-sub, .meta, .contact, .toast { overflow-wrap: anywhere; }
+:root[lang='ar'] .detail { width: min(620px, 94vw); }
+:root[lang='ar'] .btn { white-space: normal; }
+:root[lang='ar'] .tab { white-space: nowrap; }
+:root[lang='ar'] :is(.score-bar-label, .bar-label) { width: 90px; }
+:root[dir='rtl'] .directional-icon { transform: scaleX(-1); }
+.raw-text[dir='auto'] { unicode-bidi: plaintext; text-align: start; }
+@media (prefers-reduced-motion: reduce) {
+  .detail, .scrim, .toast { animation: none; }
 }

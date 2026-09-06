@@ -1,4 +1,6 @@
 import { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react'
+import { useI18n } from '../i18n.js'
+import { displayError } from '@shared/i18n.js'
 import type { ClaudeRerankPreview, MatchResult } from '@shared/types.js'
 import CandidateCard from '../components/CandidateCard.js'
 import { QumaaMark } from '../components/Brand.js'
@@ -35,6 +37,7 @@ export default function MatchView({
   resetSignal,
   libraryRevision
 }: Props): React.JSX.Element {
+  const { t, formatNumber, language } = useI18n()
   const [session, dispatch] = useReducer(matchSessionReducer, undefined, initialMatchSession)
   // Off unless the user has both stored a key and switched reranking on.
   const [rerankAvailable, setRerankAvailable] = useState(false)
@@ -205,7 +208,7 @@ export default function MatchView({
     <>
       {!snapshot && (
         <header className="view-head">
-          <h2>Match</h2>
+          <h2>{t('Match')}</h2>
         </header>
       )}
 
@@ -222,11 +225,10 @@ export default function MatchView({
             {jobPostingTitle(snapshot.posting)}
           </span>
           <span className="muted">
-            {snapshot.response.requiredSkills.length} skill
-            {snapshot.response.requiredSkills.length === 1 ? '' : 's'} detected
+            {t(snapshot.response.requiredSkills.length === 1 ? '{count} skill detected' : '{count} skills detected', { count: formatNumber(snapshot.response.requiredSkills.length) })}
           </span>
           <span className="spacer" />
-          <span className="posting-edit">Edit</span>
+          <span className="posting-edit">{t('Edit')}</span>
         </button>
       ) : (
         <form
@@ -244,14 +246,14 @@ export default function MatchView({
         >
           <fieldset className="posting-fields" disabled={busy}>
             <div className="posting-field">
-              <label htmlFor="match-position">Position</label>
+              <label htmlFor="match-position">{t('Position')}</label>
               <input
                 ref={positionRef}
                 id="match-position"
                 type="text"
                 dir="auto"
                 value={posting.position}
-                placeholder="e.g. Senior Accountant"
+                placeholder={t('e.g. Senior Accountant')}
                 onChange={(e) =>
                   dispatch({
                     type: 'draft-field-changed',
@@ -263,13 +265,13 @@ export default function MatchView({
             </div>
 
             <div className="posting-field">
-              <label htmlFor="match-description">Job Description</label>
+              <label htmlFor="match-description">{t('Job Description')}</label>
               <textarea
                 id="match-description"
                 rows={6}
                 dir="auto"
                 value={posting.jobDescription}
-                placeholder="Describe the role and its responsibilities"
+                placeholder={t('Describe the role and its responsibilities')}
                 onChange={(e) =>
                   dispatch({
                     type: 'draft-field-changed',
@@ -281,13 +283,13 @@ export default function MatchView({
             </div>
 
             <div className="posting-field">
-              <label htmlFor="match-requirements">Requirements</label>
+              <label htmlFor="match-requirements">{t('Requirements')}</label>
               <textarea
                 id="match-requirements"
                 rows={5}
                 dir="auto"
                 value={posting.requirements}
-                placeholder="List required skills and experience, one item per line"
+                placeholder={t('List required skills and experience, one item per line')}
                 onChange={(e) =>
                   dispatch({
                     type: 'draft-field-changed',
@@ -299,13 +301,13 @@ export default function MatchView({
             </div>
 
             <div className="posting-field">
-              <label htmlFor="match-education">Education and Certifications</label>
+              <label htmlFor="match-education">{t('Education and Certifications')}</label>
               <textarea
                 id="match-education"
                 rows={4}
                 dir="auto"
                 value={posting.educationAndCertifications}
-                placeholder="List required degrees, licenses, and certifications"
+                placeholder={t('List required degrees, licenses, and certifications')}
                 onChange={(e) =>
                   dispatch({
                     type: 'draft-field-changed',
@@ -323,7 +325,7 @@ export default function MatchView({
               className="btn primary"
               disabled={busy || !canSearch || resumeCount === 0}
             >
-              {busy ? 'Searching…' : 'Find matches'}
+              {t(busy ? 'Searching…' : 'Find matches')}
             </button>
             {session.result && (
               <button
@@ -331,15 +333,13 @@ export default function MatchView({
                 className="btn"
                 onClick={() => dispatch({ type: 'edit-cancelled' })}
               >
-                Cancel
+                {t('Cancel')}
               </button>
             )}
             <span className="muted">
               {resumeCount === 0
-                ? 'Import some resumes first by dragging them anywhere onto this window.'
-                : `Searching ${resumeCount} resume${resumeCount === 1 ? '' : 's'} · ${
-                    window.api.platform === 'darwin' ? '⌘↵' : 'Ctrl+Enter'
-                  }`}
+                ? t('Import some resumes first by dragging them anywhere onto this window.')
+                : t(resumeCount === 1 ? 'Searching {count} resume · {shortcut}' : 'Searching {count} resumes · {shortcut}', { count: formatNumber(resumeCount), shortcut: window.api.platform === 'darwin' ? '⌘↵' : 'Ctrl+Enter' })}
             </span>
           </div>
         </form>
@@ -347,17 +347,17 @@ export default function MatchView({
 
       {(session.error || previewError) && (
         <div className="card error-card" role="alert">
-          {session.error ?? previewError}
+          {displayError(language, session.error ?? previewError, 'Search failed')}
         </div>
       )}
 
       {res && snapshot && (
         <div className="results">
           <div className="row results-head">
-            <h3>Top {top.length}</h3>
+            <h3>{t('Top {count}', { count: formatNumber(top.length) })}</h3>
             <span className="spacer" />
             <span className="muted">
-              {res.totalCandidates} scored in {res.elapsedMs} ms
+              {t('{count} scored in {duration} ms', { count: formatNumber(res.totalCandidates), duration: formatNumber(res.elapsedMs) })}
             </span>
             {rerankAvailable && !snapshot.reranked && (
               <button
@@ -365,16 +365,16 @@ export default function MatchView({
                 className="btn sm"
                 onClick={runRerank}
                 disabled={reranking || previewingRerank || top.length < 2}
-                title="Sends the posting fields and the top candidates' matching passages to Anthropic"
+                title={t("Sends the posting fields and the top candidates' matching passages to Anthropic")}
               >
-                {reranking
+                {t(reranking
                   ? 'Reranking…'
                   : previewingRerank
                     ? 'Preparing preview…'
-                    : 'Rerank with Claude'}
+                    : 'Rerank with Claude')}
               </button>
             )}
-            {snapshot.reranked && <span className="muted">Reordered by Claude</span>}
+            {snapshot.reranked && <span className="muted">{t('Reordered by Claude')}</span>}
             <button
               className="btn sm"
               disabled={top.length === 0}
@@ -398,17 +398,17 @@ export default function MatchView({
                 }
               }}
             >
-              Export shortlist…
+              {t('Export shortlist…')}
             </button>
           </div>
 
           {res.requiredSkills.length > 0 && (
             <div className="detected">
-              <span className="muted">Requirements</span>
+              <span className="muted">{t('Requirements')}</span>
               <div className="chips">
                 {res.requiredSkills.map((s) => (
                   <span key={s} className="chip">
-                    {s}
+                    <bdi>{s}</bdi>
                   </span>
                 ))}
               </div>
@@ -416,7 +416,7 @@ export default function MatchView({
           )}
 
           {top.length === 0 ? (
-            <div className="empty">No resumes yet</div>
+            <div className="empty">{t('No resumes yet')}</div>
           ) : (
             <div className="podium">
               {top.map((m, i) => (
@@ -431,20 +431,20 @@ export default function MatchView({
           )}
 
           {session.exported && (
-            <p className="hint">Saved to {session.exported}</p>
+            <p className="hint">{t('Saved to')} <bdi dir="ltr">{session.exported}</bdi></p>
           )}
 
           {rest.length > 0 && (
             <details className="rest">
-              <summary>Show the other {rest.length} ranked candidates</summary>
+              <summary>{t('Show the other {count} ranked candidates', { count: formatNumber(rest.length) })}</summary>
               <table>
                 <thead>
                   <tr>
                     <th style={{ width: 44 }}>#</th>
-                    <th>Candidate</th>
-                    <th>Matched skills</th>
+                    <th>{t('Candidate')}</th>
+                    <th>{t('Matched skills')}</th>
                     <th className="num" style={{ width: 76 }}>
-                      Score
+                      {t('Score')}
                     </th>
                   </tr>
                 </thead>
@@ -455,16 +455,16 @@ export default function MatchView({
                       className="clickable"
                       onClick={() => onOpenCandidate(m)}
                     >
-                      <td className="muted num">{i + 4}</td>
+                      <td className="muted num">{formatNumber(i + 4)}</td>
                       <td>
-                        <div className="cell-title">{m.resume.name ?? m.resume.fileName}</div>
-                        <div className="cell-sub">{m.resume.fileName}</div>
+                        <div className="cell-title" dir="auto">{m.resume.name ?? m.resume.fileName}</div>
+                        <div className="cell-sub" dir="auto">{m.resume.fileName}</div>
                       </td>
                       <td className="muted">
-                        {m.matchedSkills.slice(0, 6).join(', ') || 'none'}
-                        {m.matchedSkills.length > 6 && ` +${m.matchedSkills.length - 6}`}
+                        {m.matchedSkills.length ? m.matchedSkills.slice(0, 6).map((skill, index) => <span key={skill}>{index > 0 && ', '}<bdi>{skill}</bdi></span>) : t('none')}
+                        {m.matchedSkills.length > 6 && ` +${formatNumber(m.matchedSkills.length - 6)}`}
                       </td>
-                      <td className="num strong">{Math.round(m.score * 100)}</td>
+                      <td className="num strong">{formatNumber(Math.round(m.score * 100))}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -484,23 +484,17 @@ export default function MatchView({
             aria-modal="true"
             aria-labelledby="claude-consent-title"
           >
-            <h3 id="claude-consent-title">Review data sent to Anthropic</h3>
+            <h3 id="claude-consent-title">{t('Review data sent to Anthropic')}</h3>
             <p>
-              Claude reranking sends this posting and redacted evidence for{' '}
-              {pendingConsent.preview.candidateCount} candidates to Anthropic using{' '}
-              {pendingConsent.preview.model}. Qumaa redacts detected names, contact details,
-              locations, filenames, and local paths. Years of experience, education, and
-              matched or missing skills are included. Your API key is never part of the request
-              body. Review the complete payload below before continuing.
+              {t('Claude reranking sends this posting and redacted evidence for {count} candidates to Anthropic using {model}. Qumaa redacts detected names, contact details, locations, filenames, and local paths. Years of experience, education, and matched or missing skills are included. Your API key is never part of the request body. Review the complete payload below before continuing.', { count: formatNumber(pendingConsent.preview.candidateCount), model: pendingConsent.preview.model })}
             </p>
-            <h4>Exact outbound request</h4>
-            <pre className="consent-payload">
+            <h4>{t('Exact outbound request')}</h4>
+            <pre className="consent-payload" dir="ltr">
               {JSON.stringify(pendingConsent.preview.requestBody, null, 2)}
             </pre>
             <div className="row consent-actions">
               <span className="muted">
-                Standard matching remains local. This approval is remembered until the data policy
-                changes.
+                {t('Standard matching remains local. This approval is remembered until the data policy changes.')}
               </span>
               <span className="spacer" />
               <button
@@ -511,7 +505,7 @@ export default function MatchView({
                   requestAnimationFrame(() => rerankButtonRef.current?.focus())
                 }}
               >
-                Cancel
+                {t('Cancel')}
               </button>
               <button
                 className="btn primary"
@@ -525,7 +519,7 @@ export default function MatchView({
                   })
                 }}
               >
-                Approve and send
+                {t('Approve and send')}
               </button>
             </div>
           </section>

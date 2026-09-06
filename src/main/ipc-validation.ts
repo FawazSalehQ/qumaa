@@ -94,6 +94,7 @@ export const ipcSchemas = {
   apiKey: boundedString(4_096).trim().min(1).nullable(),
   enabled: z.boolean(),
   theme: z.enum(['system', 'light', 'dark']),
+  language: z.enum(['en', 'ar']),
   watchedFolder: z.null()
 } as const
 

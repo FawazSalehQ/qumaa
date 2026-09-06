@@ -10,7 +10,10 @@
  * it never leaves the machine.
  */
 import { BrowserWindow } from 'electron'
-import { writeFile } from 'node:fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
+import { directionFor, localeFor, translate, type Language } from '@shared/i18n.js'
+import arabicRegularPath from '@fontsource/ibm-plex-sans-arabic/files/ibm-plex-sans-arabic-arabic-400-normal.woff2?asset'
+import arabicSemiboldPath from '@fontsource/ibm-plex-sans-arabic/files/ibm-plex-sans-arabic-arabic-600-normal.woff2?asset'
 import type { MatchResult } from '@shared/types.js'
 
 const INK = '#2b2733'
@@ -35,18 +38,25 @@ const MARK = `<svg viewBox="0 0 100 100" width="34" height="34">
   <polygon points="14,34 86,34 57,70 57,90 43,90 43,70" fill="#fff"/>
 </svg>`
 
-function candidateBlock(m: MatchResult, rank: number, note?: string): string {
+function candidateBlock(m: MatchResult, rank: number, language: Language, note?: string): string {
+  const t = (message: string): string => translate(language, message)
+  const number = (value: number): string => new Intl.NumberFormat(localeFor(language)).format(value)
+  const isolated = (value: string, direction = 'auto'): string => `<bdi dir="${direction}">${esc(value)}</bdi>`
   const r = m.resume
-  const contact = [r.email, r.phone, r.location].filter(Boolean).map(String).map(esc).join(' &middot; ')
+  const contact = [
+    r.email ? isolated(r.email, 'ltr') : null,
+    r.phone ? isolated(r.phone, 'ltr') : null,
+    r.location ? isolated(r.location) : null
+  ].filter(Boolean).join(' &middot; ')
   const facts = [
-    r.yearsExperience !== null ? `${r.yearsExperience} years` : null,
-    r.educationLevel
+    r.yearsExperience !== null ? translate(language, '{count} years', { count: number(r.yearsExperience) }) : null,
+    r.educationLevel ? t(r.educationLevel) : null
   ]
     .filter(Boolean)
     .map((x) => esc(String(x)))
     .join(' &middot; ')
 
-  const chip = (t: string, kind: string): string => `<span class="chip ${kind}">${esc(t)}</span>`
+  const chip = (t: string, kind: string): string => `<span class="chip ${kind}">${isolated(t)}</span>`
 
   const bars: Array<[string, number]> = [
     ['Semantic', m.breakdown.semantic],
@@ -56,21 +66,21 @@ function candidateBlock(m: MatchResult, rank: number, note?: string): string {
 
   return `<article class="candidate">
     <header>
-      <span class="rank">${rank}</span>
+      <span class="rank">${esc(number(rank))}</span>
       <div>
-        <h2>${esc(r.name ?? r.fileName)}</h2>
-        <p class="meta">${contact || esc(r.fileName)}${facts ? ` &middot; ${facts}` : ''}</p>
+        <h2 dir="auto">${esc(r.name ?? r.fileName)}</h2>
+        <p class="meta">${contact || isolated(r.fileName)}${facts ? ` &middot; ${facts}` : ''}</p>
       </div>
-      <span class="score">${Math.round(m.score * 100)}</span>
+      <span class="score">${esc(number(Math.round(m.score * 100)))}</span>
     </header>
 
     <div class="bars">
       ${bars
         .map(
           ([label, v]) => `<div class="bar">
-            <span class="bar-label">${label}</span>
+            <span class="bar-label">${esc(t(label))}</span>
             <span class="track"><span class="fill" style="width:${Math.round(v * 100)}%"></span></span>
-            <span class="bar-val">${Math.round(v * 100)}</span>
+            <span class="bar-val">${esc(number(Math.round(v * 100)))}</span>
           </div>`
         )
         .join('')}
@@ -88,12 +98,12 @@ function candidateBlock(m: MatchResult, rank: number, note?: string): string {
       .slice(0, 2)
       .map(
         (e) => `<blockquote>
-          <span class="tag">${esc(e.section)} &middot; ${Math.round(e.similarity * 100)}% match</span>
-          ${esc(e.text.length > 420 ? `${e.text.slice(0, 420)}…` : e.text)}
+          <span class="tag">${esc(t(e.section))} &middot; ${esc(translate(language, '{score}% match', { score: number(Math.round(e.similarity * 100)) }))}</span>
+          <div dir="auto">${esc(e.text.length > 420 ? `${e.text.slice(0, 420)}…` : e.text)}</div>
         </blockquote>`
       )
       .join('')}
-    ${note ? `<section class="recruiter-note"><strong>Recruiter notes</strong><p>${esc(note)}</p></section>` : ''}
+    ${note ? `<section class="recruiter-note"><strong>${esc(t('Recruiter notes'))}</strong><p dir="auto">${esc(note)}</p></section>` : ''}
   </article>`
 }
 
@@ -104,20 +114,23 @@ export function shortlistHtml(args: {
   generatedAt: Date
   notes?: Record<string, string>
   curated?: boolean
+  language?: Language
 }): string {
-  const date = args.generatedAt.toLocaleDateString('en-GB', {
+  const language = args.language ?? 'en'
+  const t = (message: string): string => translate(language, message)
+  const date = args.generatedAt.toLocaleDateString(language === 'en' ? 'en-GB' : localeFor(language), {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
   })
 
-  return `<!doctype html><html><head><meta charset="utf-8"><style>
+  return `<!doctype html><html lang="${language}" dir="${directionFor(language)}"><head><meta charset="utf-8"><style>
     @page { margin: 18mm 16mm; }
     * { box-sizing: border-box; }
     .recruiter-note p { white-space: pre-wrap; overflow-wrap: anywhere; }
     body {
-      font-family: 'IBM Plex Sans', system-ui, sans-serif;
-      color: ${INK}; margin: 0; font-size: 11pt; line-height: 1.5;
+      font-family: 'Qumaa PDF Arabic', 'IBM Plex Sans', system-ui, sans-serif;
+      color: ${INK}; margin: 0; font-size: 11pt; line-height: 1.5; text-align: start;
     }
     .sheet-head {
       display: flex; align-items: center; gap: 10px;
@@ -141,33 +154,39 @@ export function shortlistHtml(args: {
     .candidate h2 { font-size: 12.5pt; margin: 0; }
     .meta { color: #6b6577; font-size: 9pt; margin: 2px 0 0; }
     .score {
-      margin-left: auto; font-size: 16pt; font-weight: 700; color: ${VIOLET};
+      margin-inline-start: auto; font-size: 16pt; font-weight: 700; color: ${VIOLET};
       font-variant-numeric: tabular-nums;
     }
     .bars { margin: 10px 0 8px; }
     .bar { display: flex; align-items: center; gap: 8px; font-size: 8.5pt; margin-bottom: 3px; }
     .bar-label {
       font-family: 'IBM Plex Mono', monospace; text-transform: uppercase;
-      letter-spacing: 0.16em; color: #6b6577; width: 74px;
+      letter-spacing: 0.16em; color: #6b6577; min-width: 74px;
     }
     .track { flex: 1; height: 4px; background: ${PAPER}; border-radius: 2px; }
     .fill { display: block; height: 100%; background: ${VIOLET}; border-radius: 2px; }
-    .bar-val { width: 24px; text-align: right; font-variant-numeric: tabular-nums; color: #6b6577; }
+    .bar-val { width: 24px; text-align: end; font-variant-numeric: tabular-nums; color: #6b6577; }
     .chips { margin: 8px 0; }
     .chip {
       display: inline-block; font-size: 8.5pt; padding: 1px 8px; border-radius: 20px;
-      border: 1px solid #cfc6e2; margin: 0 4px 4px 0;
+      border: 1px solid #cfc6e2; margin: 0; margin-inline-end: 4px; margin-block-end: 4px;
     }
     .chip.has { background: #e7f4ee; border-color: #a4d8c1; color: #1f7a54; }
     .chip.missing { color: #8d8699; text-decoration: line-through; }
     blockquote {
-      margin: 7px 0 0; padding-left: 10px; border-left: 2px solid ${VIOLET_200};
+      margin: 7px 0 0; padding-inline-start: 10px; border-inline-start: 2px solid ${VIOLET_200};
       color: #4a4557; font-size: 9.5pt;
     }
     .tag {
       display: block; font-family: 'IBM Plex Mono', monospace; font-size: 7.5pt;
       text-transform: uppercase; letter-spacing: 0.2em; color: #8d8699; margin-bottom: 2px;
     }
+    html[lang="ar"] .bar-label, html[lang="ar"] .tag {
+      font-family: 'Qumaa PDF Arabic', sans-serif; letter-spacing: normal; text-transform: none;
+    }
+    html[lang="ar"] .bar-label { width: 110px; }
+    bdi { unicode-bidi: isolate; }
+    h1, h2, .meta { overflow-wrap: anywhere; }
     footer {
       margin-top: 16px; padding-top: 8px; border-top: 1px solid #e4dff0;
       color: #8d8699; font-size: 8pt;
@@ -175,23 +194,23 @@ export function shortlistHtml(args: {
   </style></head><body>
     <div class="sheet-head">
       ${MARK}
-      <span class="wordmark" lang="ar">قُمع</span>
+      <span class="wordmark" lang="ar" dir="rtl">قُمع</span>
       <span class="spacer"></span>
       <span class="when">${esc(date)}</span>
     </div>
 
-    <h1>${esc(args.jobTitle)}</h1>
+    <h1 dir="auto">${esc(args.jobTitle)}</h1>
     <p class="posting-skills">${
       args.requiredSkills.length
-        ? `Skills identified in this posting: ${args.requiredSkills.map(esc).join(', ')}`
-        : 'No named skills were identified in this posting.'
+        ? `${esc(t('Skills identified in this posting:'))} ${args.requiredSkills.map((skill) => `<bdi dir="auto">${esc(skill)}</bdi>`).join(language === 'ar' ? '، ' : ', ')}`
+        : esc(t('No named skills were identified in this posting.'))
     }</p>
 
-    ${args.results.map((m, i) => candidateBlock(m, i + 1, args.notes?.[m.resume.recordKey])).join('')}
+    ${args.results.map((m, i) => candidateBlock(m, i + 1, language, args.notes?.[m.resume.recordKey])).join('')}
 
     <footer>
-      ${args.curated ? 'Selected and ordered by the recruiter. Scores show local similarity to the posting.' : 'Ranked locally by similarity to the posting, not by judgement of seniority.'}
-      Every quoted passage is verbatim from the candidate's own document.
+      ${esc(t(args.curated ? 'Selected and ordered by the recruiter. Scores show local similarity to the posting.' : 'Ranked locally by similarity to the posting, not by judgement of seniority.'))}
+      ${esc(t("Every quoted passage is verbatim from the candidate's own document."))}
     </footer>
   </body></html>`
 }
@@ -204,12 +223,21 @@ export function shortlistHtml(args: {
  * that originated in an uploaded document.
  */
 export async function writeShortlistPdf(html: string, destination: string): Promise<void> {
+  // Assets are emitted alongside the main bundle by electron-vite and included in
+  // both installers. Inline them so even a data: document needs no local-file
+  // permissions, network, or fonts installed on the recruiter's machine.
+  const [regular, semibold] = await Promise.all([readFile(arabicRegularPath), readFile(arabicSemiboldPath)])
+  const fontCss = `<style>
+    @font-face { font-family: 'Qumaa PDF Arabic'; font-style: normal; font-weight: 400; font-display: block; src: url(data:font/woff2;base64,${regular.toString('base64')}) format('woff2'); }
+    @font-face { font-family: 'Qumaa PDF Arabic'; font-style: normal; font-weight: 600 900; font-display: block; src: url(data:font/woff2;base64,${semibold.toString('base64')}) format('woff2'); }
+  </style>`
+  const printableHtml = html.replace('</head>', `${fontCss}</head>`)
   const win = new BrowserWindow({
     show: false,
     webPreferences: { offscreen: true, javascript: false, sandbox: true }
   })
   try {
-    await win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`)
+    await win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(printableHtml)}`)
     const pdf = await win.webContents.printToPDF({ printBackground: true, pageSize: 'A4' })
     await writeFile(destination, pdf)
   } finally {

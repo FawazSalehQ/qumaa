@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useI18n } from '../i18n.js'
+import { displayError } from '@shared/i18n.js'
 import type { ResumeSummary } from '@shared/types.js'
 import { candidateWithProfile, type CandidateProfile } from '@shared/recruiting.js'
 import type { Toast } from '../components/Toasts.js'
 import { QumaaMark } from '../components/Brand.js'
+import LocalizedNumberInput from '../components/LocalizedNumberInput.js'
 import { compareResumes, type LibrarySortKey } from '../librarySort.js'
 import '../components/recruiter-profile.css'
 
@@ -49,6 +52,7 @@ export default function LibraryView({
   onOpenResume,
   profileRevision = 0
 }: Props): React.JSX.Element {
+  const { t, formatNumber, language } = useI18n()
   const [filter, setFilter] = useState('')
   const [sort, setSort] = useState<LibrarySortKey>('imported')
   const [asc, setAsc] = useState(false)
@@ -69,10 +73,10 @@ export default function LibraryView({
     }).catch((error: unknown) => {
       if (!active) return
       setProfiles([])
-      onToast([{ id: crypto.randomUUID(), kind: 'error', message: error instanceof Error ? error.message : 'Could not load recruiter profiles.' }])
+      onToast([{ id: crypto.randomUUID(), kind: 'error', message: displayError(language, error, 'Could not load recruiter profiles.') }])
     })
     return () => { active = false }
-  }, [resumes, profileRevision, onToast])
+  }, [resumes, profileRevision, onToast, language])
 
   const profilesByRecord = useMemo(() => new Map(
     profiles.flatMap((profile) => profile.recordKeys.map((key) => [key, profile] as const))
@@ -120,7 +124,7 @@ export default function LibraryView({
 
   const submitPaste = async (): Promise<void> => {
     if (!pasteText.trim()) return
-    const outcome = await window.api.ingest.text(pasteText, pasteLabel || 'Pasted resume')
+    const outcome = await window.api.ingest.text(pasteText, pasteLabel || t('Pasted resume'))
     onToast([
       {
         id: crypto.randomUUID(),
@@ -130,12 +134,12 @@ export default function LibraryView({
             : 'error',
         message:
           outcome.status === 'imported'
-            ? `Added ${outcome.resume.name ?? 'pasted resume'}`
+            ? t('Added {name}', { name: outcome.resume.name ?? t('pasted resume') })
             : outcome.status === 'near-duplicate'
-              ? `Added ${outcome.resume.name ?? 'pasted resume'}, which closely resembles ${outcome.similarTo.name ?? outcome.similarTo.fileName}`
+              ? t('Added {name}, which closely resembles {similar}', { name: outcome.resume.name ?? t('pasted resume'), similar: outcome.similarTo.name ?? outcome.similarTo.fileName })
             : outcome.status === 'duplicate'
-              ? 'That resume is already in the library'
-              : `Could not add: ${'reason' in outcome ? outcome.reason : 'unknown error'}`
+              ? t('That resume is already in the library')
+              : t('Could not add: {reason}', { reason: t('reason' in outcome ? outcome.reason : 'unknown error') })
       }
     ])
     if (outcome.status === 'imported' || outcome.status === 'near-duplicate') {
@@ -174,7 +178,7 @@ export default function LibraryView({
     const deleted = await window.api.resumes.removeMany(selectedResumes)
     if (deleted > 0) {
       onToast([
-        { id: crypto.randomUUID(), kind: 'success', message: `Deleted ${deleted} resumes` }
+        { id: crypto.randomUUID(), kind: 'success', message: t('Deleted {count} resumes', { count: formatNumber(deleted) }) }
       ])
       setSelected(new Set())
       await onChanged()
@@ -189,39 +193,40 @@ export default function LibraryView({
   return (
     <>
       <header className="view-head">
-        <h2>Library</h2>
+        <h2>{t('Library')}</h2>
         <p className="sub">
-          {resumes.length} resume{resumes.length === 1 ? '' : 's'}
-          {hasFilters && ` · ${shown.length} shown`}
+          {t(resumes.length === 1 ? '{count} resume' : '{count} resumes', { count: formatNumber(resumes.length) })}
+          {hasFilters && ` · ${t('{count} shown', { count: formatNumber(shown.length) })}`}
         </p>
       </header>
 
       <div className="row toolbar">
         <button className="btn" onClick={pickFiles}>
-          Add files…
+          {t('Add files…')}
         </button>
         <button className="btn" onClick={pickFolder}>
-          Import folder…
+          {t('Import folder…')}
         </button>
         <button className="btn" onClick={() => setPasting((p) => !p)}>
-          Paste text
+          {t('Paste text')}
         </button>
         {selected.size > 0 && (
           <>
-            <span className="selection-count">{selected.size} selected</span>
+            <span className="selection-count">{t('{count} selected', { count: formatNumber(selected.size) })}</span>
             <button className="btn sm danger" onClick={removeSelected}>
-              Delete selected
+              {t('Delete selected')}
             </button>
             <button className="btn sm" onClick={() => setSelected(new Set())}>
-              Clear
+              {t('Clear')}
             </button>
           </>
         )}
         <span className="spacer" />
         <input
           type="text"
-          aria-label="Search candidates and screening information"
-          placeholder="Name, skill, screening details…"
+          dir="auto"
+          aria-label={t('Search candidates and screening information')}
+          placeholder={t('Name, skill, screening details…')}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           style={{ width: 240 }}
@@ -229,30 +234,30 @@ export default function LibraryView({
       </div>
 
       {resumes.length > 0 && (
-        <div className="row library-filters" aria-label="Candidate filters">
-          <label htmlFor="library-minimum-years">Experience
-            <input id="library-minimum-years" type="number" min="0" max="100" step="0.5" placeholder="Min."
-              value={minimumYears} onChange={(event) => setMinimumYears(event.target.value)} aria-label="Minimum years of experience" />
-            years
+        <div className="row library-filters" aria-label={t('Candidate filters')}>
+          <label htmlFor="library-minimum-years">{t('Experience')}
+            <LocalizedNumberInput id="library-minimum-years" min={0} max={100} step={0.5} placeholder={t('Min.')}
+              value={minimumYears} onChangeValue={setMinimumYears} aria-label={t('Minimum years of experience')} />
+            {t('years')}
           </label>
-          <label htmlFor="library-education">Education
+          <label htmlFor="library-education">{t('Education')}
             <select id="library-education" value={education} onChange={(event) => setEducation(event.target.value)}>
-              <option value="">Any level</option>
-              <option value="associate">Associate</option>
-              <option value="bachelors">Bachelor’s</option>
-              <option value="masters">Master’s</option>
-              <option value="phd">PhD</option>
+              <option value="">{t('Any level')}</option>
+              <option value="associate">{t('Associate')}</option>
+              <option value="bachelors">{t('Bachelor’s')}</option>
+              <option value="masters">{t('Master’s')}</option>
+              <option value="phd">{t('PhD')}</option>
             </select>
           </label>
-          <label htmlFor="library-availability">Availability
+          <label htmlFor="library-availability">{t('Availability')}
             <select id="library-availability" value={availability} onChange={(event) => setAvailability(event.target.value)}>
-              <option value="">Any</option>
-              <option value="recorded">Recorded</option>
-              <option value="missing">Not recorded</option>
+              <option value="">{t('Any')}</option>
+              <option value="recorded">{t('Recorded')}</option>
+              <option value="missing">{t('Not recorded')}</option>
             </select>
           </label>
-          <label><input type="checkbox" checked={withNotes} onChange={(event) => setWithNotes(event.target.checked)} />With screening notes</label>
-          {hasFilters && <button className="btn sm" onClick={clearFilters}>Clear filters</button>}
+          <label><input type="checkbox" checked={withNotes} onChange={(event) => setWithNotes(event.target.checked)} />{t('With screening notes')}</label>
+          {hasFilters && <button className="btn sm" onClick={clearFilters}>{t('Clear filters')}</button>}
         </div>
       )}
 
@@ -260,23 +265,25 @@ export default function LibraryView({
         <div className="card" style={{ marginBottom: 16 }}>
           <input
             type="text"
-            placeholder="Label (e.g. candidate name)"
+            dir="auto"
+            placeholder={t('Label (e.g. candidate name)')}
             value={pasteLabel}
             onChange={(e) => setPasteLabel(e.target.value)}
             style={{ width: '100%', marginBottom: 8 }}
           />
           <textarea
+            dir="auto"
             rows={8}
-            placeholder="Paste the resume text here…"
+            placeholder={t('Paste the resume text here…')}
             value={pasteText}
             onChange={(e) => setPasteText(e.target.value)}
           />
           <div className="row" style={{ marginTop: 10 }}>
             <button className="btn primary" onClick={submitPaste} disabled={!pasteText.trim()}>
-              Add to library
+              {t('Add to library')}
             </button>
             <button className="btn" onClick={() => setPasting(false)}>
-              Cancel
+              {t('Cancel')}
             </button>
           </div>
         </div>
@@ -288,26 +295,26 @@ export default function LibraryView({
             <span className="empty-mark">
               <QumaaMark size={30} />
             </span>
-            <p className="empty-title">No resumes yet</p>
+            <p className="empty-title">{t('No resumes yet')}</p>
             <p className="empty-body">
-              Drag PDF, DOCX, or Markdown files anywhere onto this window, or pick them yourself.
+              {t('Drag PDF, DOCX, or Markdown files anywhere onto this window, or pick them yourself.')}
             </p>
             <div className="row empty-actions">
               <button className="btn primary" onClick={pickFiles}>
-                Add files…
+                {t('Add files…')}
               </button>
               <button className="btn" onClick={pickFolder}>
-                Import folder…
+                {t('Import folder…')}
               </button>
             </div>
           </div>
         ) : (
           <div className="empty">
-            <p className="empty-title">No matches</p>
-            <p className="empty-body">No candidates match the current search and filters.</p>
+            <p className="empty-title">{t('No matches')}</p>
+            <p className="empty-body">{t('No candidates match the current search and filters.')}</p>
             <div className="row empty-actions">
               <button className="btn" onClick={clearFilters}>
-                Clear filters
+                {t('Clear filters')}
               </button>
             </div>
           </div>
@@ -321,20 +328,20 @@ export default function LibraryView({
                   type="checkbox"
                   checked={allShownSelected}
                   onChange={toggleAll}
-                  aria-label="Select all shown"
+                  aria-label={t('Select all shown')}
                 />
               </th>
               <th>
-                <SortHeader label="Candidate" k="name" sort={sort} asc={asc} onSort={toggleSort} />
+                <SortHeader label={t('Candidate')} k="name" sort={sort} asc={asc} onSort={toggleSort} />
               </th>
-              <th style={{ width: 150 }}>Contact</th>
+              <th style={{ width: 150 }}>{t('Contact')}</th>
               <th className="num" style={{ width: 74 }}>
-                <SortHeader label="Years" k="years" sort={sort} asc={asc} onSort={toggleSort} />
+                <SortHeader label={t('Years')} k="years" sort={sort} asc={asc} onSort={toggleSort} />
               </th>
               <th style={{ width: 104 }}>
-                <SortHeader label="Education" k="education" sort={sort} asc={asc} onSort={toggleSort} />
+                <SortHeader label={t('Education')} k="education" sort={sort} asc={asc} onSort={toggleSort} />
               </th>
-              <th>Skills</th>
+              <th>{t('Skills')}</th>
               <th style={{ width: 130 }} />
             </tr>
           </thead>
@@ -351,32 +358,32 @@ export default function LibraryView({
                     type="checkbox"
                     checked={selected.has(r.id)}
                     onChange={() => toggleOne(r.id)}
-                    aria-label={`Select ${r.name ?? r.fileName}`}
+                    aria-label={t('Select {name}', { name: r.name ?? r.fileName })}
                   />
                 </td>
                 <td>
-                  <div className="cell-title">
-                    {r.name ?? <span className="muted">Unknown name</span>}
+                  <div className="cell-title" dir="auto">
+                    {r.name ?? <span className="muted">{t('Unknown name')}</span>}
                   </div>
-                  <div className="cell-sub">
+                  <div className="cell-sub" dir="auto">
                     {r.fileName}
                   </div>
-                  {profilesByRecord.has(r.recordKey) && <span className="library-profile-badge">Recruiter profile</span>}
+                  {profilesByRecord.has(r.recordKey) && <span className="library-profile-badge">{t('Recruiter profile')}</span>}
                   {(profilesByRecord.get(r.recordKey)?.recordKeys.length ?? 0) > 1 && (
-                    <span className="cell-sub"> · {profilesByRecord.get(r.recordKey)?.recordKeys.length} CV versions</span>
+                    <span className="cell-sub"> · {t('{count} CV versions', { count: formatNumber(profilesByRecord.get(r.recordKey)?.recordKeys.length ?? 0) })}</span>
                   )}
                 </td>
                 <td className="cell-sub">
-                  {r.email && <div>{r.email}</div>}
-                  {r.phone && <div>{r.phone}</div>}
-                  {r.location && <div>{r.location}</div>}
-                  {!r.email && !r.phone && !r.location && <span className="muted">n/a</span>}
+                  {r.email && <div><bdi dir="ltr">{r.email}</bdi></div>}
+                  {r.phone && <div><bdi dir="ltr">{r.phone}</bdi></div>}
+                  {r.location && <div dir="auto">{r.location}</div>}
+                  {!r.email && !r.phone && !r.location && <span className="muted">{t('n/a')}</span>}
                 </td>
-                <td className="num">{r.yearsExperience ?? <span className="muted">n/a</span>}</td>
-                <td className="muted">{r.educationLevel ?? 'n/a'}</td>
+                <td className="num">{r.yearsExperience !== null ? formatNumber(r.yearsExperience) : <span className="muted">{t('n/a')}</span>}</td>
+                <td className="muted">{t(r.educationLevel ?? 'n/a')}</td>
                 <td className="cell-sub">
-                  {r.skills.slice(0, 8).join(', ') || <span className="muted">none detected</span>}
-                  {r.skills.length > 8 && ` +${r.skills.length - 8}`}
+                  {r.skills.length ? r.skills.slice(0, 8).map((skill, index) => <span key={skill}>{index > 0 && ', '}<bdi>{skill}</bdi></span>) : <span className="muted">{t('none detected')}</span>}
+                  {r.skills.length > 8 && ` +${formatNumber(r.skills.length - 8)}`}
                 </td>
                 {/* Row actions must not also trigger the row's open handler. */}
                 <td onClick={(e) => e.stopPropagation()}>
@@ -386,11 +393,11 @@ export default function LibraryView({
                         className="btn sm"
                         onClick={() => window.api.resumes.reveal(r)}
                       >
-                        Reveal
+                        {t('Reveal')}
                       </button>
                     )}
                     <button className="btn sm danger" onClick={() => remove(r)}>
-                      Delete
+                      {t('Delete')}
                     </button>
                   </div>
                 </td>

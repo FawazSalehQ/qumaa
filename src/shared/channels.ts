@@ -35,6 +35,7 @@ export const CH = {
   settingsSetWatchedFolder: 'settings:setWatchedFolder',
   settingsChooseWatchedFolder: 'settings:chooseWatchedFolder',
   settingsSetTheme: 'settings:setTheme',
+  settingsSetLanguage: 'settings:setLanguage',
   settingsSetApiKey: 'settings:setApiKey',
   settingsProtectLegacyApiKey: 'settings:protectLegacyApiKey',
   settingsSetRerank: 'settings:setRerank',

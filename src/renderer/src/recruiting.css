@@ -12,10 +12,10 @@
 .recruit-job-list-head .recruit-eyebrow { display: flex; justify-content: space-between; margin: 0; }
 .recruit-job-list-head .recruit-eyebrow span { color: var(--text); letter-spacing: 0; font-variant-numeric: tabular-nums; }
 .recruit-job-buttons { display: flex; flex-direction: column; max-height: 62vh; overflow-y: auto; }
-.recruit-job-button { display: flex; flex-direction: column; align-items: stretch; gap: 10px; width: 100%; padding: 16px 15px; text-align: start; color: var(--text); border: 0; border-left: 3px solid transparent; border-bottom: 1px solid var(--border); background: transparent; }
+.recruit-job-button { display: flex; flex-direction: column; align-items: stretch; gap: 10px; width: 100%; padding: 16px 15px; text-align: start; color: var(--text); border: 0; border-inline-start: 3px solid transparent; border-bottom: 1px solid var(--border); background: transparent; }
 .recruit-job-button:last-child { border-bottom: 0; }
 .recruit-job-button:hover:not(:disabled) { background: var(--bg-hover); }
-.recruit-job-button.selected { background: var(--bg); border-left-color: var(--accent); }
+.recruit-job-button.selected { background: var(--bg); border-inline-start-color: var(--accent); }
 .recruit-job-button:disabled { cursor: default; }
 .recruit-job-title { font-size: 13px; font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
 .recruit-job-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 5px; color: var(--text-faint); font-size: 10px; }
@@ -45,11 +45,11 @@
 .recruit-posting-summary h4 { margin-top: 18px; }
 .recruit-posting-summary h4:first-child { margin-top: 0; }
 .recruit-posting-summary p { line-height: 1.75; }
-.recruit-posting-summary ul { padding-left: 18px; }
+.recruit-posting-summary ul { padding-inline-start: 18px; }
 .recruit-posting-summary li { padding: 4px 0; }
 .recruit-stats { display: grid; grid-template-columns: repeat(3, 1fr); padding: 18px 24px; gap: 16px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--bg-strip); }
-.recruit-stats > div { display: flex; flex-direction: column; gap: 2px; border-right: 1px solid var(--border); }
-.recruit-stats > div:last-child { border-right: 0; }
+.recruit-stats > div { display: flex; flex-direction: column; gap: 2px; border-inline-end: 1px solid var(--border); }
+.recruit-stats > div:last-child { border-inline-end: 0; }
 .recruit-stats strong { font-size: 23px; font-weight: 500; font-variant-numeric: tabular-nums; line-height: 1.25; }
 .recruit-stats span { color: var(--text-faint); font-size: 11px; }
 .recruit-tabs { display: flex; gap: 24px; padding: 0 24px; border-bottom: 1px solid var(--border); }
@@ -60,7 +60,7 @@
 .recruit-search { flex: 1; min-width: 130px; }
 .recruiting input:not([type='checkbox']), .recruiting textarea, .recruiting select { min-width: 0; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--bg-input); color: var(--text); font: inherit; font-size: 12px; padding: 8px 10px; }
 .recruiting input:not([type='checkbox']), .recruiting textarea { width: 100%; }
-.recruiting select { padding-right: 24px; }
+.recruiting select { padding-inline-end: 24px; }
 .recruiting textarea { resize: vertical; line-height: 1.65; }
 .recruiting input::placeholder, .recruiting textarea::placeholder { color: var(--text-faint); }
 .recruiting input[type='checkbox'] { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
@@ -79,7 +79,7 @@
 .recruit-candidate-table td { padding: 14px 12px; vertical-align: middle; border-bottom: 1px solid var(--border); }
 .recruit-candidate-table tr:last-child td { border-bottom: 0; }
 .recruit-candidate-table tr.reviewing td { background: var(--accent-soft); }
-.recruit-candidate-table .recruit-check-cell { width: 60px; text-align: center; padding-left: 16px; padding-right: 8px; }
+.recruit-candidate-table .recruit-check-cell { width: 60px; text-align: center; padding-inline-start: 16px; padding-inline-end: 8px; }
 .recruit-action-cell { width: 150px; }
 .recruit-name { display: inline-block; padding: 0; border: 0; background: transparent; color: var(--text); text-align: start; font-size: 13px; line-height: 1.5; font-weight: 600; text-decoration: none; overflow-wrap: anywhere; }
 .recruit-name:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
@@ -128,7 +128,7 @@
 .recruit-criterion-title { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; font-size: 12px; }
 .recruit-importance { display: inline-block; padding: 1px 5px; color: var(--text-faint); border: 1px solid var(--border); border-radius: var(--radius-sm); text-transform: capitalize; font-size: 9px; font-weight: 500; flex-shrink: 0; }
 .recruit-importance.required { color: var(--accent); border-color: var(--accent-border); background: var(--accent-soft); }
-.recruit-passage { margin-bottom: 14px; padding: 12px 14px; background: var(--bg-strip); border-left: 2px solid var(--border-strong); }
+.recruit-passage { margin-bottom: 14px; padding: 12px 14px; background: var(--bg-strip); border-inline-start: 2px solid var(--border-strong); }
 .recruit-evidence-label { color: var(--text-faint); font-size: 10px; }
 .recruiting blockquote { margin: 6px 0 8px; padding: 0; font-size: 12px; line-height: 1.75; color: var(--text-dim); white-space: pre-wrap; overflow-wrap: anywhere; }
 .recruit-text-button { border: 0; padding: 0; background: transparent; color: var(--accent); font-size: 11px; font-weight: 500; text-align: start; }
@@ -136,9 +136,9 @@
 .recruit-assessment-fields { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 12px; }
 .recruit-comparison-scroll { overflow: auto; width: 100%; }
 .recruit-comparison { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px; }
-.recruit-comparison th, .recruit-comparison td { min-width: 200px; width: 235px; padding: 16px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); vertical-align: top; text-align: start; overflow-wrap: anywhere; line-height: 1.6; }
+.recruit-comparison th, .recruit-comparison td { min-width: 200px; width: 235px; padding: 16px; border-inline-end: 1px solid var(--border); border-bottom: 1px solid var(--border); vertical-align: top; text-align: start; overflow-wrap: anywhere; line-height: 1.6; }
 .recruit-comparison th:first-child { min-width: 150px; width: 150px; background: var(--bg-strip); color: var(--text-dim); font-size: 11px; font-weight: 500; }
-.recruit-comparison th:last-child, .recruit-comparison td:last-child { border-right: 0; }
+.recruit-comparison th:last-child, .recruit-comparison td:last-child { border-inline-end: 0; }
 .recruit-comparison tr:last-child th, .recruit-comparison tr:last-child td { border-bottom: 0; }
 .recruit-comparison thead th { background: var(--bg-strip); vertical-align: bottom; }
 .recruit-comparison-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
@@ -150,11 +150,11 @@
   .recruit-layout { grid-template-columns: 190px minmax(0, 1fr); gap: 14px; }
   .recruit-workspace-head, .recruit-job-editor, .recruit-review { padding: 18px; }
   .recruit-workspace-head { align-items: flex-start; flex-direction: column; }
-  .recruit-candidate-table th, .recruit-candidate-table td { padding-left: 8px; padding-right: 8px; }
-  .recruit-candidate-table .recruit-check-cell { width: 47px; padding-left: 8px; font-size: 9px; }
+  .recruit-candidate-table th, .recruit-candidate-table td { padding-inline-start: 8px; padding-inline-end: 8px; }
+  .recruit-candidate-table .recruit-check-cell { width: 47px; padding-inline-start: 8px; font-size: 9px; }
   .recruit-shortlist-toolbar { align-items: flex-start; flex-direction: column; }
-  .recruit-results-toolbar { flex-wrap: wrap; padding-left: 14px; padding-right: 14px; }
-  .recruit-tabs, .recruit-stats { padding-left: 18px; padding-right: 18px; }
+  .recruit-results-toolbar { flex-wrap: wrap; padding-inline-start: 14px; padding-inline-end: 14px; }
+  .recruit-tabs, .recruit-stats { padding-inline-start: 18px; padding-inline-end: 18px; }
   .recruit-row-actions { align-items: stretch; flex-direction: column; }
   .recruit-action-cell { width: 80px; }
 }
@@ -176,3 +176,10 @@
   .recruit-stats { gap: 10px; }
   .recruit-stats span { font-size: 10px; }
 }
+
+/* Arabic has connected letterforms; tracking and case transforms are Latin-only. */
+:lang(ar) .recruiting h2, :lang(ar) .recruit-eyebrow { letter-spacing: normal; text-transform: none; }
+:lang(ar) .recruit-importance { text-transform: none; }
+:dir(rtl) .recruit-empty-symbol { transform: scaleX(-1); }
+.recruiting [dir="auto"], .recruiter-profile [dir="auto"] { unicode-bidi: isolate; }
+.recruiting input[dir="ltr"], .recruiter-profile [dir="ltr"] { unicode-bidi: isolate; }

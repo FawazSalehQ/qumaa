@@ -71,7 +71,8 @@
   font-size: var(--fs-md);
 }
 
-.recruiter-fields input[type='number'] {
+.recruiter-fields input[type='number'],
+.recruiter-fields input[data-numeric-input] {
   min-width: 0;
   min-height: 38px;
   background: var(--bg-input);
@@ -208,7 +209,8 @@
   color: var(--text-dim);
 }
 
-.library-filters input[type='number'] {
+.library-filters input[type='number'],
+.library-filters input[data-numeric-input] {
   width: 74px;
   min-height: 32px;
   padding: 5px var(--s2);
@@ -221,7 +223,8 @@
 
 .library-profile-badge {
   display: inline-block;
-  margin: 3px 5px 0 0;
+  margin-block: 3px 0;
+  margin-inline: 0 5px;
   font-size: var(--fs-xs);
   color: var(--good);
 }

@@ -12,16 +12,17 @@ import { app, dialog, Menu, shell, type BrowserWindow, type MenuItemConstructorO
 import { CH } from '@shared/channels.js'
 import type { MenuCommand } from '@shared/types.js'
 import { stats } from './db/index.js'
+import { nativeText as t } from './language.js'
 
 const isMac = process.platform === 'darwin'
 
 function aboutDetail(): string {
   const { resumeCount, chunkCount } = stats()
   return [
-    `Version ${app.getVersion()}`,
-    `Library: ${resumeCount} resumes, ${chunkCount} indexed passages`,
+    t('Version {version}', { version: app.getVersion() }),
+    t('Library: {count} resumes, {passages} indexed passages', { count: resumeCount, passages: chunkCount }),
     '',
-    'This application runs locally.'
+    t('This application runs locally.')
   ].join('\n')
 }
 
@@ -44,10 +45,10 @@ export function buildMenu(getWindow: () => BrowserWindow | null): void {
     const win = getWindow()
     const options = {
       type: 'info' as const,
-      title: 'About قُمع',
+      title: t('About قُمع'),
       message: 'قُمع',
       detail: aboutDetail(),
-      buttons: ['OK']
+      buttons: [t('OK')]
     }
     if (win) await dialog.showMessageBox(win, options)
     else await dialog.showMessageBox(options)
@@ -57,104 +58,104 @@ export function buildMenu(getWindow: () => BrowserWindow | null): void {
     ...(isMac
       ? [
           {
-            label: 'قُمع',
+            label: t('قُمع'),
             submenu: [
-              { role: 'about' as const, label: 'About قُمع' },
+              { role: 'about' as const, label: t('About قُمع') },
               { type: 'separator' as const },
               {
-                label: 'Settings…',
+                label: t('Settings…'),
                 accelerator: 'Cmd+,',
                 click: send('goto-settings')
               },
               { type: 'separator' as const },
-              { role: 'services' as const },
+              { role: 'services' as const, label: t('Services') },
               { type: 'separator' as const },
-              { role: 'hide' as const, label: 'Hide قُمع' },
-              { role: 'hideOthers' as const },
-              { role: 'unhide' as const },
+              { role: 'hide' as const, label: t('Hide قُمع') },
+              { role: 'hideOthers' as const, label: t('Hide Others') },
+              { role: 'unhide' as const, label: t('Show All') },
               { type: 'separator' as const },
-              { role: 'quit' as const, label: 'Quit قُمع' }
+              { role: 'quit' as const, label: t('Quit قُمع') }
             ]
           } satisfies MenuItemConstructorOptions
         ]
       : []),
 
     {
-      label: '&File',
+      label: t('&File'),
       submenu: [
-        { label: 'New Search', accelerator: 'CmdOrCtrl+N', click: send('new-search') },
+        { label: t('New Search'), accelerator: 'CmdOrCtrl+N', click: send('new-search') },
         { type: 'separator' },
-        { label: 'Import Files…', accelerator: 'CmdOrCtrl+O', click: send('import-files') },
+        { label: t('Import Files…'), accelerator: 'CmdOrCtrl+O', click: send('import-files') },
         {
-          label: 'Import Folder…',
+          label: t('Import Folder…'),
           accelerator: 'CmdOrCtrl+Shift+O',
           click: send('import-folder')
         },
         { type: 'separator' },
         ...(isMac
-          ? [{ role: 'close' as const }]
+          ? [{ role: 'close' as const, label: t('Close Window') }]
           : [
               {
-                label: 'Settings',
+                label: t('Settings'),
                 accelerator: 'Ctrl+,',
                 click: send('goto-settings')
               },
               { type: 'separator' as const },
-              { role: 'quit' as const, label: 'Exit' }
+              { role: 'quit' as const, label: t('Exit') }
             ])
       ]
     },
 
     // Standard roles. Removing these breaks copy and paste in the app.
     {
-      label: '&Edit',
+      label: t('&Edit'),
       submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
+        { role: 'undo', label: t('Undo') },
+        { role: 'redo', label: t('Redo') },
         { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
-        ...(isMac ? [{ role: 'pasteAndMatchStyle' as const }] : []),
-        { role: 'delete' },
-        { role: 'selectAll' }
+        { role: 'cut', label: t('Cut') },
+        { role: 'copy', label: t('Copy') },
+        { role: 'paste', label: t('Paste') },
+        ...(isMac ? [{ role: 'pasteAndMatchStyle' as const, label: t('Paste and Match Style') }] : []),
+        { role: 'delete', label: t('Delete') },
+        { role: 'selectAll', label: t('Select All') }
       ]
     },
 
     {
-      label: '&View',
+      label: t('&View'),
       submenu: [
-        { label: 'Jobs', accelerator: 'CmdOrCtrl+4', click: send('goto-jobs') },
-        { label: 'Match', accelerator: 'CmdOrCtrl+1', click: send('goto-match') },
-        { label: 'Library', accelerator: 'CmdOrCtrl+2', click: send('goto-library') },
-        { label: 'Settings', accelerator: 'CmdOrCtrl+3', click: send('goto-settings') },
+        { label: t('Jobs'), accelerator: 'CmdOrCtrl+4', click: send('goto-jobs') },
+        { label: t('Match'), accelerator: 'CmdOrCtrl+1', click: send('goto-match') },
+        { label: t('Library'), accelerator: 'CmdOrCtrl+2', click: send('goto-library') },
+        { label: t('Settings'), accelerator: 'CmdOrCtrl+3', click: send('goto-settings') },
         { type: 'separator' },
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
+        { role: 'resetZoom', label: t('Actual Size') },
+        { role: 'zoomIn', label: t('Zoom In') },
+        { role: 'zoomOut', label: t('Zoom Out') },
         { type: 'separator' },
-        { role: 'togglefullscreen' },
-        { role: 'toggleDevTools' }
+        { role: 'togglefullscreen', label: t('Toggle Full Screen') },
+        { role: 'toggleDevTools', label: t('Developer Tools') }
       ]
     },
 
     {
-      label: '&Window',
+      label: t('&Window'),
       submenu: [
-        { role: 'minimize' },
+        { role: 'minimize', label: t('Minimize') },
         ...(isMac
-          ? [{ role: 'zoom' as const }, { type: 'separator' as const }, { role: 'front' as const }]
-          : [{ role: 'close' as const }])
+          ? [{ role: 'zoom' as const, label: t('Zoom') }, { type: 'separator' as const }, { role: 'front' as const, label: t('Bring All to Front') }]
+          : [{ role: 'close' as const, label: t('Close Window') }])
       ]
     },
 
     {
-      label: '&Help',
+      label: t('&Help'),
       role: 'help',
       submenu: [
-        ...(isMac ? [] : [{ label: 'About قُمع', click: showAbout }]),
+        ...(isMac ? [] : [{ label: t('About قُمع'), click: showAbout }]),
         {
-          label: 'Show Database Folder',
+          label: t('Show Database Folder'),
           click: () => {
             shell.showItemInFolder(stats().dbPath)
           }

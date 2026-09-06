@@ -54,6 +54,7 @@ import {
   setApiKey
 } from './secrets.js'
 import { buildMenu } from './menu.js'
+import { currentLanguage, LANGUAGE_KEY, nativeText as t } from './language.js'
 import { registerRecruitingHandlers } from './recruiting-ipc.js'
 import { ipcSchemas, parseIpc } from './ipc-validation.js'
 import { maintenance } from './maintenance.js'
@@ -427,11 +428,11 @@ function registerHandlers(): void {
     await indexReadiness.waitUntilReady()
     const { response } = await dialog.showMessageBox(mainWindow!, {
       type: 'warning',
-      buttons: ['Cancel', 'Delete resume'],
+      buttons: [t('Cancel'), t('Delete resume')],
       defaultId: 0,
       cancelId: 0,
-      message: 'Delete this resume?',
-      detail: 'It is removed from the library. The original file is not touched.'
+      message: t("Delete this resume?"),
+      detail: t("It is removed from the library. The original file is not touched.")
     })
     if (response !== 1) return false
     return maintenance.runOperation(() => {
@@ -449,11 +450,11 @@ function registerHandlers(): void {
     // the dialog is native and cannot be skipped by the renderer.
     const { response } = await dialog.showMessageBox(mainWindow!, {
       type: 'warning',
-      buttons: ['Cancel', `Delete ${refs.length}`],
+      buttons: [t('Cancel'), t('Delete {count}', { count: refs.length })],
       defaultId: 0,
       cancelId: 0,
-      message: `Delete ${refs.length} resume${refs.length === 1 ? '' : 's'}?`,
-      detail: 'They are removed from the library. The original files are not touched.'
+      message: t(refs.length === 1 ? 'Delete {count} resume?' : 'Delete {count} resumes?', { count: refs.length }),
+      detail: t("They are removed from the library. The original files are not touched.")
     })
     if (response !== 1) return 0
     return maintenance.runOperation(() => {
@@ -494,7 +495,7 @@ function registerHandlers(): void {
   ipcMain.handle(CH.ingestFolder, async () => {
     const selected = await dialog.showOpenDialog(mainWindow!, {
       properties: ['openDirectory'],
-      title: 'Choose a folder of resumes'
+      title: t("Choose a folder of resumes")
     })
     if (selected.canceled || !selected.filePaths[0]) return []
     const folder = selected.filePaths[0]
@@ -512,9 +513,9 @@ function registerHandlers(): void {
   ipcMain.handle(CH.ingestPickFiles, async () => {
     const res = await dialog.showOpenDialog({
       properties: ['openFile', 'multiSelections'],
-      title: 'Choose resumes',
+      title: t("Choose resumes"),
       filters: [
-        { name: 'Resumes', extensions: SUPPORTED_EXTENSIONS.map((ext) => ext.slice(1)) }
+        { name: t("Resumes"), extensions: SUPPORTED_EXTENSIONS.map((ext) => ext.slice(1)) }
       ]
     })
     if (res.canceled || res.filePaths.length === 0) return []
@@ -531,7 +532,7 @@ function registerHandlers(): void {
       await indexReadiness.waitUntilReady()
       const outcome = await ingestText({
         text: args.text,
-        fileName: args.label || 'Pasted resume',
+        fileName: args.label || t('Pasted resume'),
         filePath: '',
         fileType: 'pasted'
       })
@@ -557,16 +558,16 @@ function registerHandlers(): void {
     CH.searchExport,
     async (_e, rawArgs: unknown) => {
       const args = parseIpc(ipcSchemas.exportArgs, rawArgs, 'shortlist export')
-      const safeTitle = args.jobTitle.replace(/[^\p{L}\p{N} _-]/gu, '').trim() || 'Shortlist'
+      const safeTitle = args.jobTitle.replace(/[^\p{L}\p{N} _-]/gu, '').trim() || t('Shortlist')
       const { canceled, filePath } = await dialog.showSaveDialog(mainWindow!, {
-        title: 'Export shortlist',
-        defaultPath: `${safeTitle} shortlist.pdf`,
+        title: t("Export shortlist"),
+        defaultPath: `${safeTitle} ${t('shortlist')}.pdf`,
         filters: [{ name: 'PDF', extensions: ['pdf'] }]
       })
       if (canceled || !filePath) return null
 
       await maintenance.runOperation(() =>
-        writeShortlistPdf(shortlistHtml({ ...args, generatedAt: new Date() }), filePath)
+        writeShortlistPdf(shortlistHtml({ ...args, language: currentLanguage(), generatedAt: new Date() }), filePath)
       )
       return filePath
     }
@@ -577,6 +578,7 @@ function registerHandlers(): void {
       const storedTheme = ipcSchemas.theme.safeParse(getSetting(THEME_KEY))
       const apiKeyStatus = getApiKeyStatus()
       return {
+        language: currentLanguage(),
         watchedFolder: getSetting(WATCHED_FOLDER_KEY),
         theme: storedTheme.success ? storedTheme.data : 'system',
         rerankEnabled: getSetting(RERANK_KEY) === 'true',
@@ -666,15 +668,15 @@ function registerHandlers(): void {
 
       const { response } = await dialog.showMessageBox(mainWindow!, {
         type: 'question',
-        buttons: ['Cancel', 'Send to Anthropic'],
+        buttons: [t('Cancel'), t('Send to Anthropic')],
         defaultId: 0,
         cancelId: 0,
         message: review.consentRequired
-          ? 'Send the request you just reviewed to Anthropic?'
-          : 'Send this search\'s redacted evidence to Anthropic?',
+          ? t('Send the request you just reviewed to Anthropic?')
+          : t('Send this search\'s redacted evidence to Anthropic?'),
         detail: review.consentRequired
-          ? 'This enables Claude reranking under the displayed data policy. Standard matching remains on this device.'
-          : 'Qumaa requires this operating-system confirmation for every outbound rerank.'
+          ? t('This enables Claude reranking under the displayed data policy. Standard matching remains on this device.')
+          : t('Qumaa requires this operating-system confirmation for every outbound rerank.')
       })
       if (response !== 1) throw new Error('Claude reranking was cancelled.')
 
@@ -700,6 +702,15 @@ function registerHandlers(): void {
     return maintenance.runOperation(() => setSetting(THEME_KEY, theme))
   })
 
+  ipcMain.handle(CH.settingsSetLanguage, (_e, rawLanguage: unknown) => {
+    const language = parseIpc(ipcSchemas.language, rawLanguage, 'language')
+    return maintenance.runOperation(() => {
+      setSetting(LANGUAGE_KEY, language)
+      buildMenu(() => mainWindow)
+      return language
+    })
+  })
+
   ipcMain.handle(CH.settingsSetWatchedFolder, async (_e, rawFolder: unknown) => {
     parseIpc(ipcSchemas.watchedFolder, rawFolder, 'watched folder')
     await withWatcherLifecycle(async () => {
@@ -711,7 +722,7 @@ function registerHandlers(): void {
   ipcMain.handle(CH.settingsChooseWatchedFolder, async () => {
     const selected = await dialog.showOpenDialog(mainWindow!, {
       properties: ['openDirectory'],
-      title: 'Choose a watched folder'
+      title: t("Choose a watched folder")
     })
     if (selected.canceled || !selected.filePaths[0]) return null
     const folder = selected.filePaths[0]
@@ -744,9 +755,9 @@ function registerHandlers(): void {
     await indexReadiness.waitUntilReady()
     const date = new Date().toISOString().slice(0, 10)
     const { canceled, filePath } = await dialog.showSaveDialog(mainWindow!, {
-      title: 'Back up Qumaa library',
+      title: t("Back up Qumaa library"),
       defaultPath: `Qumaa-backup-${date}.qumaa-backup`,
-      filters: [{ name: 'Qumaa backup', extensions: ['qumaa-backup'] }]
+      filters: [{ name: t("Qumaa backup"), extensions: ['qumaa-backup'] }]
     })
     if (canceled || !filePath) return null
 
@@ -759,9 +770,9 @@ function registerHandlers(): void {
   ipcMain.handle(CH.settingsRestore, async () => {
     await indexReadiness.waitUntilReady()
     const selected = await dialog.showOpenDialog(mainWindow!, {
-      title: 'Restore Qumaa library',
+      title: t("Restore Qumaa library"),
       properties: ['openFile'],
-      filters: [{ name: 'Qumaa backup', extensions: ['qumaa-backup'] }]
+      filters: [{ name: t("Qumaa backup"), extensions: ['qumaa-backup'] }]
     })
     if (selected.canceled || !selected.filePaths[0]) return null
 
@@ -772,12 +783,12 @@ function registerHandlers(): void {
     const staged = await stagePortableRestore(sourcePath)
     const { response } = await dialog.showMessageBox(mainWindow!, {
       type: 'warning',
-      buttons: ['Cancel', 'Restore backup'],
+      buttons: [t('Cancel'), t('Restore backup')],
       defaultId: 0,
       cancelId: 0,
-      message: `Replace this library with ${staged.resumeCount} backed-up resume${staged.resumeCount === 1 ? '' : 's'}?`,
+      message: t(staged.resumeCount === 1 ? 'Replace this library with {count} backed-up resume?' : 'Replace this library with {count} backed-up resumes?', { count: staged.resumeCount }),
       detail:
-        'The current library is kept only while Qumaa validates the restored search index, then removed automatically. Restoring removes this device\'s API key, watched folder, original-file paths, and window state.'
+        t("The current library is kept only while Qumaa validates the restored search index, then removed automatically. Restoring removes this device's API key, watched folder, original-file paths, and window state.")
     })
     if (response !== 1) {
       discardStagedRestore(staged)
@@ -814,6 +825,7 @@ function registerHandlers(): void {
           searchSessions.clear()
           return result
         })
+        buildMenu(() => mainWindow)
         return {
           schemaVersion: restored.schemaVersion,
           resumeCount: restored.resumeCount,
@@ -837,14 +849,12 @@ function registerHandlers(): void {
     // Irreversible, so the confirmation is native and states exactly what goes.
     const { response } = await dialog.showMessageBox(mainWindow!, {
       type: 'warning',
-      buttons: ['Cancel', 'Delete everything'],
+      buttons: [t('Cancel'), t('Delete everything')],
       defaultId: 0,
       cancelId: 0,
-      message: 'Delete all data?',
+      message: t("Delete all data?"),
       detail:
-        `This removes all ${resumeCount} resume${resumeCount === 1 ? '' : 's'} from the library, ` +
-        'along with your settings, watched folder, and saved API key. ' +
-        'The original resume files on disk are not touched. This cannot be undone.'
+        t(resumeCount === 1 ? 'This removes all {count} resume from the library, along with your settings, watched folder, and saved API key. The original resume files on disk are not touched. This cannot be undone.' : 'This removes all {count} resumes from the library, along with your settings, watched folder, and saved API key. The original resume files on disk are not touched. This cannot be undone.', { count: resumeCount })
     })
     if (response !== 1) return false
 
@@ -861,6 +871,7 @@ function registerHandlers(): void {
         // Readiness remains open after a wipe, so restore internal provenance for
         // the now-empty index before a new resume can be ingested.
         markEmptyIndexCurrent()
+        buildMenu(() => mainWindow)
         return true
       })
     })

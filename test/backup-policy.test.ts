@@ -3,8 +3,9 @@ import { isPortableSetting, PORTABLE_SETTING_KEYS } from '../src/main/db/backup-
 
 describe('portable backup policy', () => {
   it('keeps only cross-machine non-secret settings', () => {
-    expect(PORTABLE_SETTING_KEYS).toEqual(['theme'])
+    expect(PORTABLE_SETTING_KEYS).toEqual(['theme', 'language'])
     expect(isPortableSetting('theme')).toBe(true)
+    expect(isPortableSetting('language')).toBe(true)
   })
 
   it.each([

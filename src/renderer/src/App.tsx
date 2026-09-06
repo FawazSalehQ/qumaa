@@ -8,6 +8,8 @@ import Toasts, { type Toast } from './components/Toasts.js'
 import { useTheme } from './useTheme.js'
 import ResumeDetail from './components/ResumeDetail.js'
 import { Brand } from './components/Brand.js'
+import { useI18n } from './i18n.js'
+import type { Translator } from '@shared/i18n.js'
 
 type Tab = 'jobs' | 'match' | 'library' | 'settings'
 
@@ -18,7 +20,7 @@ interface Selection {
 }
 
 /** Turns a batch of ingest outcomes into one summary toast plus per-failure detail. */
-function summarize(outcomes: IngestOutcome[]): Toast[] {
+function summarize(outcomes: IngestOutcome[], t: Translator): Toast[] {
   const imported = outcomes.filter(
     (o) => o.status === 'imported' || o.status === 'near-duplicate'
   ).length
@@ -29,8 +31,8 @@ function summarize(outcomes: IngestOutcome[]): Toast[] {
   const toasts: Toast[] = []
   if (imported || duplicates) {
     const parts = []
-    if (imported) parts.push(`${imported} imported`)
-    if (duplicates) parts.push(`${duplicates} already in library`)
+    if (imported) parts.push(t('{count} imported', { count: imported }))
+    if (duplicates) parts.push(t('{count} already in library', { count: duplicates }))
     toasts.push({ id: crypto.randomUUID(), kind: 'success', message: parts.join(', ') })
   }
   // Near-duplicates are imported, so this is information rather than an error:
@@ -41,26 +43,27 @@ function summarize(outcomes: IngestOutcome[]): Toast[] {
     toasts.push({
       id: crypto.randomUUID(),
       kind: 'info',
-      message: `${nd.resume.name ?? nd.resume.fileName} looks ${pct}% like ${nd.similarTo.name ?? nd.similarTo.fileName} already in the library`
+      message: t('{name} looks {percent}% like {other} already in the library', { name: nd.resume.name ?? nd.resume.fileName, percent: pct, other: nd.similarTo.name ?? nd.similarTo.fileName })
     })
   }
 
   // Cap the noise: a folder of 200 scans should not produce 200 toasts.
   for (const p of problems.slice(0, 4)) {
     const reason = 'reason' in p ? p.reason : 'Failed'
-    toasts.push({ id: crypto.randomUUID(), kind: 'error', message: `${p.fileName}: ${reason}` })
+    toasts.push({ id: crypto.randomUUID(), kind: 'error', message: `${p.fileName}: ${t(reason)}` })
   }
   if (problems.length > 4) {
     toasts.push({
       id: crypto.randomUUID(),
       kind: 'error',
-      message: `…and ${problems.length - 4} more files could not be imported`
+      message: t('…and {count} more files could not be imported', { count: problems.length - 4 })
     })
   }
   return toasts
 }
 
 export default function App(): React.JSX.Element {
+  const { t, formatNumber, reloadLanguage } = useI18n()
   const [tab, setTab] = useState<Tab>('jobs')
   const [resumes, setResumes] = useState<ResumeSummary[]>([])
   const [progress, setProgress] = useState<IngestProgress | null>(null)
@@ -124,7 +127,7 @@ export default function App(): React.JSX.Element {
       }
     })
     const offWatch = window.api.on.watchIngest((o) => {
-      pushToasts(summarize([o]))
+      pushToasts(summarize([o], t))
       if (o.status === 'imported' || o.status === 'near-duplicate') {
         refreshAfterLibraryChange()
       } else {
@@ -134,7 +137,7 @@ export default function App(): React.JSX.Element {
     const offReindex = window.api.on.reindexed(() => {
       refreshAfterLibraryChange()
       pushToasts([
-        { id: crypto.randomUUID(), kind: 'success', message: 'Search index updated for the new model' }
+        { id: crypto.randomUUID(), kind: 'success', message: t('Search index updated for the new model') }
       ])
     })
     return () => {
@@ -143,36 +146,37 @@ export default function App(): React.JSX.Element {
       offReindex()
       invalidatedIngestJobs.current.clear()
     }
-  }, [invalidateMatches, refresh, refreshAfterLibraryChange, pushToasts])
+  }, [invalidateMatches, refresh, refreshAfterLibraryChange, pushToasts, t])
 
   const ingestDroppedFiles = useCallback(
     async (files: File[]) => {
       if (files.length === 0) return
       const outcomes = await window.api.ingest.files(files)
-      pushToasts(summarize(outcomes))
+      pushToasts(summarize(outcomes, t))
       await refresh()
     },
-    [pushToasts, refresh]
+    [pushToasts, refresh, t]
   )
 
   const importViaDialog = useCallback(
     async (kind: 'files' | 'folder') => {
       if (kind === 'files') {
         const outcomes = await window.api.ingest.pickFiles()
-        pushToasts(summarize(outcomes))
+        pushToasts(summarize(outcomes, t))
         await refresh()
         return
       }
-      pushToasts(summarize(await window.api.ingest.folder()))
+      pushToasts(summarize(await window.api.ingest.folder(), t))
       await refresh()
     },
-    [pushToasts, refresh]
+    [pushToasts, refresh, t]
   )
 
   const handleSettingsChanged = useCallback(async (resetWorkspace = false) => {
     if (resetWorkspace) setWorkspaceEpoch((epoch) => epoch + 1)
     await refreshAfterLibraryChange()
-  }, [refreshAfterLibraryChange])
+    await reloadLanguage()
+  }, [refreshAfterLibraryChange, reloadLanguage])
 
   /* ---------- menu commands ---------- */
 
@@ -253,27 +257,21 @@ export default function App(): React.JSX.Element {
             className={`tab ${tab === 'jobs' ? 'active' : ''}`}
             onClick={() => setTab('jobs')}
             aria-current={tab === 'jobs' ? 'page' : undefined}
-          >
-            Jobs
-          </button>
+          >{t("Jobs")}</button>
           <button
             className={`tab ${tab === 'match' ? 'active' : ''}`}
             onClick={() => setTab('match')}
-          >
-            Match
-          </button>
+          >{t("Match")}</button>
           <button
             className={`tab ${tab === 'library' ? 'active' : ''}`}
             onClick={() => setTab('library')}
           >
-            Library <span className="count">{resumes.length}</span>
+            {t('Library')} <span className="count">{formatNumber(resumes.length)}</span>
           </button>
           <button
             className={`tab ${tab === 'settings' ? 'active' : ''}`}
             onClick={() => setTab('settings')}
-          >
-            Settings
-          </button>
+          >{t("Settings")}</button>
         </nav>
       </header>
 
@@ -282,10 +280,10 @@ export default function App(): React.JSX.Element {
           <div className="progress card">
             <div className="row">
               <span>
-                Importing {progress.processed + 1} of {progress.total}
+                {t('Importing {current} of {total}', { current: Math.min(progress.processed + 1, progress.total), total: progress.total })}
               </span>
               <span className="spacer" />
-              <span className="muted">{progress.currentFile}</span>
+              <bdi className="muted">{progress.currentFile}</bdi>
             </div>
             <div className="bar">
               <div style={{ width: `${(progress.processed / progress.total) * 100}%` }} />
@@ -345,8 +343,8 @@ export default function App(): React.JSX.Element {
 
       {dragging && (
         <div className="drop-overlay">
-          <div>Drop resumes to import</div>
-          <div className="hint">PDF, DOCX or Markdown</div>
+          <div>{t("Drop resumes to import")}</div>
+          <div className="hint">{t("PDF, DOCX or Markdown")}</div>
         </div>
       )}
 

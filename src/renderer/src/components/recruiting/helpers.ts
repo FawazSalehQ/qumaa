@@ -1,6 +1,7 @@
 import type { AssessmentStatus, CandidateProfile, CandidateReview, JobWorkspace, ReviewStatus } from '@shared/recruiting.js'
 import { candidateWithProfile, profileForResume } from '@shared/recruiting.js'
 import type { MatchResult } from '@shared/types.js'
+import type { Language, Translator } from '@shared/i18n.js'
 
 export const REVIEW_LABELS: Record<ReviewStatus, string> = {
   unreviewed: 'Unreviewed',
@@ -62,4 +63,34 @@ export function matchProfile(workspace: JobWorkspace, match: MatchResult): Candi
 
 export function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'The operation could not be completed. Please try again.'
+}
+
+/** Isolate interpolated user data without changing its stored value. */
+export function bidiValue(value: string, language: Language, direction: 'auto' | 'ltr' = 'auto'): string {
+  return language === 'ar' ? `${direction === 'ltr' ? '\u2066' : '\u2068'}${value}\u2069` : value
+}
+
+/** IPC errors stay in source form until render so switching language also updates an open error. */
+export function recruitingError(message: string, t: Translator, language: Language): string {
+  const clean = message.replace(/^Error invoking remote method '[^']+':\s*(?:Error:\s*)?/, '')
+  const conflict = /^These profiles have different (\w+) values\. Reconcile those edits before linking CVs\.$/.exec(clean)
+  if (conflict) {
+    const fields: Record<string, string> = {
+      name: 'Name', email: 'Email', phone: 'Phone', location: 'Location', yearsExperience: 'Years of experience',
+      educationLevel: 'Education', skills: 'Skills', expectedSalary: 'Expected salary', noticePeriod: 'Notice period',
+      availability: 'Availability', preferredLocation: 'Preferred location', note: 'Screening notes'
+    }
+    return t('These profiles have different {field} values. Reconcile those edits before linking CVs.', {
+      field: language === 'ar' ? t(fields[conflict[1]] ?? conflict[1]) : conflict[1]
+    })
+  }
+  const limit = /^The library has reached its (\d+)-(job|review|profile|snapshot) storage limit\.$/.exec(clean)
+  if (limit) {
+    const kinds: Record<string, string> = { job: 'Job records', review: 'Review records', profile: 'Profile records', snapshot: 'Search snapshots' }
+    return t('The library has reached its {limit}-{kind} storage limit.', {
+      limit: language === 'ar' ? Number(limit[1]) : limit[1], kind: language === 'ar' ? t(kinds[limit[2]]) : limit[2]
+    })
+  }
+  if (language === 'ar' && clean.startsWith('Invalid recruiting data')) return t('The recruiting data is invalid. Check your entries and try again.')
+  return t(clean)
 }
