@@ -2,7 +2,7 @@
 
 A self-contained desktop app for macOS and Windows that stores resumes in a
 local database and surfaces the best-matching candidates with evidence. Each
-search keeps the position, job description, requirements, and education or
+saved job keeps the position, job description, requirements, and education or
 certification criteria in separate fields. English and Arabic resumes can be
 ranked against a posting written in either language.
 
@@ -16,8 +16,8 @@ experience fields, and Arabic exports include bundled fonts for offline use.
 **Nothing leaves your machine by default.** Embeddings are computed locally by a
 bundled ONNX model, and with no API key configured the app opens no network
 sockets at runtime. The one exception is opt-in and off by default: an optional
-Claude rerank of the shortlist, which only runs once you paste your own API key
-into Settings and switch it on.
+AI rerank of the shortlist through Anthropic or OpenAI, which only runs once you
+paste that provider's API key into Settings and switch it on.
 
 ## Requirements
 
@@ -45,24 +45,69 @@ outside the supported scope; the app does not perform OCR.
 
 ## Recruiting workflow
 
-1. Import CVs into **Library**, then create a vacancy in **Jobs**.
-2. Save the posting and its required/preferred criteria; refresh local matches.
-3. Review source evidence, save job-specific notes and decisions, and compare
-   two to four candidates against the same requirements.
-4. Choose and order your shortlist, then export it as a PDF or Excel-compatible CSV.
-5. Reopen the saved job later. New CVs make its matches stale without erasing
+1. Import CVs into **Library**, then open **Jobs**.
+2. Choose **Express search**, beside **New job**, for an ad hoc search. Paste the
+   job description and requirements into the two text fields, then choose
+   **Find matches** to search the existing CV library without saving a job.
+3. Inspect the results, optionally rerank with your chosen AI model or export the top three,
+   then choose **Discard search** when finished. **Save as job** explicitly saves
+   the exact posting and results, including AI order, model, and reasons if used,
+   without running matching or reranking again. To start with a saved vacancy,
+   choose **New job**, complete the full editor, and **Save job** before matching.
+4. In a saved job, review source evidence, save job-specific notes and decisions,
+   and compare two to four candidates against the same requirements.
+5. Choose and order your shortlist, then export it as a PDF or Excel-compatible CSV.
+6. Reopen the saved job later. New CVs make its matches stale without erasing
    recruiter decisions; refresh when ready to review the new library.
+7. Use **Change status** to open, pause, fill, or archive a job. The job shows its
+   creation date and a timestamped status history. **Filled** requires choosing
+   the hired candidate from the library; optional backups occupy **#2** and **#3**
+   only. Recorded candidate cards link to their CVs, and hiring decisions remain
+   visible after archiving or reopening the job.
+
+Express searches stay in memory for the current app session. Their postings and
+results are not written to the database or browser storage and are absent from
+the saved-job list and backups. **Open express search** returns to the current
+results after switching views. Discarding the search or quitting the app removes
+it; **Save as job** retains its posting and results for later.
 
 Candidate details include a separate recruiter profile for corrections, screening
 notes, availability, salary expectations, notice period, and tags. Link updated
 CVs explicitly as versions of the same candidate to retain their review history.
 Requirement passages are suggestions for human review; absent CV text never
-automatically disqualifies a candidate. **Match** remains available for a quick
-search, including the optional Claude rerank.
+automatically disqualifies a candidate. **Jobs** is the matching workspace for
+local results, optional AI reranking, reviews, and shortlists.
+For saved jobs, the model's order and reasons are saved with the results and survive
+reopening the app. Refreshing local matches resets that rerank while preserving
+recruiter reviews and the chosen shortlist.
 
-Portable backups include jobs, profiles, and reviews. Cached matching results are
-rebuilt after restoring the library. See [FEATURE_IMPLEMENTATION.md](FEATURE_IMPLEMENTATION.md)
+Use **File → New Job** (`Cmd/Ctrl+N`) to start a vacancy. Switch between **Jobs**,
+**Library**, and **Settings** with `Cmd/Ctrl+1`, `Cmd/Ctrl+2`, and `Cmd/Ctrl+3`.
+
+Portable backups include jobs, status history, hiring selections, profiles, and reviews. Cached matching results are
+rebuilt after restoring the library; saved AI reranks are part of that cache
+and are not included. Schema v6 adds status history and hiring records; schema v7
+identifies the provider and model behind a saved rerank. Earlier jobs retain their creation dates; unrecorded
+status-change dates are not inferred. See [FEATURE_IMPLEMENTATION.md](FEATURE_IMPLEMENTATION.md)
 for the integration plan and verification scope.
+
+Choose **Settings → AI reranking → AI provider**, then **AI model**:
+
+| Provider | Models |
+|---|---|
+| Anthropic | Sonnet 5, Opus 5, Fable 5.1 |
+| OpenAI | GPT-4o mini, GPT-5.6, GPT-6 Astra |
+
+Each provider retains its own protected API key and selected model. Existing
+installations default to Sonnet 5. Jobs shows the selected model on its rerank
+button and the model that produced a saved order; choosing another model allows
+another rerank without refreshing local matches. Each provider/model requires
+its own initial data review, with **See exported data** collapsed by default,
+followed by native confirmation naming the destination and model. OpenAI requests
+use `store: false`. No request automatically retries or switches providers.
+
+Model IDs were verified against the [Anthropic model catalog](https://platform.claude.com/docs/en/models/overview)
+and [OpenAI model catalog](https://developers.openai.com/api/docs/models).
 
 ## Scripts
 
@@ -144,8 +189,9 @@ Markdown) → normalise → split into labelled sections → chunk into ~200-wor
 overlapping windows → embed each chunk → store vectors as BLOBs in SQLite
 alongside heuristically extracted fields.
 
-Search combines the four posting fields into one query while keeping the fields
-separate in the interface and in the saved result context. This lets reviewers
+Search combines the posting fields into one query while keeping the fields
+separate in the interface and result context. Express search provides description
+and requirements fields; saved jobs use the full four-field editor. This lets reviewers
 edit or revisit the exact posting that produced a result without mixing it with
 a later search.
 
@@ -183,8 +229,11 @@ startup, any required reindex, and derived-data backfills to finish.
   version. When aliases or domains improve, stored resumes are re-extracted from
   their retained text before search opens, so existing libraries receive the
   same skill coverage as new imports.
-- **Optional Claude rerank.** Off unless you add an API key. It reorders the top
-  15 local results while preserving candidates 16 onward, and any failure falls
+- **Optional AI rerank in Jobs.** Off unless you add an API key and enable it
+  in Settings. The first use shows a plain-language data summary; **See exported
+  data** reveals the exact request when needed. Approval is remembered, and
+  every send requires native confirmation. It reorders the top 15 local results
+  while preserving candidates 16 onward, and any failure falls
   back to the local ranking rather than breaking the search.
 - **Branded PDF export** of a shortlist, rendered offscreen with scripting
   disabled and every value HTML-escaped.
@@ -236,7 +285,7 @@ src/main/embed/     utility-process client, worker, shared protocol, reindex
 src/main/export/    branded shortlist PDF
 src/main/db/        schema, migrations, vector (de)serialisation, queries
 src/main/recruiting/ saved jobs, candidate profiles, reviews, and version history
-src/renderer/       React UI (Jobs / Match / Library / Settings)
+src/renderer/       React UI (Jobs / Library / Settings)
 test/               vitest suites + Electron Playwright flows + PDF/DOCX fixtures
 ```
 
@@ -283,10 +332,10 @@ With no API key configured the app opens no network sockets at runtime.
 hub on a cache miss, and the model is vendored at build time. Matching itself is
 entirely local: no resume text is transmitted anywhere.
 
-The optional Claude rerank is the only code path that leaves the machine, and it
+The optional AI rerank is the only code path that leaves the machine, and it
 is inert until the user supplies a key and enables it. When it does run it sends
 the structured posting and the top 15 candidates' redacted evidence to the
-Anthropic API. New keys are stored through Electron's `safeStorage`; an older
+selected Anthropic or OpenAI API. New keys are stored separately through Electron's `safeStorage`; an older
 plaintext key cannot be used until the user protects or removes it.
 
 ### Known advisories
@@ -324,7 +373,7 @@ Both follow from the no-LLM constraint:
    depends on these fields, so a mis-parsed name cannot corrupt a result.
 2. **Matching finds similarity, not judgement.** It reliably surfaces resumes
    about the same kind of work as the posting. On its own it cannot infer
-   seniority from accomplishments. That is what the optional Claude rerank over
+   seniority from accomplishments. That is what the optional AI rerank over
    the top 15 is for, and it is the only feature that sends anything off the
    machine.
 

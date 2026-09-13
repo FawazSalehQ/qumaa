@@ -1,11 +1,13 @@
 /** Bounded, strict contracts shared by IPC, local records, and portable restore. */
 import { z } from 'zod'
+import { isRerankConfig, RERANK_MODELS, type RerankConfig } from '@shared/rerank.js'
 
 export const RECRUITING_LIMITS = Object.freeze({
   jobs: 250,
   profiles: 5_000,
   reviews: 50_000,
   snapshots: 250,
+  statusEvents: 1_000,
   totalBytes: 128 * 1024 * 1024,
   recordBytes: 8 * 1024 * 1024
 })
@@ -19,6 +21,28 @@ const resume = z.strictObject({ id: z.number().int().positive().max(Number.MAX_S
 const unique = <T>(values: T[]) => new Set(values).size === values.length
 const status = z.enum(['unreviewed', 'maybe', 'shortlisted', 'contacted', 'not-proceeding'])
 const jobStatus = z.enum(['open', 'on-hold', 'filled', 'archived'])
+const placementInput = z.strictObject({ hired: resume, backup2: resume.optional(), backup3: resume.optional() })
+  .refine((value) => !value.backup3 || !!value.backup2, 'Backup #3 requires backup #2.')
+  .refine((value) => unique([value.hired, value.backup2, value.backup3].filter((candidate) => candidate !== undefined).map((candidate) => candidate.recordKey)), 'Choose a different candidate for each hiring slot.')
+const placementCandidate = z.strictObject({ recordKey: recordKey.nullable(), name: label(512).min(1).nullable() })
+  .refine((value) => (value.recordKey === null) === (value.name === null), 'Removed CVs must not retain candidate names or identities.')
+export const jobPlacementSchema = z.strictObject({
+  hired: placementCandidate,
+  backup2: placementCandidate.nullable(),
+  backup3: placementCandidate.nullable()
+}).refine((value) => !value.backup3 || !!value.backup2, 'Backup #3 requires backup #2.')
+  .refine((value) => unique([value.hired, value.backup2, value.backup3].flatMap((candidate) => candidate?.recordKey ? [candidate.recordKey] : [])), 'Hiring slots must reference distinct CVs.')
+const statusEvent = z.strictObject({
+  id: jobId,
+  status: jobStatus,
+  at: timestamp,
+  kind: z.enum(['created', 'status-changed', 'placement-updated']),
+  placement: jobPlacementSchema.optional()
+}).superRefine((value, context) => {
+  if ((value.status === 'filled') !== !!value.placement) context.addIssue({ code: 'custom', message: 'Filled events must record a hiring decision; other statuses cannot include one.' })
+  if (value.kind === 'placement-updated' && value.status !== 'filled') context.addIssue({ code: 'custom', message: 'Hiring details can only be updated while a job is filled.' })
+  if (value.kind === 'created' && value.status !== 'open') context.addIssue({ code: 'custom', message: 'New jobs must start open.' })
+})
 const assessment = z.strictObject({
   criterionId: label(100).min(1),
   status: z.enum(['unreviewed', 'evidence-found', 'needs-clarification', 'not-stated', 'confirmed']),
@@ -61,7 +85,13 @@ const reviewFields = {
 
 export const recruitingSchemas = {
   jobId,
+  rerankPreview: z.strictObject({ jobId, sessionId: z.string().uuid() }),
+  rerank: z.strictObject({ jobId, sessionId: z.string().uuid(), approvalToken: z.string().uuid() }),
   saveJob: z.strictObject({ id: jobId.optional(), posting, status: jobStatus, criteria }),
+  changeJobStatus: z.strictObject({ jobId, expectedUpdatedAt: timestamp, status: jobStatus, placement: placementInput.optional() })
+    .refine((value) => value.status !== 'filled' || !!value.placement, 'Select the hired candidate before marking this job filled.')
+    .refine((value) => value.status === 'filled' || !value.placement, 'Hiring details can only be changed when marking a job filled.'),
+  temporarySearch: z.strictObject({ posting, status: jobStatus, criteria }),
   saveReview: z.strictObject({ jobId, resume, ...reviewFields }),
   saveProfile: z.strictObject({ resume, ...profileFields }),
   linkVersions: z.strictObject({ primary: resume, version: resume }),
@@ -78,7 +108,25 @@ export const jobRecordSchema = z.strictObject({
   criteria,
   createdAt: timestamp,
   updatedAt: timestamp,
-  lastSearchedAt: timestamp.nullable()
+  lastSearchedAt: timestamp.nullable(),
+  statusHistory: z.array(statusEvent).max(RECRUITING_LIMITS.statusEvents).optional(),
+  placement: jobPlacementSchema.optional()
+}).superRefine((job, context) => {
+  const history = job.statusHistory ?? []
+  if (!unique(history.map((event) => event.id))) context.addIssue({ code: 'custom', message: 'Status event identities must be unique.' })
+  for (const [index, event] of history.entries()) {
+    const previous = history[index - 1]
+    if (event.at < job.createdAt || event.at > job.updatedAt || (previous && event.at <= previous.at)) {
+      context.addIssue({ code: 'custom', message: 'Status event timestamps must follow the job timeline.' })
+    }
+    if (event.kind === 'created' && (index !== 0 || event.at !== job.createdAt)) context.addIssue({ code: 'custom', message: 'Creation must be the first event and match the saved job date.' })
+    if (previous && (event.kind === 'status-changed' ? event.status === previous.status : event.status !== previous.status)) {
+      context.addIssue({ code: 'custom', message: 'Status events must describe actual transitions.' })
+    }
+  }
+  if (history.length && history[history.length - 1].status !== job.status) context.addIssue({ code: 'custom', message: 'Current job status must match its latest event.' })
+  const latestPlacement = history.findLast((event) => event.placement)?.placement
+  if (JSON.stringify(latestPlacement) !== JSON.stringify(job.placement)) context.addIssue({ code: 'custom', message: 'Current hiring details must match the latest recorded decision.' })
 })
 export const profileRecordSchema = z.strictObject({
   candidateKey: recordKey,
@@ -88,6 +136,11 @@ export const profileRecordSchema = z.strictObject({
 }).refine((profile) => profile.recordKeys.includes(profile.candidateKey), 'candidate identity must belong to its CV versions')
 export const reviewRecordSchema = z.strictObject({ jobId, candidateKey: recordKey, ...reviewFields, updatedAt: timestamp })
 const score = z.number().finite().min(0).max(1)
+const rerankConfig = z.strictObject({
+  provider: z.enum(['anthropic', 'openai']),
+  model: z.enum([...RERANK_MODELS.anthropic, ...RERANK_MODELS.openai].map((model) => model.id))
+}).refine(isRerankConfig, 'The selected model must belong to its provider.')
+  .transform((value): RerankConfig => value as RerankConfig)
 export const snapshotRecordSchema = z.strictObject({
   jobId,
   libraryFingerprint: recordKey,
@@ -97,6 +150,10 @@ export const snapshotRecordSchema = z.strictObject({
   libraryKeys: z.array(recordKey).max(5_000).refine(unique, 'resume identities must be unique'),
   requiredSkills: z.array(label(256)).max(512),
   elapsedMs: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+  rerankConfig: rerankConfig.optional(),
+  // Source ranking stays intact; only this bounded display order comes from Claude.
+  rerank: z.array(z.strictObject({ recordKey, reason: text(300).optional() })).min(2).max(15)
+    .refine((values) => unique(values.map((value) => value.recordKey)), 'reranked candidates must be unique').optional(),
   results: z.array(z.strictObject({
     recordKey,
     score,

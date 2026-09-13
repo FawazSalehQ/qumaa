@@ -1,0 +1,1007 @@
+{
+  "source": "/Users/fawazalqahtani/Desktop/Directory/cv_filter/presentations/arabic/Qumaa_Recruiter_Guide_AR.pptx",
+  "sourceSha256": "cccd5e7d650d62d150a392e1dbdde0354af779b9d8ffe86cbe37f1098f971e96",
+  "language": "ar",
+  "sourceStructure": {
+    "slides": 24,
+    "width": 12191999,
+    "height": 6858000,
+    "tocOnSecondPage": true,
+    "slideDetails": [
+      {
+        "number": 1,
+        "name": "introduction",
+        "texts": [
+          "‫قُمع‬",
+          "‫قُمع: دليل التطبيق ومسؤول التوظيف‬",
+          "‫الغرض من التطبيق، وخطوات العمل، وإرشادات الاستخدام‬",
+          "‫من التطبيق الفعلي · بيانات توضيحية خيالية‬",
+          "‫قُمع v0.1.0-beta.2   /   ٠١‬",
+          "‫الغرض من التطبيق‬",
+          "‫ابحث في مكتبة السير الذاتية المحلية وفق متطلبات الوظيفة، وراجع الأدلة الداعمة، واحفظ قرارات التوظيف.‬",
+          "‫المثال التوضيحي‬",
+          "‫مدير التدريب والتطوير‬\n‫مجموعة أغذية ومشروبات في الرياض‬\n‫مرشحون وسجلات تقييم توضيحية خيالية‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 9,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "01-jobs.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "01-jobs.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 2,
+        "name": "contents",
+        "texts": [
+          "‫قُمع‬",
+          "‫المحتويات‬",
+          "‫تتبع الأقسام مراحل العمل على مهمة توظيف.‬",
+          "‫دليل مسؤول التوظيف‬",
+          "‫قُمع v0.1.0-beta.2   /   ٠٢‬",
+          "‫مساحة العمل ومكتبة السير‬",
+          "‫٠٣–٠٥‬",
+          "‫التنقّل، وخطوات العمل، واستيراد السير الذاتية‬",
+          "‫الوظائف والبحث‬",
+          "‫٠٦–٠٩‬",
+          "‫الوظائف المحفوظة، والبحث السريع، والمعايير، والتصفية‬",
+          "‫تقييم المرشحين‬",
+          "‫١٠–١٥‬",
+          "‫الأدلة، والتقييمات، والملفات، والمقارنة، والقوائم المختصرة‬",
+          "‫سجلات الوظائف‬",
+          "‫١٦–١٨‬",
+          "‫تحديث المطابقات، وسجل الحالة، ونتائج التعيين‬",
+          "‫إعادة الترتيب بالذكاء الاصطناعي‬",
+          "‫١٩–٢١‬",
+          "‫المزوّدون، ومراجعة البيانات، وفهم النتائج‬",
+          "‫التشغيل والمعلومات المرجعية‬",
+          "‫٢٢–٢٤‬",
+          "‫المجلد المُراقَب، والنسخ الاحتياطي، ونطاق السجلات‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 23,
+        "largeImages": 0,
+        "screenshots": [],
+        "captions": [],
+        "missingCaptions": [],
+        "links": [
+          {
+            "href": "#slide-3",
+            "x": 0.504999959399603,
+            "y": 0.25733333333333336,
+            "width": 0.44625003660187307,
+            "height": 0.184
+          },
+          {
+            "href": "#slide-6",
+            "x": 0.504999959399603,
+            "y": 0.47333333333333333,
+            "width": 0.44625003660187307,
+            "height": 0.184
+          },
+          {
+            "href": "#slide-10",
+            "x": 0.504999959399603,
+            "y": 0.6893333333333334,
+            "width": 0.44625003660187307,
+            "height": 0.184
+          },
+          {
+            "href": "#slide-16",
+            "x": 0.03849992113680455,
+            "y": 0.25733333333333336,
+            "width": 0.44625003660187307,
+            "height": 0.184
+          },
+          {
+            "href": "#slide-19",
+            "x": 0.03849992113680455,
+            "y": 0.47333333333333333,
+            "width": 0.44625003660187307,
+            "height": 0.184
+          },
+          {
+            "href": "#slide-22",
+            "x": 0.03849992113680455,
+            "y": 0.6893333333333334,
+            "width": 0.44625003660187307,
+            "height": 0.184
+          }
+        ],
+        "emDashCount": 0
+      },
+      {
+        "number": 3,
+        "name": "workspace",
+        "texts": [
+          "‫قُمع‬",
+          "‫التنقّل في مساحة العمل‬",
+          "‫يجمع قسم «الوظائف» الوظائف المحفوظة والبحث السريع.‬",
+          "‫من التطبيق الفعلي · بيانات توضيحية خيالية‬",
+          "‫قُمع v0.1.0-beta.2   /   ٠٣‬",
+          "‫الوظائف‬",
+          "‫ابحث عن المرشحين واحفظ التقييمات ونتائج التعيين.‬",
+          "‫المكتبة‬",
+          "‫استورد السير، وراجع بيانات المرشحين، واربط نسخ السير الذاتية.‬",
+          "‫الإعدادات‬",
+          "‫اضبط التفضيلات ومزوّدي الذكاء الاصطناعي والمجلد والنسخ الاحتياطي.‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 11,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "01-jobs.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "01-jobs.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 4,
+        "name": "workflow",
+        "texts": [
+          "‫قُمع‬",
+          "‫خطوات العمل على مهمة توظيف‬",
+          "‫مثال: فرز المرشحين لوظيفة مدير التدريب والتطوير.‬",
+          "‫خطوات التوظيف · مخطط قابل للتعديل‬",
+          "‫قُمع v0.1.0-beta.2   /   ٠٤‬",
+          "١",
+          "‫استيراد السير‬",
+          "‫أنشئ مكتبة المرشحين المحلية.‬",
+          "٢",
+          "‫تحديد المتطلبات‬",
+          "‫أنشئ وظيفة محفوظة أو بحثًا سريعًا.‬",
+          "٣",
+          "‫البحث عن مطابقات‬",
+          "‫راجع النتائج من المكتبة المحلية.‬",
+          "٤",
+          "‫تقييم المرشحين‬",
+          "‫راجع الأدلة وقارن واحفظ التقييمات.‬",
+          "٥",
+          "‫إعداد القائمة المختصرة‬",
+          "‫اختر المرشحين ورتّب القائمة وصدّرها.‬",
+          "٦",
+          "‫تسجيل النتيجة‬",
+          "‫حدّث الحالة والمرشح المعيّن والبدلاء.‬",
+          "‫عند تغيّر السير الذاتية أو المتطلبات، حدّث مطابقات الوظيفة المحفوظة وراجع النتائج الجديدة.‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 24,
+        "largeImages": 0,
+        "screenshots": [],
+        "captions": [],
+        "missingCaptions": [],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 5,
+        "name": "library",
+        "texts": [
+          "‫قُمع‬",
+          "‫استيراد مكتبة السير الذاتية‬",
+          "‫المدخلات المدعومة: PDF نصي، وDOCX، وMarkdown، ونص ملصق.‬",
+          "‫من التطبيق الفعلي · بيانات توضيحية خيالية‬",
+          "‫قُمع v0.1.0-beta.2   /   ٠٥‬",
+          "١",
+          "‫افتح «المكتبة»‬",
+          "‫اختر «إضافة ملفات» أو «استيراد مجلد».‬",
+          "٢",
+          "‫استورد السير‬",
+          "‫حدّد المستندات أو استخدم «لصق نص».‬",
+          "٣",
+          "‫راجع المعالجة‬",
+          "‫راجع تنبيهات الاستيراد وبيانات المرشحين.‬",
+          "‫لا تتطلب المطابقة المحلية مفتاح API.‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "02-library.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "02-library.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 6,
+        "name": "saved-job",
+        "texts": [
+          "‫قُمع‬",
+          "‫إنشاء وظيفة محفوظة‬",
+          "‫استخدم وظيفة محفوظة للمهام التي تتطلب متابعة وسجلات مستمرة.‬",
+          "‫من التطبيق الفعلي · بيانات توضيحية خيالية‬",
+          "‫قُمع v0.1.0-beta.2   /   ٠٦‬",
+          "١",
+          "‫اختر «وظيفة جديدة»‬",
+          "‫افتح «الوظائف» واختر «+ وظيفة جديدة».‬",
+          "٢",
+          "‫أدخل الإعلان‬",
+          "‫أضف المسمى والمتطلبات والمؤهلات.‬",
+          "٣",
+          "‫احفظ الوظيفة‬",
+          "‫تبدأ الوظيفة بحالة «مفتوحة» مع تاريخ ووقت الإنشاء.‬",
+          "‫استخدم «تغيير الحالة» لتحديث حالة الوظيفة.‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "03-job-editor.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "03-job-editor.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 7,
+        "name": "express-search",
+        "texts": [
+          "‫قُمع‬",
+          "‫البحث السريع‬",
+          "‫الصق الوظيفة ومتطلباتها لإجراء بحث مؤقت في مكتبة السير الذاتية.‬",
+          "‫من التطبيق الفعلي · بيانات توضيحية خيالية‬",
+          "‫قُمع v0.1.0-beta.2   /   ٠٧‬",
+          "١",
+          "‫افتح «بحث سريع»‬",
+          "‫استخدم الزر بجانب «+ وظيفة جديدة» في «الوظائف».‬",
+          "٢",
+          "‫الصق التفاصيل‬",
+          "‫أدخل الوصف والمتطلبات ثم ابحث عن مطابقات.‬",
+          "٣",
+          "‫راجع النتائج‬",
+          "‫اختر «إلغاء البحث» أو «حفظ كوظيفة».‬",
+          "‫نموذج البحث المؤقت‬",
+          "‫لا يُحفظ شيء إلا عند اختيار «حفظ كوظيفة».‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 16,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "13-express-form.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [
+          {
+            "name": "13-express-form.png",
+            "text": "‫نموذج البحث المؤقت‬"
+          }
+        ],
+        "missingCaptions": [],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 8,
+        "name": "criteria",
+        "texts": [
+          "‫قُمع‬",
+          "‫تحديد معايير التقييم‬",
+          "‫ميّز بين المتطلبات الأساسية والمؤهلات المفضّلة.‬",
+          "‫من التطبيق الفعلي · بيانات توضيحية خيالية‬",
+          "‫قُمع v0.1.0-beta.2   /   ٠٨‬",
+          "١",
+          "‫أنشئ المعايير‬",
+          "‫استخدم أسطر المتطلبات أو «إضافة معيار».‬",
+          "٢",
+          "‫حدّد الأهمية‬",
+          "‫اختر «مطلوب» أو «مفضّل» لكل بند.‬",
+          "٣",
+          "‫حدّد دليلًا واضحًا‬",
+          "‫مثال: قيادة التدريب في عدة فروع مطاعم.‬",
+          "‫المعايير المطلوبة لا ترفض المرشحين تلقائيًا.‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "04-criteria.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "04-criteria.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 9,
+        "name": "matches",
+        "texts": [
+          "‫قُمع‬",
+          "‫البحث عن المرشحين وتصفيتهم‬",
+          "‫ابحث باستخدام الإعلان، ثم صفِّ النتائج المعروضة.‬",
+          "‫من التطبيق الفعلي · بيانات توضيحية خيالية‬",
+          "‫قُمع v0.1.0-beta.2   /   ٠٩‬",
+          "١",
+          "‫البحث عن مطابقات‬",
+          "‫ابدأ البحث من الوظيفة المحددة.‬",
+          "٢",
+          "‫راجع الترتيب‬",
+          "‫استخدم الدرجات لتحديد أولوية مراجعة الأدلة.‬",
+          "٣",
+          "‫طبّق التصفية‬",
+          "‫صفِّ حسب الموقع والمهارات وغيرها.‬",
+          "‫تستخدم التصفية تصحيحات ملفات المرشحين.‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "05-filters.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "05-filters.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 10,
+        "name": "evidence",
+        "texts": [
+          "‫قُمع‬",
+          "‫فهم الدرجات والأدلة‬",
+          "‫راجع مقاطع السيرة الذاتية التي تستند إليها النتيجة قبل التقييم.‬",
+          "‫من التطبيق الفعلي · بيانات توضيحية خيالية‬",
+          "‫قُمع v0.1.0-beta.2   /   ١٠‬",
+          "١",
+          "‫افتح بيانات المرشح‬",
+          "‫اختر اسم المرشح من النتائج.‬",
+          "٢",
+          "‫راجع الأدلة‬",
+          "‫اقرأ «تفصيل الدرجة» و«المقاطع المطابقة» ونص السيرة.‬",
+          "٣",
+          "‫حدّد الأسئلة‬",
+          "‫سجّل المعلومات الناقصة ذات الصلة للفرز أو المقابلة.‬",
+          "‫درجة المطابقة تساعد في الفرز ولا تمثل قرار تعيين.‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "06-evidence.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "06-evidence.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 11,
+        "name": "reviews",
+        "texts": [
+          "‫قُمع‬",
+          "‫تسجيل تقييمات المرشحين‬",
+          "‫تحفظ تقييمات الوظيفة ملاحظات التقييم وأسئلة المتابعة.‬",
+          "‫من التطبيق الفعلي · بيانات توضيحية خيالية‬",
+          "‫قُمع v0.1.0-beta.2   /   ١١‬",
+          "١",
+          "‫افتح «تقييم»‬",
+          "‫اختر حالة التقييم وأدخل ملاحظات الوظيفة.‬",
+          "٢",
+          "‫قيّم كل معيار‬",
+          "‫سجّل الدليل أو التأكيد أو الحاجة إلى توضيح.‬",
+          "٣",
+          "‫احفظ التقييم‬",
+          "‫احفظ التعديلات قبل الانتقال إلى مرشح آخر.‬",
+          "‫تبقى ملاحظات الوظيفة مرتبطة بهذه الوظيفة.‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "07-review.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "07-review.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 12,
+        "name": "profiles",
+        "texts": [
+          "‫قُمع‬",
+          "‫تحديث ملفات المرشحين‬",
+          "‫تحتفظ الملفات بمعلومات الفرز عبر الوظائف المحفوظة.‬",
+          "‫من التطبيق الفعلي · بيانات توضيحية خيالية‬",
+          "‫قُمع v0.1.0-beta.2   /   ١٢‬",
+          "١",
+          "‫افتح الملف‬",
+          "‫اختر «إضافة تفاصيل» أو «تعديل الملف».‬",
+          "٢",
+          "‫سجّل بيانات مؤكّدة‬",
+          "‫أضف التصحيحات والراتب وفترة الإشعار والتفرّغ والوسوم.‬",
+          "٣",
+          "‫احفظ الملف‬",
+          "‫استخدم تقييم الوظيفة للقرارات الخاصة بها.‬",
+          "‫ترافق ملاحظات الملف المرشح عبر الوظائف.‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "08-profile.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "08-profile.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 13,
+        "name": "comparison",
+        "texts": [
+          "‫قُمع‬",
+          "‫مقارنة المرشحين‬",
+          "‫حدّد مرشحين اثنين إلى أربعة واختر «مقارنة المرشحين».‬",
+          "‫من التطبيق الفعلي · بيانات توضيحية خيالية‬",
+          "‫قُمع v0.1.0-beta.2   /   ١٣‬",
+          "‫المعايير والأدلة الداعمة من شاشة المقارنة نفسها‬",
+          "‫راجع المعايير ومعلومات الفرز والأسئلة غير المحسومة نفسها لكل مرشح.‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 7,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "09-comparison-header.png",
+            "editableImage": true
+          },
+          {
+            "name": "09-comparison-criteria.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [
+          {
+            "name": "09-comparison-criteria.png",
+            "text": "‫المعايير والأدلة الداعمة من شاشة المقارنة نفسها‬"
+          }
+        ],
+        "missingCaptions": [
+          "09-comparison-header.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 14,
+        "name": "shortlist",
+        "texts": [
+          "‫قُمع‬",
+          "‫إعداد القائمة المختصرة وتصديرها‬",
+          "‫اختر المرشحين وحدّد ترتيبهم لمراجعة التوظيف.‬",
+          "‫من التطبيق الفعلي · بيانات توضيحية خيالية‬",
+          "‫قُمع v0.1.0-beta.2   /   ١٤‬",
+          "١",
+          "‫اختر المرشحين‬",
+          "‫حدّد حالة المرشحين المناسبين «ضمن القائمة المختصرة».‬",
+          "٢",
+          "‫رتّب القائمة المختصرة‬",
+          "‫استخدم سهمَي الأعلى والأسفل داخل القائمة.‬",
+          "٣",
+          "‫صدّر السجل‬",
+          "‫اختر «تصدير PDF» أو «تصدير CSV».‬",
+          "‫يشمل التصدير القائمة المختصرة كاملة بترتيبها.‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "10-shortlist.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "10-shortlist.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 15,
+        "name": "versions",
+        "texts": [
+          "‫قُمع‬",
+          "‫ربط نسخ السير الذاتية المحدّثة‬",
+          "‫تحقّق من الهوية قبل ربط سجلّين بوصفهما شخصًا واحدًا.‬",
+          "‫من التطبيق الفعلي · بيانات توضيحية خيالية‬",
+          "‫قُمع v0.1.0-beta.2   /   ١٥‬",
+          "١",
+          "‫استورد السيرة الجديدة‬",
+          "‫أضف المستند المحدّث إلى «المكتبة».‬",
+          "٢",
+          "‫افتح «سجل السير الذاتية»‬",
+          "‫اختر «ربط سيرة ذاتية أخرى» من لوحة المرشح.‬",
+          "٣",
+          "‫أكّد الربط‬",
+          "‫اختر السجل ثم «الربط بوصفهما الشخص نفسه».‬",
+          "‫يحافظ ربط النسخ على سجل عملك مع المرشح.‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "11-versions.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "11-versions.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 16,
+        "name": "refresh",
+        "texts": [
+          "‫قُمع‬",
+          "‫تحديث المطابقات المحفوظة‬",
+          "‫حدّث النتائج عندما تتغيّر المكتبة أو متطلبات الوظيفة.‬",
+          "‫من التطبيق الفعلي · بيانات توضيحية خيالية‬",
+          "‫قُمع v0.1.0-beta.2   /   ١٦‬",
+          "١",
+          "‫أعد فتح الوظيفة‬",
+          "‫عُد إليها بعد استيراد السير أو تحديثها.‬",
+          "٢",
+          "‫اقرأ التنبيه‬",
+          "‫تحقّق مما إذا كانت المطابقات تحتاج إلى تحديث.‬",
+          "٣",
+          "‫حدّث المطابقات‬",
+          "‫راجع الترتيب والأدلة بعد التحديث.‬",
+          "‫تبقى التقييمات والملاحظات المحفوظة بعد التحديث.‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 0,
+        "screenshots": [
+          {
+            "name": "12-refresh.png",
+            "editableImage": true
+          },
+          {
+            "name": "12-refresh-action.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "12-refresh.png",
+          "12-refresh-action.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 17,
+        "name": "status",
+        "texts": [
+          "‫قُمع‬",
+          "‫تغيير حالة الوظيفة‬",
+          "‫يتضمن كل تغيير مسجّل للحالة تاريخًا ووقتًا.‬",
+          "‫من التطبيق الفعلي · بيانات توضيحية خيالية‬",
+          "‫قُمع v0.1.0-beta.2   /   ١٧‬",
+          "١",
+          "‫افتح «تغيير الحالة»‬",
+          "‫استخدم الزر في الوظيفة المحددة.‬",
+          "٢",
+          "‫اختر الحالة‬",
+          "‫«مفتوحة» أو «معلّقة» أو «تم شغلها» أو «مؤرشفة».‬",
+          "٣",
+          "‫راجع سجل الحالة‬",
+          "‫راجع تاريخ ووقت الإنشاء وتغييرات الحالة.‬",
+          "‫تحتفظ الوظائف المؤرشفة بنتيجة التعيين المسجّلة.‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "16-status.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "16-status.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 18,
+        "name": "hiring",
+        "texts": [
+          "‫قُمع‬",
+          "‫تسجيل نتيجة التعيين‬",
+          "‫تحدّد الوظيفة المشغولة المرشح المعيّن والبدلاء الاختياريين.‬",
+          "‫من التطبيق الفعلي · بيانات توضيحية خيالية‬",
+          "‫قُمع v0.1.0-beta.2   /   ١٨‬",
+          "١",
+          "‫اختر «تم شغلها»‬",
+          "‫غيّر حالة الوظيفة بعد تأكيد النتيجة.‬",
+          "٢",
+          "‫حدّد المرشحين‬",
+          "‫حدّد المرشح المعيّن والبدلاء.‬",
+          "٣",
+          "‫احفظ وراجع‬",
+          "‫راجع البطاقات والتوقيت وروابط السير الذاتية.‬",
+          "‫يتطلب البديل رقم ٣ تحديد البديل رقم ٢ أولًا.‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "17-hiring.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "17-hiring.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 19,
+        "name": "ai-settings",
+        "texts": [
+          "‫قُمع‬",
+          "‫اختيار مزوّد الذكاء الاصطناعي ونموذجه‬",
+          "‫إعادة الترتيب بالذكاء الاصطناعي اختيارية، وتُضبط من «الإعدادات».‬",
+          "‫من التطبيق الفعلي · بيانات توضيحية خيالية‬",
+          "‫قُمع v0.1.0-beta.2   /   ١٩‬",
+          "Anthropic",
+          "Sonnet 5\nOpus 5\nFable 5.1",
+          "OpenAI",
+          "GPT-4o mini\nGPT-5.6\nGPT-6 Astra",
+          "‫اختر «مزوّد الذكاء الاصطناعي» و«نموذج الذكاء الاصطناعي»، وأضف مفتاح المزوّد الخاص بك، ثم فعّل إعادة الترتيب.‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 10,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "18-ai-settings.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "18-ai-settings.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 20,
+        "name": "ai-review",
+        "texts": [
+          "‫قُمع‬",
+          "‫مراجعة البيانات قبل إعادة الترتيب‬",
+          "‫يحدّد الإشعار المزوّد المختار والبيانات التي ستُرسل.‬",
+          "‫من التطبيق الفعلي · بيانات توضيحية خيالية‬",
+          "‫قُمع v0.1.0-beta.2   /   ٢٠‬",
+          "١",
+          "‫ابدأ من النتائج‬",
+          "‫اختر إعادة الترتيب بالنموذج المحدد.‬",
+          "٢",
+          "‫اقرأ الملخص‬",
+          "‫افتح أيقونة العين «عرض البيانات المُرسلة» للاطّلاع على تفاصيل الطلب.‬",
+          "٣",
+          "‫أكّد الطلب‬",
+          "‫وافق بعد مراجعة المعلومات.‬",
+          "‫تتطلب كل إعادة ترتيب تأكيدًا قبل الإرسال.‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "19-ai-review.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "19-ai-review.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 21,
+        "name": "ai-workflow",
+        "texts": [
+          "‫قُمع‬",
+          "‫فهم إعادة الترتيب بالذكاء الاصطناعي‬",
+          "‫يعيد النموذج ترتيب مجموعة محدودة من المرشحين وفق الأدلة المقدمة.‬",
+          "‫إعادة الترتيب بالذكاء الاصطناعي · مخطط قابل للتعديل‬",
+          "‫قُمع v0.1.0-beta.2   /   ٢١‬",
+          "‫النتائج المحلية‬",
+          "‫يُعدّ التطبيق بيانات ما يصل إلى ١٥ مرشحًا من البحث المحلي.‬",
+          "‫الطلب بعد مراجعته‬",
+          "‫بعد التأكيد، يتلقى المزوّد المحدد الإعلان والمقاطع المنقّحة.‬",
+          "‫التقييم الوارد‬",
+          "‫يعيد النموذج ترتيبًا وسببًا موجزًا يستند إلى الأدلة لكل مرشح.‬",
+          "‫أساس التقييم‬",
+          "‫الخبرة ذات الصلة، والمسؤوليات التي تدعمها الأدلة، ومتطلبات الوظيفة.‬",
+          "‫قراءة النتيجة‬",
+          "‫تبقى مجموعة المرشحين والدرجات المحلية كما هي. يوضّح اسم النموذج مصدر الترتيب.‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 0,
+        "screenshots": [],
+        "captions": [],
+        "missingCaptions": [],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 22,
+        "name": "watched-folder",
+        "texts": [
+          "‫قُمع‬",
+          "‫استخدام مجلد مُراقَب‬",
+          "‫استورد السير الواردة من مجلد محلي محدد أثناء تشغيل قُمع.‬",
+          "‫من التطبيق الفعلي · بيانات توضيحية خيالية‬",
+          "‫قُمع v0.1.0-beta.2   /   ٢٢‬",
+          "١",
+          "‫افتح «الإعدادات»‬",
+          "‫انتقل إلى قسم «المجلد المُراقَب».‬",
+          "٢",
+          "‫اختر المجلد‬",
+          "‫حدّد المجلد المحلي المخصص للسير الواردة.‬",
+          "٣",
+          "‫راجع الاستيراد‬",
+          "‫راجع المكتبة وحدّث الوظائف المحفوظة ذات الصلة.‬",
+          "‫حدّث المطابقات المحفوظة بعد الاستيراد.‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "14-watched-folder.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "14-watched-folder.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 23,
+        "name": "backups",
+        "texts": [
+          "‫قُمع‬",
+          "‫النسخ الاحتياطي واستعادة السجلات‬",
+          "‫أنشئ نسخة محمولة من المكتبة أو استعدها عبر «الإعدادات».‬",
+          "‫من التطبيق الفعلي · بيانات توضيحية خيالية‬",
+          "‫قُمع v0.1.0-beta.2   /   ٢٣‬",
+          "١",
+          "‫أنشئ نسخة احتياطية‬",
+          "‫اختر «نسخ احتياطي» في «المكتبة والنسخ الاحتياطية».‬",
+          "٢",
+          "‫احفظها بأمان‬",
+          "‫تحتوي النسخ على سجلات المرشحين.‬",
+          "٣",
+          "‫استعد عند الحاجة‬",
+          "‫حدّث المطابقات بعد اكتمال الفهرسة.‬",
+          "‫لا تشمل النسخة مفاتيح API أو مستندات السير الأصلية.‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "14-backups.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "14-backups.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 24,
+        "name": "reference",
+        "texts": [
+          "‫قُمع‬",
+          "‫مرجع: أين تُحفظ المعلومات؟‬",
+          "‫استخدم السجل المناسب للمعلومات التي تحتاج إلى الاحتفاظ بها.‬",
+          "‫دليل مسؤول التوظيف‬",
+          "‫قُمع v0.1.0-beta.2   /   ٢٤‬",
+          "‫المكتبة وملف المرشح‬",
+          "‫نص السيرة والنسخ المرتبطة والبيانات المصحّحة وملاحظات الفرز العامة.‬",
+          "‫الوظيفة المحفوظة‬",
+          "‫الإعلان والمعايير والنتائج والتقييمات والقائمة المختصرة وسجل الحالة ونتيجة التعيين.‬",
+          "‫البحث السريع‬",
+          "‫إعلان وبيانات بحث مؤقتة؛ لا تُحفظ إلا عند اختيار «حفظ كوظيفة».‬",
+          "‫الطلب الخارجي الاختياري‬",
+          "‫الإعلان والمقاطع المنقّحة بعد مراجعتها؛ وتُرسل بعد التأكيد فقط.‬",
+          "‫إعداد: Fawaz Aljathnan‬",
+          "‫الملف على LinkedIn‬"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 0,
+        "screenshots": [],
+        "captions": [],
+        "missingCaptions": [],
+        "links": [
+          {
+            "href": "https://www.linkedin.com/in/fawazsalehq/",
+            "x": 0.40149995091042906,
+            "y": 0.844,
+            "width": 0.5362500439837634,
+            "height": 0.042666666666666665
+          },
+          {
+            "href": "https://www.linkedin.com/in/fawazsalehq/",
+            "x": 0.06624992341288742,
+            "y": 0.8453333333333334,
+            "width": 0.23250001906988346,
+            "height": 0.04
+          }
+        ],
+        "emDashCount": 0
+      }
+    ],
+    "shapeWarnings": []
+  },
+  "slides": 24,
+  "dimensions": {
+    "x": 0,
+    "y": 0,
+    "width": 959,
+    "height": 540
+  },
+  "notesExcludedFromScratchCopy": true,
+  "internalLinksExcludedFromScratchCopy": true,
+  "isolatedSlideRendering": true,
+  "attachmentCount": 127,
+  "overflowWarnings": [],
+  "images": [
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-01.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-02.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-03.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-04.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-05.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-06.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-07.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-08.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-09.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-10.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-11.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-12.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-13.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-14.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-15.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-16.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-17.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-18.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-19.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-20.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-21.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-22.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-23.png",
+    "/private/tmp/qumaa-guide-ar-final-polished-20260912/slide-24.png"
+  ],
+  "validationErrors": [],
+  "pdf": {
+    "path": "/private/tmp/qumaa-guide-ar-final-polished-20260912/Qumaa_Recruiter_Guide_AR_preview.pdf",
+    "pages": 24,
+    "links": [
+      {
+        "page": 2,
+        "url": null,
+        "targetPage": 3
+      },
+      {
+        "page": 2,
+        "url": null,
+        "targetPage": 6
+      },
+      {
+        "page": 2,
+        "url": null,
+        "targetPage": 10
+      },
+      {
+        "page": 2,
+        "url": null,
+        "targetPage": 16
+      },
+      {
+        "page": 2,
+        "url": null,
+        "targetPage": 19
+      },
+      {
+        "page": 2,
+        "url": null,
+        "targetPage": 22
+      },
+      {
+        "page": 24,
+        "url": "https://www.linkedin.com/in/fawazsalehq/",
+        "targetPage": null
+      },
+      {
+        "page": 24,
+        "url": "https://www.linkedin.com/in/fawazsalehq/",
+        "targetPage": null
+      }
+    ]
+  },
+  "currentSourceSha256": "cccd5e7d650d62d150a392e1dbdde0354af779b9d8ffe86cbe37f1098f971e96",
+  "sourceChangedDuringRender": false
+}

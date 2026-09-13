@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { deduplicateVersions, emptyProfile, isShortlisted, mergeProfiles, mergeReviews, passageExcerpt, postingText, suggestCriterionEvidence } from '../src/main/recruiting/planning.js'
+import { applySavedRerank, deduplicateVersions, emptyProfile, isShortlisted, mergeProfiles, mergeReviews, passageExcerpt, postingText, suggestCriterionEvidence } from '../src/main/recruiting/planning.js'
 import { profileRecordSchema, recruitingSchemas, snapshotRecordSchema } from '../src/main/recruiting/schema.js'
 import type { CandidateReview } from '../src/shared/recruiting.js'
 import type { MatchResult } from '../src/shared/types.js'
@@ -13,6 +13,23 @@ function match(recordKey: string, importedAt: number, score: number): MatchResul
 }
 
 describe('recruiter workflow rules', () => {
+  it('retains the complete candidate pool and local scores when restoring a saved Claude order', () => {
+    const results = Array.from({ length: 65 }, (_, index) => match(index.toString(16).padStart(64, '0'), index + 1, 1 - index / 100))
+    const ranking = results.slice(0, 15).reverse().map((result) => ({ recordKey: result.resume.recordKey, reason: 'Specific work evidence' }))
+    const applied = applySavedRerank(results, ranking)
+    expect(applied.reranked).toBe(true)
+    expect(applied.results).toHaveLength(65)
+    expect(applied.results.slice(15)).toEqual(results.slice(15))
+    expect(applied.results[0]).toEqual({ ...results[14], llmReason: 'Specific work evidence' })
+    expect(results[0].llmReason).toBeUndefined()
+  })
+
+  it('falls back to local ranking when CV version linking changes the reranked candidates', () => {
+    const results = [match(keyA, 1, 0.9), match(keyB, 2, 0.8)]
+    expect(applySavedRerank(results, [{ recordKey: keyB }, { recordKey: 'c'.repeat(64) }])).toEqual({ results, reranked: false })
+    expect(applySavedRerank(results, [{ recordKey: keyB }, { recordKey: keyB }])).toEqual({ results, reranked: false })
+  })
+
   it('keeps contacted people on the selected shortlist', () => {
     expect(isShortlisted('shortlisted')).toBe(true)
     expect(isShortlisted('contacted')).toBe(true)
@@ -98,6 +115,9 @@ describe('recruiting trust boundary', () => {
     const result = { recordKey: keyA, score: 0.5, breakdown: { semantic: 0.5, lexical: 0, skills: 0 }, matchedSkills: [], missingSkills: [], evidence: [{ ordinal: 0, similarity: 0.5 }] }
     const snapshot = { jobId, libraryFingerprint: keyA, postingFingerprint: keyA, modelFingerprint: keyA, searchedAt: 1, libraryKeys: [keyA], requiredSkills: [], elapsedMs: 1, results: [result] }
     expect(snapshotRecordSchema.safeParse(snapshot).success).toBe(true)
+    expect(snapshotRecordSchema.safeParse({ ...snapshot, rerankConfig: { provider: 'openai', model: 'gpt-6-astra' } }).success).toBe(true)
+    expect(snapshotRecordSchema.safeParse({ ...snapshot, rerankConfig: { provider: 'anthropic', model: 'gpt-6-astra' } }).success).toBe(false)
+    expect(snapshotRecordSchema.safeParse({ ...snapshot, rerankConfig: { provider: 'openai', model: 'unapproved-model' } }).success).toBe(false)
     expect(snapshotRecordSchema.safeParse({ ...snapshot, results: [{ ...result, resume: { filePath: '/tmp/private' } }] }).success).toBe(false)
     expect(snapshotRecordSchema.safeParse({ ...snapshot, results: [{ ...result, evidence: [{ ordinal: 0, similarity: 0.5, text: 'Forged evidence' }] }] }).success).toBe(false)
     expect(snapshotRecordSchema.safeParse({ ...snapshot, results: [result, result] }).success).toBe(false)

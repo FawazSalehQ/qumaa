@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { MatchResult, IngestOutcome, IngestProgress, ResumeSummary } from '@shared/types.js'
-import MatchView from './views/MatchView.js'
 import JobsView from './views/JobsView.js'
 import LibraryView from './views/LibraryView.js'
 import SettingsView from './views/SettingsView.js'
@@ -11,7 +10,7 @@ import { Brand } from './components/Brand.js'
 import { useI18n } from './i18n.js'
 import type { Translator } from '@shared/i18n.js'
 
-type Tab = 'jobs' | 'match' | 'library' | 'settings'
+type Tab = 'jobs' | 'library' | 'settings'
 
 /** Which candidate the slide-over is showing, and its match context if any. */
 interface Selection {
@@ -70,7 +69,7 @@ export default function App(): React.JSX.Element {
   const [dragging, setDragging] = useState(false)
   const [toasts, setToasts] = useState<Toast[]>([])
   const [selected, setSelected] = useState<Selection | null>(null)
-  const [resetSignal, setResetSignal] = useState(0)
+  const [newJobSignal, setNewJobSignal] = useState(0)
   const [libraryRevision, setLibraryRevision] = useState(0)
   const [profileRevision, setProfileRevision] = useState(0)
   const [workspaceEpoch, setWorkspaceEpoch] = useState(0)
@@ -186,19 +185,16 @@ export default function App(): React.JSX.Element {
         case 'goto-jobs':
           setTab('jobs')
           break
-        case 'new-search':
-          setTab('match')
+        case 'new-job':
+          setTab('jobs')
           setSelected(null)
-          setResetSignal((n) => n + 1)
+          setNewJobSignal((n) => n + 1)
           break
         case 'import-files':
           importViaDialog('files')
           break
         case 'import-folder':
           importViaDialog('folder')
-          break
-        case 'goto-match':
-          setTab('match')
           break
         case 'goto-library':
           setTab('library')
@@ -259,10 +255,6 @@ export default function App(): React.JSX.Element {
             aria-current={tab === 'jobs' ? 'page' : undefined}
           >{t("Jobs")}</button>
           <button
-            className={`tab ${tab === 'match' ? 'active' : ''}`}
-            onClick={() => setTab('match')}
-          >{t("Match")}</button>
-          <button
             className={`tab ${tab === 'library' ? 'active' : ''}`}
             onClick={() => setTab('library')}
           >
@@ -294,20 +286,15 @@ export default function App(): React.JSX.Element {
         <div hidden={tab !== 'jobs'}>
           <JobsView
             key={workspaceEpoch}
+            active={tab === 'jobs'}
+            newJobSignal={newJobSignal}
             resumes={resumes}
             libraryRevision={libraryRevision + profileRevision}
             onOpenCandidate={(m) => setSelected({ resume: m.resume, match: m })}
+            onOpenResume={(resume) => setSelected({ resume })}
             onToast={pushToasts}
           />
         </div>
-        {tab === 'match' && (
-          <MatchView
-            resumeCount={resumes.length}
-            resetSignal={resetSignal}
-            libraryRevision={libraryRevision}
-            onOpenCandidate={(m) => setSelected({ resume: m.resume, match: m })}
-          />
-        )}
         {tab === 'library' && (
           <LibraryView
             resumes={resumes}

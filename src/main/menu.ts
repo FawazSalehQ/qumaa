@@ -83,7 +83,7 @@ export function buildMenu(getWindow: () => BrowserWindow | null): void {
     {
       label: t('&File'),
       submenu: [
-        { label: t('New Search'), accelerator: 'CmdOrCtrl+N', click: send('new-search') },
+        { label: t('New Job'), accelerator: 'CmdOrCtrl+N', click: send('new-job') },
         { type: 'separator' },
         { label: t('Import Files…'), accelerator: 'CmdOrCtrl+O', click: send('import-files') },
         {
@@ -125,8 +125,7 @@ export function buildMenu(getWindow: () => BrowserWindow | null): void {
     {
       label: t('&View'),
       submenu: [
-        { label: t('Jobs'), accelerator: 'CmdOrCtrl+4', click: send('goto-jobs') },
-        { label: t('Match'), accelerator: 'CmdOrCtrl+1', click: send('goto-match') },
+        { label: t('Jobs'), accelerator: 'CmdOrCtrl+1', click: send('goto-jobs') },
         { label: t('Library'), accelerator: 'CmdOrCtrl+2', click: send('goto-library') },
         { label: t('Settings'), accelerator: 'CmdOrCtrl+3', click: send('goto-settings') },
         { type: 'separator' },

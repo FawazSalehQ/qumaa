@@ -36,6 +36,7 @@ import {
 } from './replacement.js'
 import { rebuildRestoredDerivedData } from '../ingest/restore-rebuild.js'
 import { pruneRecruitingRecords } from '../recruiting/storage.js'
+import { temporarySearch } from '../recruiting/temporary.js'
 
 export interface BackupValidation {
   schemaVersion: number
@@ -504,6 +505,7 @@ export function commitRestore(rollbackPath: string): void {
   ) {
     throw new Error('Qumaa cannot commit an unknown restore operation.')
   }
+  temporarySearch.clear()
   removeDatabaseFileSet(rollback)
   clearRestoreMarker(livePath)
 }

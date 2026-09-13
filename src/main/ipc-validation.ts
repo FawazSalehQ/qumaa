@@ -8,6 +8,7 @@
  */
 import { isAbsolute } from 'node:path'
 import { z } from 'zod'
+import { isRerankConfig } from '../shared/rerank.js'
 
 const MAX_PATH = 4_096
 const MAX_LABEL = 512
@@ -92,6 +93,11 @@ export const ipcSchemas = {
     approvalToken: opaqueToken.optional()
   }),
   apiKey: boundedString(4_096).trim().min(1).nullable(),
+  rerankProvider: z.enum(['anthropic', 'openai']),
+  rerankConfig: z.object({
+    provider: z.enum(['anthropic', 'openai']),
+    model: boundedString(128).min(1)
+  }).strict().refine(isRerankConfig, 'must choose a supported model for the provider'),
   enabled: z.boolean(),
   theme: z.enum(['system', 'light', 'dark']),
   language: z.enum(['en', 'ar']),

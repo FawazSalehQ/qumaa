@@ -5,12 +5,16 @@ import { MODEL_ID } from '../embed/protocol.js'
 import { SKILL_GAZETTEER_VERSION } from '../ingest/skills-backfill-plan.js'
 import { search } from '../search/rank.js'
 import { searchSessions } from '../search/sessions.js'
+import { RERANK_LIMIT } from '../search/rerankPrivacy.js'
+import { DEFAULT_RERANK_CONFIG, type RerankConfig } from '@shared/rerank.js'
 import { candidateWithProfile, profileForResume } from '@shared/recruiting.js'
-import type { CandidateProfile, CandidateReview, JobWorkspace, SavedJob } from '@shared/recruiting.js'
+import type { CandidateProfile, CandidateReview, JobPlacement, JobPlacementCandidate, JobWorkspace, SavedJob } from '@shared/recruiting.js'
 import type { MatchResult, ResumeRef, ResumeSummary, SectionKind } from '@shared/types.js'
-import { parseRecruiting, recruitingSchemas, recordId, type JobRecord, type SnapshotRecord } from './schema.js'
+import { parseRecruiting, recruitingSchemas, RECRUITING_LIMITS, recordId, type JobRecord, type SnapshotRecord } from './schema.js'
 import { putRecord, readRecord, readRecords, replaceExistingRecords } from './storage.js'
-import { deduplicateVersions, emptyProfile, isShortlisted, mergeProfiles, mergeReviews, passageExcerpt, postingText, suggestCriterionEvidence } from './planning.js'
+import { temporarySearch } from './temporary.js'
+import { samePlacementPeople } from './job-status.js'
+import { applySavedRerank, deduplicateVersions, emptyProfile, isShortlisted, mergeProfiles, mergeReviews, passageExcerpt, postingText, suggestCriterionEvidence } from './planning.js'
 
 function digest(value: unknown): string {
   return createHash('sha256').update(JSON.stringify(value)).digest('hex')
@@ -24,12 +28,23 @@ function postingFingerprint(job: JobRecord): string {
 function libraryFingerprint(resumes: ResumeSummary[]): string {
   return digest(resumes.map((resume) => [resume.recordKey, resume.importedAt]).sort((a, b) => String(a[0]).localeCompare(String(b[0]))))
 }
+function versionsFingerprint(profiles: CandidateProfile[]): string {
+  return digest(profiles.map((profile) => [profile.candidateKey, [...profile.recordKeys].sort()]).sort((a, b) => String(a[0]).localeCompare(String(b[0]))))
+}
 function requireJob(input: unknown): JobRecord {
   const id = parseRecruiting(recruitingSchemas.jobId, input)
   const job = readRecord<JobRecord>(getDb(), 'job', id)
   if (!job) throw new Error('This saved job no longer exists.')
   return job
 }
+function workspaceRecord(input: unknown): { job: JobRecord; snapshot: SnapshotRecord | null; temporary: boolean } {
+  const id = parseRecruiting(recruitingSchemas.jobId, input)
+  const transient = temporarySearch.get(id)
+  if (transient) return { ...transient, temporary: true }
+  const job = requireJob(id)
+  return { job, snapshot: readRecord<SnapshotRecord>(getDb(), 'snapshot', id), temporary: false }
+}
+
 function requireResume(ref: ResumeRef): void {
   if (!getDb().prepare('SELECT 1 FROM resumes WHERE id = ? AND content_hash = ?').get(ref.id, ref.recordKey)) throw new Error('This CV changed or was removed. Refresh the library and try again.')
 }
@@ -68,10 +83,14 @@ export function listJobs(): SavedJob[] {
 export function saveJob(input: unknown): SavedJob {
   const args = parseRecruiting(recruitingSchemas.saveJob, input)
   const previous = args.id ? requireJob(args.id) : null
-  const now = Date.now()
+  if (previous && args.status !== previous.status) throw new Error('Use Change status to record a job status change.')
+  if (!previous && args.status !== 'open') throw new Error('New jobs start open. Save the job before changing its status.')
+  const now = Math.max(Date.now(), (previous?.updatedAt ?? -1) + 1)
   const job: JobRecord = {
+    ...previous,
     id: previous?.id ?? randomUUID(), posting: args.posting, status: args.status, criteria: args.criteria,
-    createdAt: previous?.createdAt ?? now, updatedAt: now, lastSearchedAt: previous?.lastSearchedAt ?? null
+    createdAt: previous?.createdAt ?? now, updatedAt: now, lastSearchedAt: previous?.lastSearchedAt ?? null,
+    ...(!previous ? { statusHistory: [{ id: randomUUID(), status: 'open' as const, at: now, kind: 'created' as const }] } : {})
   }
   getDb().transaction(() => {
     putRecord(getDb(), 'job', job)
@@ -88,16 +107,60 @@ export function saveJob(input: unknown): SavedJob {
   return decorateJob(job, readRecord<SnapshotRecord>(getDb(), 'snapshot', job.id), listResumes(), listProfiles(), reviewsForJob(job.id))
 }
 
+/** Only this operation can transition a saved job or record who filled it. */
+export function changeJobStatus(input: unknown): JobWorkspace {
+  const args = parseRecruiting(recruitingSchemas.changeJobStatus, input)
+  const previous = requireJob(args.jobId)
+  if (previous.updatedAt !== args.expectedUpdatedAt) throw new Error('This job changed. Reopen it before changing its status.')
+  let placement: JobPlacement | undefined
+  if (args.placement) {
+    const profiles = listProfiles()
+    const resumes = listResumes()
+    const selected = new Set<string>()
+    const snapshot = (ref: ResumeRef): JobPlacementCandidate => {
+      requireResume(ref)
+      const profile = profileForResume(profiles, ref.recordKey)
+      const candidateKey = profile?.candidateKey ?? ref.recordKey
+      if (selected.has(candidateKey)) throw new Error('Choose a different candidate for each hiring slot. Linked CV versions belong to the same person.')
+      selected.add(candidateKey)
+      const resume = resumes.find((candidate) => candidate.id === ref.id && candidate.recordKey === ref.recordKey)!
+      const name = (candidateWithProfile(resume, profile).name?.trim() || resume.fileName)
+        .replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 512) || 'Unnamed candidate'
+      return { recordKey: ref.recordKey, name }
+    }
+    placement = {
+      hired: snapshot(args.placement.hired),
+      backup2: args.placement.backup2 ? snapshot(args.placement.backup2) : null,
+      backup3: args.placement.backup3 ? snapshot(args.placement.backup3) : null
+    }
+  }
+  const statusChanged = previous.status !== args.status
+  const placementChanged = placement !== undefined && !samePlacementPeople(placement, previous.placement)
+  if (!statusChanged && !placementChanged) return getJob(previous.id)
+  const history = previous.statusHistory ?? []
+  if (history.length >= RECRUITING_LIMITS.statusEvents) throw new Error('This job has reached its 1,000-entry status history limit. Its existing history has been preserved.')
+  const now = Math.max(Date.now(), previous.updatedAt + 1)
+  putRecord(getDb(), 'job', {
+    ...previous, status: args.status, updatedAt: now,
+    ...(placement ? { placement } : {}),
+    statusHistory: [...history, {
+      id: randomUUID(), status: args.status, at: now,
+      kind: statusChanged ? 'status-changed' : 'placement-updated',
+      ...(placement ? { placement } : {})
+    }]
+  })
+  return getJob(previous.id)
+}
+
 interface StoredPassage { resumeId: number; section: SectionKind; ordinal: number; text: string }
 
 export function getJob(input: unknown): JobWorkspace {
-  const job = requireJob(input)
-  const snapshot = readRecord<SnapshotRecord>(getDb(), 'snapshot', job.id)
+  const { job, snapshot, temporary } = workspaceRecord(input)
   const profiles = listProfiles()
   const resumes = listResumes()
-  const reviews = reviewsForJob(job.id)
+  const reviews = temporary ? [] : reviewsForJob(job.id)
   const decorated = decorateJob(job, snapshot, resumes, profiles, reviews)
-  if (!snapshot) return { job: decorated, response: null, profiles, reviews, evidence: {} }
+  if (!snapshot) return { job: decorated, response: null, profiles, reviews, evidence: {}, temporary }
   const byKey = new Map(resumes.map((resume) => [resume.recordKey, resume]))
   const passageAt = getDb().prepare('SELECT section, text FROM chunks WHERE resume_id = ? AND ordinal = ? LIMIT 1')
   const query = postingText(job.posting, job.criteria)
@@ -111,19 +174,56 @@ export function getJob(input: unknown): JobWorkspace {
     })
     results.push({ resume, score: stored.score, breakdown: stored.breakdown, matchedSkills: stored.matchedSkills, missingSkills: stored.missingSkills, evidence })
   }
-  const candidates = deduplicateVersions(results, profiles)
+  const { results: candidates, reranked } = applySavedRerank(deduplicateVersions(results, profiles), snapshot.rerank)
   const session = searchSessions.create(query, {
-    // Only the same bounded candidate set as an ordinary Match search may be
-    // retained for optional reranking. The complete job list is returned once.
-    results: candidates.slice(0, 50), requiredSkills: snapshot.requiredSkills, totalCandidates: candidates.length, elapsedMs: snapshot.elapsedMs
-  })
-  return { job: decorated, response: { ...session, results: candidates }, profiles, reviews, evidence: {} }
+    // Bound retained evidence, while returning the complete job list to the UI.
+    results: candidates.slice(0, 50), requiredSkills: snapshot.requiredSkills, totalCandidates: candidates.length, elapsedMs: snapshot.elapsedMs, reranked,
+    ...(reranked ? { rerankConfig: snapshot.rerankConfig ?? DEFAULT_RERANK_CONFIG } : {})
+  }, { jobId: job.id, snapshotFingerprint: digest(snapshot), versionsFingerprint: versionsFingerprint(profiles) })
+  if (temporary) temporarySearch.rememberSession(searchSessions.get(session.sessionId))
+  return { job: decorated, response: { ...session, results: candidates }, profiles, reviews, evidence: {}, temporary }
+}
+
+/** Bind every outbound step to the job and exact local snapshot the user saw. */
+function workspaceSessionSource(input: unknown, retainTemporary = false): ReturnType<typeof searchSessions.get> {
+  const { jobId, sessionId } = parseRecruiting(recruitingSchemas.rerankPreview, input)
+  const session = (retainTemporary ? temporarySearch.getSession(sessionId) : null) ?? searchSessions.get(sessionId)
+  const { job, snapshot } = workspaceRecord(jobId)
+  if (!snapshot || session.job?.jobId !== jobId || session.job.snapshotFingerprint !== digest(snapshot) ||
+      session.job.versionsFingerprint !== versionsFingerprint(listProfiles()) ||
+      snapshot.postingFingerprint !== postingFingerprint(job) ||
+      snapshot.libraryFingerprint !== libraryFingerprint(listResumes()) || snapshot.modelFingerprint !== modelFingerprint()) {
+    throw new Error('The job or its matches changed. Reopen the job and refresh matches before reranking.')
+  }
+  return session
+}
+
+export function jobRerankSource(input: unknown): ReturnType<typeof searchSessions.get> {
+  const session = workspaceSessionSource(input)
+  if (session.response.results.length < 2) throw new Error('At least two candidates are needed for reranking.')
+  return session
+}
+
+/** Only order/reasons change. Source scores, all later candidates and reviews remain intact. */
+export function saveJobRerank(input: unknown, ordered: MatchResult[], config: RerankConfig = DEFAULT_RERANK_CONFIG): JobWorkspace {
+  const args = parseRecruiting(recruitingSchemas.rerankPreview, input)
+  const session = jobRerankSource(args)
+  const expected = new Set(session.response.results.slice(0, RERANK_LIMIT).map((result) => result.resume.recordKey))
+  const leading = ordered.slice(0, RERANK_LIMIT)
+  if (leading.length !== expected.size || new Set(leading.map((result) => result.resume.recordKey)).size !== expected.size || leading.some((result) => !expected.has(result.resume.recordKey))) {
+    throw new Error('The model did not return a usable ranking.')
+  }
+  const { snapshot, temporary } = workspaceRecord(args.jobId)
+  const reranked = { ...snapshot!, rerankConfig: config, rerank: leading.map((result) => ({ recordKey: result.resume.recordKey, ...(result.llmReason ? { reason: result.llmReason } : {}) })) }
+  if (temporary) temporarySearch.updateSnapshot(args.jobId, reranked)
+  else putRecord(getDb(), 'snapshot', reranked)
+  return getJob(args.jobId)
 }
 
 /** Scorecard evidence is loaded only for the open candidate or comparison. */
 export function getEvidence(input: unknown): JobWorkspace['evidence'] {
   const { jobId, resumes } = parseRecruiting(recruitingSchemas.evidence, input)
-  const job = requireJob(jobId)
+  const { job } = workspaceRecord(jobId)
   const statement = getDb().prepare('SELECT section, ordinal, text FROM chunks WHERE resume_id = ? ORDER BY ordinal')
   return Object.fromEntries(resumes.map((resume) => {
     requireResume(resume)
@@ -132,16 +232,13 @@ export function getEvidence(input: unknown): JobWorkspace['evidence'] {
   }))
 }
 
-export async function searchJob(input: unknown): Promise<JobWorkspace> {
-  const job = requireJob(input)
+async function matchJob(job: JobRecord): Promise<SnapshotRecord> {
   const resumes = listResumes()
   const libraryAtStart = libraryFingerprint(resumes)
   const modelAtStart = modelFingerprint()
   const response = await search(postingText(job.posting, job.criteria), 5_000)
-  const current = requireJob(job.id)
-  // Embedding yields: a concurrent import, job edit, or restore must never
-  // commit a mixed snapshot as though it describes the current workspace.
-  if (libraryAtStart !== libraryFingerprint(listResumes()) || postingFingerprint(job) !== postingFingerprint(current) || modelAtStart !== modelFingerprint()) throw new Error('The job or library changed during matching. Refresh matches again.')
+  // Embedding yields: a concurrent library change must never commit a mixed snapshot.
+  if (libraryAtStart !== libraryFingerprint(listResumes()) || modelAtStart !== modelFingerprint()) throw new Error('The job or library changed during matching. Refresh matches again.')
   const passageIdentity = getDb().prepare('SELECT ordinal FROM chunks WHERE resume_id = ? AND section = ? AND text = ? LIMIT 1')
   const snapshot: SnapshotRecord = {
     jobId: job.id, libraryFingerprint: libraryAtStart, postingFingerprint: postingFingerprint(job), modelFingerprint: modelAtStart,
@@ -155,11 +252,76 @@ export async function searchJob(input: unknown): Promise<JobWorkspace> {
       })
     }))
   }
-  getDb().transaction(() => {
+  return snapshot
+}
+
+export async function searchJob(input: unknown): Promise<JobWorkspace> {
+  const source = workspaceRecord(input)
+  const generation = source.temporary ? temporarySearch.begin() : null
+  const snapshot = await matchJob(source.job)
+  const current = workspaceRecord(source.job.id)
+  if (source.temporary !== current.temporary || postingFingerprint(source.job) !== postingFingerprint(current.job) ||
+      snapshot.libraryFingerprint !== libraryFingerprint(listResumes()) || snapshot.modelFingerprint !== modelFingerprint()) throw new Error('The job or library changed during matching. Refresh matches again.')
+  const job = { ...current.job, lastSearchedAt: snapshot.searchedAt }
+  if (generation !== null) temporarySearch.publish(generation, { job, snapshot })
+  else getDb().transaction(() => {
     putRecord(getDb(), 'snapshot', snapshot)
-    putRecord(getDb(), 'job', { ...current, lastSearchedAt: snapshot.searchedAt })
+    putRecord(getDb(), 'job', job)
   })()
+  searchSessions.clearJob(job.id)
   return getJob(job.id)
+}
+
+export async function searchTemporary(input: unknown): Promise<JobWorkspace> {
+  const args = parseRecruiting(recruitingSchemas.temporarySearch, input)
+  const generation = temporarySearch.begin()
+  const now = Date.now()
+  const job: JobRecord = { ...args, id: randomUUID(), createdAt: now, updatedAt: now, lastSearchedAt: null }
+  const snapshot = await matchJob(job)
+  if (snapshot.libraryFingerprint !== libraryFingerprint(listResumes()) || snapshot.modelFingerprint !== modelFingerprint()) throw new Error('The job or library changed during matching. Refresh matches again.')
+  const previousId = temporarySearch.id
+  temporarySearch.publish(generation, { job: { ...job, lastSearchedAt: snapshot.searchedAt }, snapshot })
+  if (previousId) searchSessions.clearJob(previousId)
+  return getJob(job.id)
+}
+
+export function discardTemporary(input: unknown): void {
+  const id = parseRecruiting(recruitingSchemas.jobId, input)
+  if (temporarySearch.discard(id)) searchSessions.clearJob(id)
+}
+
+export function saveTemporary(input: unknown): JobWorkspace {
+  const args = parseRecruiting(recruitingSchemas.rerankPreview, input)
+  workspaceSessionSource(args, true)
+  const transient = temporarySearch.get(args.jobId)
+  if (!transient) throw new Error('This temporary search is no longer available.')
+  // Promotion writes the full snapshot, not the bounded 50-candidate rerank session.
+  // A new ID prevents outstanding temporary capabilities from addressing the saved job.
+  const id = randomUUID()
+  const now = Date.now()
+  getDb().transaction(() => {
+    putRecord(getDb(), 'job', {
+      ...transient.job, id, status: 'open', createdAt: now, updatedAt: now,
+      statusHistory: [{ id: randomUUID(), status: 'open', at: now, kind: 'created' }]
+    })
+    putRecord(getDb(), 'snapshot', { ...transient.snapshot, jobId: id })
+  })()
+  discardTemporary(args.jobId)
+  return getJob(id)
+}
+
+export function getTemporaryExport(input: unknown): { jobTitle: string; requiredSkills: string[]; results: MatchResult[] } {
+  const args = parseRecruiting(recruitingSchemas.rerankPreview, input)
+  const source = workspaceSessionSource(args, true)
+  const transient = temporarySearch.get(args.jobId)
+  if (!transient) throw new Error('This temporary search is no longer available.')
+  if (!source.response.results.length) throw new Error('Find matching candidates before exporting.')
+  const profiles = listProfiles()
+  return {
+    jobTitle: transient.job.posting.position.trim() || 'Candidate shortlist',
+    requiredSkills: source.response.requiredSkills,
+    results: source.response.results.slice(0, 3).map((result) => ({ ...result, resume: candidateWithProfile(result.resume, profileForResume(profiles, result.resume.recordKey)) }))
+  }
 }
 
 export function saveReview(input: unknown): CandidateReview {
@@ -236,6 +398,7 @@ export function unlinkVersion(input: unknown): void {
 /** One transaction makes moving a candidate reliable even when old orders tie. */
 export function reorderShortlist(input: unknown): void {
   const { jobId, resumes } = parseRecruiting(recruitingSchemas.reorderShortlist, input)
+  requireJob(jobId)
   const workspace = getJob(jobId)
   const selected = workspace.reviews.filter((review) => isShortlisted(review.status))
   const byCandidate = new Map((workspace.response?.results ?? []).map((result) => [profileForResume(workspace.profiles, result.resume.recordKey)?.candidateKey ?? result.resume.recordKey, result.resume]))
@@ -252,6 +415,7 @@ export function reorderShortlist(input: unknown): void {
 }
 
 export function getShortlistExport(input: unknown): { jobTitle: string; requiredSkills: string[]; results: MatchResult[]; notes: Record<string, string> } {
+  requireJob(input)
   const workspace = getJob(input)
   if (!workspace.response || workspace.job.stale) throw new Error('Refresh this job’s matches before exporting its shortlist.')
   const resultsByKey = new Map(workspace.response.results.map((result) => [profileForResume(workspace.profiles, result.resume.recordKey)?.candidateKey ?? result.resume.recordKey, result]))

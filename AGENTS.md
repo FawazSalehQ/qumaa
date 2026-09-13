@@ -5,8 +5,8 @@ empirically — several items look like tidy-up opportunities and are not.
 
 **قُمع (Qumaa)** is an offline Electron desktop app: ingest resumes into local
 SQLite, paste a job description, get the best-matching candidates with evidence.
-Everything runs on-device. The one exception is an optional Claude rerank that is
-inert unless the user supplies their own API key.
+Everything runs on-device. The one exception is optional AI reranking through
+Anthropic or OpenAI, inert unless the user supplies that provider's API key.
 
 ## Commands
 

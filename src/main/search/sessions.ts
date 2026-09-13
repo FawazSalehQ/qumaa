@@ -4,11 +4,18 @@ import type { SearchResponse } from '@shared/types.js'
 
 type LocalSearchResponse = Omit<SearchResponse, 'sessionId'>
 
-interface SearchSession {
+export interface JobSessionContext {
+  jobId: string
+  snapshotFingerprint: string
+  versionsFingerprint: string
+}
+
+export interface SearchSession {
   id: string
   jobDescription: string
   response: LocalSearchResponse
   createdAt: number
+  job?: JobSessionContext
 }
 
 interface Approval {
@@ -34,8 +41,9 @@ export class SearchSessionStore {
   private readonly sessions = new Map<string, SearchSession>()
   private readonly approvals = new Map<string, Approval>()
   private readonly approvalBySession = new Map<string, string>()
+  private approvalRevision = 0
 
-  create(jobDescription: string, response: LocalSearchResponse): SearchResponse {
+  create(jobDescription: string, response: LocalSearchResponse, job?: JobSessionContext): SearchResponse {
     this.prune()
     while (this.sessions.size >= MAX_SESSIONS) {
       const oldest = this.sessions.keys().next().value as string | undefined
@@ -45,7 +53,7 @@ export class SearchSessionStore {
 
     const id = randomUUID()
     const canonical = structuredClone(response)
-    this.sessions.set(id, { id, jobDescription, response: canonical, createdAt: Date.now() })
+    this.sessions.set(id, { id, jobDescription, response: canonical, createdAt: Date.now(), job: job ? structuredClone(job) : undefined })
     return { ...structuredClone(canonical), sessionId: id }
   }
 
@@ -82,7 +90,7 @@ export class SearchSessionStore {
   }
 
   consumeApproval(token: string | undefined, sessionId: string, requestBody: JsonObject): void {
-    if (!token) throw new Error('Review the exact Claude request before approving it.')
+    if (!token) throw new Error('Review the exact AI request before approving it.')
     const approval = this.approvals.get(token)
     this.deleteApproval(token)
     if (
@@ -91,14 +99,28 @@ export class SearchSessionStore {
       approval.sessionId !== sessionId ||
       approval.requestDigest !== requestDigest(requestBody)
     ) {
-      throw new Error('The Claude approval is missing, expired, or does not match this request.')
+      throw new Error('The AI approval is missing, expired, or does not match this request.')
     }
   }
 
   clear(): void {
     this.sessions.clear()
+    this.clearApprovals()
+  }
+
+  /** Settings can revoke outbound approval without throwing away local matches. */
+  clearApprovals(): void {
+    this.approvalRevision++
     this.approvals.clear()
     this.approvalBySession.clear()
+  }
+
+  getApprovalRevision(): number { return this.approvalRevision }
+
+  clearJob(jobId: string): void {
+    for (const [id, session] of this.sessions) {
+      if (session.job?.jobId === jobId) this.deleteSession(id)
+    }
   }
 
   private deleteApproval(token: string): void {

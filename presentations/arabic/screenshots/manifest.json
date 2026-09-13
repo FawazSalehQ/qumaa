@@ -1,0 +1,413 @@
+{
+  "appVersion": "0.1.0-beta.2",
+  "capturedAt": "2026-09-12T13:35:59.690Z",
+  "executablePath": "/Users/fawazalqahtani/Desktop/Directory/cv_filter/release/mac-arm64/قُمع.app/Contents/MacOS/قُمع",
+  "appAsarPath": "/Users/fawazalqahtani/Desktop/Directory/cv_filter/release/mac-arm64/قُمع.app/Contents/Resources/app.asar",
+  "appAsarSha256": "1042e64c83b9e5b93a228cc5b5f4683200152df7e639e974581f8ac322e8a0b1",
+  "source": "Final packaged macOS application",
+  "language": "ar",
+  "direction": "rtl",
+  "scenario": "Fictional restaurant training manager vacancy and fictional candidates",
+  "syntheticUserData": true,
+  "realCredentialsUsed": false,
+  "syntheticCredentialUsedOnlyForReview": true,
+  "outboundRequests": 0,
+  "imagesReadyToFit": true,
+  "screenshots": [
+    {
+      "file": "01-jobs.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Application window",
+      "dimensions": {
+        "width": 2880,
+        "height": 2010
+      },
+      "clip": null
+    },
+    {
+      "file": "02-library.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Library and candidate controls",
+      "dimensions": {
+        "width": 2706,
+        "height": 1794
+      },
+      "clip": {
+        "x": 43.1953125,
+        "y": 76,
+        "width": 1353.609375,
+        "height": 897.8515625
+      }
+    },
+    {
+      "file": "03-job-editor.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Structured posting fields",
+      "dimensions": {
+        "width": 2106,
+        "height": 956
+      },
+      "clip": {
+        "x": 68.1953125,
+        "y": 89.4921875,
+        "width": 1053.609375,
+        "height": 478.46875
+      }
+    },
+    {
+      "file": "04-criteria.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Evaluation criteria editor",
+      "dimensions": {
+        "width": 2106,
+        "height": 682
+      },
+      "clip": {
+        "x": 68.1953125,
+        "y": 589.9609375,
+        "width": 1053.609375,
+        "height": 341.9765625
+      }
+    },
+    {
+      "file": "05-filters.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Candidate filters and resulting shortlist",
+      "dimensions": {
+        "width": 2202,
+        "height": 1858
+      },
+      "clip": {
+        "x": 44.1953125,
+        "y": 75.9609375,
+        "width": 1101.609375,
+        "height": 929.0390625
+      }
+    },
+    {
+      "file": "08-profile.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Confirmed candidate details and reusable screening notes",
+      "dimensions": {
+        "width": 1074,
+        "height": 974
+      },
+      "clip": {
+        "x": 41,
+        "y": 109.09375,
+        "width": 537,
+        "height": 487.4140625
+      }
+    },
+    {
+      "file": "06-evidence.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Local score breakdown and original matching passage",
+      "dimensions": {
+        "width": 1142,
+        "height": 782
+      },
+      "clip": {
+        "x": 24,
+        "y": 108.8984375,
+        "width": 571,
+        "height": 391.6875
+      }
+    },
+    {
+      "file": "07-review.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Job-specific review and one complete criterion assessment",
+      "dimensions": {
+        "width": 2106,
+        "height": 1096
+      },
+      "clip": {
+        "x": 68.1953125,
+        "y": 75.828125,
+        "width": 1053.609375,
+        "height": 548.8671875
+      }
+    },
+    {
+      "file": "09-comparison.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Comparison of recruiter-confirmed details",
+      "dimensions": {
+        "width": 2200,
+        "height": 878
+      },
+      "clip": {
+        "x": 44.6953125,
+        "y": 75.9609375,
+        "width": 1100.609375,
+        "height": 439.65625
+      }
+    },
+    {
+      "file": "09-comparison-header.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Compared candidates and local match scores",
+      "dimensions": {
+        "width": 2200,
+        "height": 176
+      },
+      "clip": {
+        "x": 44.6953125,
+        "y": 75.9609375,
+        "width": 1100.609375,
+        "height": 88.59375
+      }
+    },
+    {
+      "file": "09-comparison-criteria.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Complete required criterion with evidence for both candidates",
+      "dimensions": {
+        "width": 2200,
+        "height": 484
+      },
+      "clip": {
+        "x": 44.6953125,
+        "y": 105.6171875,
+        "width": 1100.609375,
+        "height": 242.1796875
+      }
+    },
+    {
+      "file": "10-shortlist.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Ordered shortlist with PDF and CSV export controls",
+      "dimensions": {
+        "width": 2202,
+        "height": 894
+      },
+      "clip": {
+        "x": 44.1953125,
+        "y": 393.0625,
+        "width": 1101.609375,
+        "height": 447.984375
+      }
+    },
+    {
+      "file": "13-express-form.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Unsaved Express search input",
+      "dimensions": {
+        "width": 2202,
+        "height": 1144
+      },
+      "clip": {
+        "x": 44.1953125,
+        "y": 215.4921875,
+        "width": 1101.609375,
+        "height": 572.0625
+      }
+    },
+    {
+      "file": "13-express-results.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Temporary search results and explicit save/discard controls",
+      "dimensions": {
+        "width": 2202,
+        "height": 1674
+      },
+      "clip": {
+        "x": 44.1953125,
+        "y": 75.9921875,
+        "width": 1101.609375,
+        "height": 837.7109375
+      }
+    },
+    {
+      "file": "16-status.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Recorded creation and status changes with timestamps",
+      "dimensions": {
+        "width": 2106,
+        "height": 474
+      },
+      "clip": {
+        "x": 68.1953125,
+        "y": 76.078125,
+        "width": 1053.609375,
+        "height": 237.2265625
+      }
+    },
+    {
+      "file": "17-hiring.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Filled role with hired candidate and ordered backups #2 and #3",
+      "dimensions": {
+        "width": 2106,
+        "height": 714
+      },
+      "clip": {
+        "x": 68.1953125,
+        "y": 76.078125,
+        "width": 1053.609375,
+        "height": 357.21875
+      }
+    },
+    {
+      "file": "11-versions.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Linked original and updated CV versions",
+      "dimensions": {
+        "width": 1074,
+        "height": 438
+      },
+      "clip": {
+        "x": 41,
+        "y": 109.3046875,
+        "width": 537,
+        "height": 219.3828125
+      }
+    },
+    {
+      "file": "12-refresh-action.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Job header and Refresh matches action",
+      "dimensions": {
+        "width": 2202,
+        "height": 244
+      },
+      "clip": {
+        "x": 44.1953125,
+        "y": 75.9921875,
+        "width": 1101.609375,
+        "height": 122.0859375
+      }
+    },
+    {
+      "file": "12-refresh.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Refresh prompt after a library change",
+      "dimensions": {
+        "width": 2202,
+        "height": 90
+      },
+      "clip": {
+        "x": 44.1953125,
+        "y": 75.796875,
+        "width": 1101.609375,
+        "height": 45.1953125
+      }
+    },
+    {
+      "file": "14-settings.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Language, appearance and local matching settings",
+      "dimensions": {
+        "width": 2706,
+        "height": 1244
+      },
+      "clip": {
+        "x": 43.1953125,
+        "y": 76,
+        "width": 1353.609375,
+        "height": 622.7578125
+      }
+    },
+    {
+      "file": "14-watched-folder.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Watched-folder setup",
+      "dimensions": {
+        "width": 2160,
+        "height": 370
+      },
+      "clip": {
+        "x": 316.8046875,
+        "y": 75.8359375,
+        "width": 1080,
+        "height": 185.8828125
+      }
+    },
+    {
+      "file": "14-backups.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Portable backup and local data controls",
+      "dimensions": {
+        "width": 2160,
+        "height": 986
+      },
+      "clip": {
+        "x": 316.8046875,
+        "y": 367.8828125,
+        "width": 1080,
+        "height": 493.8515625
+      }
+    },
+    {
+      "file": "15-creator.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Creator attribution and LinkedIn link",
+      "dimensions": {
+        "width": 2160,
+        "height": 158
+      },
+      "clip": {
+        "x": 316.8046875,
+        "y": 877.734375,
+        "width": 1080,
+        "height": 79.1953125
+      }
+    },
+    {
+      "file": "18-ai-settings.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "AI provider, model, protected key and enable controls",
+      "dimensions": {
+        "width": 2160,
+        "height": 598
+      },
+      "clip": {
+        "x": 316.8046875,
+        "y": 75.7578125,
+        "width": 1080,
+        "height": 299.7265625
+      }
+    },
+    {
+      "file": "19-ai-review.png",
+      "kind": "Actual packaged application screenshot",
+      "demoData": true,
+      "region": "Concise data review with optional exported-data disclosure",
+      "dimensions": {
+        "width": 1320,
+        "height": 740
+      },
+      "clip": {
+        "x": 390,
+        "y": 317.3671875,
+        "width": 660,
+        "height": 370.265625
+      }
+    }
+  ]
+}

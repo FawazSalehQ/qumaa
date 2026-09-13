@@ -1,5 +1,6 @@
 import type Database from 'better-sqlite3'
 import type { CandidateProfile, CandidateReview } from '@shared/recruiting.js'
+import { pruneJobPlacements } from './job-status.js'
 import {
   parseRecruiting,
   RECRUITING_LIMITS,
@@ -151,10 +152,21 @@ export function pruneRecruitingRecords(database: Database.Database): void {
       putRecord(database, 'review', { ...review, candidateKey: newKey })
     } else if (!candidateKeys.has(review.candidateKey)) remove.run('review', recordId('review', review))
   }
+  for (const job of readRecords<JobRecord>(database, 'job')) {
+    const pruned = pruneJobPlacements(job, currentKeys)
+    if (pruned !== job) putRecord(database, 'job', { ...pruned, updatedAt: Math.max(Date.now(), job.updatedAt + 1) })
+  }
   // Saved rankings refer only to current CV identities; their source library
   // fingerprint deliberately stays unchanged so the UI requests a refresh.
   for (const snapshot of readRecords<import('./schema.js').SnapshotRecord>(database, 'snapshot')) {
     const results = snapshot.results.filter((result) => currentKeys.has(result.recordKey))
-    if (results.length !== snapshot.results.length) putRecord(database, 'snapshot', { ...snapshot, results })
+    if (results.length !== snapshot.results.length) {
+      // A deleted CV's Claude explanation is private derived text too.
+      const { rerank, rerankConfig, ...localSnapshot } = snapshot
+      putRecord(database, 'snapshot', {
+        ...localSnapshot, results,
+        ...(rerank?.every((entry) => currentKeys.has(entry.recordKey)) ? { rerank, ...(rerankConfig ? { rerankConfig } : {}) } : {})
+      })
+    }
   }
 }

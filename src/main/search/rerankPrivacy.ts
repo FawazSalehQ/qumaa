@@ -1,11 +1,13 @@
 import { z } from 'zod'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import type { ClaudeRerankPreview, JsonValue, MatchResult, ResumeSummary } from '@shared/types.js'
+import { DEFAULT_RERANK_CONFIG, isRerankConfig, PROVIDER_LABELS, RERANK_CONSENT_VERSION, RERANK_MODELS, type RerankConfig } from '@shared/rerank.js'
 
 export type { ClaudeRerankPreview } from '@shared/types.js'
 
 export const CLAUDE_RERANK_MODEL = 'claude-sonnet-5' as const
-export const CLAUDE_RERANK_CONSENT_VERSION = 'claude-rerank-v1' as const
+/** Compatibility name for existing callers; consent now binds each provider/model. */
+export const CLAUDE_RERANK_CONSENT_VERSION = RERANK_CONSENT_VERSION
 
 /** Reranking more than this wastes tokens; retrieval is reliable at the top. */
 export const RERANK_LIMIT = 15
@@ -13,10 +15,10 @@ export const RERANK_LIMIT = 15
 /** Trimmed so a single long CV cannot dominate the request. */
 const CHARS_PER_CANDIDATE = 2500
 
-const RankingSchema = z.object({
+export const RankingSchema = z.strictObject({
   ranking: z
     .array(
-      z.object({
+      z.strictObject({
         id: z
           .string()
           .regex(/^candidate-\d{2}$/)
@@ -214,50 +216,72 @@ function serializableRequestBody(value: unknown): JsonObject {
   return JSON.parse(JSON.stringify(value)) as JsonObject
 }
 
-export function prepareClaudeRerank(jobDescription: string, results: MatchResult[]): {
-  preview: ClaudeRerankPreview
-  sdkRequest: {
-    model: typeof CLAUDE_RERANK_MODEL
-    max_tokens: number
-    system: string
-    thinking: { type: 'adaptive' }
-    output_config: { format: ReturnType<typeof zodOutputFormat<typeof RankingSchema>> }
-    messages: Array<{ role: 'user'; content: string }>
+type AnthropicRerankModel = (typeof RERANK_MODELS.anthropic)[number]['id']
+
+function evidencePayload(jobDescription: string, results: MatchResult[]): string {
+  return JSON.stringify({ jobPosting: jobDescription, candidates: results.slice(0, RERANK_LIMIT).map(candidatePayload) })
+}
+
+function preview(config: RerankConfig, results: MatchResult[], request: unknown): ClaudeRerankPreview {
+  return {
+    consentVersion: RERANK_CONSENT_VERSION,
+    provider: PROVIDER_LABELS[config.provider],
+    model: config.model,
+    candidateCount: Math.min(results.length, RERANK_LIMIT),
+    totalResultCount: results.length,
+    requestBody: serializableRequestBody(request)
   }
-} {
-  const shortlist = results.slice(0, RERANK_LIMIT)
-  const candidates = shortlist.map(candidatePayload)
+}
+
+export function prepareClaudeRerank(jobDescription: string, results: MatchResult[], model: AnthropicRerankModel = CLAUDE_RERANK_MODEL) {
+  if (!isRerankConfig({ provider: 'anthropic', model })) throw new Error('Choose a supported reranking provider and model in Settings.')
   const sdkRequest = {
-    model: CLAUDE_RERANK_MODEL,
-    max_tokens: 8000,
+    model,
+    max_tokens: 8192,
     system: SYSTEM,
-    thinking: { type: 'adaptive' as const },
-    output_config: { format: zodOutputFormat(RankingSchema) },
+    thinking: { type: 'adaptive' as const, display: 'omitted' as const },
+    output_config: { effort: 'low' as const, format: zodOutputFormat(RankingSchema) },
     messages: [
       {
         role: 'user' as const,
-        content: JSON.stringify({ jobPosting: jobDescription, candidates })
+        content: evidencePayload(jobDescription, results)
       }
     ]
   }
 
   return {
-    preview: {
-      consentVersion: CLAUDE_RERANK_CONSENT_VERSION,
-      provider: 'Anthropic',
-      model: CLAUDE_RERANK_MODEL,
-      candidateCount: shortlist.length,
-      totalResultCount: results.length,
-      requestBody: serializableRequestBody(sdkRequest)
-    },
+    provider: 'anthropic' as const,
+    preview: preview({ provider: 'anthropic', model }, results, sdkRequest),
     sdkRequest
   }
+}
+
+/** Build both the review and the transport from one canonical payload. */
+export function prepareRerank(jobDescription: string, results: MatchResult[], config: RerankConfig = DEFAULT_RERANK_CONFIG) {
+  if (!isRerankConfig(config)) throw new Error('Choose a supported reranking provider and model in Settings.')
+  if (config.provider === 'anthropic') return prepareClaudeRerank(jobDescription, results, config.model as AnthropicRerankModel)
+
+  // No optional fields or composition keywords: every object explicitly rejects
+  // additional keys, as required by OpenAI strict structured outputs.
+  const { $schema: _dialect, ...schema } = z.toJSONSchema(RankingSchema, { target: 'draft-7' })
+  const requestBody = serializableRequestBody({
+    model: config.model,
+    store: false,
+    stream: false,
+    instructions: SYSTEM,
+    input: [{ role: 'user', content: evidencePayload(jobDescription, results) }],
+    max_output_tokens: config.model === 'gpt-4o-mini' ? 4096 : 8192,
+    ...(config.model === 'gpt-4o-mini' ? {} : { reasoning: { effort: 'low' } }),
+    text: { format: { type: 'json_schema', name: 'candidate_ranking', strict: true, schema } }
+  })
+  return { provider: 'openai' as const, preview: preview(config, results, requestBody), requestBody }
 }
 
 /** Renderer-safe preview: no key, database id, file metadata, or identity map. */
 export function buildRerankPreview(
   jobDescription: string,
-  results: MatchResult[]
+  results: MatchResult[],
+  config: RerankConfig = DEFAULT_RERANK_CONFIG
 ): ClaudeRerankPreview {
-  return prepareClaudeRerank(jobDescription, results).preview
+  return prepareRerank(jobDescription, results, config).preview
 }

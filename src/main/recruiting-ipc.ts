@@ -9,6 +9,7 @@ import { parseIpc } from './ipc-validation.js'
 import { shortlistHtml, writeShortlistPdf } from './export/shortlist.js'
 import { shortlistCsv } from './export/shortlist-csv.js'
 import { currentLanguage, nativeText as t } from './language.js'
+import { previewRerankSession, rerankWithConfirmation } from './search/rerank-consent.js'
 
 /** Reading/editing recruiter records stays available if model startup fails. */
 function operation<T>(work: () => T | Promise<T>): Promise<T> {
@@ -19,6 +20,8 @@ export function registerRecruitingHandlers(getWindow: () => BrowserWindow): void
   ipcMain.handle(CH.recruitingListJobs, () => operation(recruiting.listJobs))
   ipcMain.handle(CH.recruitingSaveJob, (_event, input: unknown) =>
     operation(() => recruiting.saveJob(input)))
+  ipcMain.handle(CH.recruitingChangeJobStatus, (_event, input: unknown) =>
+    operation(() => recruiting.changeJobStatus(input)))
   ipcMain.handle(CH.recruitingGetJob, (_event, input: unknown) =>
     operation(() => recruiting.getJob(input)))
   ipcMain.handle(CH.recruitingGetEvidence, (_event, input: unknown) =>
@@ -26,6 +29,41 @@ export function registerRecruitingHandlers(getWindow: () => BrowserWindow): void
   ipcMain.handle(CH.recruitingSearchJob, async (_event, input: unknown) => {
     await indexReadiness.waitUntilReady()
     return operation(() => recruiting.searchJob(input))
+  })
+  ipcMain.handle(CH.recruitingSearchTemporary, async (_event, input: unknown) => {
+    await indexReadiness.waitUntilReady()
+    return operation(() => recruiting.searchTemporary(input))
+  })
+  ipcMain.handle(CH.recruitingSaveTemporary, (_event, input: unknown) =>
+    operation(() => recruiting.saveTemporary(input)))
+  ipcMain.handle(CH.recruitingDiscardTemporary, (_event, input: unknown) =>
+    operation(() => recruiting.discardTemporary(input)))
+  ipcMain.handle(CH.recruitingExportTemporary, async (_event, input: unknown) => {
+    const args = parseIpc(recruitingSchemas.rerankPreview, input, 'temporary search export')
+    const shortlist = await operation(() => recruiting.getTemporaryExport(args))
+    const title = shortlist.jobTitle.replace(/[^\p{L}\p{N} _-]/gu, '').trim() || t('Shortlist')
+    const { canceled, filePath } = await dialog.showSaveDialog(getWindow(), {
+      title: t('Export shortlist'),
+      defaultPath: `${title} ${t('shortlist')}.pdf`,
+      filters: [{ name: 'PDF', extensions: ['pdf'] }]
+    })
+    if (canceled || !filePath) return null
+    await operation(async () => {
+      if (JSON.stringify(recruiting.getTemporaryExport(args)) !== JSON.stringify(shortlist)) {
+        throw new Error('The search changed while the save dialog was open. Review it and export again.')
+      }
+      await writeShortlistPdf(shortlistHtml({ ...shortlist, language: currentLanguage(), generatedAt: new Date() }), filePath)
+    })
+    return filePath
+  })
+  ipcMain.handle(CH.recruitingRerankPreview, (_event, input: unknown) =>
+    operation(() => previewRerankSession(recruiting.jobRerankSource(input))))
+  ipcMain.handle(CH.recruitingRerank, (_event, input: unknown) => {
+    const args = parseIpc(recruitingSchemas.rerank, input, 'job rerank')
+    const source = { jobId: args.jobId, sessionId: args.sessionId }
+    return rerankWithConfirmation(args, getWindow,
+      () => recruiting.jobRerankSource(source),
+      (ordered, config) => recruiting.saveJobRerank(source, ordered, config))
   })
   ipcMain.handle(CH.recruitingSaveReview, (_event, input: unknown) =>
     operation(() => recruiting.saveReview(input)))

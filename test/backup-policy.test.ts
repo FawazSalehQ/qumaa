@@ -10,11 +10,17 @@ describe('portable backup policy', () => {
 
   it.each([
     'anthropicApiKey',
+    'openaiApiKey',
     'credentialCleanupPending',
     'embeddingModel',
     'watchedFolder',
     'windowState',
     'rerankEnabled',
+    'rerankProvider',
+    'rerankModel:anthropic',
+    'rerankModel:openai',
+    'rerankConsent:anthropic:claude-sonnet-5',
+    'rerankConsent:openai:gpt-4o-mini',
     'claudeRerankConsent',
     'futureSetting'
   ])(

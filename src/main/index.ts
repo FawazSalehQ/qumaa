@@ -38,15 +38,18 @@ import {
 } from './ingest/watcher.js'
 import { search } from './search/rank.js'
 import { shortlistHtml, writeShortlistPdf } from './export/shortlist.js'
-import { rerank } from './search/rerank.js'
+import { previewRerankSession, rerankWithConfirmation } from './search/rerank-consent.js'
 import { searchSessions } from './search/sessions.js'
+import { RERANK_CONSENT_VERSION, rerankConsentKey } from '@shared/rerank.js'
 import {
-  buildRerankPreview,
-  CLAUDE_RERANK_CONSENT_VERSION
-} from './search/rerankPrivacy.js'
+  clearProviderRerankConsent,
+  getRerankConfig,
+  getRerankModels,
+  RERANK_ENABLED_KEY,
+  setRerankConfig
+} from './search/rerank-settings.js'
 import {
   finishPendingSecretCleanup,
-  getApiKey,
   getApiKeyStatus,
   hasApiKey,
   hasPendingSecretCleanup,
@@ -78,8 +81,6 @@ if (e2eUserData) {
 
 const WATCHED_FOLDER_KEY = 'watchedFolder'
 const THEME_KEY = 'theme'
-const RERANK_KEY = 'rerankEnabled'
-const RERANK_CONSENT_KEY = 'claudeRerankConsent'
 const RENDERER_SCHEME = 'qumaa'
 const RENDERER_ORIGIN = `${RENDERER_SCHEME}://app`
 const RENDERER_PARTITION = 'qumaa-ui'
@@ -407,10 +408,16 @@ async function ingestPathsWithoutGate(paths: string[]): Promise<IngestOutcome[]>
   return outcomes
 }
 
+function standaloneSearchSession(sessionId: string): ReturnType<typeof searchSessions.get> {
+  const source = searchSessions.get(sessionId)
+  if (source.job) throw new Error('Use the saved job rerank action for these matches.')
+  return source
+}
+
 function registerHandlers(): void {
   registerRecruitingHandlers(() => mainWindow!)
   ipcMain.handle(CH.settingsOpenLinkedIn, () =>
-    shell.openExternal('https://linkedin.com/fawazsalehq')
+    shell.openExternal('https://www.linkedin.com/in/fawazsalehq/')
   )
   ipcMain.handle(CH.resumesList, async () => {
     await indexReadiness.waitUntilReady()
@@ -576,126 +583,90 @@ function registerHandlers(): void {
   ipcMain.handle(CH.settingsGet, () =>
     maintenance.runOperation((): AppSettings => {
       const storedTheme = ipcSchemas.theme.safeParse(getSetting(THEME_KEY))
-      const apiKeyStatus = getApiKeyStatus()
+      const config = getRerankConfig()
+      const apiKeyStatus = getApiKeyStatus(config.provider)
       return {
         language: currentLanguage(),
         watchedFolder: getSetting(WATCHED_FOLDER_KEY),
         theme: storedTheme.success ? storedTheme.data : 'system',
-        rerankEnabled: getSetting(RERANK_KEY) === 'true',
+        rerankEnabled: getSetting(RERANK_ENABLED_KEY) === 'true' && apiKeyStatus === 'protected',
+        rerankProvider: config.provider,
+        rerankModel: config.model,
+        rerankModels: getRerankModels(),
         // The key itself is deliberately not returned: the renderer only needs to
         // know whether one exists.
         hasApiKey: apiKeyStatus === 'protected',
         apiKeyStatus,
-        claudeConsentGranted:
-          getSetting(RERANK_CONSENT_KEY) === CLAUDE_RERANK_CONSENT_VERSION
+        rerankConsentGranted:
+          getSetting(rerankConsentKey(config)) === RERANK_CONSENT_VERSION
       }
     })
   )
 
-  ipcMain.handle(CH.settingsSetApiKey, (_e, rawKey: unknown) => {
+  ipcMain.handle(CH.settingsSetApiKey, (_e, rawKey: unknown, rawProvider: unknown) => {
     const key = parseIpc(ipcSchemas.apiKey, rawKey, 'API key')
+    const provider = parseIpc(ipcSchemas.rerankProvider, rawProvider === undefined ? 'anthropic' : rawProvider, 'AI provider')
     return maintenance.runMaintenance(() => {
-      const cleanupNeeded = setApiKey(key)
-      if (cleanupNeeded) finishPendingSecretCleanup()
-      if (!key) {
-        setSetting(RERANK_KEY, 'false')
-        setSetting(RERANK_CONSENT_KEY, null)
+      const previouslyUsable = hasApiKey(provider)
+      const cleanupNeeded = setApiKey(key, provider)
+      if ((!key || !previouslyUsable) && provider === getRerankConfig().provider) {
+        setSetting(RERANK_ENABLED_KEY, 'false')
       }
+      searchSessions.clearApprovals()
+      clearProviderRerankConsent(provider)
+      if (cleanupNeeded) finishPendingSecretCleanup()
     })
   })
 
-  ipcMain.handle(CH.settingsProtectLegacyApiKey, () =>
-    maintenance.runMaintenance(() => {
-      const migrated = protectLegacyApiKey()
+  ipcMain.handle(CH.settingsProtectLegacyApiKey, (_e, rawProvider: unknown) => {
+    const provider = parseIpc(ipcSchemas.rerankProvider, rawProvider === undefined ? 'anthropic' : rawProvider, 'AI provider')
+    return maintenance.runMaintenance(() => {
+      const migrated = protectLegacyApiKey(provider)
+      if (migrated) {
+        if (provider === getRerankConfig().provider) setSetting(RERANK_ENABLED_KEY, 'false')
+        searchSessions.clearApprovals()
+        clearProviderRerankConsent(provider)
+      }
       if (migrated) finishPendingSecretCleanup()
       return migrated
     })
-  )
+  })
+
+  ipcMain.handle(CH.settingsSetRerankConfig, (_e, rawConfig: unknown) => {
+    const config = parseIpc(ipcSchemas.rerankConfig, rawConfig, 'AI provider and model')
+    return maintenance.runOperation(() => {
+      setRerankConfig(config)
+      searchSessions.clearApprovals()
+    })
+  })
 
   ipcMain.handle(CH.settingsSetRerank, (_e, rawEnabled: unknown) => {
     const enabled = parseIpc(ipcSchemas.enabled, rawEnabled, 'rerank setting')
     return maintenance.runOperation(() => {
       // Cannot enable without a key; silently refusing would look like a bug.
-      if (enabled && !hasApiKey()) throw new Error('Add an API key first.')
-      setSetting(RERANK_KEY, String(enabled))
+      if (enabled && !hasApiKey(getRerankConfig().provider)) throw new Error('Add an API key for the selected provider first.')
+      setSetting(RERANK_ENABLED_KEY, String(enabled))
+      searchSessions.clearApprovals()
     })
   })
 
   ipcMain.handle(CH.settingsResetRerankConsent, () =>
-    maintenance.runOperation(() => setSetting(RERANK_CONSENT_KEY, null))
+    maintenance.runOperation(() => {
+      setSetting(rerankConsentKey(getRerankConfig()), null)
+      searchSessions.clearApprovals()
+    })
   )
 
   ipcMain.handle(CH.searchRerankPreview, (_e, rawArgs: unknown) => {
     const args = parseIpc(ipcSchemas.rerankPreviewArgs, rawArgs, 'rerank preview')
-    return maintenance.runOperation(() => {
-      const session = searchSessions.get(args.sessionId)
-      const preview = buildRerankPreview(session.jobDescription, session.response.results)
-      const consentRequired =
-        preview.candidateCount > 1 &&
-        getSetting(RERANK_CONSENT_KEY) !== CLAUDE_RERANK_CONSENT_VERSION
-      return {
-        preview,
-        consentRequired,
-        approvalToken: searchSessions.issueApproval(args.sessionId, preview.requestBody)
-      }
-    })
+    return maintenance.runOperation(() => previewRerankSession(standaloneSearchSession(args.sessionId)))
   })
 
-  ipcMain.handle(
-    CH.searchRerank,
-    async (_e, rawArgs: unknown) => {
-      const args = parseIpc(ipcSchemas.rerankArgs, rawArgs, 'rerank request')
-      const review = await maintenance.runOperation(() => {
-        const session = searchSessions.get(args.sessionId)
-        const apiKey = getApiKey()
-        if (!apiKey) throw new Error('No API key is configured.')
-        if (getSetting(RERANK_KEY) !== 'true') throw new Error('Reranking is not enabled.')
-        const prepared = buildRerankPreview(session.jobDescription, session.response.results)
-        const consentRequired =
-          prepared.candidateCount > 1 &&
-          getSetting(RERANK_CONSENT_KEY) !== CLAUDE_RERANK_CONSENT_VERSION
-        // Every outbound call needs a fresh body-bound capability. First-use
-        // consent controls whether the full policy preview is shown, while the
-        // native confirmation below prevents a compromised renderer from using
-        // this channel as an unattended network relay after consent.
-        searchSessions.consumeApproval(
-          args.approvalToken,
-          args.sessionId,
-          prepared.requestBody
-        )
-        return { consentRequired }
-      })
-
-      const { response } = await dialog.showMessageBox(mainWindow!, {
-        type: 'question',
-        buttons: [t('Cancel'), t('Send to Anthropic')],
-        defaultId: 0,
-        cancelId: 0,
-        message: review.consentRequired
-          ? t('Send the request you just reviewed to Anthropic?')
-          : t('Send this search\'s redacted evidence to Anthropic?'),
-        detail: review.consentRequired
-          ? t('This enables Claude reranking under the displayed data policy. Standard matching remains on this device.')
-          : t('Qumaa requires this operating-system confirmation for every outbound rerank.')
-      })
-      if (response !== 1) throw new Error('Claude reranking was cancelled.')
-
-      return maintenance.runOperation(() => {
-        const session = searchSessions.get(args.sessionId)
-        const apiKey = getApiKey()
-        if (!apiKey) throw new Error('Protected credential storage could not unlock the API key.')
-        if (getSetting(RERANK_KEY) !== 'true') throw new Error('Reranking is not enabled.')
-        if (review.consentRequired) {
-          setSetting(RERANK_CONSENT_KEY, CLAUDE_RERANK_CONSENT_VERSION)
-        }
-        return rerank({
-          apiKey,
-          jobDescription: session.jobDescription,
-          results: session.response.results
-        })
-      })
-    }
-  )
+  ipcMain.handle(CH.searchRerank, (_e, rawArgs: unknown) => {
+    const args = parseIpc(ipcSchemas.rerankArgs, rawArgs, 'rerank request')
+    return rerankWithConfirmation(args, () => mainWindow!,
+      () => standaloneSearchSession(args.sessionId), (ordered) => ordered)
+  })
 
   ipcMain.handle(CH.settingsSetTheme, (_e, rawTheme: unknown) => {
     const theme = parseIpc(ipcSchemas.theme, rawTheme, 'theme')
@@ -788,7 +759,7 @@ function registerHandlers(): void {
       cancelId: 0,
       message: t(staged.resumeCount === 1 ? 'Replace this library with {count} backed-up resume?' : 'Replace this library with {count} backed-up resumes?', { count: staged.resumeCount }),
       detail:
-        t("The current library is kept only while Qumaa validates the restored search index, then removed automatically. Restoring removes this device's API key, watched folder, original-file paths, and window state.")
+        t("The current library is kept only while Qumaa validates the restored search index, then removed automatically. Restoring removes this device's API keys, watched folder, original-file paths, and window state.")
     })
     if (response !== 1) {
       discardStagedRestore(staged)
@@ -854,7 +825,7 @@ function registerHandlers(): void {
       cancelId: 0,
       message: t("Delete all data?"),
       detail:
-        t(resumeCount === 1 ? 'This removes all {count} resume from the library, along with your settings, watched folder, and saved API key. The original resume files on disk are not touched. This cannot be undone.' : 'This removes all {count} resumes from the library, along with your settings, watched folder, and saved API key. The original resume files on disk are not touched. This cannot be undone.', { count: resumeCount })
+        t(resumeCount === 1 ? 'This removes all {count} resume from the library, along with your settings, watched folder, and saved API keys. The original resume files on disk are not touched. This cannot be undone.' : 'This removes all {count} resumes from the library, along with your settings, watched folder, and saved API keys. The original resume files on disk are not touched. This cannot be undone.', { count: resumeCount })
     })
     if (response !== 1) return false
 

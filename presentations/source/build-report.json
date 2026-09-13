@@ -1,0 +1,218 @@
+{
+  "slides": 24,
+  "language": "en",
+  "contentsPage": 2,
+  "sha256": "34902dd14b0acab82dd8a72f1fa3ee4b429e372de9ccbf2365ad6f06a8f4c320",
+  "pages": [
+    {
+      "page": 1,
+      "name": "introduction",
+      "title": "Qumaa: application and recruiter guide",
+      "screenshots": [
+        "01-jobs.png"
+      ],
+      "speakerNotes": true
+    },
+    {
+      "page": 2,
+      "name": "contents",
+      "title": "Table of contents",
+      "screenshots": [],
+      "speakerNotes": true
+    },
+    {
+      "page": 3,
+      "name": "workspace",
+      "title": "Workspace navigation",
+      "screenshots": [
+        "01-jobs.png"
+      ],
+      "speakerNotes": true
+    },
+    {
+      "page": 4,
+      "name": "workflow",
+      "title": "Recruiting workflow",
+      "screenshots": [],
+      "speakerNotes": true
+    },
+    {
+      "page": 5,
+      "name": "library",
+      "title": "Importing the CV library",
+      "screenshots": [
+        "02-library.png"
+      ],
+      "speakerNotes": true
+    },
+    {
+      "page": 6,
+      "name": "saved-job",
+      "title": "Creating a saved job",
+      "screenshots": [
+        "03-job-editor.png"
+      ],
+      "speakerNotes": true
+    },
+    {
+      "page": 7,
+      "name": "express-search",
+      "title": "Express search",
+      "screenshots": [
+        "13-express-form.png"
+      ],
+      "speakerNotes": true
+    },
+    {
+      "page": 8,
+      "name": "criteria",
+      "title": "Defining assessment criteria",
+      "screenshots": [
+        "04-criteria.png"
+      ],
+      "speakerNotes": true
+    },
+    {
+      "page": 9,
+      "name": "matches",
+      "title": "Finding and filtering candidates",
+      "screenshots": [
+        "05-filters.png"
+      ],
+      "speakerNotes": true
+    },
+    {
+      "page": 10,
+      "name": "evidence",
+      "title": "Interpreting scores and evidence",
+      "screenshots": [
+        "06-evidence.png"
+      ],
+      "speakerNotes": true
+    },
+    {
+      "page": 11,
+      "name": "reviews",
+      "title": "Recording candidate reviews",
+      "screenshots": [
+        "07-review.png"
+      ],
+      "speakerNotes": true
+    },
+    {
+      "page": 12,
+      "name": "profiles",
+      "title": "Maintaining candidate profiles",
+      "screenshots": [
+        "08-profile.png"
+      ],
+      "speakerNotes": true
+    },
+    {
+      "page": 13,
+      "name": "comparison",
+      "title": "Comparing candidates",
+      "screenshots": [
+        "09-comparison-header.png",
+        "09-comparison-criteria.png"
+      ],
+      "speakerNotes": true
+    },
+    {
+      "page": 14,
+      "name": "shortlist",
+      "title": "Preparing and exporting a shortlist",
+      "screenshots": [
+        "10-shortlist.png"
+      ],
+      "speakerNotes": true
+    },
+    {
+      "page": 15,
+      "name": "versions",
+      "title": "Linking updated CV versions",
+      "screenshots": [
+        "11-versions.png"
+      ],
+      "speakerNotes": true
+    },
+    {
+      "page": 16,
+      "name": "refresh",
+      "title": "Refreshing saved matches",
+      "screenshots": [
+        "12-refresh.png",
+        "12-refresh-action.png"
+      ],
+      "speakerNotes": true
+    },
+    {
+      "page": 17,
+      "name": "status",
+      "title": "Changing job status",
+      "screenshots": [
+        "16-status.png"
+      ],
+      "speakerNotes": true
+    },
+    {
+      "page": 18,
+      "name": "hiring",
+      "title": "Recording a hiring outcome",
+      "screenshots": [
+        "17-hiring.png"
+      ],
+      "speakerNotes": true
+    },
+    {
+      "page": 19,
+      "name": "ai-settings",
+      "title": "Selecting an AI provider and model",
+      "screenshots": [
+        "18-ai-settings.png"
+      ],
+      "speakerNotes": true
+    },
+    {
+      "page": 20,
+      "name": "ai-review",
+      "title": "Reviewing data before AI reranking",
+      "screenshots": [
+        "19-ai-review.png"
+      ],
+      "speakerNotes": true
+    },
+    {
+      "page": 21,
+      "name": "ai-workflow",
+      "title": "Understanding an AI rerank",
+      "screenshots": [],
+      "speakerNotes": true
+    },
+    {
+      "page": 22,
+      "name": "watched-folder",
+      "title": "Using a watched folder",
+      "screenshots": [
+        "14-watched-folder.png"
+      ],
+      "speakerNotes": true
+    },
+    {
+      "page": 23,
+      "name": "backups",
+      "title": "Backing up and restoring records",
+      "screenshots": [
+        "14-backups.png"
+      ],
+      "speakerNotes": true
+    },
+    {
+      "page": 24,
+      "name": "reference",
+      "title": "Reference: where information is kept",
+      "screenshots": [],
+      "speakerNotes": true
+    }
+  ]
+}

@@ -62,6 +62,7 @@ vi.mock('../src/main/db/index.js', () => ({
 const {
   finishPendingSecretCleanup,
   getApiKey,
+  getApiKeyRevision,
   getApiKeyStatus,
   hasApiKey,
   protectLegacyApiKey,
@@ -80,6 +81,64 @@ beforeEach(() => {
 })
 
 describe('API key storage', () => {
+  it('keeps provider credentials independent and defaults legacy calls to Anthropic', () => {
+    setApiKey(SECRET)
+    setApiKey('sk-test-openai-only', 'openai')
+    expect(getApiKey('anthropic')).toBe(SECRET)
+    expect(getApiKey('openai')).toBe('sk-test-openai-only')
+    expect(store.get('openaiApiKey')).not.toContain('sk-test-openai-only')
+
+    setApiKey(null, 'openai')
+    expect(getApiKey('openai')).toBeNull()
+    expect(getApiKey()).toBe(SECRET)
+    setApiKey('sk-test-openai-only', 'openai')
+    setApiKey(null)
+    expect(getApiKey()).toBeNull()
+    expect(getApiKey('openai')).toBe('sk-test-openai-only')
+  })
+
+  it('reads statuses and credential revisions for both providers without keychain access', () => {
+    setApiKey(SECRET)
+    setApiKey('sk-test-openai-only', 'openai')
+    const anthropicRevision = getApiKeyRevision('anthropic')
+    const openaiRevision = getApiKeyRevision('openai')
+    vi.clearAllMocks()
+
+    for (const provider of ['anthropic', 'openai'] as const) {
+      expect(hasApiKey(provider)).toBe(true)
+      expect(getApiKeyStatus(provider)).toBe('protected')
+      expect(getApiKeyRevision(provider)).toMatch(/^[a-f0-9]{64}$/)
+    }
+    expect(safeStorage.decryptString).not.toHaveBeenCalled()
+    expect(safeStorage.encryptString).not.toHaveBeenCalled()
+    expect(safeStorage.isEncryptionAvailable).not.toHaveBeenCalled()
+
+    setApiKey('sk-test-openai-replacement', 'openai')
+    expect(getApiKeyRevision('anthropic')).toBe(anthropicRevision)
+    expect(getApiKeyRevision('openai')).not.toBe(openaiRevision)
+    const replacementRevision = getApiKeyRevision('openai')
+    setApiKey(null, 'openai')
+    expect(getApiKeyRevision('openai')).not.toBe(replacementRevision)
+  })
+
+  it('protects only the requested legacy provider', () => {
+    store.set(KEY, SECRET)
+    store.set('openaiApiKey', 'sk-test-openai-legacy')
+    expect(protectLegacyApiKey('openai')).toBe(true)
+    expect(getApiKey('openai')).toBe('sk-test-openai-legacy')
+    expect(getApiKeyStatus('anthropic')).toBe('migration-needed')
+    expect(store.get(KEY)).toBe(SECRET)
+  })
+
+  it('fails closed for an OpenAI key without modifying either provider', () => {
+    setApiKey(SECRET)
+    const anthropicValue = store.get(KEY)
+    safeStorage.available = false
+    expect(() => setApiKey('sk-test-openai-only', 'openai')).toThrow('Protected credential storage is unavailable')
+    expect(store.get(KEY)).toBe(anthropicValue)
+    expect(store.has('openaiApiKey')).toBe(false)
+  })
+
   it('round trips a key through encryption', () => {
     setApiKey(SECRET)
     expect(getApiKey()).toBe(SECRET)

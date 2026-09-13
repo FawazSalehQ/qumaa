@@ -6,6 +6,7 @@ import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import { CH } from '../shared/channels.js'
 import { copyResumeRefs, resolveNativeFilePaths } from './bridge-input.js'
 import type { RecruitingApi } from '../shared/recruiting.js'
+import type { RerankConfig, RerankProvider } from '../shared/rerank.js'
 import type {
   AppSettings,
   BackupSummary,
@@ -25,8 +26,22 @@ import type {
 const recruiting: RecruitingApi = {
   listJobs: () => ipcRenderer.invoke(CH.recruitingListJobs),
   saveJob: (input) => ipcRenderer.invoke(CH.recruitingSaveJob, input),
+  changeJobStatus: (input) => ipcRenderer.invoke(CH.recruitingChangeJobStatus, {
+    ...input,
+    ...(input.placement ? { placement: {
+      hired: copyResumeRefs([input.placement.hired])[0],
+      ...(input.placement.backup2 ? { backup2: copyResumeRefs([input.placement.backup2])[0] } : {}),
+      ...(input.placement.backup3 ? { backup3: copyResumeRefs([input.placement.backup3])[0] } : {})
+    } } : {})
+  }),
   getJob: (id) => ipcRenderer.invoke(CH.recruitingGetJob, id),
   searchJob: (id) => ipcRenderer.invoke(CH.recruitingSearchJob, id),
+  searchTemporary: (input) => ipcRenderer.invoke(CH.recruitingSearchTemporary, input),
+  saveTemporary: (input) => ipcRenderer.invoke(CH.recruitingSaveTemporary, input),
+  discardTemporary: (id) => ipcRenderer.invoke(CH.recruitingDiscardTemporary, id),
+  exportTemporary: (input) => ipcRenderer.invoke(CH.recruitingExportTemporary, input),
+  previewRerank: (input) => ipcRenderer.invoke(CH.recruitingRerankPreview, input),
+  rerank: (input) => ipcRenderer.invoke(CH.recruitingRerank, input),
   getEvidence: (input) => ipcRenderer.invoke(CH.recruitingGetEvidence, {
     jobId: input.jobId, resumes: copyResumeRefs(input.resumes)
   }),
@@ -116,12 +131,14 @@ const api = {
     setLanguage: (language: AppSettings['language']): Promise<AppSettings['language']> =>
       ipcRenderer.invoke(CH.settingsSetLanguage, language),
     /** Write-only: the key is never read back into the renderer. */
-    setApiKey: (key: string | null): Promise<void> =>
-      ipcRenderer.invoke(CH.settingsSetApiKey, key),
-    protectLegacyApiKey: (): Promise<boolean> =>
-      ipcRenderer.invoke(CH.settingsProtectLegacyApiKey),
+    setApiKey: (key: string | null, provider: RerankProvider = 'anthropic'): Promise<void> =>
+      ipcRenderer.invoke(CH.settingsSetApiKey, key, provider),
+    protectLegacyApiKey: (provider: RerankProvider = 'anthropic'): Promise<boolean> =>
+      ipcRenderer.invoke(CH.settingsProtectLegacyApiKey, provider),
     setRerank: (enabled: boolean): Promise<void> =>
       ipcRenderer.invoke(CH.settingsSetRerank, enabled),
+    setRerankConfig: (config: RerankConfig): Promise<void> =>
+      ipcRenderer.invoke(CH.settingsSetRerankConfig, config),
     resetRerankConsent: (): Promise<void> =>
       ipcRenderer.invoke(CH.settingsResetRerankConsent),
     stats: (): Promise<DbStats> => ipcRenderer.invoke(CH.settingsStats),

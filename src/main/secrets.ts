@@ -1,5 +1,5 @@
 /**
- * Storage for the only secret this app holds: the optional Anthropic API key.
+ * Protected storage for the optional Anthropic and OpenAI API keys.
  *
  * The settings table is a plain SQLite file, so a key written there sits in
  * cleartext on disk for anything that can read the user's home directory.
@@ -19,9 +19,14 @@
  * protects or removes it. New plaintext keys are never written to the database.
  */
 import { safeStorage } from 'electron'
+import { createHash } from 'node:crypto'
+import type { RerankProvider } from '../shared/rerank.js'
 import { checkpointWalOrThrow, getDb, getSetting, setSetting } from './db/index.js'
 
-const KEY = 'anthropicApiKey'
+const KEYS: Record<RerankProvider, string> = {
+  anthropic: 'anthropicApiKey',
+  openai: 'openaiApiKey'
+}
 const PREFIX = 'enc.v1:'
 const CLEANUP_KEY = 'credentialCleanupPending'
 
@@ -36,7 +41,7 @@ export class SecureStorageUnavailableError extends Error {
 
 export class ApiKeyMigrationRequiredError extends Error {
   constructor() {
-    super('Protect the API key saved by the older Qumaa version before using Claude reranking.')
+    super('Protect the API key saved by the older Qumaa version before using AI reranking.')
     this.name = 'ApiKeyMigrationRequiredError'
   }
 }
@@ -67,20 +72,25 @@ function encrypt(key: string): string {
 }
 
 /** Safe startup-time status: inspects only the tag and never touches the keychain. */
-export function getApiKeyStatus(): ApiKeyStatus {
-  const raw = getSetting(KEY)
+export function getApiKeyStatus(provider: RerankProvider = 'anthropic'): ApiKeyStatus {
+  const raw = getSetting(KEYS[provider])
   if (!raw) return 'none'
   return raw.startsWith(PREFIX) ? 'protected' : 'migration-needed'
 }
 
 /** Whether a usable protected key is stored. Never reports legacy plaintext as safe. */
-export function hasApiKey(): boolean {
-  return getApiKeyStatus() === 'protected'
+export function hasApiKey(provider: RerankProvider = 'anthropic'): boolean {
+  return getApiKeyStatus(provider) === 'protected'
+}
+
+/** Main-only credential identity for invalidating pending sends. No keychain access. */
+export function getApiKeyRevision(provider: RerankProvider = 'anthropic'): string {
+  return createHash('sha256').update(getSetting(KEYS[provider]) ?? '').digest('hex')
 }
 
 /** The plaintext key. Touches the keychain, so only call it to use the key. */
-export function getApiKey(): string | null {
-  const raw = getSetting(KEY)
+export function getApiKey(provider: RerankProvider = 'anthropic'): string | null {
+  const raw = getSetting(KEYS[provider])
   if (!raw) return null
 
   if (!raw.startsWith(PREFIX)) throw new ApiKeyMigrationRequiredError()
@@ -92,15 +102,15 @@ export function getApiKey(): string | null {
   }
 }
 
-function replaceLegacyValue(value: string | null): void {
+function replaceLegacyValue(value: string | null, provider: RerankProvider): void {
   const database = getDb()
   const write = database.prepare(
     'INSERT INTO settings(key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
   )
   const remove = database.prepare('DELETE FROM settings WHERE key = ?')
   database.transaction(() => {
-    if (value === null) remove.run(KEY)
-    else write.run(KEY, value)
+    if (value === null) remove.run(KEYS[provider])
+    else write.run(KEYS[provider], value)
     write.run(CLEANUP_KEY, 'true')
   })()
 }
@@ -109,29 +119,29 @@ function replaceLegacyValue(value: string | null): void {
  * Saves or removes a key. Returns true when old plaintext pages require the
  * exclusive cleanup pass below.
  */
-export function setApiKey(key: string | null): boolean {
+export function setApiKey(key: string | null, provider: RerankProvider = 'anthropic'): boolean {
   const trimmed = key?.trim()
-  const replacingLegacy = getApiKeyStatus() === 'migration-needed'
+  const replacingLegacy = getApiKeyStatus(provider) === 'migration-needed'
   if (!trimmed) {
-    if (replacingLegacy) replaceLegacyValue(null)
-    else getDb().prepare('DELETE FROM settings WHERE key = ?').run(KEY)
+    if (replacingLegacy) replaceLegacyValue(null, provider)
+    else getDb().prepare('DELETE FROM settings WHERE key = ?').run(KEYS[provider])
     return replacingLegacy
   }
 
   // Fail closed. The caller gets an actionable error and the database remains
   // untouched rather than quietly becoming a plaintext credential store.
   const protectedValue = encrypt(trimmed)
-  if (replacingLegacy) replaceLegacyValue(protectedValue)
-  else setSetting(KEY, protectedValue)
+  if (replacingLegacy) replaceLegacyValue(protectedValue, provider)
+  else setSetting(KEYS[provider], protectedValue)
   return replacingLegacy
 }
 
 /** Deliberate user action that protects the legacy value without exposing it. */
-export function protectLegacyApiKey(): boolean {
-  const raw = getSetting(KEY)
+export function protectLegacyApiKey(provider: RerankProvider = 'anthropic'): boolean {
+  const raw = getSetting(KEYS[provider])
   if (!raw || raw.startsWith(PREFIX)) return false
   const protectedValue = encrypt(raw)
-  replaceLegacyValue(protectedValue)
+  replaceLegacyValue(protectedValue, provider)
   return true
 }
 

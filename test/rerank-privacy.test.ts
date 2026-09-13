@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { MatchResult } from '../src/shared/types.js'
+import { RERANK_MODELS, RERANK_CONSENT_VERSION, type RerankConfig } from '../src/shared/rerank.js'
 import {
   buildRerankPreview,
   CLAUDE_RERANK_CONSENT_VERSION,
@@ -142,5 +143,50 @@ describe('Claude rerank privacy', () => {
     expect(body).toContain('candidate-15')
     expect(body).not.toContain('candidate-16')
     expect(body).not.toContain('private16@example.com')
+  })
+})
+
+describe('provider-neutral preview privacy and schema', () => {
+  const configs: RerankConfig[] = Object.entries(RERANK_MODELS).flatMap(([provider, models]) => models.map((model) => ({ provider: provider as RerankConfig['provider'], model: model.id })))
+
+  it.each(configs)('preserves redaction, opaque identities, bounds, and strict schema for $provider / $model', (config) => {
+    const results = Array.from({ length: 17 }, () => candidate())
+    const preview = buildRerankPreview('Senior platform engineer', results, config)
+    expect(preview).toMatchObject({ consentVersion: RERANK_CONSENT_VERSION, provider: config.provider === 'anthropic' ? 'Anthropic' : 'OpenAI', model: config.model, candidateCount: 15, totalResultCount: 17 })
+    const serialized = JSON.stringify(preview)
+    expect(serialized).not.toMatch(/987654|Noura Al-Qahtani|noura@example.com|\+966 50 123 4567|Riyadh, Saudi Arabia|\/Users\/noura|apiKey/)
+    expect(serialized).toContain('candidate-15')
+    expect(serialized).not.toContain('candidate-16')
+    expect(serialized).toContain('[REDACTED NAME]')
+    expect(() => structuredClone(preview)).not.toThrow()
+    const request = preview.requestBody as Record<string, any>
+    const evidence = JSON.parse(config.provider === 'anthropic' ? request.messages[0].content : request.input[0].content)
+    expect(evidence.jobPosting).toBe('Senior platform engineer')
+    expect(evidence.candidates).toHaveLength(15)
+    for (const item of evidence.candidates) {
+      expect(Object.keys(item).sort()).toEqual(['education', 'id', 'passages', 'skillsNotFound', 'skillsPresent', 'yearsExperience'])
+      expect(item.passages.reduce((length: number, passage: { text: string }) => length + passage.text.length, 0)).toBeLessThanOrEqual(2500)
+    }
+    const schema = config.provider === 'anthropic' ? request.output_config.format.schema : request.text.format.schema
+    expect(schema.type).toBe('object')
+    expect(schema.additionalProperties).toBe(false)
+    expect(schema.required).toEqual(['ranking'])
+    const item = schema.properties.ranking.items
+    const itemSchema = item.$ref ? item.$ref.slice(2).split('/').reduce((value: any, key: string) => value[key], schema) : item
+    expect(itemSchema.additionalProperties).toBe(false)
+    expect(itemSchema.required).toEqual(['id', 'rank', 'reason'])
+    if (config.provider === 'openai') {
+      expect(request.text.format).toMatchObject({ type: 'json_schema', name: 'candidate_ranking', strict: true })
+      expect(JSON.stringify(schema)).not.toMatch(/\"(?:allOf|not|dependentRequired|dependentSchemas|if|then|else|\$schema)\"/)
+    }
+  })
+
+  it('uses the same redacted evidence for both provider destinations', () => {
+    const result = candidate()
+    result.evidence.push({ section: 'experience', similarity: 0.8, text: 'Demonstrated platform work. '.repeat(300) })
+    const anthropic = buildRerankPreview('Job text', [result], { provider: 'anthropic', model: 'claude-fable-5-1' }).requestBody as Record<string, any>
+    const openai = buildRerankPreview('Job text', [result], { provider: 'openai', model: 'gpt-5.6' }).requestBody as Record<string, any>
+    expect(anthropic.messages[0].content).toBe(openai.input[0].content)
+    expect(JSON.parse(openai.input[0].content).candidates[0].passages.reduce((size: number, passage: { text: string }) => size + passage.text.length, 0)).toBe(2500)
   })
 })

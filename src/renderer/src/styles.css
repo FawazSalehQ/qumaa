@@ -1264,6 +1264,29 @@ tbody tr.clickable {
   width: min(320px, 100%);
 }
 
+.ai-settings {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-inline-size: 0;
+}
+
+.ai-model-selectors {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr));
+  gap: var(--s3);
+  margin-bottom: var(--s4);
+  max-width: 620px;
+}
+
+.ai-model-selectors label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+.ai-model-selectors select { width: 100%; }
+
 .segmented {
   display: inline-flex;
   gap: 3px;
@@ -1517,7 +1540,7 @@ input[type='checkbox'] {
 }
 
 .consent-dialog {
-  width: min(760px, 100%);
+  width: min(660px, 100%);
   max-height: min(760px, calc(100vh - 48px));
   overflow: auto;
   box-shadow: var(--shadow-panel);
@@ -1529,6 +1552,41 @@ input[type='checkbox'] {
 
 .consent-dialog h4 {
   margin: 18px 0 8px;
+}
+
+.consent-summary {
+  display: grid;
+  gap: var(--s3);
+  margin: var(--s4) 0;
+}
+
+.consent-summary > div {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  gap: var(--s2);
+}
+
+.consent-summary dt {
+  font-weight: 600;
+}
+
+.consent-summary dd {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+.consent-data-toggle {
+  gap: var(--s2);
+}
+
+.consent-data-toggle svg {
+  flex-shrink: 0;
+}
+
+.consent-note {
+  margin: var(--s4) 0;
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
 }
 
 .consent-payload {
@@ -1560,12 +1618,9 @@ input[type='checkbox'] {
 
 .consent-actions {
   align-items: center;
+  justify-content: flex-end;
   gap: var(--s2);
   flex-wrap: wrap;
-}
-
-.consent-actions .muted {
-  max-width: 390px;
 }
 
 /* Keep the posting readable on wide displays and usable when the desktop

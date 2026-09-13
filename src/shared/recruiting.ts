@@ -1,4 +1,4 @@
-import type { EducationLevel, Evidence, MatchResult, ResumeRef, ResumeSummary, SearchResponse } from './types.js'
+import type { ClaudeRerankReview, EducationLevel, Evidence, MatchResult, ResumeRef, ResumeSummary, SearchResponse } from './types.js'
 
 export interface JobPosting {
   position: string
@@ -8,6 +8,33 @@ export interface JobPosting {
 }
 
 export type JobStatus = 'open' | 'on-hold' | 'filled' | 'archived'
+
+/** Main-process snapshots of the people selected for a hiring decision. */
+export interface JobPlacementCandidate {
+  recordKey: string | null
+  name: string | null
+}
+
+export interface JobPlacement {
+  hired: JobPlacementCandidate
+  backup2: JobPlacementCandidate | null
+  backup3: JobPlacementCandidate | null
+}
+
+export interface JobStatusEvent {
+  id: string
+  status: JobStatus
+  at: number
+  kind: 'created' | 'status-changed' | 'placement-updated'
+  placement?: JobPlacement
+}
+
+export interface ChangeJobStatusInput {
+  jobId: string
+  expectedUpdatedAt: number
+  status: JobStatus
+  placement?: { hired: ResumeRef; backup2?: ResumeRef; backup3?: ResumeRef }
+}
 export type ReviewStatus = 'unreviewed' | 'maybe' | 'shortlisted' | 'contacted' | 'not-proceeding'
 export type AssessmentStatus = 'unreviewed' | 'evidence-found' | 'needs-clarification' | 'not-stated' | 'confirmed'
 
@@ -61,6 +88,10 @@ export interface SavedJob {
   createdAt: number
   updatedAt: number
   lastSearchedAt: number | null
+  /** Older jobs may lack history; do not infer unrecorded transition dates. */
+  statusHistory?: JobStatusEvent[]
+  /** Most recent recorded hiring outcome, retained when archived or reopened. */
+  placement?: JobPlacement
   candidateCount: number
   shortlistCount: number
   newResumeCount: number
@@ -73,6 +104,8 @@ export interface CriterionEvidence {
 }
 
 export interface JobWorkspace {
+  /** True for the unsaved, process-local search in Jobs. */
+  temporary?: boolean
   job: SavedJob
   response: SearchResponse | null
   reviews: CandidateReview[]
@@ -104,8 +137,15 @@ export type SaveProfileInput = Omit<CandidateProfile, 'candidateKey' | 'recordKe
 export interface RecruitingApi {
   listJobs(): Promise<SavedJob[]>
   saveJob(input: SaveJobInput): Promise<SavedJob>
+  changeJobStatus(input: ChangeJobStatusInput): Promise<JobWorkspace>
   getJob(id: string): Promise<JobWorkspace>
   searchJob(id: string): Promise<JobWorkspace>
+  searchTemporary(input: Omit<SaveJobInput, 'id'>): Promise<JobWorkspace>
+  saveTemporary(input: { jobId: string; sessionId: string }): Promise<JobWorkspace>
+  discardTemporary(jobId: string): Promise<void>
+  exportTemporary(input: { jobId: string; sessionId: string }): Promise<string | null>
+  previewRerank(input: { jobId: string; sessionId: string }): Promise<ClaudeRerankReview>
+  rerank(input: { jobId: string; sessionId: string; approvalToken: string }): Promise<JobWorkspace>
   getEvidence(input: { jobId: string; resumes: ResumeRef[] }): Promise<Record<string, CriterionEvidence[]>>
   saveReview(input: SaveReviewInput): Promise<CandidateReview>
   reorderShortlist(input: { jobId: string; resumes: ResumeRef[] }): Promise<void>

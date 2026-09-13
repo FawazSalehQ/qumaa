@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { DbStats, ModelStatus, ThemeChoice } from '@shared/types.js'
+import { DEFAULT_RERANK_CONFIG, DEFAULT_RERANK_MODELS, PROVIDER_LABELS, RERANK_MODELS, type RerankConfig, type RerankModel, type RerankProvider } from '@shared/rerank.js'
 import type { Toast } from '../components/Toasts.js'
 import { useI18n } from '../i18n.js'
 import { displayError } from '@shared/i18n.js'
@@ -26,31 +27,63 @@ export default function SettingsView({
   const [rerankOn, setRerankOn] = useState(false)
   const [consentGranted, setConsentGranted] = useState(false)
   const [keyDraft, setKeyDraft] = useState('')
+  const [rerankConfig, setRerankConfig] = useState<RerankConfig>(DEFAULT_RERANK_CONFIG)
+  const [rerankModels, setRerankModels] = useState<Record<RerankProvider, RerankModel>>(DEFAULT_RERANK_MODELS)
+  const [aiBusy, setAiBusy] = useState(false)
+  const [aiReady, setAiReady] = useState(false)
+  const aiMutationInFlight = useRef(false)
+  const loadEpoch = useRef(0)
   const [stats, setStats] = useState<DbStats | null>(null)
   const [dataAction, setDataAction] = useState<'backup' | 'restore' | null>(null)
   const revealLabel = window.api.platform === 'darwin'
     ? 'Show in Finder'
     : 'Show in Explorer'
   const [model, setModel] = useState<ModelStatus | null>(null)
+  const providerLabel = PROVIDER_LABELS[rerankConfig.provider]
+  const aiDisabled = !aiReady || aiBusy || dataAction !== null
 
   const load = useCallback(async () => {
+    const epoch = ++loadEpoch.current
     const [settings, s, m] = await Promise.all([
       window.api.settings.get(),
       window.api.settings.stats(),
       window.api.settings.modelStatus()
     ])
+    if (epoch !== loadEpoch.current) return
     setWatched(settings.watchedFolder)
     setHasKey(settings.hasApiKey)
     setKeyStatus(settings.apiKeyStatus)
     setRerankOn(settings.rerankEnabled)
-    setConsentGranted(settings.claudeConsentGranted)
+    setConsentGranted(settings.rerankConsentGranted)
+    setRerankConfig({ provider: settings.rerankProvider, model: settings.rerankModel })
+    setRerankModels(settings.rerankModels)
+    setAiReady(true)
     setStats(s)
     setModel(m)
   }, [])
 
   useEffect(() => {
-    load()
+    void load().catch((error: unknown) => {
+      onToast([{ id: crypto.randomUUID(), kind: 'error', message: displayError(language, error, 'Could not load settings') }])
+    })
   }, [load])
+
+  const changeAiSetting = async (action: () => Promise<unknown>, fallback: string, success?: string): Promise<void> => {
+    if (aiMutationInFlight.current || !aiReady || dataAction !== null) return
+    aiMutationInFlight.current = true
+    setAiBusy(true)
+    ++loadEpoch.current
+    try {
+      await action()
+      await load()
+      if (success) onToast([{ id: crypto.randomUUID(), kind: 'success', message: t(success) }])
+    } catch (error) {
+      onToast([{ id: crypto.randomUUID(), kind: 'error', message: errorMessage(error, fallback) }])
+    } finally {
+      aiMutationInFlight.current = false
+      setAiBusy(false)
+    }
+  }
 
   /**
    * Main owns the confirmation dialog, so this only reacts to the answer.
@@ -126,7 +159,8 @@ export default function SettingsView({
       setHasKey(restoredSettings.hasApiKey)
       setKeyStatus(restoredSettings.apiKeyStatus)
       setRerankOn(restoredSettings.rerankEnabled)
-      setConsentGranted(restoredSettings.claudeConsentGranted)
+      setConsentGranted(restoredSettings.rerankConsentGranted)
+      setKeyDraft('')
       onThemeChange(restoredSettings.theme)
       await Promise.all([load(), onChanged(true)])
       onToast([
@@ -220,147 +254,82 @@ export default function SettingsView({
 
         <section className="card setting setting-wide" aria-labelledby="rerank-heading">
           <div className="row setting-heading">
-            <h3 id="rerank-heading">{t("Claude rerank")}</h3>
-            <span className="setting-badge">{t("Optional")}</span>
+            <h3 id="rerank-heading">{t('AI reranking')}</h3>
+            <span className="setting-badge">{t('Optional')}</span>
           </div>
-          <div className="desc">
-            <strong>{t('This is the only feature that sends data off your machine.')}</strong>{' '}
-            {t('When you run it, the job posting and redacted matching passages from up to {count} candidates are sent to Anthropic. Qumaa removes detected names, contact details, locations, filenames, and local paths; years of experience, education, and matched or missing skills are also included. The complete request is shown before first use. Everything else stays local. Off unless you add a key and switch it on.', { count: 15 })}
-          </div>
-
-          {keyStatus === 'migration-needed' ? (
-            <div className="credential-warning" role="alert">
-              <p>{t("An older Qumaa version saved this API key without operating-system protection. Protect or remove it before Claude reranking can be used.")}</p>
-              <div className="row">
-                <button
-                  className="btn"
-                  onClick={async () => {
-                    try {
-                      await window.api.settings.protectLegacyApiKey()
-                      await load()
-                      onToast([
-                        {
-                          id: crypto.randomUUID(),
-                          kind: 'success',
-                          message: t('The existing API key is now protected by the operating system.')
-                        }
-                      ])
-                    } catch (error) {
-                      onToast([
-                        {
-                          id: crypto.randomUUID(),
-                          kind: 'error',
-                          message: errorMessage(error, 'Could not protect the existing API key')
-                        }
-                      ])
-                    }
-                  }}
-                >{t("Protect existing key")}</button>
-                <button
-                  className="btn danger"
-                  onClick={async () => {
-                    await window.api.settings.setApiKey(null)
-                    await load()
-                  }}
-                >{t("Remove key")}</button>
+          <p className="desc">{t('Choose a provider and model. Each provider uses its own API key, protected by your operating system.')}</p>
+          <fieldset className="ai-settings" disabled={aiDisabled} aria-busy={aiBusy}>
+            <legend className="sr-only">{t('AI reranking')}</legend>
+            <div className="ai-model-selectors">
+              <label htmlFor="rerank-provider">
+                <span className="label">{t('AI provider')}</span>
+                <select id="rerank-provider" value={rerankConfig.provider} onChange={(event) => {
+                  const provider = event.target.value as RerankProvider
+                  setKeyDraft('')
+                  void changeAiSetting(() => window.api.settings.setRerankConfig({ provider, model: rerankModels[provider] }), 'Could not change the AI provider or model')
+                }}>
+                  {Object.entries(PROVIDER_LABELS).map(([provider, label]) => <option key={provider} value={provider}>{label}</option>)}
+                </select>
+              </label>
+              <label htmlFor="rerank-model">
+                <span className="label">{t('AI model')}</span>
+                <select id="rerank-model" value={rerankConfig.model} onChange={(event) => {
+                  const model = event.target.value as RerankModel
+                  void changeAiSetting(() => window.api.settings.setRerankConfig({ provider: rerankConfig.provider, model }), 'Could not change the AI provider or model')
+                }}>
+                  {RERANK_MODELS[rerankConfig.provider].map((entry) => <option key={entry.id} value={entry.id}>{entry.label}</option>)}
+                </select>
+              </label>
+            </div>
+            <p className="desc">{t('Reranking sends the job posting and redacted evidence from up to {count} candidates to {provider}. You review what will be sent before first use with each model, and confirm every send. Local matching stays on your device.', { count: 15, provider: providerLabel })}</p>
+            {keyStatus === 'migration-needed' ? (
+              <div className="credential-warning" role="alert">
+                <p>{t('An older Qumaa version saved this API key without operating-system protection. Protect or remove it before AI reranking can be used.')}</p>
+                <div className="row">
+                  <button className="btn" onClick={() => void changeAiSetting(
+                    () => window.api.settings.protectLegacyApiKey(rerankConfig.provider),
+                    'Could not protect the existing API key',
+                    'The existing API key is now protected by the operating system.'
+                  )}>{t('Protect existing key')}</button>
+                  <button className="btn danger" onClick={() => void changeAiSetting(
+                    () => window.api.settings.setApiKey(null, rerankConfig.provider), 'Could not remove the API key'
+                  )}>{t('Remove key')}</button>
+                </div>
               </div>
-            </div>
-          ) : hasKey ? (
-            <div className="row">
-              <span className="muted">{t("API key stored")}</span>
-              <label className="row toggle">
+            ) : hasKey ? (
+              <div className="row">
+                <span className="muted">{t('{provider} API key stored', { provider: providerLabel })}</span>
+                <label className="row toggle">
+                  <input type="checkbox" checked={rerankOn} onChange={(event) => {
+                    const enabled = event.target.checked
+                    void changeAiSetting(() => window.api.settings.setRerank(enabled), 'Could not change the rerank setting')
+                  }} />{t('Enable reranking')}
+                </label>
+                <span className="spacer" />
+                {consentGranted && <button className="btn sm" onClick={() => void changeAiSetting(
+                  () => window.api.settings.resetRerankConsent(),
+                  'Could not reset the sharing review',
+                  'Qumaa will show the sharing review for this model next time.'
+                )}>{t('Review sharing again')}</button>}
+                <button className="btn sm danger" onClick={() => void changeAiSetting(
+                  () => window.api.settings.setApiKey(null, rerankConfig.provider), 'Could not remove the API key'
+                )}>{t('Remove key')}</button>
+              </div>
+            ) : (
+              <div className="row">
+                <label className="sr-only" htmlFor="rerank-api-key">{t('{provider} API key', { provider: providerLabel })}</label>
                 <input
-                  type="checkbox"
-                  checked={rerankOn}
-                  onChange={async (e) => {
-                    try {
-                      await window.api.settings.setRerank(e.target.checked)
-                      await load()
-                    } catch (error) {
-                      onToast([
-                        {
-                          id: crypto.randomUUID(),
-                          kind: 'error',
-                          message: errorMessage(error, 'Could not change the rerank setting')
-                        }
-                      ])
-                    }
-                  }}
-                />{t("Enable reranking")}</label>
-              <span className="spacer" />
-              {consentGranted && (
-                <button
-                  className="btn sm"
-                  onClick={async () => {
-                    await window.api.settings.resetRerankConsent()
-                    await load()
-                    onToast([
-                      {
-                        id: crypto.randomUUID(),
-                        kind: 'info',
-                        message: t('Qumaa will show the full Claude sharing preview next time.')
-                      }
-                    ])
-                  }}
-                >{t("Review sharing again")}</button>
-              )}
-              <button
-                className="btn sm danger"
-                onClick={async () => {
-                  try {
-                    await window.api.settings.setApiKey(null)
-                    await load()
-                  } catch (error) {
-                    onToast([
-                      {
-                        id: crypto.randomUUID(),
-                        kind: 'error',
-                        message: errorMessage(error, 'Could not remove the API key')
-                      }
-                    ])
-                  }
-                }}
-              >{t("Remove key")}</button>
-            </div>
-          ) : (
-            <div className="row">
-              <label className="sr-only" htmlFor="anthropic-api-key">{t("Anthropic API key")}</label>
-              <input
-                id="anthropic-api-key"
-                type="password" dir="ltr"
-                placeholder="sk-ant-…"
-                value={keyDraft}
-                onChange={(e) => setKeyDraft(e.target.value)}
-                className="api-key-input"
-              />
-              <button
-                className="btn"
-                disabled={!keyDraft.trim()}
-                onClick={async () => {
-                  try {
-                    await window.api.settings.setApiKey(keyDraft)
-                    setKeyDraft('')
-                    await load()
-                    onToast([
-                      {
-                        id: crypto.randomUUID(),
-                        kind: 'success',
-                        message: t('API key saved in protected operating-system storage.')
-                      }
-                    ])
-                  } catch (error) {
-                    onToast([
-                      {
-                        id: crypto.randomUUID(),
-                        kind: 'error',
-                        message: errorMessage(error, 'Could not save the API key securely')
-                      }
-                    ])
-                  }
-                }}
-              >{t("Save key")}</button>
-            </div>
-          )}
+                  id="rerank-api-key" type="password" dir="ltr" autoComplete="off" spellCheck={false}
+                  placeholder={rerankConfig.provider === 'anthropic' ? 'sk-ant-…' : 'sk-…'}
+                  value={keyDraft} onChange={(event) => setKeyDraft(event.target.value)} className="api-key-input"
+                />
+                <button className="btn" disabled={!keyDraft.trim()} onClick={() => void changeAiSetting(async () => {
+                  await window.api.settings.setApiKey(keyDraft, rerankConfig.provider)
+                  setKeyDraft('')
+                }, 'Could not save the API key securely', 'API key saved in protected operating-system storage.')}>{t('Save key')}</button>
+              </div>
+            )}
+          </fieldset>
         </section>
 
         <section className="card setting setting-wide" aria-labelledby="data-heading">
@@ -378,10 +347,10 @@ export default function SettingsView({
           <div className="desc">{t("Uninstalling the app does not remove this data.")}</div>
           <div className="desc">{t("Portable backups include resume text, saved jobs, recruiter profiles, review notes, and portable preferences. On restore, Qumaa rebuilds the search index; refresh your saved jobs to generate updated matches. API keys, watched folders, original-file paths, consent, and window position are excluded. Backup files are not encrypted, so store them securely.")}</div>
           <div className="row">
-            <button className="btn sm" disabled={dataAction !== null} onClick={() => void backUp()}>
+            <button className="btn sm" disabled={dataAction !== null || aiBusy} onClick={() => void backUp()}>
               {t(dataAction === 'backup' ? 'Backing up…' : 'Back up…')}
             </button>
-            <button className="btn sm" disabled={dataAction !== null} onClick={() => void restore()}>
+            <button className="btn sm" disabled={dataAction !== null || aiBusy} onClick={() => void restore()}>
               {t(dataAction === 'restore' ? 'Restoring…' : 'Restore…')}
             </button>
             <button className="btn sm" onClick={() => void window.api.settings.revealData()}>
@@ -393,7 +362,7 @@ export default function SettingsView({
               <div className="label">{t("Delete local data")}</div>
               <p className="desc">{t("Remove the library and reset your preferences.")}</p>
             </div>
-            <button className="btn sm danger" onClick={() => void wipe()}>{t("Delete all data…")}</button>
+            <button className="btn sm danger" disabled={dataAction !== null || aiBusy} onClick={() => void wipe()}>{t("Delete all data…")}</button>
           </div>
         </section>
 
@@ -404,7 +373,7 @@ export default function SettingsView({
           </div>
           <a
             className="creator-link"
-            href="https://linkedin.com/fawazsalehq"
+            href="https://www.linkedin.com/in/fawazsalehq/"
             target="_blank"
             rel="noopener noreferrer"
             aria-label={t("View Fawaz Aljathnan on LinkedIn (opens in your browser)")}

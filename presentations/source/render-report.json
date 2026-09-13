@@ -1,0 +1,1007 @@
+{
+  "source": "/Users/fawazalqahtani/Desktop/Directory/cv_filter/presentations/Qumaa_Recruiter_Guide.pptx",
+  "sourceSha256": "34902dd14b0acab82dd8a72f1fa3ee4b429e372de9ccbf2365ad6f06a8f4c320",
+  "language": "en",
+  "sourceStructure": {
+    "slides": 24,
+    "width": 12191999,
+    "height": 6858000,
+    "tocOnSecondPage": true,
+    "slideDetails": [
+      {
+        "number": 1,
+        "name": "introduction",
+        "texts": [
+          "QUMAA",
+          "Qumaa: application and recruiter guide",
+          "Purpose, workflows, and operating guidance",
+          "Actual application · Fictional demo data",
+          "Qumaa v0.1.0-beta.2   /   01",
+          "Application purpose",
+          "Search a local CV library against job requirements, review supporting evidence, and maintain recruiting decisions.",
+          "Demonstration scenario",
+          "Training & Development Manager\nRiyadh food and beverage group\nFictional candidates and screening records"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 9,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "01-jobs.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "01-jobs.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 2,
+        "name": "contents",
+        "texts": [
+          "QUMAA",
+          "Table of contents",
+          "Sections follow the sequence of a recruiting assignment.",
+          "Recruiter guide",
+          "Qumaa v0.1.0-beta.2   /   02",
+          "Workspace and CV library",
+          "03–05",
+          "Navigation, workflow, and importing CVs",
+          "Jobs and search",
+          "06–09",
+          "Saved jobs, Express search, criteria, and filters",
+          "Candidate assessment",
+          "10–15",
+          "Evidence, reviews, profiles, comparison, and shortlists",
+          "Job records",
+          "16–18",
+          "Refreshing matches, status history, and hiring outcomes",
+          "Optional AI reranking",
+          "19–21",
+          "Providers, data review, and result interpretation",
+          "Operations and reference",
+          "22–24",
+          "Watched folders, backups, and record scope"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 23,
+        "largeImages": 0,
+        "screenshots": [],
+        "captions": [],
+        "missingCaptions": [],
+        "links": [
+          {
+            "href": "#slide-3",
+            "x": 0.04875000399852395,
+            "y": 0.25733333333333336,
+            "width": 0.44625003660187307,
+            "height": 0.184
+          },
+          {
+            "href": "#slide-6",
+            "x": 0.04875000399852395,
+            "y": 0.47333333333333333,
+            "width": 0.44625003660187307,
+            "height": 0.184
+          },
+          {
+            "href": "#slide-10",
+            "x": 0.04875000399852395,
+            "y": 0.6893333333333334,
+            "width": 0.44625003660187307,
+            "height": 0.184
+          },
+          {
+            "href": "#slide-16",
+            "x": 0.5152500422613223,
+            "y": 0.25733333333333336,
+            "width": 0.44625003660187307,
+            "height": 0.184
+          },
+          {
+            "href": "#slide-19",
+            "x": 0.5152500422613223,
+            "y": 0.47333333333333333,
+            "width": 0.44625003660187307,
+            "height": 0.184
+          },
+          {
+            "href": "#slide-22",
+            "x": 0.5152500422613223,
+            "y": 0.6893333333333334,
+            "width": 0.44625003660187307,
+            "height": 0.184
+          }
+        ],
+        "emDashCount": 0
+      },
+      {
+        "number": 3,
+        "name": "workspace",
+        "texts": [
+          "QUMAA",
+          "Workspace navigation",
+          "Jobs contains both saved vacancies and Express search.",
+          "Actual application · Fictional demo data",
+          "Qumaa v0.1.0-beta.2   /   03",
+          "Jobs",
+          "Search vacancies; retain reviews, shortlists, and hiring records.",
+          "Library",
+          "Import CVs, inspect candidate details, and link CV versions.",
+          "Settings",
+          "Set preferences, AI providers, watched folders, and backups."
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 11,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "01-jobs.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "01-jobs.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 4,
+        "name": "workflow",
+        "texts": [
+          "QUMAA",
+          "Recruiting workflow",
+          "Example: screening a Training & Development Manager vacancy.",
+          "Recruiter workflow · Editable diagram",
+          "Qumaa v0.1.0-beta.2   /   04",
+          "1",
+          "Import CVs",
+          "Build the local candidate library.",
+          "2",
+          "Define requirements",
+          "Create a saved job or an Express search.",
+          "3",
+          "Find matches",
+          "Review results from the local library.",
+          "4",
+          "Assess candidates",
+          "Check evidence, compare, and record reviews.",
+          "5",
+          "Prepare the shortlist",
+          "Choose candidates, set order, and export.",
+          "6",
+          "Record the outcome",
+          "Update status, hired candidate, and backups.",
+          "When CVs or requirements change, refresh the saved job and review the updated results."
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 24,
+        "largeImages": 0,
+        "screenshots": [],
+        "captions": [],
+        "missingCaptions": [],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 5,
+        "name": "library",
+        "texts": [
+          "QUMAA",
+          "Importing the CV library",
+          "Supported inputs: digital PDF, DOCX, Markdown, and pasted text.",
+          "Actual application · Fictional demo data",
+          "Qumaa v0.1.0-beta.2   /   05",
+          "1",
+          "Open Library",
+          "Choose Add files or Import folder.",
+          "2",
+          "Import the CVs",
+          "Select documents or use Paste text.",
+          "3",
+          "Check processing",
+          "Review import notices and candidate details.",
+          "Local matching requires no API key."
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "02-library.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "02-library.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 6,
+        "name": "saved-job",
+        "texts": [
+          "QUMAA",
+          "Creating a saved job",
+          "Use a saved job for an assignment that requires ongoing records.",
+          "Actual application · Fictional demo data",
+          "Qumaa v0.1.0-beta.2   /   06",
+          "1",
+          "Select New job",
+          "Open Jobs and choose + New job.",
+          "2",
+          "Enter the posting",
+          "Add the role, requirements, and qualifications.",
+          "3",
+          "Save the job",
+          "The new job starts as Open with a timestamp.",
+          "Status changes use the Change status control."
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "03-job-editor.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "03-job-editor.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 7,
+        "name": "express-search",
+        "texts": [
+          "QUMAA",
+          "Express search",
+          "Paste a job and its requirements for a temporary search of the CV library.",
+          "Actual application · Fictional demo data",
+          "Qumaa v0.1.0-beta.2   /   07",
+          "1",
+          "Open Express search",
+          "In Jobs, use the button beside + New job.",
+          "2",
+          "Paste the details",
+          "Enter a description and requirements; find matches.",
+          "3",
+          "Review the results",
+          "Discard the session or choose Save as job.",
+          "Temporary search form",
+          "Nothing is saved unless you choose Save as job."
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 16,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "13-express-form.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [
+          {
+            "name": "13-express-form.png",
+            "text": "Temporary search form"
+          }
+        ],
+        "missingCaptions": [],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 8,
+        "name": "criteria",
+        "texts": [
+          "QUMAA",
+          "Defining assessment criteria",
+          "Separate essential requirements from preferred qualifications.",
+          "Actual application · Fictional demo data",
+          "Qumaa v0.1.0-beta.2   /   08",
+          "1",
+          "Create criteria",
+          "Use requirement lines or select Add criterion.",
+          "2",
+          "Set importance",
+          "Choose Required or Preferred for each item.",
+          "3",
+          "Use clear evidence",
+          "Example: led training across restaurant sites.",
+          "Required criteria do not automatically reject candidates."
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "04-criteria.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "04-criteria.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 9,
+        "name": "matches",
+        "texts": [
+          "QUMAA",
+          "Finding and filtering candidates",
+          "Use the posting to search, then narrow the displayed results.",
+          "Actual application · Fictional demo data",
+          "Qumaa v0.1.0-beta.2   /   09",
+          "1",
+          "Find matches",
+          "Search from the selected job.",
+          "2",
+          "Inspect the ranking",
+          "Use scores to prioritize evidence review.",
+          "3",
+          "Apply filters",
+          "Filter by location, skills, and more.",
+          "Profile corrections are used by screening filters."
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "05-filters.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "05-filters.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 10,
+        "name": "evidence",
+        "texts": [
+          "QUMAA",
+          "Interpreting scores and evidence",
+          "Inspect the underlying CV passages before making an assessment.",
+          "Actual application · Fictional demo data",
+          "Qumaa v0.1.0-beta.2   /   10",
+          "1",
+          "Open a candidate",
+          "Select the candidate name in the results.",
+          "2",
+          "Inspect the evidence",
+          "Read Score breakdown, Matching passages, and CV text.",
+          "3",
+          "Identify questions",
+          "Record relevant gaps for screening or interview.",
+          "A match score is a screening aid, not a hiring decision."
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "06-evidence.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "06-evidence.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 11,
+        "name": "reviews",
+        "texts": [
+          "QUMAA",
+          "Recording candidate reviews",
+          "Job-specific reviews preserve assessments and follow-up questions.",
+          "Actual application · Fictional demo data",
+          "Qumaa v0.1.0-beta.2   /   11",
+          "1",
+          "Open Review",
+          "Choose a review state and enter job notes.",
+          "2",
+          "Assess each criterion",
+          "Record evidence, confirmation, or clarification.",
+          "3",
+          "Save the review",
+          "Save changes before reviewing another person.",
+          "Job notes remain attached to this vacancy."
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "07-review.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "07-review.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 12,
+        "name": "profiles",
+        "texts": [
+          "QUMAA",
+          "Maintaining candidate profiles",
+          "Profiles retain screening information across saved jobs.",
+          "Actual application · Fictional demo data",
+          "Qumaa v0.1.0-beta.2   /   12",
+          "1",
+          "Open the profile",
+          "Choose Add details or Edit profile.",
+          "2",
+          "Record verified details",
+          "Add corrections, salary, notice, availability, and tags.",
+          "3",
+          "Save the profile",
+          "Use job reviews for vacancy-specific decisions.",
+          "Profile notes apply across jobs."
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "08-profile.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "08-profile.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 13,
+        "name": "comparison",
+        "texts": [
+          "QUMAA",
+          "Comparing candidates",
+          "Select two to four candidates and choose Compare candidates.",
+          "Actual application · Fictional demo data",
+          "Qumaa v0.1.0-beta.2   /   13",
+          "Criteria and supporting evidence from the same comparison",
+          "Review the same criteria, screening details, and unresolved questions for each person."
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 7,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "09-comparison-header.png",
+            "editableImage": true
+          },
+          {
+            "name": "09-comparison-criteria.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [
+          {
+            "name": "09-comparison-criteria.png",
+            "text": "Criteria and supporting evidence from the same comparison"
+          }
+        ],
+        "missingCaptions": [
+          "09-comparison-header.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 14,
+        "name": "shortlist",
+        "texts": [
+          "QUMAA",
+          "Preparing and exporting a shortlist",
+          "Choose candidates and set the order for the hiring review.",
+          "Actual application · Fictional demo data",
+          "Qumaa v0.1.0-beta.2   /   14",
+          "1",
+          "Choose candidates",
+          "Set relevant candidates to Shortlisted.",
+          "2",
+          "Arrange the shortlist",
+          "Use the up and down arrows in Shortlist.",
+          "3",
+          "Export the record",
+          "Select Export PDF or Export CSV.",
+          "Exports include the full ordered shortlist."
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "10-shortlist.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "10-shortlist.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 15,
+        "name": "versions",
+        "texts": [
+          "QUMAA",
+          "Linking updated CV versions",
+          "Confirm identity before linking two records as the same person.",
+          "Actual application · Fictional demo data",
+          "Qumaa v0.1.0-beta.2   /   15",
+          "1",
+          "Import the new CV",
+          "Add the updated document to Library.",
+          "2",
+          "Open Resume history",
+          "Select Link another CV in the candidate panel.",
+          "3",
+          "Confirm the link",
+          "Choose the record and select Link as same person.",
+          "Linked versions retain the candidate's recruiting context."
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "11-versions.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "11-versions.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 16,
+        "name": "refresh",
+        "texts": [
+          "QUMAA",
+          "Refreshing saved matches",
+          "Refresh when the library or job requirements change.",
+          "Actual application · Fictional demo data",
+          "Qumaa v0.1.0-beta.2   /   16",
+          "1",
+          "Reopen the job",
+          "Return after importing or updating CVs.",
+          "2",
+          "Read the notice",
+          "Check whether the saved matches are out of date.",
+          "3",
+          "Refresh matches",
+          "Review the updated ranking and evidence.",
+          "Saved reviews and notes remain available after refresh."
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 0,
+        "screenshots": [
+          {
+            "name": "12-refresh.png",
+            "editableImage": true
+          },
+          {
+            "name": "12-refresh-action.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "12-refresh.png",
+          "12-refresh-action.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 17,
+        "name": "status",
+        "texts": [
+          "QUMAA",
+          "Changing job status",
+          "Each recorded status change includes a date and time.",
+          "Actual application · Fictional demo data",
+          "Qumaa v0.1.0-beta.2   /   17",
+          "1",
+          "Open Change status",
+          "Use the control in the selected job.",
+          "2",
+          "Choose the status",
+          "Open, On hold, Filled, or Archived.",
+          "3",
+          "Check the history",
+          "Review the creation and status-change timestamps.",
+          "Archived jobs retain their recorded hiring outcome."
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "16-status.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "16-status.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 18,
+        "name": "hiring",
+        "texts": [
+          "QUMAA",
+          "Recording a hiring outcome",
+          "A filled job identifies the hired person and optional backup candidates.",
+          "Actual application · Fictional demo data",
+          "Qumaa v0.1.0-beta.2   /   18",
+          "1",
+          "Select Filled",
+          "Change the job status after confirming the outcome.",
+          "2",
+          "Choose the candidates",
+          "Select the hired person and backups.",
+          "3",
+          "Save and inspect",
+          "Review the recorded cards, timestamp, and linked CVs.",
+          "Backup #3 requires backup #2."
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "17-hiring.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "17-hiring.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 19,
+        "name": "ai-settings",
+        "texts": [
+          "QUMAA",
+          "Selecting an AI provider and model",
+          "AI reranking is optional and configured in Settings.",
+          "Actual application · Fictional demo data",
+          "Qumaa v0.1.0-beta.2   /   19",
+          "Anthropic",
+          "Sonnet 5\nOpus 5\nFable 5.1",
+          "OpenAI",
+          "GPT-4o mini\nGPT-5.6\nGPT-6 Astra",
+          "Choose AI provider and AI model, add your own provider key, then enable reranking."
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 10,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "18-ai-settings.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "18-ai-settings.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 20,
+        "name": "ai-review",
+        "texts": [
+          "QUMAA",
+          "Reviewing data before AI reranking",
+          "The notice identifies the selected provider and the data to be sent.",
+          "Actual application · Fictional demo data",
+          "Qumaa v0.1.0-beta.2   /   20",
+          "1",
+          "Start from results",
+          "Choose Rerank with the selected model.",
+          "2",
+          "Read the summary",
+          "Open the eye icon, See exported data, for request details.",
+          "3",
+          "Confirm the request",
+          "Approve only after reviewing the information.",
+          "Each rerank requires confirmation before sending."
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "19-ai-review.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "19-ai-review.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 21,
+        "name": "ai-workflow",
+        "texts": [
+          "QUMAA",
+          "Understanding an AI rerank",
+          "The selected model reorders a limited candidate set using the supplied evidence.",
+          "AI reranking · Editable diagram",
+          "Qumaa v0.1.0-beta.2   /   21",
+          "Local results",
+          "The application prepares up to 15 candidates from the local search.",
+          "Reviewed request",
+          "After confirmation, the selected provider receives the posting and redacted passages.",
+          "Returned assessment",
+          "The model returns an order and a short evidence-based reason for each candidate.",
+          "Assessment basis",
+          "Relevant experience, demonstrated responsibility, and evidence for job requirements.",
+          "Reading the result",
+          "Candidate membership and local scores remain unchanged. The model label identifies who produced the order."
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 0,
+        "screenshots": [],
+        "captions": [],
+        "missingCaptions": [],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 22,
+        "name": "watched-folder",
+        "texts": [
+          "QUMAA",
+          "Using a watched folder",
+          "Import incoming CVs from a selected local folder while Qumaa is running.",
+          "Actual application · Fictional demo data",
+          "Qumaa v0.1.0-beta.2   /   22",
+          "1",
+          "Open Settings",
+          "Find the Watched folder section.",
+          "2",
+          "Choose the folder",
+          "Select the local folder used for incoming CVs.",
+          "3",
+          "Review imports",
+          "Check Library and refresh relevant saved jobs.",
+          "Refresh saved matches after new imports."
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "14-watched-folder.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "14-watched-folder.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 23,
+        "name": "backups",
+        "texts": [
+          "QUMAA",
+          "Backing up and restoring records",
+          "Use Settings to create or restore a portable library backup.",
+          "Actual application · Fictional demo data",
+          "Qumaa v0.1.0-beta.2   /   23",
+          "1",
+          "Create a backup",
+          "In Library & backups, select Back up.",
+          "2",
+          "Store it securely",
+          "Backups contain candidate records.",
+          "3",
+          "Restore when needed",
+          "After indexing finishes, refresh saved matches.",
+          "Backups exclude API keys and original CV files."
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 1,
+        "screenshots": [
+          {
+            "name": "14-backups.png",
+            "editableImage": true
+          }
+        ],
+        "captions": [],
+        "missingCaptions": [
+          "14-backups.png"
+        ],
+        "links": [],
+        "emDashCount": 0
+      },
+      {
+        "number": 24,
+        "name": "reference",
+        "texts": [
+          "QUMAA",
+          "Reference: where information is kept",
+          "Use the appropriate record for the information you need to retain.",
+          "Recruiter guide",
+          "Qumaa v0.1.0-beta.2   /   24",
+          "Library and candidate profile",
+          "CV text, linked versions, corrected details, and general screening notes.",
+          "Saved job",
+          "Posting, criteria, results, candidate reviews, shortlist, status history, and hiring outcome.",
+          "Express search",
+          "Temporary posting and search work; retained only if you choose Save as job.",
+          "Optional provider request",
+          "Reviewed posting and redacted passages, sent only after confirmation.",
+          "Prepared by Fawaz Aljathnan",
+          "LinkedIn profile"
+        ],
+        "notesPresent": true,
+        "editableTextShapes": 15,
+        "largeImages": 0,
+        "screenshots": [],
+        "captions": [],
+        "missingCaptions": [],
+        "links": [
+          {
+            "href": "https://www.linkedin.com/in/fawazsalehq/",
+            "x": 0.062250005105807506,
+            "y": 0.844,
+            "width": 0.5362500439837634,
+            "height": 0.042666666666666665
+          },
+          {
+            "href": "https://www.linkedin.com/in/fawazsalehq/",
+            "x": 0.7012500575172291,
+            "y": 0.8453333333333334,
+            "width": 0.23250001906988346,
+            "height": 0.04
+          }
+        ],
+        "emDashCount": 0
+      }
+    ],
+    "shapeWarnings": []
+  },
+  "slides": 24,
+  "dimensions": {
+    "x": 0,
+    "y": 0,
+    "width": 959,
+    "height": 540
+  },
+  "notesExcludedFromScratchCopy": true,
+  "internalLinksExcludedFromScratchCopy": true,
+  "isolatedSlideRendering": true,
+  "attachmentCount": 127,
+  "overflowWarnings": [],
+  "images": [
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-01.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-02.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-03.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-04.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-05.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-06.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-07.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-08.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-09.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-10.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-11.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-12.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-13.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-14.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-15.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-16.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-17.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-18.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-19.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-20.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-21.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-22.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-23.png",
+    "/private/tmp/qumaa-guide-final-en-20260912-a/slide-24.png"
+  ],
+  "validationErrors": [],
+  "pdf": {
+    "path": "/private/tmp/qumaa-guide-final-en-20260912-a/Qumaa_Recruiter_Guide_preview.pdf",
+    "pages": 24,
+    "links": [
+      {
+        "page": 2,
+        "url": null,
+        "targetPage": 3
+      },
+      {
+        "page": 2,
+        "url": null,
+        "targetPage": 6
+      },
+      {
+        "page": 2,
+        "url": null,
+        "targetPage": 10
+      },
+      {
+        "page": 2,
+        "url": null,
+        "targetPage": 16
+      },
+      {
+        "page": 2,
+        "url": null,
+        "targetPage": 19
+      },
+      {
+        "page": 2,
+        "url": null,
+        "targetPage": 22
+      },
+      {
+        "page": 24,
+        "url": "https://www.linkedin.com/in/fawazsalehq/",
+        "targetPage": null
+      },
+      {
+        "page": 24,
+        "url": "https://www.linkedin.com/in/fawazsalehq/",
+        "targetPage": null
+      }
+    ]
+  },
+  "currentSourceSha256": "34902dd14b0acab82dd8a72f1fa3ee4b429e372de9ccbf2365ad6f06a8f4c320",
+  "sourceChangedDuringRender": false
+}

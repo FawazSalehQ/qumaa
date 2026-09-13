@@ -7,6 +7,7 @@ import { skillLabels } from '../ingest/skills.js'
 import { DATABASE_LIMITS, migrateDatabase } from './migrations.js'
 import { pruneStaleDatabaseArtifacts, recoverInterruptedRestore } from './replacement.js'
 import { pruneRecruitingRecords } from '../recruiting/storage.js'
+import { temporarySearch } from '../recruiting/temporary.js'
 import type {
   DbStats,
   EducationLevel,
@@ -238,7 +239,10 @@ export function deleteResume(ref: ResumeRef): boolean {
     if (removed) pruneRecruitingRecords(d)
     return removed
   })()
-  if (deleted) invalidateLibraryUsage()
+  if (deleted) {
+    invalidateLibraryUsage()
+    temporarySearch.prune(new Set(listResumes().map((resume) => resume.recordKey)))
+  }
   return deleted
 }
 
@@ -258,7 +262,10 @@ export function deleteResumes(refs: ResumeRef[]): number {
     pruneRecruitingRecords(db)
     return refs.length
   })()
-  if (deleted > 0) invalidateLibraryUsage()
+  if (deleted > 0) {
+    invalidateLibraryUsage()
+    temporarySearch.prune(new Set(listResumes().map((resume) => resume.recordKey)))
+  }
   return deleted
 }
 
@@ -293,6 +300,7 @@ export function deleteAllData(): void {
     d.prepare('DELETE FROM settings').run()
     d.prepare('DELETE FROM recruiting_records').run()
   })()
+  temporarySearch.clear()
   // VACUUM cannot run inside a transaction.
   d.exec('VACUUM')
   checkpointWalOrThrow('Qumaa could not finish securely deleting all library data.')

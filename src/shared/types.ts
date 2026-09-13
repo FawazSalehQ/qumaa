@@ -80,6 +80,10 @@ export interface MatchResult {
 }
 
 export interface SearchResponse {
+  /** True when the saved job has an applicable AI ordering. Local scores remain unchanged. */
+  reranked?: boolean
+  /** Provider/model that produced this saved ordering, independent of current Settings. */
+  rerankConfig?: import('./rerank.js').RerankConfig
   /** Opaque handle to the immutable main-process result snapshot. */
   sessionId: string
   results: MatchResult[]
@@ -97,11 +101,11 @@ export type JsonValue =
   | JsonValue[]
   | { [key: string]: JsonValue }
 
-/** Renderer-safe description of the exact request body sent for Claude reranking. */
+/** Renderer-safe description of the exact request body sent for optional reranking. */
 export interface ClaudeRerankPreview {
   consentVersion: string
-  provider: 'Anthropic'
-  model: 'claude-sonnet-5'
+  provider: 'Anthropic' | 'OpenAI'
+  model: import('./rerank.js').RerankModel
   candidateCount: number
   totalResultCount: number
   /** The API key is constructor state and is deliberately absent from this body. */
@@ -122,13 +126,16 @@ export interface AppSettings {
   language: import('./i18n.js').Language
   watchedFolder: string | null
   theme: ThemeChoice
-  /** Whether the optional Claude rerank is enabled. Off unless a key is set. */
+  /** Whether optional AI reranking is enabled for the selected provider. */
   rerankEnabled: boolean
+  rerankProvider: import('./rerank.js').RerankProvider
+  rerankModel: import('./rerank.js').RerankModel
+  rerankModels: Record<import('./rerank.js').RerankProvider, import('./rerank.js').RerankModel>
   /** True when a key is stored. The key itself never reaches the renderer. */
   hasApiKey: boolean
   /** Detectable without decrypting or prompting the operating-system keychain. */
   apiKeyStatus: 'none' | 'protected' | 'migration-needed'
-  claudeConsentGranted: boolean
+  rerankConsentGranted: boolean
 }
 
 export interface DbStats {
@@ -147,10 +154,9 @@ export interface BackupSummary {
 
 /** Commands the application menu sends to the renderer. */
 export type MenuCommand =
-  | 'new-search'
+  | 'new-job'
   | 'import-files'
   | 'import-folder'
-  | 'goto-match'
   | 'goto-jobs'
   | 'goto-library'
   | 'goto-settings'

@@ -421,8 +421,50 @@ Requirements:
   const { searchSessions } = await import('./search/sessions.js')
   const posting = { position: 'Backend Engineer', jobDescription: 'Build Python services and operate Kubernetes clusters.', requirements: 'PostgreSQL and AWS', educationAndCertifications: '' }
   const savedJob = recruiting.saveJob({ posting, status: 'open', criteria: [{ id: 'python', text: 'Python services', importance: 'required' }] })
-  const otherJob = recruiting.saveJob({ posting: { ...posting, position: 'Future vacancy' }, status: 'on-hold', criteria: [] })
+  const otherJob = recruiting.saveJob({ posting: { ...posting, position: 'Future vacancy' }, status: 'open', criteria: [] })
   check('persists multiple independent job drafts', recruiting.listJobs().length === 2 && recruiting.getJob(savedJob.id).response === null)
+  check('new jobs record their initial status at creation', savedJob.statusHistory?.length === 1 && savedJob.statusHistory[0].kind === 'created' && savedJob.statusHistory[0].status === 'open' && savedJob.statusHistory[0].at === savedJob.createdAt)
+  const heldJob = recruiting.changeJobStatus({ jobId: otherJob.id, expectedUpdatedAt: otherJob.updatedAt, status: 'on-hold' }).job
+  check('status changes append a timestamp without replacing creation', heldJob.statusHistory?.length === 2 && heldJob.statusHistory[1].status === 'on-hold' && heldJob.statusHistory[1].kind === 'status-changed' && heldJob.statusHistory[1].at > otherJob.createdAt && heldJob.createdAt === otherJob.createdAt)
+  const sameHeldJob = recruiting.changeJobStatus({ jobId: otherJob.id, expectedUpdatedAt: heldJob.updatedAt, status: 'on-hold' }).job
+  check('reselecting the current status creates no artificial history', sameHeldJob.updatedAt === heldJob.updatedAt && sameHeldJob.statusHistory?.length === 2)
+  let statusBypassRejected = false
+  try { recruiting.saveJob({ id: otherJob.id, posting: otherJob.posting, status: 'filled', criteria: [] }) } catch { statusBypassRejected = true }
+  check('posting edits cannot bypass the filled-job requirements', statusBypassRejected && recruiting.getJob(otherJob.id).job.status === 'on-hold')
+  const { temporarySearch } = await import('./recruiting/temporary.js')
+  const recordsBeforeTemporary = (getDb().prepare('SELECT COUNT(*) AS count FROM recruiting_records').get() as { count: number }).count
+  const temporary = await recruiting.searchTemporary({ posting, status: 'open', criteria: [] })
+  const temporaryRef = { jobId: temporary.job.id, sessionId: temporary.response!.sessionId }
+  check('temporary matching creates no saved job or snapshot', temporary.temporary === true && temporary.response!.results.length === stats().resumeCount && (getDb().prepare('SELECT COUNT(*) AS count FROM recruiting_records').get() as { count: number }).count === recordsBeforeTemporary)
+  let temporaryReviewRejected = false
+  try { recruiting.saveReview({ jobId: temporary.job.id, resume: { id: top.resume.id, recordKey: top.resume.recordKey }, status: 'shortlisted', note: 'Must not become an orphan', order: 0, assessments: [] }) } catch { temporaryReviewRejected = true }
+  check('temporary searches cannot create orphaned recruiter reviews', temporaryReviewRejected && (getDb().prepare("SELECT COUNT(*) AS count FROM recruiting_records WHERE kind = 'review'").get() as { count: number }).count === 0)
+  check('temporary exports use the canonical top three', recruiting.getTemporaryExport(temporaryRef).results.map((result) => result.resume.recordKey).join(',') === temporary.response!.results.slice(0, 3).map((result) => result.resume.recordKey).join(','))
+  const temporaryReranked = recruiting.saveJobRerank(temporaryRef, [...temporary.response!.results].reverse().map((result) => ({ ...result, llmReason: 'Temporary candidate evidence.' })), { provider: 'openai', model: 'gpt-6-astra' })
+  check('temporary reranking remains entirely in memory', temporaryReranked.temporary === true && temporaryReranked.response!.reranked === true && (getDb().prepare('SELECT COUNT(*) AS count FROM recruiting_records').get() as { count: number }).count === recordsBeforeTemporary)
+  // Claude sessions can expire or be evicted while this unsaved workspace stays open.
+  searchSessions.clear()
+  let expiredTemporaryClaudeRejected = false
+  try { recruiting.jobRerankSource({ jobId: temporaryReranked.job.id, sessionId: temporaryReranked.response!.sessionId }) } catch { expiredTemporaryClaudeRejected = true }
+  check('retaining temporary results does not extend Claude session authority', expiredTemporaryClaudeRejected)
+  check('temporary export survives expiry of the Claude session cache', recruiting.getTemporaryExport({ jobId: temporaryReranked.job.id, sessionId: temporaryReranked.response!.sessionId }).results[0].resume.recordKey === temporaryReranked.response!.results[0].resume.recordKey)
+  const temporarySaved = recruiting.saveTemporary({ jobId: temporaryReranked.job.id, sessionId: temporaryReranked.response!.sessionId })
+  check('explicit save preserves exact temporary posting, results and Claude reasons', temporarySaved.temporary === false && temporarySaved.job.id !== temporary.job.id && JSON.stringify(temporarySaved.job.posting) === JSON.stringify(posting) && JSON.stringify(temporarySaved.response!.results) === JSON.stringify(temporaryReranked.response!.results) && temporarySearch.id === null)
+  check('saving Express results starts history at the actual save time', temporarySaved.job.statusHistory?.length === 1 && temporarySaved.job.statusHistory[0].kind === 'created' && temporarySaved.job.statusHistory[0].at === temporarySaved.job.createdAt && temporarySaved.job.createdAt >= temporary.job.createdAt)
+  check('saving Express results retains the actual reranking provider and model', temporarySaved.response?.rerankConfig?.provider === 'openai' && temporarySaved.response.rerankConfig.model === 'gpt-6-astra')
+  let promotedCapabilityRejected = false
+  try { recruiting.jobRerankSource(temporaryRef) } catch { promotedCapabilityRejected = true }
+  check('promotion revokes temporary capabilities without addressing the saved job', promotedCapabilityRejected)
+  const concurrentTemporary = await Promise.allSettled([
+    recruiting.searchTemporary({ posting, status: 'open', criteria: [] }),
+    recruiting.searchTemporary({ posting: { ...posting, position: 'Most recent temporary search' }, status: 'open', criteria: [] })
+  ])
+  check('a late temporary search cannot overwrite a newer request', concurrentTemporary[0].status === 'rejected' && concurrentTemporary[1].status === 'fulfilled')
+  const currentTemporary = concurrentTemporary[1].status === 'fulfilled' ? concurrentTemporary[1].value : null
+  recruiting.discardTemporary(temporary.job.id)
+  check('an obsolete discard preserves the current temporary and all saved jobs', currentTemporary !== null && temporarySearch.id === currentTemporary.job.id && recruiting.getJob(temporarySaved.job.id).response!.reranked === true)
+  if (currentTemporary) recruiting.discardTemporary(currentTemporary.job.id)
+  check('discard removes only temporary search state', temporarySearch.id === null && recruiting.listJobs().length === 3)
   const workspace = await recruiting.searchJob(savedJob.id)
   check('ranks the complete local library for a saved job', workspace.response?.results.length === stats().resumeCount)
   const selectedResume = top.resume
@@ -433,6 +475,38 @@ Requirements:
   recruiting.saveProfile({ resume: { id: selectedResume.id, recordKey: selectedResume.recordKey }, ...profileFields })
   check('keeps job decisions independent', recruiting.getJob(otherJob.id).reviews[0].status === 'maybe' && recruiting.getJob(savedJob.id).reviews[0].status === 'shortlisted')
   check('keeps recruiter corrections separate from CV extraction', recruiting.getJob(savedJob.id).response?.results.find((result) => result.resume.recordKey === selectedResume.recordKey)?.resume.name === selectedResume.name)
+  const hiringRefs = workspace.response!.results.slice(0, 3).map(({ resume }) => ({ id: resume.id, recordKey: resume.recordKey }))
+  const fillInput = { jobId: otherJob.id, expectedUpdatedAt: heldJob.updatedAt, status: 'filled' as const }
+  const rejectedPlacements = [
+    undefined,
+    { hired: { ...hiringRefs[0], recordKey: '0'.repeat(64) } },
+    { hired: hiringRefs[0], backup2: hiringRefs[0] },
+    { hired: hiringRefs[0], backup3: hiringRefs[2] }
+  ].map((placement) => {
+    try { recruiting.changeJobStatus({ ...fillInput, placement }); return false } catch { return true }
+  })
+  check('filled jobs require a valid hire and distinct consecutive backup slots', rejectedPlacements.every(Boolean) && recruiting.getJob(otherJob.id).job.statusHistory?.length === 2)
+  const placement = { hired: hiringRefs[0], backup2: hiringRefs[1], backup3: hiringRefs[2] }
+  const filledJob = recruiting.changeJobStatus({ ...fillInput, placement }).job
+  check('records a hire and both backup CV identities in status history', filledJob.status === 'filled' && filledJob.placement?.hired.recordKey === hiringRefs[0].recordKey && filledJob.placement.backup2?.recordKey === hiringRefs[1].recordKey && filledJob.placement.backup3?.recordKey === hiringRefs[2].recordKey && JSON.stringify(filledJob.statusHistory?.at(-1)?.placement) === JSON.stringify(filledJob.placement))
+  let staleStatusRejected = false
+  try { recruiting.changeJobStatus({ jobId: otherJob.id, expectedUpdatedAt: heldJob.updatedAt, status: 'archived' }) } catch { staleStatusRejected = true }
+  check('stale status dialogs cannot overwrite a later hiring decision', staleStatusRejected && recruiting.getJob(otherJob.id).job.status === 'filled')
+  const sameFilledJob = recruiting.changeJobStatus({ ...fillInput, expectedUpdatedAt: filledJob.updatedAt, placement }).job
+  check('saving identical hiring selections creates no duplicate history', sameFilledJob.statusHistory?.length === filledJob.statusHistory?.length && sameFilledJob.updatedAt === filledJob.updatedAt)
+  const adjustedFilledJob = recruiting.changeJobStatus({ ...fillInput, expectedUpdatedAt: filledJob.updatedAt, placement: { hired: hiringRefs[0] } }).job
+  check('editing a filled job records a hiring update without another status change', adjustedFilledJob.statusHistory?.at(-1)?.kind === 'placement-updated' && adjustedFilledJob.placement?.backup2 === null && adjustedFilledJob.placement.backup3 === null)
+  const archivedJob = recruiting.changeJobStatus({ jobId: otherJob.id, expectedUpdatedAt: adjustedFilledJob.updatedAt, status: 'archived' }).job
+  check('archiving retains the previous hiring outcome and recruiter review', archivedJob.placement?.hired.recordKey === hiringRefs[0].recordKey && recruiting.getJob(otherJob.id).reviews[0].note === 'Keep in talent pool')
+  // Simulate a released job whose current status predates status-history support.
+  const legacyRecord = JSON.parse((getDb().prepare("SELECT data FROM recruiting_records WHERE kind = 'job' AND id = ?").get(otherJob.id) as { data: string }).data)
+  delete legacyRecord.statusHistory
+  delete legacyRecord.placement
+  legacyRecord.status = 'filled'
+  getDb().prepare("UPDATE recruiting_records SET data = ? WHERE kind = 'job' AND id = ?").run(JSON.stringify(legacyRecord), otherJob.id)
+  check('legacy jobs do not acquire invented transition dates', recruiting.getJob(otherJob.id).job.statusHistory === undefined && recruiting.getJob(otherJob.id).job.createdAt === otherJob.createdAt)
+  const repairedLegacyJob = recruiting.changeJobStatus({ jobId: otherJob.id, expectedUpdatedAt: legacyRecord.updatedAt, status: 'filled', placement: { hired: hiringRefs[0] } }).job
+  check('legacy filled jobs can record their missing hire with an honest update date', repairedLegacyJob.statusHistory?.length === 1 && repairedLegacyJob.statusHistory[0].kind === 'placement-updated' && repairedLegacyJob.statusHistory[0].at > legacyRecord.updatedAt && repairedLegacyJob.createdAt === otherJob.createdAt)
   const suggested = recruiting.getEvidence({ jobId: savedJob.id, resumes: [{ id: selectedResume.id, recordKey: selectedResume.recordKey }] })[selectedResume.recordKey][0].passage
   // Passage windows intentionally normalise whitespace while chunking. Check
   // the stored canonical passage, not the PDF extractor's original line breaks.
@@ -444,22 +518,49 @@ Requirements:
   let foreignCriterionRejected = false
   try { recruiting.saveReview({ jobId: savedJob.id, resume: { id: selectedResume.id, recordKey: selectedResume.recordKey }, status: 'maybe', note: '', order: 0, assessments: [{ criterionId: 'foreign', status: 'confirmed', note: '' }] }) } catch { foreignCriterionRejected = true }
   check('rejects assessments for another job’s criterion', foreignCriterionRejected)
+  // A released v4 library has the same tables but no saved Claude metadata.
+  getDb().pragma('user_version = 4')
   closeDbForMaintenance()
   const reopenedWorkspace = recruiting.getJob(savedJob.id)
+  check('upgrades v4 recruiting records without losing saved work', getDb().pragma('user_version', { simple: true }) === CURRENT_SCHEMA_VERSION)
   check('reopens saved results and recruiter work after a database restart', reopenedWorkspace.response !== null && reopenedWorkspace.reviews[0].note === 'Arrange technical interview' && reopenedWorkspace.profiles[0].expectedSalary === 'SAR 22000' && !reopenedWorkspace.job.stale)
   check('reconstructs trusted search sessions from canonical stored CV rows', searchSessions.get(reopenedWorkspace.response!.sessionId).response.results.find((result) => result.resume.recordKey === selectedResume.recordKey)?.resume.name === selectedResume.name)
+
+  const rerankRef = { jobId: savedJob.id, sessionId: reopenedWorkspace.response!.sessionId }
+  let wrongJobRejected = false
+  try { recruiting.jobRerankSource({ ...rerankRef, jobId: otherJob.id }) } catch { wrongJobRejected = true }
+  check('binds Claude sessions to their saved job', wrongJobRejected)
+  const reversed = [...reopenedWorkspace.response!.results].reverse().map((result) => ({ ...result, llmReason: 'Relevant production experience.' }))
+  const rerankedWorkspace = recruiting.saveJobRerank(rerankRef, reversed, { provider: 'anthropic', model: 'claude-fable-5-1' })
+  check('stores Claude order while preserving original scores and recruiter decisions', rerankedWorkspace.response!.reranked === true && rerankedWorkspace.response!.results.every((result, index) => result.resume.recordKey === reversed[index].resume.recordKey && result.score === reversed[index].score) && rerankedWorkspace.reviews[0].note === 'Arrange technical interview')
+  let replacedSnapshotRejected = false
+  try { recruiting.saveJobRerank(rerankRef, reversed) } catch { replacedSnapshotRejected = true }
+  check('rejects a late rerank result for a replaced snapshot', replacedSnapshotRejected)
+  closeDbForMaintenance()
+  const reopenedRerank = recruiting.getJob(savedJob.id)
+  check('reopens saved Claude order and reasons after restarting the database', reopenedRerank.response!.reranked === true && reopenedRerank.response!.results[0].resume.recordKey === reversed[0].resume.recordKey && reopenedRerank.response!.results[0].llmReason === 'Relevant production experience.')
+  check('reopens the saved reranking model independently of current preferences', reopenedRerank.response?.rerankConfig?.provider === 'anthropic' && reopenedRerank.response.rerankConfig.model === 'claude-fable-5-1')
 
   const versionOutcome = await ingestText({ text: `${detail!.rawText}\n\nPROJECTS\n2026: Led a Python platform migration and Kubernetes training for thirty engineers.`, fileName: 'maria-updated.md', filePath: '', fileType: 'pasted' })
   if (versionOutcome.status !== 'imported' && versionOutcome.status !== 'near-duplicate') throw new Error('Could not create the CV-version smoke fixture.')
   const newerResume = versionOutcome.resume
   check('discovers new arrivals for previously searched jobs', recruiting.listJobs().find((job) => job.id === savedJob.id)?.newResumeCount === 1 && recruiting.getJob(savedJob.id).job.stale)
+  let staleRerankRejected = false
+  const staleRerank = recruiting.getJob(savedJob.id)
+  try { recruiting.jobRerankSource({ jobId: savedJob.id, sessionId: staleRerank.response!.sessionId }) } catch { staleRerankRejected = true }
+  check('rejects even newly opened Claude sessions when saved matches are stale', staleRerankRejected)
   let staleExportRejected = false
   try { recruiting.getShortlistExport(savedJob.id) } catch { staleExportRejected = true }
   check('requires refreshed rankings before exporting changed libraries', staleExportRejected)
   const primaryRef = { id: selectedResume.id, recordKey: selectedResume.recordKey }
   const versionRef = { id: newerResume.id, recordKey: newerResume.recordKey }
   recruiting.linkVersions({ primary: primaryRef, version: versionRef })
+  let linkedHireRejected = false
+  try { recruiting.changeJobStatus({ jobId: otherJob.id, expectedUpdatedAt: repairedLegacyJob.updatedAt, status: 'filled', placement: { hired: primaryRef, backup2: versionRef } }) } catch { linkedHireRejected = true }
+  check('two linked CV versions cannot fill separate hiring slots', linkedHireRejected)
   const linkedWorkspace = await recruiting.searchJob(savedJob.id)
+  check('refreshing local matches clears saved Claude order and reasons', linkedWorkspace.response!.reranked === false && linkedWorkspace.response!.results.every((result) => !result.llmReason))
+  check('local refresh clears the previous AI model attribution', linkedWorkspace.response?.rerankConfig === undefined)
   check('deduplicates versions using the latest CV while preserving reviews', linkedWorkspace.response?.results.some((result) => result.resume.recordKey === newerResume.recordKey) === true && !linkedWorkspace.response.results.some((result) => result.resume.recordKey === selectedResume.recordKey) && linkedWorkspace.job.shortlistCount === 1)
   const linkedExport = recruiting.getShortlistExport(savedJob.id)
   check('exports the selected candidate with profile corrections and job notes', linkedExport.results.length === 1 && linkedExport.results[0].resume.recordKey === newerResume.recordKey && linkedExport.results[0].resume.name === 'Maria Chen (confirmed)' && linkedExport.notes[newerResume.recordKey] === 'Arrange technical interview')
@@ -467,6 +568,10 @@ Requirements:
   check('unlinking retains recruiter history for both resulting profiles', recruiting.getJob(savedJob.id).job.shortlistCount === 2 && recruiting.listProfiles().filter((profile) => profile.note === 'Recruiter profile note').length === 2)
   recruiting.reorderShortlist({ jobId: savedJob.id, resumes: [versionRef, primaryRef] })
   check('atomically orders selected export candidates', recruiting.getShortlistExport(savedJob.id).results.map((result) => result.resume.recordKey).join(',') === [versionRef.recordKey, primaryRef.recordKey].join(','))
+  const shortlistBeforeRerank = recruiting.getShortlistExport(savedJob.id)
+  const shortlistWorkspace = recruiting.getJob(savedJob.id)
+  recruiting.saveJobRerank({ jobId: savedJob.id, sessionId: shortlistWorkspace.response!.sessionId }, [...shortlistWorkspace.response!.results].reverse())
+  check('Claude candidate order leaves the manually ordered shortlist unchanged', JSON.stringify(recruiting.getShortlistExport(savedJob.id)) === JSON.stringify(shortlistBeforeRerank))
   let incompleteOrderRejected = false
   try { recruiting.reorderShortlist({ jobId: savedJob.id, resumes: [primaryRef] }) } catch { incompleteOrderRejected = true }
   check('rejects stale partial shortlist reorders without changing ranks', incompleteOrderRejected && recruiting.getShortlistExport(savedJob.id).results[0].resume.recordKey === versionRef.recordKey)
@@ -480,6 +585,12 @@ Requirements:
   const changedCriterion = recruiting.getJob(savedJob.id)
   check('invalidates confirmations when a criterion changes but preserves decisions', changedCriterion.job.stale && changedCriterion.reviews[0].assessments.length === 0 && changedCriterion.reviews[0].note === 'Arrange technical interview' && changedCriterion.reviews[0].status === 'shortlisted')
   await recruiting.searchJob(savedJob.id)
+  const beforeHiring = recruiting.getJob(savedJob.id)
+  const hiredWorkspace = recruiting.changeJobStatus({ jobId: savedJob.id, expectedUpdatedAt: beforeHiring.job.updatedAt, status: 'filled', placement: { hired: primaryRef } })
+  check('status-only changes preserve matching scores and recruiter decisions', JSON.stringify(hiredWorkspace.response?.results) === JSON.stringify(beforeHiring.response?.results) && JSON.stringify(hiredWorkspace.reviews) === JSON.stringify(beforeHiring.reviews) && !hiredWorkspace.job.stale)
+  closeDbForMaintenance()
+  const persistedHiring = recruiting.getJob(savedJob.id).job
+  check('hiring evidence and status timestamps survive a database restart', JSON.stringify(persistedHiring.statusHistory) === JSON.stringify(hiredWorkspace.job.statusHistory) && JSON.stringify(persistedHiring.placement) === JSON.stringify(hiredWorkspace.job.placement))
 
   console.log('\n7b. Portable backup and restore')
   const {
@@ -493,6 +604,10 @@ Requirements:
   setSetting('theme', 'dark')
   setSetting('language', 'ar')
   setSetting('anthropicApiKey', 'must-not-leave-this-machine')
+  setSetting('openaiApiKey', 'openai-must-not-leave-this-machine')
+  setSetting('rerankProvider', 'openai')
+  setSetting('rerankModel:openai', 'gpt-6-astra')
+  setSetting('rerankConsent:openai:gpt-6-astra', 'ai-rerank-v2')
   setSetting('watchedFolder', '/machine-specific/resumes')
   setSetting('windowState', '{"x":10,"y":20}')
   setSetting('rerankEnabled', 'true')
@@ -991,11 +1106,13 @@ Requirements:
   check('restores portable preferences', getSetting('theme') === 'dark')
   check('restores the interface language', getSetting('language') === 'ar')
   check('does not restore an API key', getSetting('anthropicApiKey') === null)
+  check('does not restore OpenAI credentials or provider sharing settings', getSetting('openaiApiKey') === null && getSetting('rerankProvider') === null && getSetting('rerankModel:openai') === null && getSetting('rerankConsent:openai:gpt-6-astra') === null)
   check('does not restore a watched folder', getSetting('watchedFolder') === null)
   check('does not restore machine window state', getSetting('windowState') === null)
   check('does not enable cloud reranking without a key', getSetting('rerankEnabled') === null)
   const restoredWorkspace = recruiting.getJob(savedJob.id)
   check('restores jobs, notes, profile corrections and explicit CV history', restoredWorkspace.reviews[0].note === 'Arrange technical interview' && restoredWorkspace.profiles[0].recordKeys.length === 2 && restoredWorkspace.profiles[0].expectedSalary === 'SAR 22000')
+  check('portable restore preserves hiring selections and recorded status dates', JSON.stringify(restoredWorkspace.job.statusHistory) === JSON.stringify(persistedHiring.statusHistory) && JSON.stringify(restoredWorkspace.job.placement) === JSON.stringify(persistedHiring.placement))
   check('requires fresh local matching after restore instead of trusting backup rankings', restoredWorkspace.response === null && restoredWorkspace.job.stale)
   check('retains the exact pre-restore database for rollback', statSync(restored.rollbackPath).size > 0)
 
@@ -1004,13 +1121,20 @@ Requirements:
   check('rollback preserves the previous local-only settings', getSetting('anthropicApiKey') !== null)
   check('rollback consumes its private recovery file', !existsSync(restored.rollbackPath))
 
+  await recruiting.searchTemporary({ posting, status: 'open', criteria: [] })
   const committed = await restorePortableBackup(backupPath)
   check('a second restore returns to the sanitised portable state', getSetting('anthropicApiKey') === null)
   commitRestore(committed.rollbackPath)
+  check('committing a restored library clears temporary search state', temporarySearch.id === null)
   check('committing a healthy restore removes its rollback file', !existsSync(committed.rollbackPath))
 
+  const beforePrivateDeletion = await recruiting.searchJob(savedJob.id)
+  recruiting.saveJobRerank({ jobId: savedJob.id, sessionId: beforePrivateDeletion.response!.sessionId }, beforePrivateDeletion.response!.results.map((result) => ({ ...result, llmReason: 'Private explanation for the deletion fixture.' })))
   check('deleting one CV preserves the person’s other version', deleteResume(primaryRef) && recruiting.listProfiles()[0].recordKeys.join(',') === versionRef.recordKey && recruiting.getJob(savedJob.id).reviews[0].note === 'Arrange technical interview')
+  const scrubbedHiring = recruiting.getJob(savedJob.id).job
+  check('CV deletion scrubs private hiring identities while preserving status dates', scrubbedHiring.placement?.hired.recordKey === null && scrubbedHiring.placement.hired.name === null && scrubbedHiring.statusHistory?.at(-1)?.placement?.hired.recordKey === null && scrubbedHiring.statusHistory.at(-1)?.placement?.hired.name === null && scrubbedHiring.statusHistory.at(-1)?.at === persistedHiring.statusHistory?.at(-1)?.at)
   check('bulk-deleting the last CV removes its private profile and every job review', deleteResumes([versionRef]) === 1 && recruiting.listProfiles().length === 0 && recruiting.getJob(savedJob.id).reviews.length === 0 && recruiting.getJob(otherJob.id).reviews.length === 0)
+  check('deleting a reranked CV removes its stored Claude explanation', !(getDb().prepare("SELECT data FROM recruiting_records WHERE kind = 'snapshot' AND id = ?").get(savedJob.id) as { data: string }).data.includes('Private explanation for the deletion fixture.'))
 
   console.log(`\n8. Final state: ${stats().resumeCount} resumes, ${stats().chunkCount} chunks`)
 
@@ -1097,7 +1221,24 @@ Requirements:
     beyondCapacity.status === 'failed' && beyondCapacity.reason.includes('5000-resume')
   )
   check('keeps the live library at its valid ceiling', stats().resumeCount === DATABASE_LIMITS.resumes)
+  // Reuse real stored passages for a bounded 65-candidate fixture. This checks
+  // promotion beyond the 50-result consent cache without re-embedding 5,000 CVs.
+  const templateResume = after.status === 'imported' ? after.resume.id : 0
+  const extraResumeIds = getDb().prepare("SELECT id FROM resumes WHERE file_name LIKE 'capacity-%' ORDER BY id LIMIT 64").all() as Array<{ id: number }>
+  const copyPassages = getDb().prepare('INSERT INTO chunks(resume_id, section, ordinal, text, embedding) SELECT ?, section, ordinal, text, embedding FROM chunks WHERE resume_id = ?')
+  getDb().transaction(() => { for (const row of extraResumeIds) copyPassages.run(row.id, templateResume) })()
+  for (let index = 0; index < 250; index++) recruiting.saveJob({ posting: { ...posting, position: `Saved capacity job ${index}` }, status: 'open', criteria: [] })
+  const fullTemporary = await recruiting.searchTemporary({ posting, status: 'open', criteria: [] })
+  check('temporary matching works at the saved-job limit and retains all candidates', fullTemporary.response!.results.length === 65 && searchSessions.get(fullTemporary.response!.sessionId).response.results.length === 50)
+  let promotionAtCapacityRejected = false
+  try { recruiting.saveTemporary({ jobId: fullTemporary.job.id, sessionId: fullTemporary.response!.sessionId }) } catch { promotionAtCapacityRejected = true }
+  check('failed promotion preserves temporary results and writes no partial job', promotionAtCapacityRejected && recruiting.listJobs().length === 250 && temporarySearch.id === fullTemporary.job.id)
+  getDb().prepare("DELETE FROM recruiting_records WHERE kind = 'job' AND id = ?").run(recruiting.listJobs()[0].id)
+  const promotedFullTemporary = recruiting.saveTemporary({ jobId: fullTemporary.job.id, sessionId: fullTemporary.response!.sessionId })
+  check('promotion stores all results beyond the bounded consent cache', promotedFullTemporary.response!.results.length === 65 && JSON.stringify(promotedFullTemporary.response!.results) === JSON.stringify(fullTemporary.response!.results))
+  await recruiting.searchTemporary({ posting, status: 'open', criteria: [] })
   deleteAllData()
+  check('full deletion also clears temporary postings and results', temporarySearch.id === null)
   keeperWindow.destroy()
 }
 

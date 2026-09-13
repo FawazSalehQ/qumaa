@@ -67,6 +67,22 @@ export function deduplicateVersions(results: MatchResult[], profiles: CandidateP
   return [...selected.values()].sort((a, b) => b.score - a.score || b.resume.importedAt - a.resume.importedAt || b.resume.id - a.resume.id)
 }
 
+/** Reapply saved Claude order only while it describes the same leading CVs. */
+export function applySavedRerank(
+  results: MatchResult[],
+  ranking?: Array<{ recordKey: string; reason?: string }>
+): { results: MatchResult[]; reranked: boolean } {
+  if (!ranking) return { results, reranked: false }
+  const leading = new Map(results.slice(0, ranking.length).map((result) => [result.resume.recordKey, result]))
+  if (leading.size !== ranking.length || new Set(ranking.map((entry) => entry.recordKey)).size !== ranking.length || ranking.some((entry) => !leading.has(entry.recordKey))) {
+    return { results, reranked: false }
+  }
+  return {
+    results: [...ranking.map((entry) => ({ ...leading.get(entry.recordKey)!, ...(entry.reason ? { llmReason: entry.reason } : {}) })), ...results.slice(ranking.length)],
+    reranked: true
+  }
+}
+
 const STOP_WORDS = new Set('a an and are as at be by for from in is it of on or our that the their this to we will with you your must required preferred experience experienced years year skills skill have has ability capable candidate candidates في من على الي الى عن ان مع او و العمل خبره خبرة سنوات سنه سنة مطلوب يجب'.split(' '))
 function normalize(value: string): string {
   return value.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f\u064b-\u065f\u0670]/g, '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي')

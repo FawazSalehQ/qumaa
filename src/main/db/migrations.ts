@@ -12,7 +12,7 @@ import { assertRecruitingData, RECRUITING_TABLE_SQL } from '../recruiting/storag
 
 /** ASCII "QUMA", stored in SQLite's standard application_id header field. */
 export const QUMAA_APPLICATION_ID = 0x51554d41
-export const CURRENT_SCHEMA_VERSION = 4
+export const CURRENT_SCHEMA_VERSION = 7
 
 const BASE_RESUME_COLUMNS = [
   'id',
@@ -1257,6 +1257,27 @@ const MIGRATIONS: readonly Migration[] = [
     up(database) {
       database.exec(RECRUITING_TABLE_SQL)
     }
+  },
+  {
+    version: 5,
+    up() {
+      // Saved search JSON can now retain Claude order/reasons. Existing records
+      // need no rewrite; the version keeps older strict readers from opening it.
+    }
+  },
+  {
+    version: 6,
+    up() {
+      // Jobs can retain timestamped status decisions and hiring selections.
+      // Legacy jobs keep unknown transition dates rather than fabricated history.
+    }
+  },
+  {
+    version: 7,
+    up() {
+      // Saved AI rankings now identify the provider and model that produced them.
+      // Older Claude rankings remain readable without rewriting their evidence.
+    }
   }
 ]
 
@@ -1270,11 +1291,11 @@ export interface MigrationResult {
 export function assertSchemaVersion(database: Database.Database, version: number): void {
   const shape = inspectSchema(database)
   // Legacy adoption remains limited to the three schemas actually shipped
-  // without a version header. Version 4 must carry the application identity.
-  const inferred = inferPublishedSchemaVersion(version === 4
+  // without a version header. Recruiting versions must carry the application identity.
+  const inferred = inferPublishedSchemaVersion(version >= 4
     ? { ...shape, objects: shape.objects.filter((name) => name !== 'recruiting_records') }
     : shape)
-  if (inferred !== (version === 4 ? 3 : version)) {
+  if (inferred !== (version >= 4 ? 3 : version)) {
     throw new Error(
       `The database schema does not match Qumaa schema version ${version} (detected ${String(inferred)}).`
     )
