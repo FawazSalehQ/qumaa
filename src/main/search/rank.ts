@@ -3,9 +3,9 @@
  * signals. The scoring math itself lives in scoring.ts.
  *
  * Why blend rather than use embeddings alone: embeddings capture "this resume is
- * about the same kind of work", but they smear exact tokens. A JD demanding
- * `Kubernetes` or a `CPA` licence needs those to count as the hard requirements
- * they are, which is what the lexical and skill components restore.
+ * about the same kind of work", but exact wording and recognized aliases add
+ * useful signals. None of these components verifies qualifications or enforces
+ * eligibility; recruiters review the source evidence and job requirements.
  */
 import {
   getDb,
@@ -26,6 +26,13 @@ import {
   type ScoredChunk
 } from './scoring.js'
 import type { MatchResult, SearchResponse, SectionKind } from '@shared/types.js'
+
+/** Optional in-process evaluation hook; never sent through the renderer API. */
+export interface SearchInspection {
+  queries: string[]
+  queryVectors: Float32Array[]
+  candidates: Array<{ resumeId: number; chunks: ScoredChunk[]; semantic: number; lexical: number }>
+}
 
 function lexicalScores(jd: string): Map<number, number> {
   const scores = new Map<number, number>()
@@ -49,7 +56,8 @@ function lexicalScores(jd: string): Map<number, number> {
 
 export async function search(
   jobDescription: string,
-  limit = 50
+  limit = 50,
+  inspect?: (inspection: SearchInspection) => void
 ): Promise<Omit<SearchResponse, 'sessionId'>> {
   const started = Date.now()
   const db = getDb()
@@ -62,10 +70,11 @@ export async function search(
   const requiredSkillIds = extractSkills(jobDescription)
   // The whole-JD vector anchors overall role similarity; the per-requirement
   // vectors let individual bullets be answered individually.
-  const queryVectors = await embedder.embedQueries([
+  const queries = [
     jobDescription,
     ...parseRequirements(jobDescription)
-  ])
+  ]
+  const queryVectors = await embedder.embedQueries(queries)
 
   const chunkRows = db
     .prepare('SELECT resume_id, section, text, embedding FROM chunks')
@@ -120,10 +129,15 @@ export async function search(
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
 
+  const elapsedMs = Date.now() - started
+  inspect?.({ queries, queryVectors, candidates: raws.map((r) => ({
+    resumeId: r.row.id, chunks: byResume.get(r.row.id)!, semantic: r.semantic, lexical: r.lexical
+  })) })
+
   return {
     results,
     requiredSkills: skillLabels(requiredSkillIds),
     totalCandidates: raws.length,
-    elapsedMs: Date.now() - started
+    elapsedMs
   }
 }

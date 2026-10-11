@@ -8,10 +8,11 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'inputMode' | 
   min?: number
   max?: number
   step?: number | 'any'
+  reportOnBlur?: boolean
 }
 
 /** Native number inputs reject Arabic keyboard digits before React receives them. */
-export default function LocalizedNumberInput({ value, onChangeValue, min, max, step = 1, required, onBlur, ...props }: Props): React.JSX.Element {
+export default function LocalizedNumberInput({ value, onChangeValue, min, max, step = 1, required, reportOnBlur = true, onBlur, ...props }: Props): React.JSX.Element {
   const { t } = useI18n()
   const input = useRef<HTMLInputElement>(null)
   const validation = validateLocalizedNumber(String(value), { min, max, step, required })
@@ -28,7 +29,7 @@ export default function LocalizedNumberInput({ value, onChangeValue, min, max, s
     value={value} required={required} aria-invalid={validation ? true : undefined}
     onChange={(event) => onChangeValue(normalizeLocalizedNumber(event.target.value))}
     onBlur={(event) => {
-      if (validation) event.currentTarget.reportValidity()
+      if (validation && reportOnBlur) event.currentTarget.reportValidity()
       onBlur?.(event)
     }} />
 }

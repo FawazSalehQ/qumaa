@@ -4,13 +4,22 @@ import { recruitingAr } from './locales/recruiting.js'
 import { matchingAr } from './locales/matching.js'
 import { nativeAr } from './locales/native.js'
 import { exportsAr } from './locales/exports.js'
+import { companiesAr } from './locales/companies.js'
+import { jobsCompanyAr } from './locales/jobs-company.js'
+import { talentAr } from './locales/talent.js'
+import { pipelineAr } from './locales/pipeline.js'
+import { clientPackAr } from './locales/client-pack.js'
+import { hiringCostsAr } from './locales/hiring-costs.js'
+import { hiringCostAssumptionTranslations } from './locales/hiring-costs-assumptions.js'
+import { requirementsAr } from './locales/requirements.js'
 
 export type Language = 'en' | 'ar'
 export type TranslationValues = Record<string, string | number>
 export type Translator = (message: string, values?: TranslationValues) => string
 
 export const arabicMessages: Readonly<Record<string, string>> = {
-  ...commonAr, ...recruitingAr, ...matchingAr, ...nativeAr, ...exportsAr
+  ...commonAr, ...recruitingAr, ...matchingAr, ...nativeAr, ...exportsAr, ...companiesAr, ...jobsCompanyAr,
+  ...talentAr, ...pipelineAr, ...clientPackAr, ...requirementsAr, ...hiringCostsAr, ...hiringCostAssumptionTranslations
 }
 
 export function normalizeLanguage(value: unknown): Language {

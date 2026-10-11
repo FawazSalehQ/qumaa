@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "family": "software",
+  "title": "Backend services and platform engineering",
+  "reviewStatus": "synthetic-unreviewed",
+  "candidates": [
+    {
+      "id": "C01",
+      "en": "Professional profile\nBackend engineer and team supervisor, 2017–2026. Builds transaction services used by business customers.\nEmployment history\nFrom 2021, owned Python APIs, PostgreSQL schema changes, and asynchronous payment reconciliation. Diagnosed slow queries using execution plans and introduced retry-safe message consumers. Participated in an on-call rota and wrote incident reviews after service interruptions. Since 2023, supervised five engineers, estimated delivery work, reviewed designs, and coordinated releases with product managers. Previously developed internal account-management services and automated integration checks. Continued implementing production features while supervising the team.\nEducation\nBachelor's degree in computing; practical training in distributed systems.",
+      "ar": "نبذة مهنية\nمهندس خدمات خلفية ومشرف فريق خلال الفترة من 2017 إلى 2026. يطور خدمات معاملات تستخدمها مؤسسات تجارية.\nالخبرة العملية\nمنذ 2021 تولى مسؤولية واجهات برمجية بلغة بايثون وتعديلات مخطط قاعدة بوستغري إس كيو إل وتسوية المدفوعات بصورة غير متزامنة. فحص خطط تنفيذ الاستعلامات لمعالجة البطء، وأنشأ مستهلكي رسائل يعالجون إعادة المحاولة دون تكرار الأثر. شارك في مناوبات الاستجابة للأعطال وكتب مراجعات للحوادث. منذ 2023 يشرف على خمسة مهندسين ويقدر الأعمال ويراجع التصاميم وينسق الإصدارات مع إدارة المنتج. سبق أن طور خدمات إدارة الحسابات واختبارات التكامل. استمر في تنفيذ خصائص الإنتاج أثناء إشرافه على الفريق.\nالتعليم\nبكالوريوس حوسبة وتدريب عملي في الأنظمة الموزعة."
+    },
+    {
+      "id": "C02",
+      "en": "Summary\nSoftware engineer, 2016–2026, with responsibility for subscription and invoicing services.\nExperience\nAt a subscription business since 2020, implemented Python web endpoints and database migrations for PostgreSQL. Replaced a nightly billing script with queued workers, adding reconciliation reports and tests for duplicate delivery. Investigated production incidents with support staff. Led a group of four developers from 2022, allocated work, coached new colleagues, and reviewed architecture proposals. Negotiated incremental releases when requirements changed. Earlier employment covered integrations between customer accounts and finance software. Maintains code ownership alongside people leadership.\nQualifications\nBachelor's degree in software engineering and internal incident-response training.",
+      "ar": "الملخص\nمهندس برمجيات من 2016 إلى 2026 يتولى خدمات الاشتراكات وإصدار الفواتير.\nالخبرة\nفي مؤسسة اشتراكات منذ 2020 نفذ نقاط اتصال ويب بلغة بايثون وترحيلات قواعد بيانات بوستغري إس كيو إل. استبدل برنامج فوترة ليلياً بعاملين يعالجون طوابير المهام، وأضاف تقارير تسوية واختبارات لتكرار تسليم الرسائل. حقق في أعطال الإنتاج بالتعاون مع موظفي الدعم. قاد أربعة مطورين منذ 2022 ووزع العمل ودرب الزملاء الجدد وراجع المقترحات المعمارية. تفاوض على إصدارات تدريجية عند تغير المتطلبات. شملت خبرته السابقة الربط بين حسابات العملاء وبرامج المالية. يواصل مسؤولية كتابة الشفرة إلى جانب قيادة الأفراد.\nالمؤهلات\nبكالوريوس هندسة برمجيات وتدريب داخلي للاستجابة للحوادث."
+    },
+    {
+      "id": "C03",
+      "en": "Career overview\nIndividual contributor developing backend systems, 2018–2026.\nWork history\nBuilt Python services for warehouse reservations, with PostgreSQL constraints preventing double allocation. Used message queues to process stock adjustments and wrote integration tests around failed deliveries. For the last four years, maintained production dashboards, investigated alerts, and improved database indexes. Authored design notes for a service split and explained deployment risks to product colleagues. Reviews peers' changes but has not managed staff, set departmental priorities, or owned hiring. Previously worked on reporting exports and data validation for a small software vendor.\nEducation\nBachelor's degree in information systems; continuing study of database performance.",
+      "ar": "المسار المهني\nمطور أنظمة خلفية يعمل بصفة مساهم فردي منذ 2018 وحتى 2026.\nتاريخ العمل\nبنى خدمات بايثون لحجز مخزون المستودعات، واستخدم قيود بوستغري إس كيو إل لمنع حجز الكمية نفسها مرتين. عالج تعديلات المخزون عبر طوابير الرسائل وكتب اختبارات تكامل لحالات فشل التسليم. خلال السنوات الأربع الأخيرة صان لوحات مراقبة الإنتاج وحقق في التنبيهات وحسن فهارس قواعد البيانات. أعد مذكرات تصميم لتقسيم خدمة وشرح مخاطر النشر لزملاء المنتج. يراجع تعديلات زملائه، لكنه لم يدر موظفين أو يحدد أولويات قسم أو يتول التوظيف. عمل سابقاً على تصدير التقارير والتحقق من البيانات لدى مورد برمجيات صغير.\nالتعليم\nبكالوريوس نظم معلومات ودراسة مستمرة لأداء قواعد البيانات."
+    },
+    {
+      "id": "C04",
+      "en": "Profile\nEngineering lead responsible for a business-services platform, 2014–2026.\nEmployment\nManaged eight engineers since 2019, set quarterly delivery priorities, reviewed distributed-service designs, and coordinated outage investigations. Owned staffing plans, technical coaching, and migration sequencing across several product teams. Earlier built Java services backed by PostgreSQL and operated queued integrations with billing systems. Still reviews database proposals and production readiness, but has not written Python in a commercial project. Recent personal coding has been limited to Java maintenance utilities. Can explain architectural tradeoffs using incident history and capacity measurements.\nEducation\nBachelor's degree in computer engineering and workplace management development.",
+      "ar": "الملف المهني\nقائد هندسي مسؤول عن منصة خدمات أعمال، وتغطي خبرته الفترة من 2014 إلى 2026.\nالعمل\nأدار ثمانية مهندسين منذ 2019 وحدد أولويات التسليم الفصلية وراجع تصاميم الخدمات الموزعة ونسق التحقيق في توقف الخدمات. تولى خطط التوظيف والتوجيه التقني وترتيب عمليات الترحيل بين فرق المنتج. في مرحلة سابقة بنى خدمات جافا تعتمد على بوستغري إس كيو إل وشغل تكاملات عبر طوابير مع أنظمة الفوترة. لا يزال يراجع مقترحات قواعد البيانات والجاهزية للإنتاج، لكنه لم يكتب بايثون في مشروع تجاري. اقتصرت برمجته الشخصية مؤخراً على أدوات صيانة بلغة جافا. يشرح مفاضلات التصميم بالرجوع إلى تاريخ الحوادث وقياسات السعة.\nالتعليم\nبكالوريوس هندسة حاسب وبرنامج تطوير إداري في العمل."
+    },
+    {
+      "id": "C05",
+      "en": "Overview\nJunior backend developer, January 2025–September 2026.\nEmployment history\nAdded Python endpoints and PostgreSQL queries to an existing appointment application under senior review. Wrote tests for input validation and corrected defects reported by customer support. Assisted with one queued email worker but has not owned asynchronous transaction processing. Observed incident calls without taking an on-call shift. A university project used a small database and a local container deployment. Has no staff supervision or architecture ownership. Requests design approval before changing interfaces and documents unresolved questions in review notes.\nEducation\nBachelor's degree in computing completed in 2024; introductory cloud course.",
+      "ar": "نبذة\nمطور خلفي مبتدئ من يناير 2025 إلى سبتمبر 2026.\nالخبرة العملية\nأضاف نقاط اتصال بايثون واستعلامات بوستغري إس كيو إل إلى تطبيق قائم لحجز المواعيد تحت مراجعة مهندس أقدم. كتب اختبارات للتحقق من المدخلات وصحح عيوباً أبلغ عنها دعم العملاء. ساعد في عامل واحد لإرسال البريد من طابور، لكنه لم يتول معالجة معاملات غير متزامنة. تابع مكالمات الحوادث دون تحمل مناوبة استجابة. استخدم مشروعه الجامعي قاعدة بيانات صغيرة ونشراً محلياً داخل حاوية. ليس لديه إشراف على موظفين أو مسؤولية عن التصميم المعماري. يطلب اعتماد التصميم قبل تغيير الواجهات ويسجل الأسئلة المفتوحة في ملاحظات المراجعة.\nالتعليم\nأكمل بكالوريوس الحوسبة عام 2024 ودورة تمهيدية في الحوسبة السحابية."
+    },
+    {
+      "id": "C06",
+      "en": "Professional summary\nWeb interface developer, 2018–2026.\nExperience\nBuilds browser applications with React and TypeScript for a customer-support product. Owns accessible forms, component tests, and page performance. Coordinates API contracts with backend colleagues but does not implement their Python services or administer PostgreSQL. Led a temporary redesign project involving two designers and three developers; this did not include line management or backend architecture. Diagnoses browser errors and releases frontend bundles. Studied message queues in an online course and completed a demonstration application without production users.\nEducation\nBachelor's degree in digital media and vocational web-development training.",
+      "ar": "النبذة المهنية\nمطور واجهات ويب من 2018 إلى 2026.\nالخبرة\nيبني تطبيقات متصفح باستخدام رياكت وتايب سكريبت لمنتج يخدم موظفي دعم العملاء. يتولى النماذج الميسرة واختبارات المكونات وأداء الصفحات. ينسق عقود الواجهات البرمجية مع زملاء الخدمات الخلفية، لكنه لا ينفذ خدمات بايثون الخاصة بهم ولا يدير بوستغري إس كيو إل. قاد مشروعاً مؤقتاً لإعادة التصميم شارك فيه مصممان وثلاثة مطورين؛ ولم يشمل ذلك إدارة الموظفين أو معمارية الأنظمة الخلفية. يشخص أخطاء المتصفح وينشر حزم الواجهة. درس طوابير الرسائل في دورة عبر الإنترنت وأنجز تطبيقاً توضيحياً دون مستخدمين فعليين.\nالتعليم\nبكالوريوس إعلام رقمي وتدريب مهني في تطوير الويب."
+    },
+    {
+      "id": "C07",
+      "en": "Profile\nCustomer account coordinator, 2019–2026. Career interests include Python, PostgreSQL, message queues, distributed systems, APIs, and technical leadership.\nWork experience\nMaintains subscription contact records, arranges demonstrations, and follows up unpaid invoices. Escalates product faults to technical support and records the response for customers. Has never deployed application code or responded to a production outage. A six-week evening course covered Python syntax and simple SQL queries; its final exercise was a personal expense tracker. Coordinates meeting schedules but has no engineering staff or design responsibility.\nEducation\nDiploma in business administration and the introductory programming course.",
+      "ar": "الملف\nمنسق حسابات عملاء من 2019 إلى 2026. تشمل اهتماماته المهنية بايثون وبوستغري إس كيو إل وطوابير الرسائل والأنظمة الموزعة والواجهات البرمجية والقيادة التقنية.\nخبرة العمل\nيصون سجلات الاتصال الخاصة بالاشتراكات ويرتب العروض التوضيحية ويتابع الفواتير غير المسددة. يحيل أعطال المنتج إلى الدعم التقني ويسجل الرد للعميل. لم ينشر شفرة تطبيق ولم يستجب لعطل إنتاجي. غطت دورة مسائية مدتها ستة أسابيع أساسيات بايثون واستعلامات إس كيو إل البسيطة، وكان تمرينها الأخير أداة شخصية لتتبع المصروفات. ينسق مواعيد الاجتماعات لكن ليست لديه مسؤولية عن موظفين هندسيين أو تصميم أنظمة.\nالتعليم\nدبلوم إدارة أعمال والدورة التمهيدية في البرمجة المذكورة أعلاه."
+    },
+    {
+      "id": "C08",
+      "en": "Career summary\nCommercial interior sales consultant, 2017–2026.\nWork history\nAdvises office customers about furniture dimensions, fabric options, and delivery dates. Prepares quotations, checks showroom stock, and arranges installer visits. Maintains supplier catalogues and resolves damaged-delivery claims. Supervises one showroom assistant during busy periods and reports monthly orders to the store manager. Uses a sales application as an end user and exports spreadsheet totals. Has not developed software, administered databases, operated digital services, or completed technical programming training. Earlier employment involved retail stock counts and display preparation.\nEducation\nDiploma in interior decoration and product-sales training.",
+      "ar": "المسار المهني\nمستشار مبيعات تجهيزات داخلية تجارية من 2017 إلى 2026.\nتاريخ العمل\nينصح عملاء المكاتب بشأن أبعاد الأثاث وخيارات الأقمشة ومواعيد التسليم. يعد عروض الأسعار ويفحص مخزون المعرض ويرتب زيارات التركيب. يحدث كتالوجات الموردين ويعالج مطالبات التلف أثناء التسليم. يشرف على مساعد واحد في المعرض خلال الفترات المزدحمة ويرفع طلبات الشهر إلى مدير المتجر. يستخدم تطبيق مبيعات بصفة مستخدم نهائي ويصدر الإجماليات إلى جداول حسابية. لم يطور برمجيات أو يدر قواعد بيانات أو يشغل خدمات رقمية أو يكمل تدريباً تقنياً في البرمجة. شملت وظيفته السابقة جرد مخزون التجزئة وإعداد المعروضات.\nالتعليم\nدبلوم ديكور داخلي وتدريب في بيع المنتجات."
+    }
+  ],
+  "vacancies": [
+    {
+      "id": "specialist",
+      "seniority": "experienced",
+      "posting": {
+        "en": "Backend engineer — transaction services\nOur subscription platform needs an experienced engineer to develop reliable business services and maintain them after release. Required: at least four years delivering backend software; practical Python service development; PostgreSQL data modelling and query diagnosis; and experience processing asynchronous work without duplicating financial actions. The engineer must write automated integration checks and take an active role in investigating production incidents. Explain proposed changes, deployment risks, and unresolved issues clearly to product and support colleagues. Preferred: responsibility for reconciliation workflows or repeated message delivery. This is an individual-contributor position with regular code review and a shared support rota. People management is not required, and classroom exercises alone do not replace operational experience.",
+        "ar": "مهندس خدمات خلفية — خدمات المعاملات\nتحتاج منصة الاشتراكات لدينا إلى مهندس ذي خبرة يطور خدمات أعمال موثوقة ويتابعها بعد الإطلاق. المطلوب أربع سنوات على الأقل في تسليم البرمجيات الخلفية، وتطوير عملي لخدمات بايثون، وتصميم بيانات بوستغري إس كيو إل وتشخيص استعلاماتها، وخبرة في تنفيذ أعمال غير متزامنة دون تكرار العمليات المالية. يجب كتابة اختبارات تكامل آلية والمشاركة الفعلية في التحقيق بأعطال الإنتاج. يتعين توضيح التغييرات المقترحة ومخاطر النشر والمسائل المفتوحة لزملاء المنتج والدعم. يفضل تحمل مسؤولية تدفقات التسوية أو حالات وصول الرسالة أكثر من مرة. هذه وظيفة مساهم فردي تشمل مراجعة الشفرة ومناوبات دعم مشتركة. إدارة الأفراد ليست مطلوبة، ولا تحل التمارين الدراسية وحدها محل الخبرة التشغيلية الفعلية."
+      },
+      "labels": {
+        "C01": 1,
+        "C02": 1,
+        "C03": 1,
+        "C04": 2,
+        "C05": 2,
+        "C06": 3,
+        "C07": 4,
+        "C08": 4
+      },
+      "rationales": {
+        "C01": "Owns Python, PostgreSQL, queued transactions and production response over several years.",
+        "C02": "Sustained Python billing-service ownership, database migrations and duplicate-message safeguards.",
+        "C03": "Eight years of Python backend work, transactional queues, tests and operational diagnosis.",
+        "C04": "Extensive relevant systems background but no commercial Python delivery and limited recent implementation.",
+        "C05": "Direct stack exposure but under two years and no operational ownership.",
+        "C06": "Frontend delivery transfers some engineering practice but does not establish backend capability.",
+        "C07": "Technical terms and introductory coursework are unsupported by professional software delivery.",
+        "C08": "Sales and furniture duties provide no backend development evidence."
+      }
+    },
+    {
+      "id": "lead",
+      "seniority": "lead",
+      "posting": {
+        "en": "Engineering lead — business platform\nLead a team responsible for business-critical backend services, balancing delivery commitments with operational reliability. Required: at least seven years in software engineering, three years supervising engineers, and experience designing distributed services with relational databases and queued integrations. Own planning, design review, coaching, and coordination with product stakeholders. Lead incident follow-up and turn recurring faults into practical engineering work. Candidates must be able to assess migration risks and explain architecture decisions using production evidence. Preferred: recent Python development or experience with subscription billing. Prior Java service development is acceptable; this role does not require a particular primary programming language. The team expects technical judgement, clear delegation, and continued involvement in production readiness.",
+        "ar": "قائد هندسي — منصة الأعمال\nقد فريقاً مسؤولاً عن خدمات خلفية أساسية للأعمال، مع الموازنة بين التزامات التسليم وموثوقية التشغيل. المطلوب سبع سنوات على الأقل في هندسة البرمجيات، وثلاث سنوات في الإشراف على مهندسين، وخبرة في تصميم خدمات موزعة تستخدم قواعد بيانات علائقية وتكاملات عبر الطوابير. تول مسؤولية التخطيط ومراجعة التصميم وتطوير الزملاء والتنسيق مع إدارة المنتج. قد متابعة الحوادث وحول الأعطال المتكررة إلى أعمال هندسية عملية. يجب تقييم مخاطر الترحيل وشرح قرارات المعمارية بالاستناد إلى وقائع التشغيل. يفضل التطوير الحديث ببايثون أو العمل في فوترة الاشتراكات. خبرة خدمات جافا مقبولة، ولا تشترط الوظيفة لغة برمجة أساسية بعينها. يتوقع الفريق حكماً تقنياً واضحاً وتفويضاً منظماً ومشاركة مستمرة في جاهزية الإنتاج."
+      },
+      "labels": {
+        "C01": 1,
+        "C02": 1,
+        "C03": 2,
+        "C04": 1,
+        "C05": 3,
+        "C06": 3,
+        "C07": 4,
+        "C08": 4
+      },
+      "rationales": {
+        "C01": "Meets tenure and supervision needs while owning production service design and delivery.",
+        "C02": "Four years leading developers plus longstanding transactional backend and incident work.",
+        "C03": "Strong individual contributor but explicitly lacks staff management and planning ownership.",
+        "C04": "Seven years leading engineers and hands-on earlier distributed service experience satisfy required criteria.",
+        "C05": "Early-career implementation does not establish leadership or architecture ownership.",
+        "C06": "Temporary frontend project coordination lacks required backend and line-management scope.",
+        "C07": "Meeting coordination and programming coursework do not establish engineering leadership.",
+        "C08": "Retail supervision is outside the technical leadership scope."
+      }
+    }
+  ]
+}

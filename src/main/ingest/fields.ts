@@ -94,9 +94,11 @@ function extractName(text: string): string | null {
 // "Riyadh, Saudi Arabia" / "London, UK" / "Austin, TX"
 const LOCATION_RE = /\b([A-Z][a-zA-Z.'-]+(?:\s+[A-Z][a-zA-Z.'-]+)?),\s*([A-Z]{2,}|[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\b/
 const ARABIC_LOCATION_LABEL =
-  /(?:العنوان|الموقع|مكان\s+الإقامة|المدينة|الدولة)\s*[:：-]?\s*([\p{Script=Arabic}\p{M}][\p{Script=Arabic}\p{M}\s،,-]{1,80})/u
+  /(?<![\p{L}\p{M}\p{N}_])(?:العنوان|الموقع|مكان\s+الإقامة|المدينة(?!\s+المنورة(?:[^\p{L}\p{M}\p{N}_]|$))|الدولة)(?![\p{L}\p{M}\p{N}_])\s*[:：-]?\s*([\p{Script=Arabic}\p{M}][\p{Script=Arabic}\p{M}\s،,-]{1,80})/u
+// JavaScript's \b is ASCII-based: it cannot distinguish الخبر from الخبرة.
+// Require complete Unicode tokens and prefer complete multiword place names.
 const ARABIC_PLACE =
-  /(?:الرياض|جدة|مكة|مكة\s+المكرمة|المدينة\s+المنورة|الدمام|الخبر|الظهران|أبها|تبوك|دبي|أبو\s+ظبي|الدوحة|الكويت|مسقط|المنامة|المملكة\s+العربية\s+السعودية|السعودية|الإمارات|قطر|الكويت|عمان|البحرين)/u
+  /(?<![\p{L}\p{M}\p{N}_])(?:الرياض|جدة|مكة\s+المكرمة|مكة|المدينة\s+المنورة|الدمام|الخبر|الظهران|أبها|تبوك|دبي|أبو\s+ظبي|الدوحة|الكويت|مسقط|المنامة|المملكة\s+العربية\s+السعودية|السعودية|الإمارات|قطر|عمان|البحرين)(?![\p{L}\p{M}\p{N}_])/u
 
 /**
  * "Charge Nurse, ICU" and "Distributed Computing, Imperial College" both match
@@ -195,8 +197,14 @@ function parseEndpoint(raw: string, isEnd: boolean): number | null {
   return null
 }
 
-const RANGE_RE =
-  /([A-Za-z]{3,9}\.?\s+\d{4}|\d{1,2}\s*[/.-]\s*\d{4}|\d{4})\s*(?:[-–—]|\bto\b|\buntil\b)\s*([A-Za-z]{3,9}\.?\s+\d{4}|\d{1,2}\s*[/.-]\s*\d{4}|\d{4}|present|current|now|ongoing|to date)/gi
+// A generic word before a year ("Engineer 2019") must not consume that year as
+// an invalid month endpoint and hide the otherwise valid 2019–2023 range.
+const MONTH_TOKEN = '(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)'
+const DATE_ENDPOINT = `(?:\\b${MONTH_TOKEN}\\.?\\s+\\d{4}|\\d{1,2}\\s*[/.-]\\s*\\d{4}|\\d{4})`
+const RANGE_RE = new RegExp(
+  `(${DATE_ENDPOINT})\\s*(?:[-–—]|\\bto\\b|\\buntil\\b)\\s*(${DATE_ENDPOINT}|present|current|now|ongoing|to date)`,
+  'gi'
+)
 
 /** Merges overlapping employment periods so concurrent roles are not double-counted. */
 function mergeIntervals(intervals: Interval[]): Interval[] {

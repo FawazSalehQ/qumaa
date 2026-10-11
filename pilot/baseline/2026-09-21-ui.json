@@ -1,0 +1,348 @@
+{
+  "ranAt": "2026-09-21T18:24:44.773Z",
+  "target": "packaged macOS beta.2",
+  "searches": [
+    {
+      "language": "en",
+      "savedJobId": "a6c33226-7cfa-4f24-bc09-8302349b7c88",
+      "requiredSkills": [
+        "Training"
+      ],
+      "results": [
+        {
+          "file": "C02.md",
+          "score": 0.895429593321148,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C03.md",
+          "score": 0.8683014736076292,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C05.md",
+          "score": 0.784447101548083,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C11.md",
+          "score": 0.7668202941444058,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C14.md",
+          "score": 0.7420656173532555,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C08.md",
+          "score": 0.7189688003683636,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C12.md",
+          "score": 0.6972148313966037,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C09.md",
+          "score": 0.6796618675237167,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C10.md",
+          "score": 0.33327531812975697,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C06.md",
+          "score": 0.30175995413477014,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C13.md",
+          "score": 0.09942079183920834,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C04.md",
+          "score": 0.09501656076964168,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C07.md",
+          "score": 0.09284677169108427,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C16.md",
+          "score": 0.0509046633340625,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C15.md",
+          "score": 0.0398964937719713,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C01.md",
+          "score": 0,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        }
+      ]
+    },
+    {
+      "language": "ar",
+      "savedJobId": "ee12bfec-7a0b-42e9-8b41-68dff960f17c",
+      "requiredSkills": [
+        "Emergency Care",
+        "Training"
+      ],
+      "results": [
+        {
+          "file": "C07.md",
+          "score": 0.6875416451974239,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C10.md",
+          "score": 0.6706251105237725,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C06.md",
+          "score": 0.6345395216154192,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C13.md",
+          "score": 0.55,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C08.md",
+          "score": 0.5182086195118207,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C15.md",
+          "score": 0.5056072438095793,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C04.md",
+          "score": 0.5055984400551358,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C16.md",
+          "score": 0.5042088385743582,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C01.md",
+          "score": 0.5040908908164163,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C05.md",
+          "score": 0.2690513950862857,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C03.md",
+          "score": 0.26827645669240624,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C02.md",
+          "score": 0.24590157184321085,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C12.md",
+          "score": 0.24271968927981072,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C09.md",
+          "score": 0.20586034071315762,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C14.md",
+          "score": 0.19037911786985487,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        },
+        {
+          "file": "C11.md",
+          "score": 0.1715818949352241,
+          "evidenceSections": [
+            "other",
+            "other"
+          ]
+        }
+      ]
+    }
+  ],
+  "imports": [
+    {
+      "status": "imported",
+      "file": "C01.md"
+    },
+    {
+      "status": "imported",
+      "file": "C02.md"
+    },
+    {
+      "status": "imported",
+      "file": "C03.md"
+    },
+    {
+      "status": "imported",
+      "file": "C04.md"
+    },
+    {
+      "status": "imported",
+      "file": "C05.md"
+    },
+    {
+      "status": "imported",
+      "file": "C06.md"
+    },
+    {
+      "status": "imported",
+      "file": "C07.md"
+    },
+    {
+      "status": "imported",
+      "file": "C08.md"
+    },
+    {
+      "status": "imported",
+      "file": "C09.md"
+    },
+    {
+      "status": "imported",
+      "file": "C10.md"
+    },
+    {
+      "status": "imported",
+      "file": "C11.md"
+    },
+    {
+      "status": "imported",
+      "file": "C12.md"
+    },
+    {
+      "status": "imported",
+      "file": "C13.md"
+    },
+    {
+      "status": "imported",
+      "file": "C14.md"
+    },
+    {
+      "status": "imported",
+      "file": "C15.md"
+    },
+    {
+      "status": "imported",
+      "file": "C16.md"
+    }
+  ],
+  "status": "passed"
+}

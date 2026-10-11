@@ -6,11 +6,13 @@ import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import { CH } from '../shared/channels.js'
 import { copyResumeRefs, resolveNativeFilePaths } from './bridge-input.js'
 import type { RecruitingApi } from '../shared/recruiting.js'
+import type { HiringBudgetsApi } from '../shared/hiring-budget.js'
+import type { TalentApi } from '../shared/talent.js'
+import type { ClientPackApi } from '../shared/client-pack.js'
 import type { RerankConfig, RerankProvider } from '../shared/rerank.js'
 import type {
   AppSettings,
   BackupSummary,
-  ClaudeRerankReview,
   DbStats,
   IngestOutcome,
   IngestProgress,
@@ -18,12 +20,13 @@ import type {
   ModelStatus,
   ResumeDetail,
   ResumeRef,
-  MatchResult,
-  ResumeSummary,
-  SearchResponse
+  ResumeSummary
 } from '../shared/types.js'
 
 const recruiting: RecruitingApi = {
+  listCompanies: () => ipcRenderer.invoke(CH.recruitingListCompanies),
+  saveCompany: (input) => ipcRenderer.invoke(CH.recruitingSaveCompany, input),
+  saveTargetCompanies: (input) => ipcRenderer.invoke(CH.recruitingSaveTargetCompanies, input),
   listJobs: () => ipcRenderer.invoke(CH.recruitingListJobs),
   saveJob: (input) => ipcRenderer.invoke(CH.recruitingSaveJob, input),
   changeJobStatus: (input) => ipcRenderer.invoke(CH.recruitingChangeJobStatus, {
@@ -64,6 +67,41 @@ const recruiting: RecruitingApi = {
   exportShortlist: (input) => ipcRenderer.invoke(CH.recruitingExportShortlist, input)
 }
 
+const talent: TalentApi = {
+  overview: () => ipcRenderer.invoke('talent:overview'),
+  ensurePerson: (resume) => ipcRenderer.invoke('talent:ensurePerson', copyResumeRefs([resume])[0]),
+  savePerson: (input) => ipcRenderer.invoke('talent:savePerson', input),
+  deletePerson: (input) => ipcRenderer.invoke('talent:deletePerson', input),
+  linkCv: (input) => ipcRenderer.invoke('talent:linkCv', { ...input, resume: copyResumeRefs([input.resume])[0] }),
+  previewMerge: (input) => ipcRenderer.invoke('talent:previewMerge', input),
+  mergeContacts: (input) => ipcRenderer.invoke('talent:mergeContacts', input),
+  saveActivity: (input) => ipcRenderer.invoke('talent:saveActivity', input),
+  completeActivity: (input) => ipcRenderer.invoke('talent:completeActivity', input),
+  saveAssignment: (input) => ipcRenderer.invoke('talent:saveAssignment', input),
+  deleteAssignment: (input) => ipcRenderer.invoke('talent:deleteAssignment', input),
+  addSubmission: (input) => ipcRenderer.invoke('talent:addSubmission', input),
+  updateSubmission: (input) => ipcRenderer.invoke('talent:updateSubmission', input),
+  generateScreening: (input) => ipcRenderer.invoke('talent:generateScreening', input),
+  saveScreening: (input) => ipcRenderer.invoke('talent:saveScreening', input),
+  deleteScreening: (input) => ipcRenderer.invoke('talent:deleteScreening', input),
+  savePool: (input) => ipcRenderer.invoke('talent:savePool', input),
+  reviewPool: (input) => ipcRenderer.invoke('talent:reviewPool', input),
+  deletePool: (input) => ipcRenderer.invoke('talent:deletePool', input)
+}
+
+const clientPack: ClientPackApi = {
+  source: (jobId, personIds) => ipcRenderer.invoke('clientPack:source', { jobId, personIds }),
+  preview: (config) => ipcRenderer.invoke('clientPack:preview', config),
+  export: (input) => ipcRenderer.invoke('clientPack:export', input)
+}
+
+const hiringBudgets: HiringBudgetsApi = {
+  list: (companyId) => ipcRenderer.invoke('hiringBudgets:list', companyId),
+  save: (input) => ipcRenderer.invoke('hiringBudgets:save', input),
+  remove: (input) => ipcRenderer.invoke('hiringBudgets:remove', input),
+  exportCsv: (input) => ipcRenderer.invoke('hiringBudgets:exportCsv', input)
+}
+
 const api = {
   /** Renderer needs this only to match native window chrome. */
   platform: process.platform,
@@ -98,24 +136,6 @@ const api = {
     pickFiles: (): Promise<IngestOutcome[]> => ipcRenderer.invoke(CH.ingestPickFiles),
     text: (text: string, label: string): Promise<IngestOutcome> =>
       ipcRenderer.invoke(CH.ingestText, { text, label }),
-  },
-
-  search: {
-    run: (jobDescription: string): Promise<SearchResponse> =>
-      ipcRenderer.invoke(CH.searchRun, jobDescription),
-    rerank: (args: {
-      sessionId: string
-      approvalToken?: string
-    }): Promise<MatchResult[]> => ipcRenderer.invoke(CH.searchRerank, args),
-    previewRerank: (args: {
-      sessionId: string
-    }): Promise<ClaudeRerankReview> => ipcRenderer.invoke(CH.searchRerankPreview, args),
-    /** Resolves with the saved path, or null if the user cancelled. */
-    exportPdf: (args: {
-      jobTitle: string
-      requiredSkills: string[]
-      results: MatchResult[]
-    }): Promise<string | null> => ipcRenderer.invoke(CH.searchExport, args)
   },
 
   settings: {
@@ -154,6 +174,9 @@ const api = {
   },
 
   recruiting,
+  talent,
+  clientPack,
+  hiringBudgets,
 
   on: {
     ingestProgress: (cb: (p: IngestProgress) => void): (() => void) => {

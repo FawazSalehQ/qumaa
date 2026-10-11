@@ -1,8 +1,6 @@
 import type { JobPosting } from '@shared/recruiting.js'
 export type { JobPosting } from '@shared/recruiting.js'
 
-export type JobPostingField = keyof JobPosting
-
 export function emptyJobPosting(): JobPosting {
   return {
     position: '',
@@ -14,22 +12,6 @@ export function emptyJobPosting(): JobPosting {
 
 export function hasJobPostingContent(posting: JobPosting): boolean {
   return Object.values(posting).some((value) => value.trim().length > 0)
-}
-
-/**
- * The proven local search pipeline deliberately continues to accept one string.
- * Only user-authored values enter that query: UI headings would otherwise leak
- * generic words into FTS and could become synthetic semantic requirements.
- */
-export function formatJobPosting(posting: JobPosting): string {
-  const sections = [
-    posting.position,
-    posting.jobDescription,
-    posting.requirements,
-    posting.educationAndCertifications
-  ]
-
-  return sections.map((value) => value.trim()).filter(Boolean).join('\n\n')
 }
 
 /** Position is the stable result label; older title-less workflows still get a useful fallback. */

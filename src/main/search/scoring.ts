@@ -77,21 +77,30 @@ const STOPWORDS = new Set([
   'but', 'all', 'can', 'who', 'what', 'when', 'where', 'how', 'why', 'other', 'more',
   'work', 'working', 'role', 'team', 'teams', 'years', 'year', 'experience', 'ability',
   'strong', 'good', 'excellent', 'job', 'candidate', 'looking', 'seeking', 'required',
-  'requirements', 'responsibilities', 'preferred', 'plus', 'must', 'should', 'well'
+  'requirements', 'responsibilities', 'preferred', 'plus', 'must', 'should', 'well',
+  // Keep this conservative: connectives and generic recruitment wording, not
+  // occupations, qualifications, locations, or domain terms.
+  'في', 'من', 'على', 'إلى', 'الى', 'عن', 'مع', 'أن', 'ان', 'أو', 'او', 'هذا', 'هذه',
+  'الذي', 'التي', 'نحن', 'بين', 'كما', 'لدى', 'ضمن', 'يجب', 'مطلوب', 'مطلوبة',
+  'المطلوب', 'المطلوبة', 'وظيفة', 'الوظيفة', 'خبرة', 'الخبرة', 'سنوات', 'سنة',
+  'المتطلبات', 'المسؤوليات', 'يفضل'
 ])
 
 const MAX_FTS_TERMS = 60
 
-/** Builds an FTS5 MATCH expression of the JD's salient terms, OR-ed together. */
+/**
+ * Builds an FTS5 MATCH expression from literal Unicode terms. Token spelling
+ * agrees with the existing porter/unicode61 index; no query-only normalization
+ * or translation is applied. The existing sixty-term prefix budget is retained.
+ */
 export function buildFtsQuery(jd: string): string | null {
   const seen = new Set<string>()
   const terms: string[] = []
-  for (const raw of jd.toLowerCase().match(/[a-z][a-z0-9+#.]{2,}/g) ?? []) {
-    const term = raw.replace(/\.+$/, '')
-    if (term.length < 3 || STOPWORDS.has(term) || seen.has(term)) continue
+  for (const match of jd.toLowerCase().matchAll(/\p{L}[\p{L}\p{M}\p{N}+#.]*/gu)) {
+    const term = match[0].replace(/\.+$/, '')
+    const unmarked = term.replace(/\p{M}/gu, '')
+    if (Array.from(unmarked).length < 3 || STOPWORDS.has(unmarked) || seen.has(term)) continue
     seen.add(term)
-    // Double-quote to make every term a literal, because FTS5 reads bare punctuation as
-    // query syntax, and JD text is full of it.
     terms.push(`"${term.replace(/"/g, '""')}"`)
     if (terms.length >= MAX_FTS_TERMS) break
   }

@@ -29,7 +29,8 @@ export default defineConfig({
           // Capacity benchmark; see `npm run bench`.
           bench: resolve('src/main/bench.ts'),
           // Ranking-quality evaluation; see `npm run eval`.
-          eval: resolve('src/main/eval.ts')
+          eval: resolve('src/main/eval.ts'),
+          'eval-cross-domain': resolve('src/main/eval-cross-domain.ts')
         },
         output: { format: 'cjs', entryFileNames: '[name].js' }
       }

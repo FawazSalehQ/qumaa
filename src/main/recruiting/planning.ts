@@ -1,10 +1,28 @@
 /** Pure recruiter-workflow rules. Ranking weights and eligibility stay untouched. */
-import type { CandidateProfile, CandidateReview, JobCriterion, JobPosting } from '@shared/recruiting.js'
+import type { CandidateProfile, CandidateReview, CriterionEvidence, JobCriterion, JobPosting } from '@shared/recruiting.js'
 import type { Evidence, MatchResult, SectionKind } from '@shared/types.js'
+import { scoreSemantics, type ScoredChunk } from '../search/scoring.js'
+import { splitRequirementClauses, stripRequirementBullet } from '@shared/job-requirements.js'
 
 export function postingText(posting: JobPosting, criteria: JobCriterion[] = []): string {
-  return [posting.position, posting.jobDescription, posting.requirements, posting.educationAndCertifications,
-    ...criteria.map((criterion) => criterion.text)].map((part) => part.trim()).filter(Boolean).join('\n\n')
+  const parts = [posting.position, posting.jobDescription, posting.requirements, posting.educationAndCertifications]
+    .map((part) => part.trim()).filter(Boolean)
+  const key = (text: string): string => text.normalize('NFKC').toLowerCase().replace(/\s+/gu, ' ').trim()
+  const included = new Set(parts.flatMap((part) => part.split(/\r?\n/u)).flatMap((line) => {
+    const cleaned = stripRequirementBullet(line)
+    return [cleaned, ...splitRequirementClauses(cleaned)]
+  }).map(key).filter(Boolean))
+  for (const criterion of criteria) {
+    const text = criterion.text.trim()
+    const normalized = key(text)
+    // Importing a scorecard line must not repeat its existing posting wording
+    // and increase its weight in per-query averages. Edited/new wording stays
+    // searchable. Deliberately preserve punctuation and negation.
+    if (!normalized || included.has(normalized)) continue
+    parts.push(text)
+    included.add(normalized)
+  }
+  return parts.join('\n\n')
 }
 
 export function isShortlisted(status: CandidateReview['status']): boolean {
@@ -130,5 +148,38 @@ export function suggestCriterionEvidence(criteria: JobCriterion[], passages: Evi
     // Bound repeated scorecard excerpts while retaining a verbatim window near
     // a matching term. This is a suggestion, never an automatic assessment.
     return { criterionId: criterion.id, passage: { section: best.section, text: passageExcerpt(best.text, criterion.text, 1_200), similarity: overlap / words.length } }
+  })
+}
+
+/**
+ * Retrieve each requirement's nearest passage using the same section weighting
+ * as search. Similarity is not a support/qualification verdict: even the nearest
+ * passage can contradict a requirement or describe someone else's work.
+ */
+export function suggestSemanticCriterionEvidence(criteria: JobCriterion[], passages: ScoredChunk[], vectors: Float32Array[]): CriterionEvidence[] {
+  if (vectors.length !== criteria.length) throw new Error('Requirement evidence vectors do not match the requested criteria.')
+  // A leading name/header is frequently its own unstructured chunk. It is not
+  // useful requirement evidence even if the multilingual model places it near
+  // a short query. Exclude only tiny leading `other` chunks, and only when the
+  // CV also contains a substantive passage. Keep short credentials in named
+  // education/skills sections. This does not alter ingest or candidate ranking.
+  const wordCount = (text: string): number => text.trim().split(/\s+/u).filter(Boolean).length
+  let start = 0
+  if (passages.some((passage) => wordCount(passage.text) >= 8)) {
+    while (start < passages.length && passages[start].section === 'other' && wordCount(passages[start].text) <= 3) start++
+  }
+  const evidencePassages = passages.slice(start)
+  return criteria.map((criterion, index) => {
+    const vector = vectors[index]
+    if (!vector.length || [...vector].some((value) => !Number.isFinite(value)) || passages.some((passage) => passage.vector.length !== vector.length)) {
+      throw new Error('Requirement evidence vectors are incompatible with the current index.')
+    }
+    const nearest = scoreSemantics([vector], evidencePassages).evidence[0]
+    return {
+      criterionId: criterion.id,
+      method: 'semantic',
+      reviewNeeded: true,
+      passage: nearest ? { ...nearest, text: passageExcerpt(nearest.text, criterion.text, 1_200) } : null
+    }
   })
 }

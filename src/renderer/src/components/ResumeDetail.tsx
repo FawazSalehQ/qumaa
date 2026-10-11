@@ -21,26 +21,24 @@ interface Props {
 }
 
 /** Turns the three component scores into a sentence, so the numbers mean something. */
-function readScore(m: MatchResult, t: Translator, formatNumber: (value: number) => string, separator: string): string {
-  const { semantic, lexical, skills } = m.breakdown
+function readScore(m: MatchResult, t: Translator, formatNumber: (value: number) => string): string {
+  const { semantic, lexical } = m.breakdown
   const parts: string[] = []
 
-  if (semantic >= 0.75) parts.push(t('their experience closely resembles the work described'))
-  else if (semantic >= 0.4) parts.push(t('their experience partly resembles the work described'))
-  else parts.push(t('their experience is a weak fit for the work described'))
+  if (semantic >= 0.75) parts.push(t('CV text similarity is high relative to this candidate pool.'))
+  else if (semantic >= 0.4) parts.push(t('CV text similarity is moderate relative to this candidate pool.'))
+  else parts.push(t('CV text similarity is low relative to this candidate pool.'))
 
-  if (m.matchedSkills.length && !m.missingSkills.length) parts.push(t('and they have every listed skill'))
-  else if (m.matchedSkills.length)
-    parts.push(t('and they have {matched} of {total} listed skills', { matched: formatNumber(m.matchedSkills.length), total: formatNumber(m.matchedSkills.length + m.missingSkills.length) }))
-  else if (m.missingSkills.length) parts.push(t('but none of the listed skills were found'))
+  const total = m.matchedSkills.length + m.missingSkills.length
+  if (total) parts.push(t('The CV mentions {matched} of {total} recognized skill terms.', {
+    matched: formatNumber(m.matchedSkills.length), total: formatNumber(total)
+  }))
+  else parts.push(t('No skill terms were recognized in this job description. Review its requirements and source passages.'))
 
-  if (lexical >= 0.75) parts.push(t('with strong keyword overlap'))
-  else if (lexical <= 0.25) parts.push(t('with little keyword overlap'))
+  if (lexical >= 0.75) parts.push(t('Keyword overlap is high relative to this candidate pool.'))
+  else if (lexical <= 0.25) parts.push(t('Keyword overlap is low relative to this candidate pool.'))
 
-  if (skills < 1 && m.missingSkills.length) {
-    return t('{reading}. Missing: {skills}.', { reading: parts.join(separator), skills: m.missingSkills.join(separator) })
-  }
-  return `${parts.join(separator)}.`
+  return parts.join(' ')
 }
 
 function Bar({ label, value }: { label: string; value: number }): React.JSX.Element {
@@ -67,7 +65,7 @@ function Field({ label, value, dir = 'auto' }: { label: string; value: string | 
 }
 
 export default function ResumeDetail({ resume, match, onClose, onDeleted, onProfileChanged }: Props): React.JSX.Element {
-  const { t, formatNumber, language } = useI18n()
+  const { t, formatNumber } = useI18n()
   const [detail, setDetail] = useState<Detail | null>(null)
   const [showAllText, setShowAllText] = useState(false)
 
@@ -121,26 +119,27 @@ export default function ResumeDetail({ resume, match, onClose, onDeleted, onProf
           {match && (
             <section>
               <h3>{t('Score breakdown')}</h3>
-              <p className="reading">{readScore(match, t, formatNumber, language === 'ar' ? '، ' : ', ')}</p>
+              <p className="reading">{readScore(match, t, formatNumber)}</p>
               <div className="score-bars">
                 <Bar label={t('Semantic')} value={match.breakdown.semantic} />
                 <Bar label={t('Keyword')} value={match.breakdown.lexical} />
-                <Bar label={t('Skills')} value={match.breakdown.skills} />
+                {(match.matchedSkills.length > 0 || match.missingSkills.length > 0) && <Bar label={t('Recognized skill terms')} value={match.breakdown.skills} />}
               </div>
               {(match.matchedSkills.length > 0 || match.missingSkills.length > 0) && (
                 <div className="chips">
                   {match.matchedSkills.map((s) => (
-                    <span key={s} className="chip matched">
+                    <span key={s} className="chip matched" title={t('Mentioned in CV text')}>
                       <bdi>{s}</bdi>
                     </span>
                   ))}
                   {match.missingSkills.map((s) => (
-                    <span key={s} className="chip missing">
+                    <span key={s} className="chip missing" title={t('Not found in CV text')}>
                       <bdi>{s}</bdi>
                     </span>
                   ))}
                 </div>
               )}
+              <p className="hint">{t('Text matches suggest passages to review; they do not verify qualifications or professional responsibility.')}</p>
             </section>
           )}
 

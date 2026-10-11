@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "family": "logistics",
+  "title": "Warehouse inventory and distribution operations",
+  "reviewStatus": "synthetic-unreviewed",
+  "candidates": [
+    {
+      "id": "C01",
+      "en": "Professional profile\nWarehouse inventory specialist and distribution supervisor, 2014–2026.\nEmployment\nOwns cycle counts, investigates location discrepancies, and reconciles receipts and dispatches in the warehouse management system. Plans replenishment and picking waves for a spare-parts distribution centre. Since 2021, supervises eighteen warehouse employees, sets shift allocations, reviews order accuracy, and follows up damaged stock. Coordinates carrier collection times with outbound teams and tracks recurring causes of late dispatch. Previously performed receiving checks and stock-location updates. Trains new colleagues on transaction records and verifies corrective actions after count differences.\nEducation\nDiploma in logistics operations and warehouse-system training.",
+      "ar": "نبذة مهنية\nمتخصص مخزون مستودعات ومشرف توزيع من 2014 إلى 2026.\nالعمل\nيتولى الجرد الدوري ويحقق في فروق المواقع ويسوي الاستلام والصرف في نظام إدارة المستودع. يخطط إعادة التزويد وموجات الالتقاط لمركز توزيع قطع غيار. منذ 2021 يشرف على ثمانية عشر موظف مستودع ويوزع الورديات ويراجع دقة الطلبات ويتابع المخزون التالف. ينسق أوقات استلام الناقلين مع فرق الشحن ويتتبع الأسباب المتكررة لتأخر الإرسال. نفذ سابقاً فحوص الاستلام وتحديث مواقع المخزون. يدرب الزملاء الجدد على تسجيل الحركات ويتحقق من تنفيذ التصحيحات بعد فروق العد.\nالتعليم\nدبلوم عمليات لوجستية وتدريب على نظام المستودعات وتنظيم حركة المخزون."
+    },
+    {
+      "id": "C02",
+      "en": "Summary\nDistribution-centre inventory controller and operations lead, 2013–2026.\nWork history\nReconciles scanned movements with physical stock and investigates shortages before replenishment orders are released. Uses a WMS to control bin assignments, count schedules, and dispatch exceptions. Since 2020, leads twenty-two employees across receiving, storage, picking, and shipping. Reviews throughput and overtime, coaches shift supervisors, and coordinates carrier cut-offs with customer service. Introduced a documented process for resolving mislocated stock and follows its completion. Earlier employment involved checking inbound deliveries and preparing outbound orders for regional customers.\nQualifications\nDiploma in supply-chain operations and practical supervisory training.",
+      "ar": "الملخص\nمراقب مخزون مركز توزيع وقائد عمليات من 2013 إلى 2026.\nتاريخ العمل\nيطابق الحركات الممسوحة بالمخزون الفعلي ويحقق في النقص قبل إصدار أوامر إعادة التزويد. يستخدم نظام إدارة مستودعات لضبط مواقع التخزين وجداول الجرد واستثناءات الشحن. منذ 2020 يقود اثنين وعشرين موظفاً في الاستلام والتخزين والالتقاط والإرسال. يراجع حجم المناولة والعمل الإضافي ويوجه مشرفي الورديات وينسق مواعيد الناقلين النهائية مع خدمة العملاء. أدخل إجراء موثقاً لحل المخزون الموجود في موقع خاطئ ويتابع اكتماله. شمل عمله السابق فحص التسليمات الواردة وتجهيز الطلبات الصادرة لعملاء إقليميين.\nالمؤهلات\nدبلوم عمليات سلسلة إمداد وتدريب إشرافي عملي في بيئة توزيع."
+    },
+    {
+      "id": "C03",
+      "en": "Career overview\nInventory control specialist, 2018–2026, in a regional warehouse.\nExperience\nPlans cycle counts, traces unexplained stock movements, and corrects locations after approved investigations. Reconciles receiving records and picked quantities in a WMS and prepares discrepancy summaries for the warehouse manager. Coordinates urgent replenishment with pickers and flags orders at risk of missing carrier collection. Maintains a log of repeat errors and trains new users on recording transactions. Does not set staffing budgets, manage warehouse employees, or own site throughput targets. Earlier work focused on receiving documentation and product identification.\nEducation\nVocational diploma in warehouse operations and inventory-control workshops.",
+      "ar": "المسار المهني\nمتخصص رقابة مخزون من 2018 إلى 2026 في مستودع إقليمي.\nالخبرة\nيخطط الجرد الدوري ويتتبع حركات المخزون غير المفسرة ويصحح المواقع بعد تحقيقات معتمدة. يسوي سجلات الاستلام والكميات الملتقطة في نظام إدارة مستودعات ويعد ملخصات الفروق لمدير المستودع. ينسق إعادة التزويد العاجلة مع الملتقطين وينبه إلى الطلبات المعرضة لفوات استلام الناقل. يحتفظ بسجل الأخطاء المتكررة ويدرب المستخدمين الجدد على تسجيل الحركات. لا يحدد ميزانيات العمالة أو يدير موظفي المستودع أو يتولى أهداف إنتاجية الموقع. ركز عمله السابق على مستندات الاستلام والتعرف على المنتجات.\nالتعليم\nدبلوم مهني في عمليات المستودعات وورش في رقابة المخزون وتحليل الفروق."
+    },
+    {
+      "id": "C04",
+      "en": "Profile\nDistribution operations manager, 2010–2026.\nEmployment\nManaged a warehouse and transport depot since 2017, leading thirty employees through shift supervisors. Owns staffing plans, throughput reviews, carrier coordination, operating budgets, and investigation of persistent dispatch failures. Previously supervised warehouse receiving and outbound staging before moving into site management. Reviews inventory-accuracy reports and assigns corrective actions, but detailed WMS transactions and cycle-count reconciliation have been delegated for eight years. Leads capacity planning for seasonal demand and chairs weekly reviews with customer service and transport partners.\nEducation\nBachelor's degree in business operations and employer logistics-management training.",
+      "ar": "الملف المهني\nمدير عمليات توزيع من 2010 إلى 2026.\nالعمل\nأدار مستودعاً وساحة نقل منذ 2017 وقاد ثلاثين موظفاً من خلال مشرفي ورديات. يتولى خطط العمالة ومراجعات الإنتاجية وتنسيق الناقلين وميزانيات التشغيل والتحقيق في إخفاقات الشحن المستمرة. أشرف سابقاً على الاستلام وتجميع الشحنات قبل انتقاله إلى إدارة الموقع. يراجع تقارير دقة المخزون ويكلف بإجراءات تصحيحية، لكن الحركات التفصيلية في نظام المستودعات وتسوية الجرد مفوضة منذ ثماني سنوات. يقود تخطيط السعة للمواسم ويرأس مراجعات أسبوعية مع خدمة العملاء وشركاء النقل.\nالتعليم\nبكالوريوس عمليات أعمال وتدريب لدى صاحب العمل في الإدارة اللوجستية وتنسيق فرق المواقع."
+    },
+    {
+      "id": "C05",
+      "en": "Overview\nWarehouse assistant, January 2025–September 2026.\nExperience\nScans incoming cartons, records bin locations, and participates in supervised stock counts. Checks picked quantities against order sheets and reports differences to an inventory controller. Has used basic WMS screens but has not investigated discrepancies independently or planned replenishment waves. Helps prepare carrier manifests from approved orders. Has no responsibility for staffing, operating budgets, or throughput planning. A vocational course covered warehouse layouts and an example cycle-count schedule before starting this first full-time warehouse role.\nEducation\nDiploma in logistics support completed in 2024.",
+      "ar": "نبذة\nمساعد مستودع من يناير 2025 إلى سبتمبر 2026.\nالخبرة\nيمسح الكراتين الواردة ويسجل مواقعها ويشارك في جرد مخزون خاضع للإشراف. يفحص الكميات الملتقطة مقابل أوراق الطلبات ويرفع الفروق إلى مراقب المخزون. استخدم شاشات أساسية بنظام المستودعات لكنه لم يحقق في الفروق مستقلاً أو يخطط موجات إعادة التزويد. يساعد في تجهيز كشوف الناقلين من طلبات معتمدة. لا يتحمل مسؤولية العمالة أو ميزانيات التشغيل أو تخطيط الإنتاجية. غطت دورة مهنية تخطيطات المستودعات ومثالاً لجدول جرد دوري قبل بدء وظيفته الكاملة الأولى في المستودع.\nالتعليم\nأكمل دبلوم الدعم اللوجستي عام 2024 مع تدريب قصير على تسجيل المواد."
+    },
+    {
+      "id": "C06",
+      "en": "Professional summary\nFleet dispatcher, 2016–2026.\nWork history\nAssigns delivery vehicles to routes, tracks driver arrival times, and adjusts schedules when roads or customer access cause delays. Coordinates collection windows with warehouse contacts but does not receive stock or control warehouse locations. Reviews transport mileage and external-carrier charges. Supervises three dispatch clerks, not warehouse shifts. Has no hands-on cycle-count reconciliation or WMS ownership. Completed an introductory inventory course to understand the warehouse reports used in planning. Earlier work involved transport bookings and proof-of-delivery collection.\nQualifications\nDiploma in transport administration and route-planning training.",
+      "ar": "النبذة المهنية\nمنسق أسطول من 2016 إلى 2026.\nتاريخ العمل\nيوزع مركبات التوصيل على المسارات ويتابع وصول السائقين ويعدل الجداول عند تأخر الطريق أو صعوبة الدخول للعميل. ينسق نوافذ الاستلام مع موظفي المستودع لكنه لا يستلم المخزون أو يضبط مواقع تخزينه. يراجع مسافات النقل ورسوم الناقلين الخارجيين. يشرف على ثلاثة كتبة إرسال وليس ورديات مستودع. ليست لديه مسؤولية عملية عن تسويات الجرد الدوري أو نظام إدارة المستودعات. أكمل دورة مخزون تمهيدية لفهم تقارير المستودع المستخدمة في التخطيط. تضمن عمله السابق حجوزات النقل وجمع إثبات التسليم.\nالمؤهلات\nدبلوم إدارة نقل وتدريب في تخطيط المسارات ومتابعة الرحلات."
+    },
+    {
+      "id": "C07",
+      "en": "Profile\nOnline product-listing assistant, 2019–2026. Interests include warehouse management, cycle counting, WMS, inventory accuracy, replenishment, and dispatch leadership.\nEmployment\nUpdates catalogue descriptions, uploads product photographs, and checks that advertised prices match approved lists. Forwards stock questions to a separate fulfilment provider and has never handled physical stock. Completed an online warehouse-management overview and a spreadsheet exercise using invented inventory movements. Does not operate a warehouse system, investigate real count differences, supervise shifts, or coordinate carriers. Occasionally helps customer support locate an order reference in the sales portal.\nEducation\nDiploma in digital commerce and catalogue-system training.",
+      "ar": "الملف\nمساعد إدراج منتجات إلكترونية من 2019 إلى 2026. يهتم بإدارة المستودعات والجرد الدوري ونظام المستودعات ودقة المخزون وإعادة التزويد وقيادة الإرسال.\nالعمل\nيحدث أوصاف الكتالوج ويرفع صور المنتجات ويتحقق من مطابقة الأسعار المعلنة للقوائم المعتمدة. يحيل أسئلة المخزون إلى مزود تنفيذ طلبات منفصل ولم يتعامل مع مخزون مادي. أكمل عرضاً تعليمياً عبر الإنترنت عن إدارة المستودعات وتمريناً حسابياً بحركات مخزون مختلقة. لا يشغل نظام مستودع أو يحقق في فروق عد فعلية أو يشرف على ورديات أو ينسق الناقلين. يساعد أحياناً الدعم في العثور على مرجع طلب ببوابة المبيعات.\nالتعليم\nدبلوم تجارة رقمية وتدريب على نظام الكتالوج ومراجعة البيانات المنشورة."
+    },
+    {
+      "id": "C08",
+      "en": "Career summary\nMusic-school administrator, 2015–2026.\nExperience\nArranges lessons, maintains student attendance, and allocates practice rooms. Coordinates instructor availability and sends reminders about concerts and missed sessions. Records fee payments for review by an external bookkeeper. Orders classroom supplies in small quantities without operating a stock ledger or warehouse. Previously staffed a reception desk and handled event registrations. Supervises one part-time receptionist during term starts. Has no work history in distribution, physical inventory control, carrier dispatch, or warehouse systems.\nEducation\nDiploma in arts administration and training in student-record software.",
+      "ar": "المسار المهني\nإداري مدرسة موسيقى من 2015 إلى 2026.\nالخبرة\nيرتب الدروس ويحافظ على حضور الطلاب ويوزع غرف التدريب. ينسق توافر المعلمين ويرسل تذكيرات بالحفلات والجلسات الفائتة. يسجل رسوم الدراسة ليراجعها ماسك دفاتر خارجي. يطلب مستلزمات الصفوف بكميات صغيرة دون تشغيل سجل مخزون أو مستودع. عمل سابقاً في مكتب استقبال وعالج تسجيل الفعاليات. يشرف على موظف استقبال جزئي واحد عند بدء الفصول. ليست لديه خبرة عمل في التوزيع أو رقابة المخزون المادي أو إرسال الناقلين أو أنظمة المستودعات.\nالتعليم\nدبلوم إدارة فنون وتدريب في برنامج سجلات الطلاب وتنظيم المواعيد ومتابعة حجوزات الغرف."
+    }
+  ],
+  "vacancies": [
+    {
+      "id": "specialist",
+      "seniority": "experienced",
+      "posting": {
+        "en": "Inventory specialist — regional distribution centre\nKeep warehouse stock records dependable and help outbound teams fulfil orders accurately. Required: at least four years in warehouse inventory control; practical use of a warehouse management system; ownership of cycle counts and discrepancy investigations; and reconciliation of inbound and outbound movements. Coordinate replenishment with picking teams and flag orders that may miss carrier cut-offs. Explain recurring errors using transaction records and propose workable corrections. Preferred: spare-parts or other high-item-count distribution experience. The role is based in the warehouse and does not require people management. Transport scheduling or classroom inventory exercises are useful background but do not replace direct responsibility for physical stock accuracy and its system records.",
+        "ar": "متخصص مخزون — مركز توزيع إقليمي\nحافظ على موثوقية سجلات مخزون المستودع وساعد فرق الإرسال في تجهيز الطلبات بدقة. المطلوب أربع سنوات على الأقل في رقابة مخزون مستودعات، واستخدام عملي لنظام إدارة مستودع، ومسؤولية عن الجرد الدوري والتحقيق في الفروق، وتسوية الحركات الواردة والصادرة. نسق إعادة التزويد مع فرق الالتقاط ونبه إلى الطلبات التي قد تفوت المواعيد النهائية للناقلين. اشرح الأخطاء المتكررة بالرجوع إلى سجلات الحركات واقترح تصحيحات قابلة للتنفيذ. يفضل توزيع قطع الغيار أو منتجات ذات عدد أصناف مرتفع. مقر الوظيفة داخل المستودع ولا تتطلب إدارة أفراد. تعد جدولة النقل أو تمارين المخزون الدراسية خلفية مفيدة لكنها لا تعوض المسؤولية المباشرة عن دقة المخزون المادي وسجلاته النظامية."
+      },
+      "labels": {
+        "C01": 1,
+        "C02": 1,
+        "C03": 1,
+        "C04": 2,
+        "C05": 2,
+        "C06": 3,
+        "C07": 4,
+        "C08": 4
+      },
+      "rationales": {
+        "C01": "Twelve years of direct count, discrepancy, WMS and replenishment responsibilities.",
+        "C02": "Longstanding hands-on stock reconciliation and system control alongside leadership.",
+        "C03": "Eight years of direct inventory investigations and warehouse transaction ownership.",
+        "C04": "Relevant warehouse leadership but recent detailed WMS and reconciliation work is delegated.",
+        "C05": "Direct handling exposure but less than two years and no independent investigation.",
+        "C06": "Transport dispatch transfers coordination skills but lacks physical stock control.",
+        "C07": "Catalogue work and simulated inventory exercises do not establish warehouse experience.",
+        "C08": "Music-school administration provides no warehouse evidence."
+      }
+    },
+    {
+      "id": "lead",
+      "seniority": "lead",
+      "posting": {
+        "en": "Warehouse operations manager — distribution site\nLead receiving, storage, picking, and dispatch at a busy regional distribution site. Required: at least ten years in distribution operations and four years managing warehouse employees through shifts or supervisors. Own workforce planning, throughput and order-accuracy reviews, operating costs, and coordination with carriers and customer service. Use inventory and dispatch reports to identify recurring failures and ensure corrective actions are completed. Coach supervisors and prepare capacity plans for seasonal demand. Preferred: direct WMS and cycle-count experience, though detailed transactions may be delegated to inventory specialists. This role requires responsibility for an operating warehouse, not only vehicle routing or third-party booking. Explain decisions with site evidence and communicate service risks early.",
+        "ar": "مدير عمليات مستودع — موقع توزيع\nقد الاستلام والتخزين والالتقاط والإرسال في موقع توزيع إقليمي نشط. المطلوب عشر سنوات على الأقل في عمليات التوزيع وأربع سنوات في إدارة موظفي مستودع عبر ورديات أو مشرفين. تول تخطيط العمالة ومراجعات الإنتاجية ودقة الطلبات وتكاليف التشغيل والتنسيق مع الناقلين وخدمة العملاء. استخدم تقارير المخزون والإرسال لتحديد الإخفاقات المتكررة وتأكد من اكتمال الإجراءات التصحيحية. وجه المشرفين وأعد خطط السعة للطلب الموسمي. يفضل الاستخدام المباشر لنظام المستودعات والجرد الدوري، مع إمكانية تفويض الحركات التفصيلية لمتخصصي المخزون. تتطلب الوظيفة مسؤولية عن مستودع عامل، ولا تكفي جدولة المركبات أو الحجز لدى أطراف أخرى. اشرح القرارات بوقائع الموقع وبلغ مخاطر الخدمة في وقت مبكر."
+      },
+      "labels": {
+        "C01": 1,
+        "C02": 1,
+        "C03": 2,
+        "C04": 1,
+        "C05": 3,
+        "C06": 3,
+        "C07": 4,
+        "C08": 4
+      },
+      "rationales": {
+        "C01": "Five years managing warehouse staff plus twelve years of direct distribution work.",
+        "C02": "Six years leading full distribution-centre shifts with throughput, overtime and service reviews.",
+        "C03": "Experienced specialist without staff, cost or site-performance ownership.",
+        "C04": "Nine years managing warehouse and depot operations including budgets and capacity.",
+        "C05": "Entry-level warehouse assistance lacks required leadership and tenure.",
+        "C06": "Fleet-clerk supervision does not establish management of warehouse operations.",
+        "C07": "Catalogue administration has no operating-site leadership evidence.",
+        "C08": "Education administration is unrelated to warehouse operations."
+      }
+    }
+  ]
+}

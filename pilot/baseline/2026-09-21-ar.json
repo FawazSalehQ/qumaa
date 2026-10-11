@@ -1,0 +1,454 @@
+{
+  "schemaVersion": 2,
+  "status": "completed",
+  "ranAt": "2026-09-21T18:24:42.843Z",
+  "provenance": {
+    "modelVectorId": "multilingual-e5-small@761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+    "nodeVersion": "24.18.1",
+    "electronVersion": "43.4.1",
+    "sourceHead": "48cbbc09dd61df162a945aeedd235b30c7577821",
+    "sourceTreeSha256": "ea717719f2e989946fc6d595cb3cce28691ec6278d8c60d008eccbbf6b859fc9",
+    "runtimeBundleSha256": "45bb8f35a2b5f94aa9a5d30dbbbefe8921df918e633f31487e22259d60719bdc",
+    "postingSha256": "1872c7f8d4ab31db6bb5af8929892d3171803bfd92939010659d1bcfa6a28740",
+    "labelsSha256": "b66bc42bbc286c80e00691de05f2bd56a36026255a805f368c342c2999ab516c",
+    "labelsFileSha256": "9b66cd386fc219b7f6a983a622161080feedd80f1f5d7b448c294a49c6e88098",
+    "corpusSha256": "2c9738bc10800521843d31f0613fbb2256ffff6f83b330929d6390662f03c5ff",
+    "corpusFiles": [
+      {
+        "file": "C01.md",
+        "sha256": "14dc36b6de74e7da5125f7878e6612bab7f299199c59977ab14dee627bb8838d"
+      },
+      {
+        "file": "C02.md",
+        "sha256": "17ae3380399c77ab2b406f01db7929e3caa6ab80e4007c6eb4fc5080a50f33b6"
+      },
+      {
+        "file": "C03.md",
+        "sha256": "f681c366a30965a39d7db14608d6b9d2dcba7242972885f7fdc98590b0177e43"
+      },
+      {
+        "file": "C04.md",
+        "sha256": "f0a7f70765b005ee543435139a67ed7f65fed0e94d43774222c4ed664de97bee"
+      },
+      {
+        "file": "C05.md",
+        "sha256": "5b6eb2a8281ffa6687c983a0d305ea3b110d71ad478360bdace4975b62dbf0d5"
+      },
+      {
+        "file": "C06.md",
+        "sha256": "705fd80021da0c49474cba31ccdc56d14872892d1b64756f1a8bfb4e3021c7f5"
+      },
+      {
+        "file": "C07.md",
+        "sha256": "54129a67686c2e6eecd0e019e8f154f2ef84f6006f98a04cb0217d35d297ae17"
+      },
+      {
+        "file": "C08.md",
+        "sha256": "7f4e7d4c4e8374161a6fc373f97ea5a7d52e2dcc82ad7c47bf84e71f3ef5296d"
+      },
+      {
+        "file": "C09.md",
+        "sha256": "374891286597452510632892517b928a5a6edf7969e8e6dee811e1b97a195d3f"
+      },
+      {
+        "file": "C10.md",
+        "sha256": "dbe5a1ce64c704831fa065a4a3f55f2366e74291396255c1c37847399cf61158"
+      },
+      {
+        "file": "C11.md",
+        "sha256": "781e9e5ef0394841faf7fe6fe48ceef2765c9ac55213d970cdfd0492a7c319fc"
+      },
+      {
+        "file": "C12.md",
+        "sha256": "73bc23ac88ed9fbda868e02c2f914b8f6b35e5c3a47e1c82a367fc2bb4901e8c"
+      },
+      {
+        "file": "C13.md",
+        "sha256": "77a4f7b7a263d75dcfea7c0df884004ec3ebee17f39a228ff6ac4850f94d99e0"
+      },
+      {
+        "file": "C14.md",
+        "sha256": "b665221035a0f2d966170ef1c8ea727ce9adcb418d298e5ba5cadcf567418d70"
+      },
+      {
+        "file": "C15.md",
+        "sha256": "6f2c8afb97e6024b59788e3f11c998285783089dd5f3554de6fe01431a6c3560"
+      },
+      {
+        "file": "C16.md",
+        "sha256": "5c01925e65adab07ab9ae583bb8b6855bdad6c053fcae62f95782e2fd2602c8d"
+      }
+    ]
+  },
+  "ignoredUnlabelled": 0,
+  "corpusSize": 16,
+  "imported": 16,
+  "ingestMs": 925,
+  "searchMs": 770,
+  "metrics": {
+    "precisionAt3": 0.3333333333333333,
+    "recallAt3": 0.25,
+    "recallAt10": 0.5,
+    "top3TargetCoverage": 0.3333333333333333,
+    "reciprocalRank": 1,
+    "mrr": 1,
+    "ndcg10": 0.6624812910234603
+  },
+  "tier1Ranks": [
+    1,
+    6,
+    12,
+    16
+  ],
+  "meanByTier": {
+    "1": 0.40265808894635957,
+    "2": 0.40853662857408235,
+    "3": 0.41243612654049855,
+    "4": 0.44491685007002857
+  },
+  "spread": 0.5159597502621998,
+  "requiredSkills": [
+    "Emergency Care",
+    "Training"
+  ],
+  "nearDuplicates": [],
+  "problems": [],
+  "ranking": [
+    {
+      "rank": 1,
+      "tier": 1,
+      "file": "C07.md",
+      "score": 0.6875416451974239,
+      "breakdown": {
+        "semantic": 0.9754059219676082,
+        "lexical": 0.7553419405761967,
+        "skills": 0
+      },
+      "evidence": [
+        {
+          "section": "other",
+          "similarity": 0.8934949882198563
+        },
+        {
+          "section": "other",
+          "similarity": 0.8816472963674127
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "tier": 2,
+      "file": "C10.md",
+      "score": 0.6706251105237725,
+      "breakdown": {
+        "semantic": 0.9920456554977681,
+        "lexical": 0,
+        "skills": 0.5
+      },
+      "evidence": [
+        {
+          "section": "other",
+          "similarity": 0.8777020807453016
+        },
+        {
+          "section": "other",
+          "similarity": 0.8731687475288382
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "tier": 3,
+      "file": "C06.md",
+      "score": 0.6345395216154192,
+      "breakdown": {
+        "semantic": 0.9264354938462165,
+        "lexical": 0,
+        "skills": 0.5
+      },
+      "evidence": [
+        {
+          "section": "other",
+          "similarity": 0.8852399371552196
+        },
+        {
+          "section": "other",
+          "similarity": 0.8668882399095608
+        }
+      ]
+    },
+    {
+      "rank": 4,
+      "tier": 4,
+      "file": "C13.md",
+      "score": 0.55,
+      "breakdown": {
+        "semantic": 1,
+        "lexical": 0,
+        "skills": 0
+      },
+      "evidence": [
+        {
+          "section": "other",
+          "similarity": 0.884536793713318
+        },
+        {
+          "section": "other",
+          "similarity": 0.8836907827703944
+        }
+      ]
+    },
+    {
+      "rank": 5,
+      "tier": 4,
+      "file": "C08.md",
+      "score": 0.5182086195118207,
+      "breakdown": {
+        "semantic": 0.3512883991124014,
+        "lexical": 1,
+        "skills": 0.5
+      },
+      "evidence": [
+        {
+          "section": "other",
+          "similarity": 0.836359180298167
+        },
+        {
+          "section": "other",
+          "similarity": 0.8172804572339137
+        }
+      ]
+    },
+    {
+      "rank": 6,
+      "tier": 1,
+      "file": "C15.md",
+      "score": 0.5056072438095793,
+      "breakdown": {
+        "semantic": 0.9192858978355987,
+        "lexical": 0,
+        "skills": 0
+      },
+      "evidence": [
+        {
+          "section": "other",
+          "similarity": 0.8814272211190181
+        },
+        {
+          "section": "other",
+          "similarity": 0.8770939652989187
+        }
+      ]
+    },
+    {
+      "rank": 7,
+      "tier": 4,
+      "file": "C04.md",
+      "score": 0.5055984400551358,
+      "breakdown": {
+        "semantic": 0.9192698910093376,
+        "lexical": 0,
+        "skills": 0
+      },
+      "evidence": [
+        {
+          "section": "other",
+          "similarity": 0.8762326021687569
+        },
+        {
+          "section": "other",
+          "similarity": 0.8574140842906116
+        }
+      ]
+    },
+    {
+      "rank": 8,
+      "tier": 3,
+      "file": "C16.md",
+      "score": 0.5042088385743582,
+      "breakdown": {
+        "semantic": 0.9167433428624694,
+        "lexical": 0,
+        "skills": 0
+      },
+      "evidence": [
+        {
+          "section": "other",
+          "similarity": 0.8740185350619973
+        },
+        {
+          "section": "other",
+          "similarity": 0.8716951784425528
+        }
+      ]
+    },
+    {
+      "rank": 9,
+      "tier": 2,
+      "file": "C01.md",
+      "score": 0.5040908908164163,
+      "breakdown": {
+        "semantic": 0.9165288923934842,
+        "lexical": 0,
+        "skills": 0
+      },
+      "evidence": [
+        {
+          "section": "other",
+          "similarity": 0.8723540125437996
+        },
+        {
+          "section": "other",
+          "similarity": 0.8616439182557274
+        }
+      ]
+    },
+    {
+      "rank": 10,
+      "tier": 2,
+      "file": "C05.md",
+      "score": 0.2690513950862857,
+      "breakdown": {
+        "semantic": 0,
+        "lexical": 0.7202569754314284,
+        "skills": 0.5
+      },
+      "evidence": [
+        {
+          "section": "other",
+          "similarity": 0.8132170853351882
+        },
+        {
+          "section": "other",
+          "similarity": 0.8081757015425461
+        }
+      ]
+    },
+    {
+      "rank": 11,
+      "tier": 3,
+      "file": "C03.md",
+      "score": 0.26827645669240624,
+      "breakdown": {
+        "semantic": 0.2605026485316477,
+        "lexical": 0,
+        "skills": 0.5
+      },
+      "evidence": [
+        {
+          "section": "other",
+          "similarity": 0.8256428109475903
+        },
+        {
+          "section": "other",
+          "similarity": 0.8102732602163147
+        }
+      ]
+    },
+    {
+      "rank": 12,
+      "tier": 1,
+      "file": "C02.md",
+      "score": 0.24590157184321085,
+      "breakdown": {
+        "semantic": 0.15210879529500948,
+        "lexical": 0.18620867215477815,
+        "skills": 0.5
+      },
+      "evidence": [
+        {
+          "section": "other",
+          "similarity": 0.8316920919964903
+        },
+        {
+          "section": "other",
+          "similarity": 0.8088494671619126
+        }
+      ]
+    },
+    {
+      "rank": 13,
+      "tier": 3,
+      "file": "C12.md",
+      "score": 0.24271968927981072,
+      "breakdown": {
+        "semantic": 0.14462774885151786,
+        "lexical": 0.1908721370573795,
+        "skills": 0.5
+      },
+      "evidence": [
+        {
+          "section": "other",
+          "similarity": 0.8147942120413997
+        },
+        {
+          "section": "other",
+          "similarity": 0.8004718280956826
+        }
+      ]
+    },
+    {
+      "rank": 14,
+      "tier": 4,
+      "file": "C09.md",
+      "score": 0.20586034071315762,
+      "breakdown": {
+        "semantic": 0.14701880129665024,
+        "lexical": 0,
+        "skills": 0.5
+      },
+      "evidence": [
+        {
+          "section": "other",
+          "similarity": 0.8158612183660212
+        },
+        {
+          "section": "other",
+          "similarity": 0.8002100713872474
+        }
+      ]
+    },
+    {
+      "rank": 15,
+      "tier": 2,
+      "file": "C14.md",
+      "score": 0.19037911786985487,
+      "breakdown": {
+        "semantic": 0.04946307356068905,
+        "lexical": 0.1908721370573795,
+        "skills": 0.5
+      },
+      "evidence": [
+        {
+          "section": "other",
+          "similarity": 0.8154876250779591
+        },
+        {
+          "section": "other",
+          "similarity": 0.8128429941643486
+        }
+      ]
+    },
+    {
+      "rank": 16,
+      "tier": 1,
+      "file": "C11.md",
+      "score": 0.1715818949352241,
+      "breakdown": {
+        "semantic": 0.08469435442768018,
+        "lexical": 0,
+        "skills": 0.5
+      },
+      "evidence": [
+        {
+          "section": "other",
+          "similarity": 0.8192115736934893
+        },
+        {
+          "section": "other",
+          "similarity": 0.8144012256285291
+        }
+      ]
+    }
+  ]
+}

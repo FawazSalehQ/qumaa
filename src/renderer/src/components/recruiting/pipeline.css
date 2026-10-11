@@ -1,0 +1,26 @@
+.job-pipeline { padding-block: 18px; }
+.pipeline-add { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; margin-block: 16px; }
+.pipeline-add .recruit-field { min-width: 230px; flex: 1; }
+.pipeline-add .hint { flex-basis: 100%; margin: 0; }
+.pipeline-stage-counts { display: flex; flex-wrap: wrap; gap: 7px; margin-block: 18px; }
+.pipeline-stage-counts button { background: var(--bg-raised); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; cursor: pointer; }
+.pipeline-stage-counts button.selected { border-color: var(--accent); color: var(--accent); }
+.pipeline-stage-counts strong { margin-inline-start: 8px; }
+.pipeline-layout { display: grid; grid-template-columns: minmax(180px, 26%) minmax(0, 1fr); gap: 20px; }
+.pipeline-people { display: flex; flex-direction: column; gap: 8px; }
+.pipeline-people > button { text-align: start; display: grid; gap: 6px; padding: 14px; background: var(--bg-raised); color: var(--text); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; overflow-wrap: anywhere; }
+.pipeline-people > button span { font-size: 12px; color: var(--text-dim); }
+.pipeline-people > button.selected { border-color: var(--accent); box-shadow: inset 3px 0 var(--accent); }
+.pipeline-people .pipeline-overdue { color: var(--danger, #c75344); }
+.pipeline-detail { min-width: 0; border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.pipeline-detail h3, .pipeline-detail h4 { margin-block: 0 8px; }
+.pipeline-facts { display: grid; grid-template-columns: minmax(100px, 28%) 1fr; gap: 10px; font-size: 13px; }
+.pipeline-facts dt { color: var(--text-dim); }
+.pipeline-facts dd { margin: 0; overflow-wrap: anywhere; }
+.pipeline-history, .pipeline-submissions, .pipeline-screenings { margin-block-start: 22px; border-block-start: 1px solid var(--border); padding-block-start: 18px; }
+.pipeline-entry { border: 1px solid var(--border); border-radius: 9px; padding: 13px; margin-block: 12px; }
+.pipeline-entry summary, .pipeline-history summary { cursor: pointer; }
+.pipeline-question { border-block-end: 1px solid var(--border); padding-block: 14px; }
+.pipeline-detail .recruit-field { margin-block: 12px; }
+.pipeline-detail .recruit-section-head { flex-wrap: wrap; }
+@media (max-width: 1000px) { .pipeline-layout { grid-template-columns: 1fr; } .pipeline-people { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); } }

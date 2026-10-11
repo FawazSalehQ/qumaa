@@ -2,7 +2,167 @@
 
 Qumaa keeps the CV library, recruiting records, and matching on this computer.
 The existing matching engine remains the basis for candidate discovery.
-All six feature groups below are implemented.
+The company workflow and the remaining headhunter tools are implemented in the
+development source. Version 0.1.0-beta.5 also includes September 23 extraction
+work, September 27 vacancy-requirement/evidence changes, and October 3 company
+detail lists, plus October 4 company hiring-cost plans. See
+[ROADMAP.md](ROADMAP.md) and the
+[cross-domain report](pilot/CROSS-DOMAIN-2026-09-27.md) for current verification
+and remaining quality gates. Dated September 22 installer evidence below remains
+historical evidence for beta.2.
+
+## Hiring Budgets & Costs — October 4
+
+- Companies own multiple saved employment-cost plans, optionally linked to their
+  jobs. Each plan retains salary entry mode, split, headcount, dates, classification,
+  EOS components, approved period budget, notes and verified wage/limit overrides.
+- The shared pure engine uses integer halalas and half-up rounding, dated existing
+  and new GOSI rates, three independent wage bases, monthly EOS provisions,
+  headcount and period variance. Comparison never infers eligibility from hiring
+  dates. Annualisation and month-by-month forecasts are separate.
+- Full-month estimates exclude medical insurance and other cost items. Existing
+  job salary and total hiring-budget ranges remain independent. English/Arabic
+  screens and CSV exports calculate from the same canonical inputs.
+- Schema 12 preserves company/job identities and adds bounded, referentially
+  validated budget records to local persistence and portable backup/restore.
+  Stale edits/exports are rejected; linked jobs must be detached from budget plans
+  before changing company.
+- Production build, 547 unit tests, 289 Electron integration checks and all 29
+  source UI workflows passed (28 in the full suite and the new validation case
+  in a three-test budget rerun). English/Arabic budget layouts were inspected.
+- See [the calculation guide](docs/HIRING-BUDGETS.md) for verified sources and
+  assumptions, and [beta.5 verification](docs/releases/RELEASE-v0.1.0-beta.5.md).
+
+## Multiple company details — October 3
+
+- Industry, location, contact name and contact email accept multiple entries via
+  Add or Enter. Each entry has an accessible remove button. Duplicate entries are
+  prevented, new email entries are validated, and punctuation remains part of
+  the entered value. Names and emails are independent lists.
+- Save includes pending valid text; unsuccessful saves keep the editor intact.
+  Cancel discards draft changes. All values appear in company details and can
+  be found in directory search. Job context and target-company maps display
+  multiple industries/locations correctly.
+- Schema v11 reads legacy strings as individual entries without delimiter
+  splitting or destructive rewrites. Stable company/job identities and timestamps
+  survive upgrade. Multiple details persist through restart and backup/restore.
+- Production build, 507 unit tests and 268 Electron integration checks passed.
+  All 26 source UI workflows passed: the first run passed 13, and the other 13
+  passed after clearing an inherited Electron Node-only test-launch setting.
+  English and Arabic company layouts were inspected.
+- Beta.4 macOS arm64 and Windows x64 installers were rebuilt and their payloads
+  verified. All four company UI workflows passed in the packaged Mac app;
+  Windows runtime testing remains pending. See the
+  [beta.4 release notes](docs/releases/RELEASE-v0.1.0-beta.4.md).
+
+## Cross-domain requirements and evidence — September 27
+
+- Saved and Express jobs share editable requirement extraction from all posting
+  content fields, including arbitrary domain terminology and short credentials.
+  Source wording survives edits and reimport. Explicit required/preferred wording
+  is retained; ambiguous or negated priority wording stays unspecified.
+- Local multilingual embeddings retrieve canonical CV passages per criterion.
+  Suggestions require review and do not set an assessment. Short identity headers
+  are skipped when substantive evidence exists. Saved reviews support explicit
+  contradictory evidence; Express results expose read-only passage suggestions.
+- Identical source clauses are not appended twice to ranking queries. Changed
+  criteria still contribute. Saved match snapshots become stale without losing
+  decisions. Schema v10 protects the expanded JSON contract from older readers.
+- Candidate copy distinguishes relative text similarity and recognized terms
+  from verified qualifications; zero dictionary requirements no longer imply
+  perfect skill coverage.
+- The frozen evaluation samples 12 profession families, 96 fictional bilingual
+  careers and 24 vacancies. Development and reserved results expose cross-language
+  retrieval gaps. Synthetic labels and translations remain unreviewed, so this
+  work does not establish acceptable accuracy for all professions.
+- Production build, 503 unit tests, 261 Electron integration checks and all 24
+  source UI workflows passed. The full UI run passed 23; a stale passage-label
+  assertion was updated and that workflow passed on rerun. Checks use disposable
+  profiles and preserve existing recruiter records.
+- Beta.3 macOS arm64 and Windows x64 installers were rebuilt. The two new
+  English/Arabic requirement workflows also passed in the packaged macOS app.
+  Windows runtime verification remains pending. See the
+  [beta.3 release notes](docs/releases/RELEASE-v0.1.0-beta.3.md).
+
+## Recruiter desk and client workflow
+
+- Stable contacts for imported CV groups and manually created prospects without
+  CVs. Explicit CV linking and contact merging preserve histories, conflicting
+  fields, memberships and job assignments. Edits use stale-version checks.
+- Dated call/email/message/meeting/note activity, optional job context, outcomes,
+  next actions, completion/reopening, and overdue/today/upcoming reminders.
+- Manual talent pools and saved contact searches, with last-review dates and new
+  members. Filters include skills, employer, location, tags, availability, CV
+  presence and recent contact activity.
+- Separate per-job candidate pipelines from sourcing through placement/closure,
+  with immutable stage history, due actions and client feedback. Manual client
+  submission logs retain dates, recipients and the hiring-company snapshot.
+- Screening kits generated locally from unresolved criteria. Editable questions,
+  answers, call dates and verification labels persist independently of ranking
+  and CV assessment decisions. Historical kits remain available.
+- Client presentation PDFs for up to ten assigned people in recruiter order,
+  with explicit recommendations, selected evidence/answers and chosen details.
+  Canonical main-process previews exclude internal notes. One-use preview tokens
+  reject source changes before and after the save dialog. Blind mode suppresses
+  structured identity fields and explains narrative-text limitations.
+- Schema v9 includes these records in startup validation and portable backup
+  restore, with bounded inputs and referential checks. CV removal prunes
+  library-origin contacts and histories after the last CV; manual prospects
+  remain independently deletable. Wipe removes all recruiter records.
+- These workflows operate locally. Activity/submission logging sends no messages;
+  follow-ups are in-app reminders. English and Arabic UI and export copy are
+  available. Matching and provider request content are unchanged.
+
+## Company workspaces and sourcing plans
+
+- **Companies** stores company details, contact information, and hiring notes.
+  Create a job directly under a company, open its existing jobs, or assign a
+  company in the job editor. The Jobs list supports company filtering.
+- Jobs support an optional salary range with a currency and monthly, annual,
+  or hourly pay period. The default is monthly SAR; localized number input
+  accepts Arabic and Persian numerals. Both bounds are required when enabled,
+  and the maximum cannot be less than the minimum.
+- An independent total hiring-budget range stores the vacancy's minimum,
+  maximum, and currency without a pay period. Both budgets are optional and
+  appear independently in the job and company workspaces.
+- Each job has a **Target companies** research map with selected companies,
+  roles, notes, and research status, including explicit sourcing exclusions.
+  The company hiring for the job is separate from its research targets.
+- Schema v8 protects the new record contract from older readers. Company links,
+  budgets, and research maps survive restart and portable backup/restore.
+  Metadata edits preserve job history, recruiter decisions, and matching results.
+- Company context and budgets are administrative information. They are not
+  automatically inserted into the posting, used to reject candidates, or sent
+  to AI providers. Target exclusions only describe the recruiter's sourcing plan.
+- New company-contract tests validate amounts, identities, bounded records,
+  and legacy-job compatibility. Smoke and UI workflows cover company jobs,
+  budget entry, research maps, persistence, backup/restore, and Arabic entry.
+
+Verified on 2026-09-22 against the local macOS development build:
+
+- TypeScript and production build passed; all 434 unit/IPC tests passed.
+- All 234 Electron integration checks passed, including older-schema migrations,
+  contact linking/merging, exact backup/restore, deletion and wipe. New regression
+  checks cover fresh screening kits, saved-search review snapshots, and merging
+  5,001 activity records with complete rollback on a failed merge.
+- All 22 UI workflows passed in one full run, including English/Arabic recruiter
+  workflows, screening cancellation/deletion, client-pack refresh across views,
+  current Express search, company budgets, and selected PDF content.
+- English and Arabic search layouts were visually checked after removing obsolete
+  styles. The actual Electron PDF writer exported both English and Arabic client
+  presentations; selected-content and private-note exclusion checks passed.
+  Source changes invalidate an approved preview before export.
+
+The audit fixed stale client-pack data, screening lifecycle issues, missed new
+saved-search matches, and inefficient history merges. Obsolete APIs, styles and
+helpers were removed. See [CODE_AUDIT.md](CODE_AUDIT.md) for findings and scope.
+
+Verification used disposable libraries. Both installers were subsequently rebuilt
+on 2026-09-22. All 22 UI workflows also passed against the packaged macOS app.
+The DMG and extracted Windows payload match the verified packages; bundled model
+hashes, native architectures and release checksums passed. Windows runtime tests
+have not been rerun for this rebuild. See the local
+[release notes](docs/releases/RELEASE-v0.1.0-beta.2.md).
 
 ## Integration order
 
@@ -20,9 +180,10 @@ All six feature groups below are implemented.
 2. **Review and shortlist:** record a job-specific review state and notes for each
    candidate. Choose and reorder the shortlist. Export chosen candidates to PDF
    or Excel-compatible CSV, including recruiter notes.
-3. **Requirements scorecard:** edit required/preferred criteria, inspect suggested
-   source passages, and record evidence found, clarification needed, not stated,
-   or recruiter confirmation. Missing text never triggers automatic rejection.
+3. **Requirements scorecard:** edit required/preferred/unspecified criteria,
+   inspect source wording and nearest CV passages, and record evidence found,
+   clarification needed, not stated, contradicted, or recruiter confirmation.
+   Missing text never triggers automatic rejection.
 4. **Candidate profiles:** retain CV extraction and recruiter corrections
    separately. Store salary expectations, notice period, availability, preferred
    location, tags, and notes. Filter candidates using the corrected profiles.
@@ -167,4 +328,5 @@ provider responses.
   OpenAI exact-request consent, a second model on the same matches, and honest
   model labels in result headers and beside candidate explanations.
 
-OCR remains planned separately.
+Scope confirmed on 2026-09-23: OCR is excluded from the product roadmap. Resume
+intake supports text-based PDFs, DOCX, Markdown, and pasted text.

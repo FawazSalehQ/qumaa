@@ -1,9 +1,15 @@
 import type Database from 'better-sqlite3'
+import type { SavedHiringBudget } from '@shared/hiring-budget.js'
+import { assertHiringBudgetReferences } from './hiring-budget-schema.js'
 import type { CandidateProfile, CandidateReview } from '@shared/recruiting.js'
+import type { Activity, Assignment, Person, Screening, TalentOverview, TalentPool } from '@shared/talent.js'
 import { pruneJobPlacements } from './job-status.js'
+import { assertTalentReferences } from './talent-planning.js'
 import {
   parseRecruiting,
+  assertJobCompanyReferences,
   RECRUITING_LIMITS,
+  RECORD_LIMITS,
   recordId,
   recordSchemas,
   type JobRecord,
@@ -49,10 +55,35 @@ export function putRecord(database: Database.Database, kind: RecordKind, input: 
   const usage = database.prepare(`SELECT COUNT(*) AS count, COALESCE(SUM(length(CAST(data AS BLOB))), 0) AS bytes,
     COALESCE(SUM(CASE WHEN kind = ? THEN 1 ELSE 0 END), 0) AS kindCount FROM recruiting_records`).get(kind) as { count: number; bytes: number; kindCount: number }
   const previous = database.prepare('SELECT length(CAST(data AS BLOB)) AS bytes FROM recruiting_records WHERE kind = ? AND id = ?').get(kind, id) as { bytes: number } | undefined
-  const limit = { job: RECRUITING_LIMITS.jobs, review: RECRUITING_LIMITS.reviews, profile: RECRUITING_LIMITS.profiles, snapshot: RECRUITING_LIMITS.snapshots }[kind]
+  const limit = RECORD_LIMITS[kind]
   if (!previous && usage.kindCount >= limit) throw new Error(`The library has reached its ${limit}-${kind} storage limit.`)
   if (usage.bytes - (previous?.bytes ?? 0) + size > RECRUITING_LIMITS.totalBytes) throw new Error('Recruiting records have reached the 128 MB storage limit.')
   database.prepare('INSERT INTO recruiting_records(kind, id, data) VALUES (?, ?, ?) ON CONFLICT(kind, id) DO UPDATE SET data = excluded.data').run(kind, id, data)
+}
+
+/** Validate one storage budget for a complete batch, including contact-history merges. */
+export function putRecords(database: Database.Database, kind: RecordKind, inputs: StoredRecord[]): void {
+  if (!inputs.length) return
+  if (inputs.length > RECORD_LIMITS[kind]) throw new Error('Too many recruiting records in one update.')
+  const records = inputs.map((input) => {
+    const value = parseRecruiting<StoredRecord>(recordSchemas[kind], input)
+    const data = JSON.stringify(value)
+    const bytes = Buffer.byteLength(data)
+    if (bytes > RECRUITING_LIMITS.recordBytes) throw new Error('This recruiting record exceeds the storage limit.')
+    return { id: recordId(kind, value), data, bytes }
+  })
+  if (new Set(records.map((record) => record.id)).size !== records.length) throw new Error('Duplicate recruiting records in one update.')
+  database.transaction(() => {
+    const rows = database.prepare('SELECT id, length(CAST(data AS BLOB)) AS bytes FROM recruiting_records WHERE kind = ?').all(kind) as Array<{ id: string; bytes: number }>
+    const previous = new Map(rows.map((row) => [row.id, row.bytes]))
+    const additions = records.filter((record) => !previous.has(record.id)).length
+    if (previous.size + additions > RECORD_LIMITS[kind]) throw new Error(`The library has reached its ${RECORD_LIMITS[kind]}-${kind} storage limit.`)
+    const usage = database.prepare('SELECT COALESCE(SUM(length(CAST(data AS BLOB))), 0) AS bytes FROM recruiting_records').get() as { bytes: number }
+    const difference = records.reduce((sum, record) => sum + record.bytes - (previous.get(record.id) ?? 0), 0)
+    if (usage.bytes + difference > RECRUITING_LIMITS.totalBytes) throw new Error('Recruiting records have reached the 128 MB storage limit.')
+    const write = database.prepare('INSERT INTO recruiting_records(kind, id, data) VALUES (?, ?, ?) ON CONFLICT(kind, id) DO UPDATE SET data = excluded.data')
+    for (const record of records) write.run(kind, record.id, record.data)
+  })()
 }
 
 /** Reordering can touch every candidate; check the byte budget once per batch. */
@@ -91,12 +122,17 @@ export function assertRecruitingData(database: Database.Database): void {
     COALESCE(MAX(length(CAST(kind AS BLOB))), 0) AS maxKind FROM recruiting_records`).get() as {
     count: number; bytes: number; maxBytes: number; maxId: number; maxKind: number
   }
-  if (aggregate.count > 55_500 || aggregate.bytes > RECRUITING_LIMITS.totalBytes || aggregate.maxBytes > RECRUITING_LIMITS.recordBytes || aggregate.maxId > 101 || aggregate.maxKind > 8) {
+  const rowLimit = Object.values(RECORD_LIMITS).reduce((sum, limit) => sum + limit, 0)
+  const maxKindLength = Math.max(...Object.keys(recordSchemas).map((kind) => kind.length))
+  if (aggregate.count > rowLimit || aggregate.bytes > RECRUITING_LIMITS.totalBytes || aggregate.maxBytes > RECRUITING_LIMITS.recordBytes || aggregate.maxId > 101 || aggregate.maxKind > maxKindLength) {
     throw new Error('Recruiting records exceed Qumaa safety limits.')
   }
   if (database.prepare(`SELECT 1 FROM recruiting_records WHERE typeof(kind) <> 'text' OR typeof(id) <> 'text'
     OR typeof(data) <> 'text' OR instr(data, char(0)) > 0 LIMIT 1`).get()) throw new Error('Invalid recruiting record storage.')
-  const counts = { job: 0, review: 0, profile: 0, snapshot: 0 }
+  const counts = Object.fromEntries(Object.keys(recordSchemas).map((kind) => [kind, 0])) as Record<RecordKind, number>
+  const talent: TalentOverview = { people: [], activities: [], assignments: [], pools: [], screenings: [] }
+  const hiringBudgets: SavedHiringBudget[] = []
+  const companyIds = new Set<string>()
   const jobs = new Map<string, JobRecord>()
   const ownedKeys = new Set<string>()
   const owners = new Map<string, string>()
@@ -105,6 +141,8 @@ export function assertRecruitingData(database: Database.Database): void {
   for (const row of database.prepare('SELECT kind, id, data FROM recruiting_records ORDER BY kind, id').iterate() as IterableIterator<Row>) {
     const value = parseRow(row)
     counts[row.kind as RecordKind]++
+    if (row.kind === 'hiringBudget') hiringBudgets.push(value as SavedHiringBudget)
+    if (row.kind === 'company') companyIds.add(row.id)
     if (row.kind === 'job') jobs.set(row.id, value as JobRecord)
     if (row.kind === 'profile') {
       const profile = value as CandidateProfile
@@ -116,19 +154,59 @@ export function assertRecruitingData(database: Database.Database): void {
     }
     if (row.kind === 'review') reviews.push(value as CandidateReview)
     if (row.kind === 'snapshot') snapshotJobs.push(row.id)
+    if (row.kind === 'person') talent.people.push(value as Person)
+    if (row.kind === 'activity') talent.activities.push(value as Activity)
+    if (row.kind === 'assignment') talent.assignments.push(value as Assignment)
+    if (row.kind === 'pool') talent.pools.push(value as TalentPool)
+    if (row.kind === 'screening') talent.screenings.push(value as Screening)
   }
-  if (counts.job > RECRUITING_LIMITS.jobs || counts.review > RECRUITING_LIMITS.reviews || counts.profile > RECRUITING_LIMITS.profiles || counts.snapshot > RECRUITING_LIMITS.snapshots) throw new Error('Recruiting record counts exceed Qumaa safety limits.')
+  if ((Object.keys(counts) as RecordKind[]).some((kind) => counts[kind] > RECORD_LIMITS[kind])) throw new Error('Recruiting record counts exceed Qumaa safety limits.')
+  for (const job of jobs.values()) assertJobCompanyReferences(job, companyIds)
+  for (const plan of hiringBudgets) assertHiringBudgetReferences(plan, companyIds, jobs)
   for (const review of reviews) {
     const job = jobs.get(review.jobId)
     if (!job || review.assessments.some((assessment) => !job.criteria.some((criterion) => criterion.id === assessment.criterionId))) throw new Error('A candidate review references an unknown job or criterion.')
     if (owners.has(review.candidateKey) && owners.get(review.candidateKey) !== review.candidateKey) throw new Error('A candidate review references an obsolete CV version identity.')
   }
   if (snapshotJobs.some((id) => !jobs.has(id))) throw new Error('A saved search references an unknown job.')
+  const cvKeys = new Set((database.prepare('SELECT content_hash FROM resumes').all() as Array<{ content_hash: string }>).map((row) => row.content_hash))
+  assertTalentReferences(talent, new Set(jobs.keys()), companyIds, cvKeys)
+  const personByKey = new Map(talent.people.flatMap((person) => person.recordKeys.map((key) => [key, person.id] as const)))
+  const profilePeople = new Map<string, Set<string>>()
+  for (const [key, profileId] of owners) {
+    const personId = personByKey.get(key)
+    if (!personId) continue
+    const ids = profilePeople.get(profileId) ?? new Set<string>()
+    ids.add(personId)
+    if (ids.size > 1) throw new Error('Linked CV versions belong to different contacts. Merge the contacts first.')
+    profilePeople.set(profileId, ids)
+  }
+}
+
+/** Remove only CRM records; resume files, extracted data and recruiter reviews remain. */
+export function removeTalentPeople(database: Database.Database, ids: ReadonlySet<string>): void {
+  if (!ids.size) return
+  const remove = database.prepare('DELETE FROM recruiting_records WHERE kind = ? AND id = ?')
+  for (const id of ids) remove.run('person', id)
+  for (const kind of ['activity', 'assignment', 'screening'] as const) {
+    for (const record of readRecords<Activity | Assignment | Screening>(database, kind)) if (ids.has(record.personId)) remove.run(kind, record.id)
+  }
+  for (const pool of readRecords<TalentPool>(database, 'pool')) {
+    const members = pool.members.filter((member) => !ids.has(member.personId))
+    if (members.length !== pool.members.length) putRecord(database, 'pool', { ...pool, members, updatedAt: Math.max(Date.now(), pool.updatedAt + 1) })
+  }
 }
 
 /** Deletion removes private notes when the last CV for a person is removed. */
 export function pruneRecruitingRecords(database: Database.Database): void {
   const currentKeys = new Set((database.prepare('SELECT content_hash FROM resumes').all() as Array<{ content_hash: string }>).map((row) => row.content_hash))
+  const removedPeople = new Set<string>()
+  for (const person of readRecords<Person>(database, 'person')) {
+    const recordKeys = person.recordKeys.filter((key) => currentKeys.has(key))
+    if (!recordKeys.length && person.origin === 'library') removedPeople.add(person.id)
+    else if (recordKeys.length !== person.recordKeys.length) putRecord(database, 'person', { ...person, recordKeys, updatedAt: Math.max(Date.now(), person.updatedAt + 1) })
+  }
+  removeTalentPeople(database, removedPeople)
   const remove = database.prepare('DELETE FROM recruiting_records WHERE kind = ? AND id = ?')
   const candidateKeys = new Set(currentKeys)
   const reassignedKeys = new Map<string, string>()

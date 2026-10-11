@@ -13,11 +13,9 @@ export const CH = {
   ingestPickFiles: 'ingest:pickFiles',
   ingestText: 'ingest:text',
 
-  searchRun: 'search:run',
-  searchExport: 'search:export',
-  searchRerankPreview: 'search:rerankPreview',
-  searchRerank: 'search:rerank',
-
+  recruitingListCompanies: 'recruiting:listCompanies',
+  recruitingSaveCompany: 'recruiting:saveCompany',
+  recruitingSaveTargetCompanies: 'recruiting:saveTargetCompanies',
   recruitingListJobs: 'recruiting:listJobs',
   recruitingSaveJob: 'recruiting:saveJob',
   recruitingChangeJobStatus: 'recruiting:changeJobStatus',

@@ -17,6 +17,7 @@ import {
   resumeContentHash
 } from './derive.js'
 import { SKILL_GAZETTEER_VERSION } from './skills-backfill-plan.js'
+import { markResumeDerivationCurrent } from './derived-backfill.js'
 
 interface StoredResumeText {
   id: number
@@ -177,5 +178,6 @@ export async function rebuildRestoredDerivedData(
   // complete for the bundled immutable model.
   rebuildAndVerifySearchIndex(db)
   markCompletedIndexRebuild()
+  markResumeDerivationCurrent()
   return { resumeCount, chunkCount }
 }

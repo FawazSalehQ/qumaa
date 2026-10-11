@@ -41,9 +41,96 @@ before producing an installer if a model file is missing or has changed.
 
 Qumaa accepts digital PDF, DOCX, and Markdown (`.md` or `.markdown`) resumes.
 PDFs must contain a usable text layer. Image-only scans and other file types are
-outside the supported scope; the app does not perform OCR.
+outside the supported scope. OCR is outside the product scope and is not planned.
+
+The current development roadmap and its remaining quality gates are tracked in
+[ROADMAP.md](ROADMAP.md). Qumaa's scope covers hiring across professions; a
+[12-family synthetic baseline](pilot/CROSS-DOMAIN-2026-09-27.md) now records
+quality by vacancy and language. Cross-language recall remains a substantial
+limitation, and broad-domain accuracy has not been established with recruiters.
+On the first launch of an updated build, existing CV sections and extracted
+fields are rebuilt from retained text when their derivation version changes.
+Recruiter corrections, notes and pipeline records remain intact; saved matches
+must be refreshed after the upgrade. Cached AI reranks are also cleared and
+require a new explicit rerank if desired.
+
+The current beta.5 installers include company hiring-cost plans and multiple company details.
+The existing release name and URL remain `v0.1.0-beta.2`:
+[macOS arm64](https://github.com/FawazSalehQ/qumaa/releases/download/v0.1.0-beta.2/Qumaa-0.1.0-beta.5-arm64.dmg) and
+[Windows x64](https://github.com/FawazSalehQ/qumaa/releases/download/v0.1.0-beta.2/Qumaa-0.1.0-beta.5-Setup-x64.exe).
+See [release notes](docs/releases/RELEASE-v0.1.0-beta.5.md) for verification and limits.
 
 ## Recruiting workflow
+
+Use **Companies** to create a company with its industry, location, contact,
+website, and hiring notes. Open a company and choose **+ New job for company**
+to create a vacancy under it, or assign an existing job through **Edit job**.
+The company workspace lists its jobs; Jobs can also be filtered by company.
+Existing jobs can remain unassigned.
+
+**Industry**, **Location**, **Contact name** and **Contact email** each support
+multiple entries. Type a detail, then click **Add** or press Enter. Click its
+**×** to remove it. Saving also includes valid text still in an input; cancelling
+discards edits. Existing company details appear as individual entries, and
+directory search includes every saved value. Contact names and emails are
+independent lists, without implied pairing.
+
+Open a company’s **Hiring Budgets & Costs** section to save employment-cost plans,
+optionally linked to one of its jobs. Enter salary components or split a combined
+basic/housing amount, compare GOSI schemes, and forecast headcount costs with
+end-of-service provision and an optional approved budget. English/Arabic screens
+and CSV exports use the same calculation engine. Totals exclude medical insurance;
+planning covers full months. See [the budgeting guide](docs/HIRING-BUDGETS.md) for
+formulas, eligibility, sources and assumptions.
+
+Each saved job has an optional **salary budget**: minimum, maximum, currency,
+and monthly, annual, or hourly pay period. New budgets default to monthly SAR.
+Arabic and Persian digits are accepted. The range is per person and is shown
+in the job and company workspaces; it is not an automatic candidate filter.
+An independent **total hiring budget** stores a minimum, maximum, and currency
+for the whole vacancy. Set either range or both; changing one does not change
+the other, and total hiring budgets have no salary pay period.
+
+In a saved job, **Target companies → Edit company map** records the other
+companies to research, target roles, research notes, and a status of To research,
+Researching, Mapped, or Excluded. Create these companies in the directory first.
+The hiring company cannot target itself. Exclusion is a sourcing-plan note;
+it does not remove candidates from matching. Company details, budgets, and
+research progress are stored locally and included in portable backups. These
+administrative fields do not become ranking inputs or AI request content.
+
+**Recruiter desk** keeps reusable contacts, including prospects without a CV.
+Imported CVs acquire a contact automatically when the desk or pipeline opens;
+explicitly linked CV versions share that identity. Add contact details, employer,
+source URL, skills, tags and dated availability. Contact details can be edited
+independently of the CV review profile. Link a later CV or explicitly merge
+contacts after reviewing conflicts; histories and pool memberships are retained.
+
+Use **Follow-ups** for overdue, today and upcoming actions. Record calls, emails,
+meetings or notes with an outcome, next action and due date, optionally tied to a
+job. Complete or reopen reminders. These are local records, not automated emails
+or operating-system notifications. **Talent pools** support curated membership
+and saved search filters, with a review date and newly added contacts.
+
+In a saved job, **Pipeline** tracks each person through Sourced, Contacted,
+Interested, Screened, Submitted, Interviewing, Offer, Placed and Closed. Every
+stage change is dated. Record next actions and client feedback, and log a client
+submission with its recipient and date. The submission retains the hiring
+company's name as recorded at that time. Candidate stages are separate from the
+vacancy's status and do not alter matching scores.
+
+**Screening-call kits**, under each pipeline candidate, suggest questions from
+unresolved job criteria, or general screening prompts when no criteria exist.
+Edit questions, record answers and distinguish unverified, candidate-stated and
+verified answers. Kits remain available for later calls; recording an answer
+does not automatically change a CV scorecard or rank.
+
+**Client pack** builds a PDF for up to ten people assigned to the job, in your
+chosen order. Write client-facing recommendations and select CV passages,
+screening answers, compensation and availability fields. Preview the exact
+content before exporting. Internal contact, review, activity and feedback notes
+are excluded. The optional blind presentation hides names and contact fields;
+review narrative text for identifying details before sharing the file.
 
 1. Import CVs into **Library**, then open **Jobs**.
 2. Choose **Express search**, beside **New job**, for an ad hoc search. Paste the
@@ -74,8 +161,17 @@ it; **Save as job** retains its posting and results for later.
 Candidate details include a separate recruiter profile for corrections, screening
 notes, availability, salary expectations, notice period, and tags. Link updated
 CVs explicitly as versions of the same candidate to retain their review history.
-Requirement passages are suggestions for human review; absent CV text never
-automatically disqualifies a candidate. **Jobs** is the matching workspace for
+Choose **Use requirement lines** in either job editor to draft editable criteria
+from the posting. Specialist terms do not need an entry in the built-in skills
+dictionary. Original source wording is retained, and importance stays
+**Unspecified** unless required/preferred wording is explicit or you choose it.
+Reimport preserves your corrections.
+
+**Nearest passage** suggestions use the local multilingual model and remain
+**Review needed**. They may be irrelevant or contradictory; saved scorecards
+let you record that assessment explicitly. Express searches show read-only
+passages. Absent CV text never automatically disqualifies a candidate.
+**Jobs** is the matching workspace for
 local results, optional AI reranking, reviews, and shortlists.
 For saved jobs, the model's order and reasons are saved with the results and survive
 reopening the app. Refreshing local matches resets that rerank while preserving
@@ -84,12 +180,27 @@ recruiter reviews and the chosen shortlist.
 Use **File → New Job** (`Cmd/Ctrl+N`) to start a vacancy. Switch between **Jobs**,
 **Library**, and **Settings** with `Cmd/Ctrl+1`, `Cmd/Ctrl+2`, and `Cmd/Ctrl+3`.
 
-Portable backups include jobs, status history, hiring selections, profiles, and reviews. Cached matching results are
+Portable backups include companies, jobs, status history, hiring selections, contacts,
+activities, talent pools, pipelines, submissions, screening kits, profiles, and reviews. Cached matching results are
 rebuilt after restoring the library; saved AI reranks are part of that cache
 and are not included. Schema v6 adds status history and hiring records; schema v7
 identifies the provider and model behind a saved rerank. Earlier jobs retain their creation dates; unrecorded
 status-change dates are not inferred. See [FEATURE_IMPLEMENTATION.md](FEATURE_IMPLEMENTATION.md)
 for the integration plan and verification scope.
+
+Schema v8 adds companies, budgets and target-company maps. Schema v9 adds
+contacts, activities, pipelines, submissions, screening kits and talent pools.
+All are stored locally and included in portable backups. Deleting the last CV
+for a library contact removes its CRM history; manually created prospects remain
+until explicitly deleted. Schema v10 adds requirement source wording,
+unspecified importance and explicit contradictory-evidence assessments.
+Existing required/preferred decisions are retained. Schema v11 adds multiple
+company details, preserving existing single-value records, company identities
+and job relationships. Schema v12 adds saved company employment-cost plans,
+including assumptions, dates and verified wage overrides. Libraries upgraded to
+v12 require app build beta.5 or a newer compatible build, regardless of the
+retained GitHub release name. The earlier beta.3 query-composition change marks saved
+matches stale; refresh them while keeping recruiter reviews.
 
 Choose **Settings → AI reranking → AI provider**, then **AI model**:
 
@@ -122,6 +233,7 @@ and [OpenAI model catalog](https://developers.openai.com/api/docs/models).
 | `npm run verify` | Unit, Electron smoke, and UI suites together |
 | `npm run seed` | Dev only: fill the library with the ten-person test corpus |
 | `npm run bench` | Capacity benchmark: ingest, duplicate scan, and search at 500/1500/3000 resumes |
+| `npm run eval:domains` | Frozen cross-profession quality checks in a disposable library; see [evaluation instructions](eval/cross-domain/README.md) |
 | `npm run build:mac` | Produce `release/Qumaa-<version>-arm64.dmg` (Apple Silicon) |
 | `npm run build:win` | Produce `release/Qumaa-<version>-Setup-x64.exe` (Windows 10/11 x64) |
 

@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
   emptyJobPosting,
-  formatJobPosting,
   hasJobPostingContent,
   jobPostingTitle,
   type JobPosting
 } from '../src/renderer/src/jobPosting.js'
 import { parseRequirements } from '../src/main/search/scoring.js'
+import { postingText } from '../src/main/recruiting/planning.js'
 
 function posting(overrides: Partial<JobPosting> = {}): JobPosting {
   return {
@@ -21,7 +21,7 @@ function posting(overrides: Partial<JobPosting> = {}): JobPosting {
 describe('structured job posting', () => {
   it('joins trimmed user values in field order without synthetic headings', () => {
     expect(
-      formatJobPosting(
+      postingText(
         posting({
           position: '  Senior Accountant  ',
           jobDescription: '\nOwn monthly close.\n',
@@ -43,7 +43,7 @@ describe('structured job posting', () => {
     const valueOnly = { ...emptyJobPosting(), [field]: `  ${value}  ` }
 
     expect(hasJobPostingContent(valueOnly)).toBe(true)
-    expect(formatJobPosting(valueOnly)).toBe(value)
+    expect(postingText(valueOnly)).toBe(value)
   })
 
   it('treats an entirely blank posting as empty', () => {
@@ -55,12 +55,12 @@ describe('structured job posting', () => {
     }
 
     expect(hasJobPostingContent(blank)).toBe(false)
-    expect(formatJobPosting(blank)).toBe('')
+    expect(postingText(blank)).toBe('')
   })
 
   it('keeps substantive requirement and education lines available to semantic parsing', () => {
     const requirements = parseRequirements(
-      formatJobPosting(
+      postingText(
         posting({
           requirements: 'Manage Kubernetes production clusters',
           educationAndCertifications: "Bachelor's degree in computer science"

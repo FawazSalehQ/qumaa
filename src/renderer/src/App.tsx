@@ -3,6 +3,8 @@ import type { MatchResult, IngestOutcome, IngestProgress, ResumeSummary } from '
 import JobsView from './views/JobsView.js'
 import LibraryView from './views/LibraryView.js'
 import SettingsView from './views/SettingsView.js'
+import CompaniesView from './views/CompaniesView.js'
+import TalentView from './views/TalentView.js'
 import Toasts, { type Toast } from './components/Toasts.js'
 import { useTheme } from './useTheme.js'
 import ResumeDetail from './components/ResumeDetail.js'
@@ -10,7 +12,7 @@ import { Brand } from './components/Brand.js'
 import { useI18n } from './i18n.js'
 import type { Translator } from '@shared/i18n.js'
 
-type Tab = 'jobs' | 'library' | 'settings'
+type Tab = 'jobs' | 'companies' | 'talent' | 'library' | 'settings'
 
 /** Which candidate the slide-over is showing, and its match context if any. */
 interface Selection {
@@ -72,7 +74,15 @@ export default function App(): React.JSX.Element {
   const [newJobSignal, setNewJobSignal] = useState(0)
   const [libraryRevision, setLibraryRevision] = useState(0)
   const [profileRevision, setProfileRevision] = useState(0)
+  const [companyRevision, setCompanyRevision] = useState(0)
+  const [talentRevision, setTalentRevision] = useState(0)
+  const [companyNavigationLocked, setCompanyNavigationLocked] = useState(false)
+  const [talentNavigationLocked, setTalentNavigationLocked] = useState(false)
+  const [navigationRequest, setNavigationRequest] = useState<{ id: number; companyId?: string; jobId?: string; tab?: 'pipeline' }>()
   const [workspaceEpoch, setWorkspaceEpoch] = useState(0)
+  const companyNavigationLock = useRef(false)
+  const talentNavigationLock = useRef(false)
+  const navigationSequence = useRef(0)
   /** Nested dragenter/dragleave events fire constantly; count them instead of
    *  toggling, or the overlay flickers as the cursor crosses child elements. */
   const dragDepth = useRef(0)
@@ -89,6 +99,29 @@ export default function App(): React.JSX.Element {
   const dismissToast = useCallback((id: string) => {
     setToasts((current) => current.filter((toast) => toast.id !== id))
   }, [])
+
+  const handleCompanyNavigationLock = useCallback((locked: boolean): void => {
+    companyNavigationLock.current = locked
+    setCompanyNavigationLocked(locked)
+  }, [])
+
+  const handleTalentNavigationLock = useCallback((locked: boolean): void => {
+    talentNavigationLock.current = locked
+    setTalentNavigationLocked(locked)
+  }, [])
+
+  const navigate = useCallback((next: Tab): boolean => {
+    if (companyNavigationLock.current && next !== 'companies') return false
+    if (talentNavigationLock.current && next !== 'talent') return false
+    setTab(next)
+    return true
+  }, [])
+
+  const openCompanyJob = useCallback((target: { companyId?: string; jobId?: string; tab?: 'pipeline' }): void => {
+    if (!navigate('jobs')) return
+    setSelected(null)
+    setNavigationRequest({ id: ++navigationSequence.current, ...target })
+  }, [navigate])
 
   const refresh = useCallback(async () => {
     setResumes(await window.api.resumes.list())
@@ -172,7 +205,12 @@ export default function App(): React.JSX.Element {
   )
 
   const handleSettingsChanged = useCallback(async (resetWorkspace = false) => {
-    if (resetWorkspace) setWorkspaceEpoch((epoch) => epoch + 1)
+    if (resetWorkspace) {
+      setWorkspaceEpoch((epoch) => epoch + 1)
+      setCompanyRevision((revision) => revision + 1)
+      setTalentRevision((revision) => revision + 1)
+      setNavigationRequest(undefined)
+    }
     await refreshAfterLibraryChange()
     await reloadLanguage()
   }, [refreshAfterLibraryChange, reloadLanguage])
@@ -183,10 +221,10 @@ export default function App(): React.JSX.Element {
     return window.api.on.menuCommand((command) => {
       switch (command) {
         case 'goto-jobs':
-          setTab('jobs')
+          navigate('jobs')
           break
         case 'new-job':
-          setTab('jobs')
+          if (!navigate('jobs')) break
           setSelected(null)
           setNewJobSignal((n) => n + 1)
           break
@@ -197,14 +235,14 @@ export default function App(): React.JSX.Element {
           importViaDialog('folder')
           break
         case 'goto-library':
-          setTab('library')
+          navigate('library')
           break
         case 'goto-settings':
-          setTab('settings')
+          navigate('settings')
           break
       }
     })
-  }, [importViaDialog])
+  }, [importViaDialog, navigate])
 
   /* ---------- window-wide drag & drop ---------- */
 
@@ -251,18 +289,33 @@ export default function App(): React.JSX.Element {
         <nav className="tabs">
           <button
             className={`tab ${tab === 'jobs' ? 'active' : ''}`}
-            onClick={() => setTab('jobs')}
+            onClick={() => navigate('jobs')}
+            disabled={companyNavigationLocked || talentNavigationLocked}
             aria-current={tab === 'jobs' ? 'page' : undefined}
           >{t("Jobs")}</button>
           <button
+            className={`tab ${tab === 'companies' ? 'active' : ''}`}
+            onClick={() => navigate('companies')}
+            disabled={talentNavigationLocked}
+            aria-current={tab === 'companies' ? 'page' : undefined}
+          >{t('Companies')}</button>
+          <button
+            className={`tab ${tab === 'talent' ? 'active' : ''}`}
+            onClick={() => navigate('talent')}
+            disabled={companyNavigationLocked}
+            aria-current={tab === 'talent' ? 'page' : undefined}
+          >{t('Recruiter desk')}</button>
+          <button
             className={`tab ${tab === 'library' ? 'active' : ''}`}
-            onClick={() => setTab('library')}
+            onClick={() => navigate('library')}
+            disabled={companyNavigationLocked || talentNavigationLocked}
           >
             {t('Library')} <span className="count">{formatNumber(resumes.length)}</span>
           </button>
           <button
             className={`tab ${tab === 'settings' ? 'active' : ''}`}
-            onClick={() => setTab('settings')}
+            onClick={() => navigate('settings')}
+            disabled={companyNavigationLocked || talentNavigationLocked}
           >{t("Settings")}</button>
         </nav>
       </header>
@@ -290,11 +343,36 @@ export default function App(): React.JSX.Element {
             newJobSignal={newJobSignal}
             resumes={resumes}
             libraryRevision={libraryRevision + profileRevision}
+            companyRevision={companyRevision}
+            talentRevision={talentRevision}
+            navigationRequest={navigationRequest}
+            onOpenCompanies={() => navigate('companies')}
             onOpenCandidate={(m) => setSelected({ resume: m.resume, match: m })}
             onOpenResume={(resume) => setSelected({ resume })}
             onToast={pushToasts}
           />
         </div>
+        {tab === 'companies' && (
+          <CompaniesView
+            key={workspaceEpoch}
+            onChanged={() => setCompanyRevision((revision) => revision + 1)}
+            onNavigationLockChange={handleCompanyNavigationLock}
+            onNewJob={(companyId) => openCompanyJob({ companyId })}
+            onOpenJob={(jobId) => openCompanyJob({ jobId })}
+            onToast={pushToasts}
+          />
+        )}
+        {tab === 'talent' && (
+          <TalentView
+            key={workspaceEpoch}
+            resumes={resumes}
+            libraryRevision={libraryRevision + profileRevision}
+            onChanged={() => setTalentRevision((revision) => revision + 1)}
+            onNavigationLockChange={handleTalentNavigationLock}
+            onOpenJob={(jobId) => openCompanyJob({ jobId, tab: 'pipeline' })}
+            onOpenResume={(resume) => setSelected({ resume })}
+          />
+        )}
         {tab === 'library' && (
           <LibraryView
             resumes={resumes}

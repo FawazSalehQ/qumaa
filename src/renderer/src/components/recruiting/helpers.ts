@@ -16,7 +16,8 @@ export const ASSESSMENT_LABELS: Record<AssessmentStatus, string> = {
   'evidence-found': 'Evidence found',
   'needs-clarification': 'Needs clarification',
   'not-stated': 'Not stated',
-  confirmed: 'Recruiter confirmed'
+  confirmed: 'Recruiter confirmed',
+  contradicted: 'Contradictory evidence'
 }
 
 export function isShortlisted(review?: CandidateReview): boolean {
@@ -84,9 +85,9 @@ export function recruitingError(message: string, t: Translator, language: Langua
       field: language === 'ar' ? t(fields[conflict[1]] ?? conflict[1]) : conflict[1]
     })
   }
-  const limit = /^The library has reached its (\d+)-(job|review|profile|snapshot) storage limit\.$/.exec(clean)
+  const limit = /^The library has reached its (\d+)-(job|review|profile|snapshot|company) storage limit\.$/.exec(clean)
   if (limit) {
-    const kinds: Record<string, string> = { job: 'Job records', review: 'Review records', profile: 'Profile records', snapshot: 'Search snapshots' }
+    const kinds: Record<string, string> = { job: 'Job records', review: 'Review records', profile: 'Profile records', snapshot: 'Search snapshots', company: 'Company records' }
     return t('The library has reached its {limit}-{kind} storage limit.', {
       limit: language === 'ar' ? Number(limit[1]) : limit[1], kind: language === 'ar' ? t(kinds[limit[2]]) : limit[2]
     })

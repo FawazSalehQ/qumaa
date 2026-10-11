@@ -5,35 +5,58 @@
  * important question: does it surface the *right* people. It ingests a labelled
  * corpus, runs one real posting, and grades the ranking against the labels.
  *
- * Ground truth lives in the filename (`t1_03_hannah_reid.docx`). That is safe
- * because nothing in ranking reads a filename: it consumes FTS scores, chunk
- * embeddings and text, and extracted skills.
+ * Ground truth comes from a separate manifest, or legacy t1_... filenames.
+ * Labels never enter ranking: it consumes FTS scores, chunk embeddings and
+ * text, and extracted skills.
  *
  * Uses a throwaway userData directory, so the real library is never touched.
  */
 import { app } from 'electron'
+import { execFileSync } from 'node:child_process'
 import { mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { join, relative, resolve } from 'node:path'
+import {
+  entriesFingerprint,
+  evaluationLabels,
+  evaluationPaths,
+  rankingMetrics,
+  sha256,
+  type RelevanceTier
+} from './eval-support.js'
+import { MODEL_VECTOR_ID } from './embed/protocol.js'
+import { diagnoseSearch, modelBenchmarkInput } from './eval-diagnostics.js'
 
 const scratch = mkdtempSync(join(tmpdir(), 'qumaa-eval-'))
 app.setPath('userData', scratch)
 
 const ROOT = resolve(__dirname, '../..')
-const CORPUS = join(ROOT, 'eval', 'corpus')
-const POSTING = join(ROOT, 'eval', 'posting.txt')
-const RESULTS = join(ROOT, 'eval', 'results')
+const paths = evaluationPaths(ROOT, process.env)
 
-/** Graded relevance per tier, used for NDCG. Tier 4 is a true non-match. */
-const GAIN: Record<number, number> = { 1: 3, 2: 2, 3: 1, 4: 0 }
-
-function tierOf(fileName: string): number | null {
-  const m = /^t(\d)_/i.exec(fileName)
-  return m ? Number(m[1]) : null
+function sourceFingerprint(directory: string): string {
+  const entries: Array<{ file: string; sha256: string }> = []
+  function visit(dir: string): void {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, entry.name)
+      if (entry.isDirectory()) visit(path)
+      else if (entry.isFile()) {
+        entries.push({ file: relative(ROOT, path).replace(/\\/g, '/'), sha256: sha256(readFileSync(path)) })
+      }
+    }
+  }
+  visit(directory)
+  for (const file of ['package.json', 'package-lock.json', 'electron.vite.config.ts']) {
+    entries.push({ file, sha256: sha256(readFileSync(join(ROOT, file))) })
+  }
+  return entriesFingerprint(entries)
 }
 
-function dcg(gains: number[]): number {
-  return gains.reduce((sum, g, i) => sum + g / Math.log2(i + 2), 0)
+function gitOutput(args: string[]): string | null {
+  try {
+    return execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
+  } catch {
+    return null
+  }
 }
 
 function pct(n: number): string {
@@ -53,62 +76,47 @@ async function main(): Promise<void> {
 
   setEntryDir(__dirname)
 
-  let posting: string
-  try {
-    posting = readFileSync(POSTING, 'utf8')
-  } catch {
-    console.error(`No posting at ${POSTING}`)
-    console.error('Save the job description you generated the corpus against there.')
-    app.exit(1)
-    return
-  }
-
-  let files: string[]
-  try {
-    files = readdirSync(CORPUS)
-      .filter((f) => /\.(pdf|docx|md|markdown)$/i.test(f) && !f.startsWith('~$'))
-      .sort()
-  } catch {
-    console.error(`No corpus at ${CORPUS}`)
-    app.exit(1)
-    return
-  }
-
-  if (files.length === 0) {
-    console.error(`No resumes in ${CORPUS}`)
-    app.exit(1)
-    return
-  }
-
-  const unlabelled = files.filter((f) => tierOf(f) === null)
-  if (unlabelled.length > 0) {
-    // Without a tier there is nothing to grade against, and a silently
-    // ungraded corpus would produce confident but meaningless numbers.
-    if (process.env.QUMAA_EVAL_IGNORE_UNLABELLED === '1') {
-      console.warn(`Ignoring ${unlabelled.length} explicitly unlabelled file(s).`)
-      files = files.filter((file) => tierOf(file) !== null)
-    } else {
-      console.error(`${unlabelled.length} file(s) have no t<n>_ tier prefix, e.g. ${unlabelled[0]}`)
-      console.error('Rename them or the results cannot be graded. See eval/README.md.')
-      app.exit(1)
-      return
-    }
+  const posting = readFileSync(paths.posting, 'utf8')
+  if (!posting.trim()) throw new Error('The evaluation posting is empty.')
+  const supportedFiles = readdirSync(paths.corpus, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && /\.(pdf|docx|md|markdown)$/i.test(entry.name) && !entry.name.startsWith('~$'))
+    .map((entry) => entry.name)
+  const labelsText = paths.labels ? readFileSync(paths.labels, 'utf8') : undefined
+  const { files, labels, ignored } = evaluationLabels(
+    supportedFiles,
+    labelsText === undefined ? undefined : JSON.parse(labelsText),
+    process.env.QUMAA_EVAL_IGNORE_UNLABELLED === '1'
+  )
+  if (ignored) console.warn(`Ignoring ${ignored} explicitly unlabelled file(s).`)
+  const corpusFiles = files.map((file) => ({ file, sha256: sha256(readFileSync(join(paths.corpus, file))) }))
+  const provenance = {
+    modelVectorId: MODEL_VECTOR_ID,
+    nodeVersion: process.versions.node,
+    electronVersion: process.versions.electron,
+    sourceHead: gitOutput(['rev-parse', 'HEAD']),
+    sourceTreeSha256: sourceFingerprint(join(ROOT, 'src')),
+    runtimeBundleSha256: sha256(readFileSync(__filename)),
+    postingSha256: sha256(posting),
+    labelsSha256: sha256(JSON.stringify([...labels.entries()].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0))),
+    labelsFileSha256: labelsText === undefined ? null : sha256(labelsText),
+    corpusSha256: entriesFingerprint(corpusFiles),
+    corpusFiles
   }
 
   console.log(`Loading model...`)
   await embedder.start()
 
-  console.log(`Ingesting ${files.length} resumes from eval/corpus...\n`)
+  console.log(`Ingesting ${files.length} resumes from ${paths.corpus}...\n`)
 
-  const tierOfId = new Map<number, number>()
+  const tierOfId = new Map<number, RelevanceTier>()
   const nameOfId = new Map<number, string>()
   const nearDuplicates: string[] = []
   const problems: string[] = []
   const t0 = Date.now()
 
   for (const [i, f] of files.entries()) {
-    const outcome = await ingestFile(join(CORPUS, f))
-    const tier = tierOf(f)!
+    const outcome = await ingestFile(join(paths.corpus, f))
+    const tier = labels.get(f)!
 
     switch (outcome.status) {
       case 'imported':
@@ -119,7 +127,7 @@ async function main(): Promise<void> {
         tierOfId.set(outcome.resume.id, tier)
         nameOfId.set(outcome.resume.id, f)
         const other = outcome.similarTo
-        const crossTier = tierOf(other.fileName) !== tier
+        const crossTier = labels.get(other.fileName) !== tier
         nearDuplicates.push(
           `${f} ~ ${other.fileName}  ${(other.similarity * 100).toFixed(1)}%${crossTier ? '  [CROSS-TIER]' : ''}`
         )
@@ -142,6 +150,9 @@ async function main(): Promise<void> {
   }
 
   console.log(`\nImported ${imported} of ${files.length} in ${(ingestMs / 1000).toFixed(1)}s.`)
+  if (problems.length || imported !== files.length) {
+    throw new Error('Evaluation aborted: every labelled resume must import; failed or duplicate files would bias the metrics.')
+  }
 
   if (nearDuplicates.length > 0) {
     // Expected to be noisy on a generated corpus: same-function resumes written
@@ -153,26 +164,32 @@ async function main(): Promise<void> {
   }
 
   console.log(`\nSearching...`)
-  const response = await search(posting, imported)
+  let diagnostics: ReturnType<typeof diagnoseSearch> | undefined
+  const response = await search(posting, imported, process.env.QUMAA_EVAL_DIAGNOSTICS === '1'
+    ? (inspection) => { diagnostics = diagnoseSearch(inspection) }
+    : undefined)
   const ranked = response.results
+  if (process.env.QUMAA_EVAL_BENCH_INPUT) {
+    const input = modelBenchmarkInput(posting)
+    const target = resolve(ROOT, process.env.QUMAA_EVAL_BENCH_INPUT)
+    writeFileSync(target, JSON.stringify({ provenance, ...input, candidates: input.candidates.map((candidate) => ({
+      ...candidate, file: nameOfId.get(candidate.id), tier: tierOfId.get(candidate.id)
+    })) }, null, 2))
+    console.log(`Frozen model benchmark input written to ${target}`)
+  }
 
-  const tiers = ranked.map((r) => tierOfId.get(r.resume.id) ?? 4)
+  if (new Set(ranked.map((result) => result.resume.id)).size !== ranked.length ||
+      ranked.some((result) => !tierOfId.has(result.resume.id))) {
+    throw new Error('Ranking returned duplicate or unknown candidates.')
+  }
+  const tiers = ranked.map((r) => tierOfId.get(r.resume.id)!)
   const counts = new Map<number, number>()
   for (const t of tierOfId.values()) counts.set(t, (counts.get(t) ?? 0) + 1)
 
   /* ---------- metrics ---------- */
 
-  const top3 = tiers.slice(0, 3)
-  const precisionAt3 = top3.filter((t) => t === 1).length / 3
   const tier1Total = counts.get(1) ?? 0
-  const recallAt3 = tier1Total > 0 ? top3.filter((t) => t === 1).length / Math.min(3, tier1Total) : 0
-
-  const firstTier1 = tiers.findIndex((t) => t === 1)
-  const mrr = firstTier1 === -1 ? 0 : 1 / (firstTier1 + 1)
-
-  const gains = tiers.map((t) => GAIN[t] ?? 0)
-  const ideal = [...gains].sort((a, b) => b - a)
-  const ndcg10 = dcg(ideal.slice(0, 10)) === 0 ? 0 : dcg(gains.slice(0, 10)) / dcg(ideal.slice(0, 10))
+  const metrics = rankingMetrics(tiers, [...labels.values()])
 
   const scores = ranked.map((r) => r.score)
   const spread = scores.length > 1 ? scores[0] - scores[scores.length - 1] : 0
@@ -212,10 +229,12 @@ async function main(): Promise<void> {
   // matter how good the ranking is. Say so, rather than looking like a failure.
   const ceiling = Math.min(3, tier1Total) / 3
   const ceilingNote = ceiling < 1 ? `, max possible ${pct(ceiling)}` : ''
-  console.log(`  precision@3    ${pct(precisionAt3)}   (tier-1 share of the top 3${ceilingNote})`)
-  console.log(`  recall@3       ${pct(recallAt3)}   (tier-1 found in the top 3)`)
-  console.log(`  MRR            ${mrr.toFixed(3)}   (1 / rank of the first tier-1)`)
-  console.log(`  NDCG@10        ${ndcg10.toFixed(3)}   (graded, tier1=3 tier2=2 tier3=1 tier4=0)`)
+  console.log(`  precision@3    ${pct(metrics.precisionAt3)}   (tier-1 share of the top 3${ceilingNote})`)
+  console.log(`  recall@3       ${pct(metrics.recallAt3)}   (share of all tier-1 candidates found in the top 3)`)
+  console.log(`  recall@10      ${pct(metrics.recallAt10)}   (share of all tier-1 candidates found in the top 10)`)
+  console.log(`  top-3 target   ${pct(metrics.top3TargetCoverage)}   (hits / min(3, tier-1 total); formerly labelled recall@3)`)
+  console.log(`  RR             ${metrics.reciprocalRank.toFixed(3)}   (single-query reciprocal rank)`)
+  console.log(`  NDCG@10        ${metrics.ndcg10.toFixed(3)}   (graded, tier1=3 tier2=2 tier3=1 tier4=0)`)
 
   console.log(`\nScore separation:`)
   for (const t of [1, 2, 3, 4]) {
@@ -237,19 +256,29 @@ async function main(): Promise<void> {
 
   console.log(`\nDetected requirements: ${response.requiredSkills.join(', ') || '(none)'}`)
 
-  mkdirSync(RESULTS, { recursive: true })
+  mkdirSync(paths.results, { recursive: true })
   const stamp = new Date().toISOString().replace(/[:.]/g, '-')
-  const out = join(RESULTS, `${stamp}.json`)
+  const out = join(paths.results, `${stamp}.json`)
   writeFileSync(
     out,
     JSON.stringify(
       {
+        schemaVersion: 2,
+        status: 'completed',
         ranAt: new Date().toISOString(),
+        provenance,
+        ...(diagnostics ? { diagnostics: {
+          ...diagnostics,
+          candidates: diagnostics.candidates.map(({ resumeId, ...candidate }) => ({
+            file: nameOfId.get(resumeId), ...candidate
+          }))
+        } } : {}),
+        ignoredUnlabelled: ignored,
         corpusSize: files.length,
         imported,
         ingestMs,
         searchMs: response.elapsedMs,
-        metrics: { precisionAt3, recallAt3, mrr, ndcg10 },
+        metrics,
         tier1Ranks,
         meanByTier: Object.fromEntries(meanByTier),
         spread,
@@ -272,7 +301,7 @@ async function main(): Promise<void> {
     ),
     'utf8'
   )
-  console.log(`\nFull ranking written to eval/results/${stamp}.json`)
+  console.log(`\nFull ranking written to ${out}`)
 
   embedder.stop()
   rmSync(scratch, { recursive: true, force: true })

@@ -34,9 +34,12 @@ files:
   # launched by the installed application.
   - '!out/main/bench.js'
   - '!out/main/eval.js'
+  - '!out/main/eval-cross-domain.js'
   - '!out/main/seed.js'
   - '!out/main/smoke.js'
   - '!out/main/chunks/corpus-*.js'
+  - '!out/main/chunks/eval-*.js'
+  - '!out/main/chunks/smoke-*.js'
   - '!node_modules/onnxruntime-web/**'
 
 # Native modules cannot be dlopen'd from inside an asar archive.
@@ -80,9 +83,12 @@ mac:
     - package.json
     - '!out/main/bench.js'
     - '!out/main/eval.js'
+    - '!out/main/eval-cross-domain.js'
     - '!out/main/seed.js'
     - '!out/main/smoke.js'
     - '!out/main/chunks/corpus-*.js'
+    - '!out/main/chunks/eval-*.js'
+    - '!out/main/chunks/smoke-*.js'
     - '!node_modules/onnxruntime-web/**'
     - '!node_modules/onnxruntime-node/bin/napi-v6/linux/**'
     - '!node_modules/onnxruntime-node/bin/napi-v6/win32/**'
@@ -103,9 +109,12 @@ win:
     - package.json
     - '!out/main/bench.js'
     - '!out/main/eval.js'
+    - '!out/main/eval-cross-domain.js'
     - '!out/main/seed.js'
     - '!out/main/smoke.js'
     - '!out/main/chunks/corpus-*.js'
+    - '!out/main/chunks/eval-*.js'
+    - '!out/main/chunks/smoke-*.js'
     - '!node_modules/onnxruntime-web/**'
     - '!node_modules/onnxruntime-node/bin/napi-v6/linux/**'
     - '!node_modules/onnxruntime-node/bin/napi-v6/darwin/**'

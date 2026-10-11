@@ -1,0 +1,4561 @@
+{
+  "schemaVersion": 1,
+  "status": "completed",
+  "split": "reserved",
+  "decision": "Keep multilingual-e5-small; development gains are modest and uneven relative to asset/runtime cost. Reserved results are a separate confirmation, not the selection set.",
+  "models": [
+    {
+      "schemaVersion": 1,
+      "status": "completed",
+      "createdAt": "2026-09-27T18:56:43.942Z",
+      "modelId": "multilingual-e5-small",
+      "runtime": {
+        "node": "v22.23.2",
+        "transformers": "4.2.0",
+        "platform": "darwin",
+        "arch": "arm64",
+        "cpu": "Apple M4 Pro",
+        "availableParallelism": 14,
+        "device": "cpu",
+        "dtype": "q8",
+        "batchSize": 8,
+        "embeddingDimension": 384,
+        "queryPrefix": "query: ",
+        "passagePrefix": "passage: "
+      },
+      "timing": {
+        "loadMs": 360.052709,
+        "loadFileCache": "warmed-by-asset-hashing",
+        "queryMs": 804.372167,
+        "passagesMs": 3984.9219160000002,
+        "scoringMs": 11.9482909999997,
+        "totalMs": 5297.4175,
+        "batches": {
+          "queries": [
+            {
+              "offset": 0,
+              "count": 8,
+              "elapsedMs": 111.4697920000001
+            },
+            {
+              "offset": 8,
+              "count": 8,
+              "elapsedMs": 90.44612499999994
+            },
+            {
+              "offset": 16,
+              "count": 8,
+              "elapsedMs": 105.88470800000005
+            },
+            {
+              "offset": 24,
+              "count": 8,
+              "elapsedMs": 90.82845799999996
+            },
+            {
+              "offset": 32,
+              "count": 8,
+              "elapsedMs": 107.00020900000004
+            },
+            {
+              "offset": 40,
+              "count": 8,
+              "elapsedMs": 84.08783400000016
+            },
+            {
+              "offset": 48,
+              "count": 8,
+              "elapsedMs": 107.08533299999999
+            },
+            {
+              "offset": 56,
+              "count": 8,
+              "elapsedMs": 85.07491600000003
+            },
+            {
+              "offset": 64,
+              "count": 8,
+              "elapsedMs": 22.1512909999999
+            }
+          ],
+          "passages": [
+            {
+              "offset": 0,
+              "count": 8,
+              "elapsedMs": 89.51250000000005
+            },
+            {
+              "offset": 8,
+              "count": 8,
+              "elapsedMs": 92.57737500000007
+            },
+            {
+              "offset": 16,
+              "count": 8,
+              "elapsedMs": 101.53604199999995
+            },
+            {
+              "offset": 24,
+              "count": 8,
+              "elapsedMs": 114.89737500000001
+            },
+            {
+              "offset": 32,
+              "count": 8,
+              "elapsedMs": 120.54025000000001
+            },
+            {
+              "offset": 40,
+              "count": 8,
+              "elapsedMs": 130.67037500000015
+            },
+            {
+              "offset": 48,
+              "count": 8,
+              "elapsedMs": 77.82104200000003
+            },
+            {
+              "offset": 56,
+              "count": 8,
+              "elapsedMs": 87.9227079999996
+            },
+            {
+              "offset": 64,
+              "count": 8,
+              "elapsedMs": 125.21716700000025
+            },
+            {
+              "offset": 72,
+              "count": 8,
+              "elapsedMs": 153.39583399999992
+            },
+            {
+              "offset": 80,
+              "count": 8,
+              "elapsedMs": 144.96166700000003
+            },
+            {
+              "offset": 88,
+              "count": 8,
+              "elapsedMs": 129.94958300000008
+            },
+            {
+              "offset": 96,
+              "count": 8,
+              "elapsedMs": 80.01408300000003
+            },
+            {
+              "offset": 104,
+              "count": 8,
+              "elapsedMs": 125.2616250000001
+            },
+            {
+              "offset": 112,
+              "count": 8,
+              "elapsedMs": 154.10941700000012
+            },
+            {
+              "offset": 120,
+              "count": 8,
+              "elapsedMs": 148.04508399999986
+            },
+            {
+              "offset": 128,
+              "count": 8,
+              "elapsedMs": 92.29279199999974
+            },
+            {
+              "offset": 136,
+              "count": 8,
+              "elapsedMs": 85.55812500000002
+            },
+            {
+              "offset": 144,
+              "count": 8,
+              "elapsedMs": 92.99891600000001
+            },
+            {
+              "offset": 152,
+              "count": 8,
+              "elapsedMs": 97.3566249999999
+            },
+            {
+              "offset": 160,
+              "count": 8,
+              "elapsedMs": 73.8037919999997
+            },
+            {
+              "offset": 168,
+              "count": 8,
+              "elapsedMs": 127.42099999999982
+            },
+            {
+              "offset": 176,
+              "count": 8,
+              "elapsedMs": 129.06666700000005
+            },
+            {
+              "offset": 184,
+              "count": 8,
+              "elapsedMs": 88.16724999999997
+            },
+            {
+              "offset": 192,
+              "count": 8,
+              "elapsedMs": 82.47699999999986
+            },
+            {
+              "offset": 200,
+              "count": 8,
+              "elapsedMs": 71.14308399999982
+            },
+            {
+              "offset": 208,
+              "count": 8,
+              "elapsedMs": 126.4950829999998
+            },
+            {
+              "offset": 216,
+              "count": 8,
+              "elapsedMs": 149.81216700000004
+            },
+            {
+              "offset": 224,
+              "count": 8,
+              "elapsedMs": 146.20141599999988
+            },
+            {
+              "offset": 232,
+              "count": 8,
+              "elapsedMs": 126.50258300000041
+            },
+            {
+              "offset": 240,
+              "count": 8,
+              "elapsedMs": 74.35512500000004
+            },
+            {
+              "offset": 248,
+              "count": 8,
+              "elapsedMs": 136.25445800000034
+            },
+            {
+              "offset": 256,
+              "count": 8,
+              "elapsedMs": 180.4064589999998
+            },
+            {
+              "offset": 264,
+              "count": 8,
+              "elapsedMs": 133.27170899999965
+            },
+            {
+              "offset": 272,
+              "count": 8,
+              "elapsedMs": 80.18737500000043
+            },
+            {
+              "offset": 280,
+              "count": 1,
+              "elapsedMs": 13.948291999999128
+            }
+          ]
+        }
+      },
+      "cache": {
+        "distinctQueries": 72,
+        "queryReferences": 144,
+        "queryReuses": 72,
+        "distinctPassages": 281,
+        "passageReferences": 2728,
+        "passageReuses": 2447,
+        "queryOrderSha256": "6700f059882ae608d76e11bd1e878f4ef86034075f148ca1488a80115a15b23b",
+        "passageOrderSha256": "3e72f7f741719ef804d409d97ea591ced7a808d0a0e658966b8078cc6657814a"
+      },
+      "resource": {
+        "modelBytes": 135392183,
+        "peakRssBytes": 1041612800,
+        "rssSamplingIntervalMs": 25
+      },
+      "tokenization": {
+        "maxTokens": 512,
+        "queriesTruncated": 0,
+        "passagesTruncated": 0,
+        "longestQueryTokens": 240,
+        "longestPassageTokens": 234
+      },
+      "weights": {
+        "semantic": 0.55,
+        "lexical": 0.2,
+        "skills": 0.25
+      },
+      "provenance": {
+        "inputs": [
+          {
+            "file": "education--lead--mixed-a--ar.json",
+            "sha256": "687475ad10e29cb0dde7f501e5164221b1206b6cbd828976403ce788090c1a91"
+          },
+          {
+            "file": "education--lead--mixed-a--en.json",
+            "sha256": "ab23f8f25abcdbd582eaba2c3881d9f3ee4c80f16ff225659c8541927a298cfe"
+          },
+          {
+            "file": "education--lead--mixed-b--ar.json",
+            "sha256": "e621fe0889565f2f6a0bdde32f6a0aa4a2076699177e040847262acfb929151a"
+          },
+          {
+            "file": "education--lead--mixed-b--en.json",
+            "sha256": "b47e2484ac5b24a37c4c7bf3995cd7f2fcacb3428130f75a3185386877e40297"
+          },
+          {
+            "file": "education--specialist--mixed-a--ar.json",
+            "sha256": "f80b809f06fad702914e14b6aa916ff0b01f6bfb077faef98350ff94209f208d"
+          },
+          {
+            "file": "education--specialist--mixed-a--en.json",
+            "sha256": "b85443898438497bd45cc768ae3247bb2c3d694dcfbdc7785e8a3b1e66ceca4f"
+          },
+          {
+            "file": "education--specialist--mixed-b--ar.json",
+            "sha256": "6ecc28c5b0c27ac120d7686eb9aa1cfdad95da19ac0793e2669a64117bfa21cc"
+          },
+          {
+            "file": "education--specialist--mixed-b--en.json",
+            "sha256": "165cc51487a6e630bd15ea20c51ff448280c3d83b4db1d4d2229b57a12730549"
+          },
+          {
+            "file": "legal--lead--mixed-a--ar.json",
+            "sha256": "69c261609b9b0512cb470507fcfbc5da20a7e5559cf1eeb1ef90d9aa6d39363c"
+          },
+          {
+            "file": "legal--lead--mixed-a--en.json",
+            "sha256": "b60d6be47942e65c3577ddf7ec8e7024571a908829d8113969e82cc66970aabf"
+          },
+          {
+            "file": "legal--lead--mixed-b--ar.json",
+            "sha256": "30b437aab759a0aaf33586ecb6b28a077386f9f3fb15f39531fefa2ef23b988b"
+          },
+          {
+            "file": "legal--lead--mixed-b--en.json",
+            "sha256": "85f117a52700f8a1536b0a97406a11ac892709d12d36361de28a395dae7279ac"
+          },
+          {
+            "file": "legal--specialist--mixed-a--ar.json",
+            "sha256": "c4c00e2312f246d8cef537e64e98f9b9b9f9aad9f1883ce0453e9c63f5d14732"
+          },
+          {
+            "file": "legal--specialist--mixed-a--en.json",
+            "sha256": "0092e752cc3904434c3f1ef06e8c53f06eaf62e7b20da82539f49000e7ee74d4"
+          },
+          {
+            "file": "legal--specialist--mixed-b--ar.json",
+            "sha256": "b3f54a85e33d5a1d950a7d42bc780ee965dc2c212dee0cf0e94d0cc823ea2627"
+          },
+          {
+            "file": "legal--specialist--mixed-b--en.json",
+            "sha256": "9e2e4d02a9ee3c23db1bf0fc787907d470cae60a32929af61cfe9ae2fbe7aa50"
+          }
+        ],
+        "inputFilesSha256": "f294b9fa5b6c6a048c6ca5faa2ab50bc67748aaef8e2ac220e2782b48531ba71",
+        "scoringBundleSha256": "d656ebefa9770df1c5c1a12d4d8b1597c5291e0fc3bef537357480a35654fe56",
+        "modelFiles": [
+          {
+            "file": "config.json",
+            "bytes": 658,
+            "sha256": "cb99455288675345e1a4f411438d5d0adbba5fbd3a67ea4fb03c015433b996c1"
+          },
+          {
+            "file": "onnx/model_quantized.onnx",
+            "bytes": 118308185,
+            "sha256": "f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193"
+          },
+          {
+            "file": "special_tokens_map.json",
+            "bytes": 167,
+            "sha256": "d05497f1da52c5e09554c0cd874037a083e1dc1b9cfd48034d1c717f1afc07a7"
+          },
+          {
+            "file": "tokenizer.json",
+            "bytes": 17082730,
+            "sha256": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39"
+          },
+          {
+            "file": "tokenizer_config.json",
+            "bytes": 443,
+            "sha256": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b"
+          }
+        ],
+        "modelFilesSha256": "7531c39fdd7a9e9ae7d1971ea59b1afc02bd9d0c11bb8cc270bce85263b4fb29",
+        "benchmarkScriptSha256": "71e36dfb36be6c9013e60797c2b37e70a22133229fbdc2edad4119d4964372a5",
+        "dependencyLockSha256": "b80c77c833eb1a9cf7c125a3e235b146250f5b344aef6afe67ef997dace20167",
+        "sourceExport": {
+          "modelVectorId": "multilingual-e5-small@761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+          "node": "24.18.1",
+          "electron": "43.4.1",
+          "manifestSha256": "74fd862282f721e6b1cc82d1b7462fcc6bce02ff1150c9becffe1a7840f25ee2",
+          "fixtureHashes": [
+            {
+              "family": "software",
+              "sha256": "9c4541bec65209bb4b1d61d17447939853856caa64a321ebead2adaafd3770fa"
+            },
+            {
+              "family": "construction",
+              "sha256": "98d3f60a7dac5141ac390df1450c6a23b10ddd513746b687957250f07d01fc7c"
+            },
+            {
+              "family": "energy",
+              "sha256": "54d20b1e138bd587bbc984b7078f786676a5c57d4eed1c289932559b2063f60c"
+            },
+            {
+              "family": "healthcare",
+              "sha256": "98ec9cfd3d3d83ed096078f51be046588cab9dab364f8debf218320f9807684c"
+            },
+            {
+              "family": "finance",
+              "sha256": "9d04334c383405fe46a5c607121bb1f1b1ab4fb531ff221230cf37a0529a4773"
+            },
+            {
+              "family": "legal",
+              "sha256": "aa3045f1adfe683e1083d8d18a338edb5c3ccb537ac4f1df517b697153876961"
+            },
+            {
+              "family": "education",
+              "sha256": "c1f0f11e1a396ceeddc402978f00be4ed8aa36d4f9ea96b725c703d46fd66b5e"
+            },
+            {
+              "family": "manufacturing",
+              "sha256": "dc61735b849e15bfeb63f12543eecb412541673220fdbfe8600ae0a117a11a64"
+            },
+            {
+              "family": "logistics",
+              "sha256": "99f51aa8492dbf0844f72e4988c3f65cfd33066d927441a7ddc32ad1cc1768c5"
+            },
+            {
+              "family": "sales",
+              "sha256": "5b4c84e76cdee9c5c7fc6f403606f5424b8d66c8efed2fe7e580eb2dea6f6634"
+            },
+            {
+              "family": "hr",
+              "sha256": "deff455b00173552cf04998af7ff24ffbcc5d3a610c69be9b5540daee86b9c40"
+            },
+            {
+              "family": "hospitality",
+              "sha256": "07dbf1cc5fcc173d66f5584ddaaa2adbd0163e27ffeae01c5aa4fd29b4523b17"
+            }
+          ],
+          "sourceTreeSha256": "1c8a09c67d1da3fa7c58e6b043b6217197e060d00ce161e5f2501851c5057fda",
+          "runtimeBundleSha256": "6f73ae2aec538708bdfc1c384f4554331fa319a851984b42b89e66b3dc81356d",
+          "runtimeFiles": [
+            {
+              "file": "out/main/bench.js",
+              "sha256": "d4f1b82d5c4399de30b392e129f6718f3ee3be9cbf430955b7ab460d6cf5e81a"
+            },
+            {
+              "file": "out/main/chunks/backup-Dz7kQac7.js",
+              "sha256": "4644bb4b0212845002fdcc24ba15ff0e3cbfd5095cf3fd485a8f0fc87167a762"
+            },
+            {
+              "file": "out/main/chunks/client-Bh73xlTh.js",
+              "sha256": "966fca02c4ef02120d7950cca2c3c577329edc95e9ca6f1690a52ad07d67497b"
+            },
+            {
+              "file": "out/main/chunks/corpus-BdEhJT9W.js",
+              "sha256": "618e433d6b21d5d3919933af3ebe2e2bcf7e3a6fe166e80aac513c70fdec23ce"
+            },
+            {
+              "file": "out/main/chunks/derivation-version-BLqfCajs.js",
+              "sha256": "42dff3abddfb7d12bb56d6518d651db8040426f207cec334a4ecbfaaa95d532d"
+            },
+            {
+              "file": "out/main/chunks/derive-CAOn6JBC.js",
+              "sha256": "3f95f2b998c7f888e048fffa1ef7a8e05e3d8b2227456519a77b40bc80f3fb68"
+            },
+            {
+              "file": "out/main/chunks/derived-backfill-sv390hg8.js",
+              "sha256": "db1333906bc44ad575232e55df43f8b756933c75303f1e559dbb73c3553898d7"
+            },
+            {
+              "file": "out/main/chunks/duplicates-CDr0JH3L.js",
+              "sha256": "e339858c10111c59a97730e6a797c53707759f7346598799666cd8090b7d64f8"
+            },
+            {
+              "file": "out/main/chunks/eval-diagnostics-BYffXvBj.js",
+              "sha256": "1c4b5d08e67e55ca4662a2faca5e56ae2258bc3b31fddafd9a1203aa5b81f1c6"
+            },
+            {
+              "file": "out/main/chunks/eval-support-Br-EYfw1.js",
+              "sha256": "4b8765b6e7a1ae68c3c91d91d2fde2ff9bb52ad4ce593dce13aaaf5a549c17f4"
+            },
+            {
+              "file": "out/main/chunks/extraction-protocol-BcXXz5Z5.js",
+              "sha256": "47a5179de710323979bfbd64652d7b9b2966c71ff3e22418b7fa0bce3aac4586"
+            },
+            {
+              "file": "out/main/chunks/ibm-plex-sans-arabic-arabic-400-normal-CyU-ddYS.woff2",
+              "sha256": "6010e7fd0dce5d527583951750728cbe3c895efbd16aa0f809ab8c824878c9d8"
+            },
+            {
+              "file": "out/main/chunks/ibm-plex-sans-arabic-arabic-600-normal-0pRdybE_.woff2",
+              "sha256": "16734a5adb27b0f363e566cbbeacec480da0dc0baa19c8f0053251c2e2bc0eac"
+            },
+            {
+              "file": "out/main/chunks/index-Cz99DUNw.js",
+              "sha256": "21f142ba30a269e3324c1bf816e21e35ac2271bae27f4a44bcec9feaaf7fa42c"
+            },
+            {
+              "file": "out/main/chunks/index-vvB5OeAk.js",
+              "sha256": "59423267e3dc7fa820b6c65cb212885f90a3ed93e81b936addd2c62f0ccd24ba"
+            },
+            {
+              "file": "out/main/chunks/job-requirements-CdhlCbzm.js",
+              "sha256": "a6e4ee3900a6e0058ece74327ab582dee25f4c236e04f1683e05647dc0884ee4"
+            },
+            {
+              "file": "out/main/chunks/migrations-DCoE5OMR.js",
+              "sha256": "18afdb5c1cd7ae3144f9105d2ba36dc97656307617ad21e30e1d9aa576f03bb6"
+            },
+            {
+              "file": "out/main/chunks/normalize-U7knnRF4.js",
+              "sha256": "be0fea270db706092bdc311646dea725488f5a5f17ad2de903ae6e558f102463"
+            },
+            {
+              "file": "out/main/chunks/pipeline-Dx7rKZSX.js",
+              "sha256": "54c60574cbfce00a24cec7ee6ab8ffdc300dbde57fc1ceff0a0ada8ea9a9d0e0"
+            },
+            {
+              "file": "out/main/chunks/planning-BCCXf9u9.js",
+              "sha256": "c4016d070cecf33dc9764d7e1f72f65ffbb1b0f103ca19f1523150922e121c31"
+            },
+            {
+              "file": "out/main/chunks/protocol-xhmDI7TG.js",
+              "sha256": "63826c96d1019a6639908ae4ee0923d455829ca9011b85f2869fd33dbacbcefe"
+            },
+            {
+              "file": "out/main/chunks/rank-BQmwmFrf.js",
+              "sha256": "bf5648c941b499af7c2655116c171789bd14047e0950d399346dd12d83b6d9c3"
+            },
+            {
+              "file": "out/main/chunks/reindex-DeRG3DLn.js",
+              "sha256": "09d39d304eeb2ec81d41c8a087c18b8be2921910076b1ee7a078ba75ed5fff9c"
+            },
+            {
+              "file": "out/main/chunks/schema-Dw_dWwkk.js",
+              "sha256": "d1e3675b4a20cdc87cb94941b6bd8dfb67aaa42f165bd4c22b04dbcf0d3019f2"
+            },
+            {
+              "file": "out/main/chunks/scoring-s25wEYdO.js",
+              "sha256": "eb25adedc36d3a8955dd84ef4c8276c74ac17cdd822bedac4d05a4e7fc601c3c"
+            },
+            {
+              "file": "out/main/chunks/sessions-DB50HskB.js",
+              "sha256": "9625efa92b5970ca8e22342bc8b9ca5d04c05999b617d8a1e4bd4b35eedef30b"
+            },
+            {
+              "file": "out/main/chunks/shortlist-M1T1xvnQ.js",
+              "sha256": "ee85e42e125c0db78e793dc47f1f3b5d97c874f9f8682d60150b614c563ba51e"
+            },
+            {
+              "file": "out/main/chunks/skills-backfill-D6RfXRIg.js",
+              "sha256": "8a09577c7409cc46d4092e98866f5d9dd59a783146b48a9994f8bc65fa595bcb"
+            },
+            {
+              "file": "out/main/chunks/skills-backfill-plan-jyekYTJk.js",
+              "sha256": "82f96b8a919a8e7837cb685fc06671e5bebe0e1aef247f073504dfe4c467d51d"
+            },
+            {
+              "file": "out/main/chunks/skills-BzmpfOrD.js",
+              "sha256": "325e90bff0eac8b6c78a5d87767483cb1ad8b712400e3443e3ccd376f1cfa4b0"
+            },
+            {
+              "file": "out/main/chunks/smoke-derived-DA1M-A9r.js",
+              "sha256": "6cfd68d86bfae700599a8da8e4092563f856c51d2fb86deb2aff5f53f3544b56"
+            },
+            {
+              "file": "out/main/chunks/smoke-requirements-BOpoewBC.js",
+              "sha256": "ea0a75e2a2dbbf8d8df2168883747065cc35e4a345890696ffae573b9285b116"
+            },
+            {
+              "file": "out/main/chunks/smoke-talent-BUA5A9_m.js",
+              "sha256": "60ae0de96abc2e357d9d0abbc52f8c4c79246daf44c3b7560e596f240e9192c8"
+            },
+            {
+              "file": "out/main/chunks/storage-lUu4EK8i.js",
+              "sha256": "91c9c581ef1292732b1f090bd02a8452d1fc83ff4d12621f0055f1437807107f"
+            },
+            {
+              "file": "out/main/chunks/talent-DP5gL2TE.js",
+              "sha256": "25cda4d858c2e78e310c543e57bf73dafa30802db4b6ecd6e0c9e60d119f8476"
+            },
+            {
+              "file": "out/main/chunks/temporary-CHrjtfUl.js",
+              "sha256": "90c75e16bc1c4448b16dedf0af4010e1a67a2a2da7243fcecae0896ce9ef54eb"
+            },
+            {
+              "file": "out/main/embed-worker.js",
+              "sha256": "20ce0d785de6d8a044837be91c14f9e15e95f48e23f876ab43800b5d221dd433"
+            },
+            {
+              "file": "out/main/eval-cross-domain.js",
+              "sha256": "6f73ae2aec538708bdfc1c384f4554331fa319a851984b42b89e66b3dc81356d"
+            },
+            {
+              "file": "out/main/eval.js",
+              "sha256": "ab86074242df32025b509ce739dd04f4f8d86ca6a5feeb44616de2ee49c945a0"
+            },
+            {
+              "file": "out/main/extraction-worker.js",
+              "sha256": "54f348c73ee0c4088cb7f36064a24ddeb5f55ac8d4c32ded2c67a8a10fac7007"
+            },
+            {
+              "file": "out/main/index.js",
+              "sha256": "a37ffe370a1768836f356b655fcd60c2e53c96d186832db8d6be9ad7daa49884"
+            },
+            {
+              "file": "out/main/seed.js",
+              "sha256": "b5fd2e665ec82fc4299f261accb89b88c52c413bba088df450a5516eb165f56b"
+            },
+            {
+              "file": "out/main/smoke.js",
+              "sha256": "b86e668c3060faa8ce7af2d7f55cf8d03fbd1fd6425103e35ac7243c688a6ca4"
+            }
+          ],
+          "modelFiles": [
+            {
+              "file": "resources/models/multilingual-e5-small/config.json",
+              "sha256": "cb99455288675345e1a4f411438d5d0adbba5fbd3a67ea4fb03c015433b996c1"
+            },
+            {
+              "file": "resources/models/multilingual-e5-small/onnx/model_quantized.onnx",
+              "sha256": "f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193"
+            },
+            {
+              "file": "resources/models/multilingual-e5-small/special_tokens_map.json",
+              "sha256": "d05497f1da52c5e09554c0cd874037a083e1dc1b9cfd48034d1c717f1afc07a7"
+            },
+            {
+              "file": "resources/models/multilingual-e5-small/tokenizer_config.json",
+              "sha256": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b"
+            },
+            {
+              "file": "resources/models/multilingual-e5-small/tokenizer.json",
+              "sha256": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39"
+            }
+          ],
+          "packageSha256": "00fc34c480f033d361a6ddadefd60713915cf0bd7ba7fbbf4e1cceab8f6a9595",
+          "lockSha256": "b80c77c833eb1a9cf7c125a3e235b146250f5b344aef6afe67ef997dace20167",
+          "weights": {
+            "semantic": 0.55,
+            "lexical": 0.2,
+            "skills": 0.25
+          }
+        }
+      },
+      "summary": {
+        "cases": 16,
+        "distinctVacancies": 4,
+        "aggregation": "Equal case; complete identical grids make this equal vacancy.",
+        "macro": {
+          "precisionAt3": 0.45833333333333326,
+          "recallAt3": 0.3958333333333333,
+          "recallAt10": 0.5104166666666666,
+          "top3TargetCoverage": 0.45833333333333326,
+          "reciprocalRank": 0.8169642857142857,
+          "mrr": 0.8169642857142857,
+          "ndcg10": 0.5532821070128845
+        },
+        "pooledLanguageRecall": {
+          "same": {
+            "relevant": 28,
+            "hits3": 22,
+            "hits10": 27,
+            "recallAt3": 0.7857142857142857,
+            "recallAt10": 0.9642857142857143
+          },
+          "cross": {
+            "relevant": 28,
+            "hits3": 0,
+            "hits10": 2,
+            "recallAt3": 0,
+            "recallAt10": 0.07142857142857142
+          }
+        },
+        "byFamily": {
+          "education": {
+            "cases": 8,
+            "metrics": {
+              "precisionAt3": 0.45833333333333326,
+              "recallAt3": 0.38541666666666663,
+              "recallAt10": 0.5208333333333333,
+              "top3TargetCoverage": 0.45833333333333326,
+              "reciprocalRank": 0.6964285714285714,
+              "mrr": 0.6964285714285714,
+              "ndcg10": 0.5339664077455313
+            },
+            "pooledLanguageRecall": {
+              "same": {
+                "relevant": 14,
+                "hits3": 11,
+                "hits10": 13,
+                "recallAt3": 0.7857142857142857,
+                "recallAt10": 0.9285714285714286
+              },
+              "cross": {
+                "relevant": 14,
+                "hits3": 0,
+                "hits10": 2,
+                "recallAt3": 0,
+                "recallAt10": 0.14285714285714285
+              }
+            }
+          },
+          "legal": {
+            "cases": 8,
+            "metrics": {
+              "precisionAt3": 0.4583333333333333,
+              "recallAt3": 0.40625,
+              "recallAt10": 0.5,
+              "top3TargetCoverage": 0.4583333333333333,
+              "reciprocalRank": 0.9375,
+              "mrr": 0.9375,
+              "ndcg10": 0.5725978062802374
+            },
+            "pooledLanguageRecall": {
+              "same": {
+                "relevant": 14,
+                "hits3": 11,
+                "hits10": 14,
+                "recallAt3": 0.7857142857142857,
+                "recallAt10": 1
+              },
+              "cross": {
+                "relevant": 14,
+                "hits3": 0,
+                "hits10": 0,
+                "recallAt3": 0,
+                "recallAt10": 0
+              }
+            }
+          }
+        },
+        "byPostingLanguage": {
+          "ar": {
+            "cases": 8,
+            "metrics": {
+              "precisionAt3": 0.375,
+              "recallAt3": 0.32291666666666663,
+              "recallAt10": 0.4895833333333333,
+              "top3TargetCoverage": 0.375,
+              "reciprocalRank": 0.7589285714285714,
+              "mrr": 0.7589285714285714,
+              "ndcg10": 0.5067709890945752
+            },
+            "pooledLanguageRecall": {
+              "same": {
+                "relevant": 14,
+                "hits3": 9,
+                "hits10": 13,
+                "recallAt3": 0.6428571428571429,
+                "recallAt10": 0.9285714285714286
+              },
+              "cross": {
+                "relevant": 14,
+                "hits3": 0,
+                "hits10": 1,
+                "recallAt3": 0,
+                "recallAt10": 0.07142857142857142
+              }
+            }
+          },
+          "en": {
+            "cases": 8,
+            "metrics": {
+              "precisionAt3": 0.5416666666666666,
+              "recallAt3": 0.46875,
+              "recallAt10": 0.53125,
+              "top3TargetCoverage": 0.5416666666666666,
+              "reciprocalRank": 0.875,
+              "mrr": 0.875,
+              "ndcg10": 0.5997932249311935
+            },
+            "pooledLanguageRecall": {
+              "same": {
+                "relevant": 14,
+                "hits3": 13,
+                "hits10": 14,
+                "recallAt3": 0.9285714285714286,
+                "recallAt10": 1
+              },
+              "cross": {
+                "relevant": 14,
+                "hits3": 0,
+                "hits10": 1,
+                "recallAt3": 0,
+                "recallAt10": 0.07142857142857142
+              }
+            }
+          }
+        },
+        "byCohort": {
+          "mixed-a": {
+            "cases": 8,
+            "metrics": {
+              "precisionAt3": 0.4166666666666667,
+              "recallAt3": 0.3645833333333333,
+              "recallAt10": 0.5208333333333333,
+              "top3TargetCoverage": 0.4166666666666667,
+              "reciprocalRank": 0.7589285714285714,
+              "mrr": 0.7589285714285714,
+              "ndcg10": 0.5486294407972676
+            },
+            "pooledLanguageRecall": {
+              "same": {
+                "relevant": 14,
+                "hits3": 10,
+                "hits10": 13,
+                "recallAt3": 0.7142857142857143,
+                "recallAt10": 0.9285714285714286
+              },
+              "cross": {
+                "relevant": 14,
+                "hits3": 0,
+                "hits10": 2,
+                "recallAt3": 0,
+                "recallAt10": 0.14285714285714285
+              }
+            }
+          },
+          "mixed-b": {
+            "cases": 8,
+            "metrics": {
+              "precisionAt3": 0.5,
+              "recallAt3": 0.4270833333333333,
+              "recallAt10": 0.5,
+              "top3TargetCoverage": 0.5,
+              "reciprocalRank": 0.875,
+              "mrr": 0.875,
+              "ndcg10": 0.557934773228501
+            },
+            "pooledLanguageRecall": {
+              "same": {
+                "relevant": 14,
+                "hits3": 12,
+                "hits10": 14,
+                "recallAt3": 0.8571428571428571,
+                "recallAt10": 1
+              },
+              "cross": {
+                "relevant": 14,
+                "hits3": 0,
+                "hits10": 0,
+                "recallAt3": 0,
+                "recallAt10": 0
+              }
+            }
+          }
+        }
+      },
+      "limitations": [
+        "Synthetic input labels and translations require independent review.",
+        "Shared embedding caches and batch size differ from the desktop ingest/search execution pattern; small numerical differences are possible.",
+        "Timings include one first query forward and unique-text batching; these are not per-search application latency measurements.",
+        "Sampled Node RSS excludes desktop renderer processes and is not total installed-app memory.",
+        "Input SQLite lexical scores are frozen; this comparison changes the embedding model only."
+      ],
+      "caseMetrics": [
+        {
+          "id": "education/lead/mixed-a/ar",
+          "family": "education",
+          "vacancy": "lead",
+          "cohort": "mixed-a",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership"
+          ],
+          "metrics": {
+            "precisionAt3": 0,
+            "recallAt3": 0,
+            "recallAt10": 0,
+            "top3TargetCoverage": 0,
+            "reciprocalRank": 0.07142857142857142,
+            "mrr": 0.07142857142857142,
+            "ndcg10": 0.15147399301772024
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 1,
+              "hits3": 0,
+              "hits10": 0
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            14,
+            40,
+            57
+          ],
+          "scoringMs": 1.919499999999971
+        },
+        {
+          "id": "education/lead/mixed-a/en",
+          "family": "education",
+          "vacancy": "lead",
+          "cohort": "mixed-a",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership",
+            "coaching"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.6666666666666666,
+            "recallAt10": 0.6666666666666666,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.699050580338565
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 1,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            48
+          ],
+          "scoringMs": 0.6880000000001019
+        },
+        {
+          "id": "education/lead/mixed-b/ar",
+          "family": "education",
+          "vacancy": "lead",
+          "cohort": "mixed-b",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.3333333333333333,
+            "recallAt10": 0.6666666666666666,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.4883985503006938
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 1,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 1,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            6,
+            62
+          ],
+          "scoringMs": 0.6927089999999225
+        },
+        {
+          "id": "education/lead/mixed-b/en",
+          "family": "education",
+          "vacancy": "lead",
+          "cohort": "mixed-b",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership",
+            "coaching"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.3333333333333333,
+            "recallAt10": 0.3333333333333333,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 0.5,
+            "mrr": 0.5,
+            "ndcg10": 0.4672915882941651
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 1,
+              "hits3": 1,
+              "hits10": 1
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            2,
+            37,
+            46
+          ],
+          "scoringMs": 0.6975830000001224
+        },
+        {
+          "id": "education/specialist/mixed-a/ar",
+          "family": "education",
+          "vacancy": "specialist",
+          "cohort": "mixed-a",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "training"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.25,
+            "recallAt10": 0.75,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 0.5,
+            "mrr": 0.5,
+            "ndcg10": 0.575108105014604
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 1,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 1
+            }
+          },
+          "tier1Ranks": [
+            2,
+            4,
+            8,
+            63
+          ],
+          "scoringMs": 0.695875000000342
+        },
+        {
+          "id": "education/specialist/mixed-a/en",
+          "family": "education",
+          "vacancy": "specialist",
+          "cohort": "mixed-a",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "coaching"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.5,
+            "recallAt10": 0.75,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.7400319518343417
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 1
+            }
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            8,
+            31
+          ],
+          "scoringMs": 1.1989579999999478
+        },
+        {
+          "id": "education/specialist/mixed-b/ar",
+          "family": "education",
+          "vacancy": "specialist",
+          "cohort": "mixed-b",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "training"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.5,
+            "recallAt10": 0.5,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.5608759573086857
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            3,
+            58,
+            60
+          ],
+          "scoringMs": 0.5643749999999272
+        },
+        {
+          "id": "education/specialist/mixed-b/en",
+          "family": "education",
+          "vacancy": "specialist",
+          "cohort": "mixed-b",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "coaching"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.5,
+            "recallAt10": 0.5,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 0.5,
+            "mrr": 0.5,
+            "ndcg10": 0.5895005358554747
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            2,
+            3,
+            23,
+            27
+          ],
+          "scoringMs": 0.6232920000002196
+        },
+        {
+          "id": "legal/lead/mixed-a/ar",
+          "family": "legal",
+          "vacancy": "lead",
+          "cohort": "mixed-a",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership",
+            "sales",
+            "training",
+            "supply_chain"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.3333333333333333,
+            "recallAt10": 0.3333333333333333,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 0.5,
+            "mrr": 0.5,
+            "ndcg10": 0.5273117379860613
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 1,
+              "hits3": 1,
+              "hits10": 1
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            2,
+            40,
+            44
+          ],
+          "scoringMs": 0.6544579999999769
+        },
+        {
+          "id": "legal/lead/mixed-a/en",
+          "family": "legal",
+          "vacancy": "lead",
+          "cohort": "mixed-a",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership",
+            "sales",
+            "supply_chain",
+            "coaching"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.6666666666666666,
+            "recallAt10": 0.6666666666666666,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.6473520373698537
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 1,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            32
+          ],
+          "scoringMs": 0.5887499999998909
+        },
+        {
+          "id": "legal/lead/mixed-b/ar",
+          "family": "legal",
+          "vacancy": "lead",
+          "cohort": "mixed-b",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership",
+            "sales",
+            "training",
+            "supply_chain"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.6666666666666666,
+            "recallAt10": 0.6666666666666666,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.6676168867046373
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 1,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            3,
+            55
+          ],
+          "scoringMs": 0.59637500000008
+        },
+        {
+          "id": "legal/lead/mixed-b/en",
+          "family": "legal",
+          "vacancy": "lead",
+          "cohort": "mixed-b",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership",
+            "sales",
+            "supply_chain",
+            "coaching"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.3333333333333333,
+            "recallAt10": 0.3333333333333333,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.5716150408609937
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 1,
+              "hits3": 1,
+              "hits10": 1
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            34,
+            56
+          ],
+          "scoringMs": 0.6231669999997393
+        },
+        {
+          "id": "legal/specialist/mixed-a/ar",
+          "family": "legal",
+          "vacancy": "specialist",
+          "cohort": "mixed-a",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "sales",
+            "supply_chain"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.25,
+            "recallAt10": 0.5,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.5349863198591207
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 1,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            4,
+            26,
+            67
+          ],
+          "scoringMs": 0.5836670000007871
+        },
+        {
+          "id": "legal/specialist/mixed-a/en",
+          "family": "legal",
+          "vacancy": "specialist",
+          "cohort": "mixed-a",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "sales",
+            "supply_chain"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.25,
+            "recallAt10": 0.5,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.5137208009578746
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 1,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            6,
+            18,
+            22
+          ],
+          "scoringMs": 0.5879169999998339
+        },
+        {
+          "id": "legal/specialist/mixed-b/ar",
+          "family": "legal",
+          "vacancy": "specialist",
+          "cohort": "mixed-b",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "sales",
+            "supply_chain"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.25,
+            "recallAt10": 0.5,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.5483963625650788
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 1,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            5,
+            23,
+            31
+          ],
+          "scoringMs": 0.619459000000461
+        },
+        {
+          "id": "legal/specialist/mixed-b/en",
+          "family": "legal",
+          "vacancy": "specialist",
+          "cohort": "mixed-b",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "sales",
+            "supply_chain"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.5,
+            "recallAt10": 0.5,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.5697832639382796
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            3,
+            17,
+            60
+          ],
+          "scoringMs": 0.6038330000001224
+        }
+      ],
+      "detailedResultSha256": "bdbbbd1e5b3024467347f2a0467e91ef97727b9db003bcfb668b7e569748b0fd"
+    },
+    {
+      "schemaVersion": 1,
+      "status": "completed",
+      "createdAt": "2026-09-27T18:56:54.356Z",
+      "modelId": "multilingual-e5-base",
+      "runtime": {
+        "node": "v22.23.2",
+        "transformers": "4.2.0",
+        "platform": "darwin",
+        "arch": "arm64",
+        "cpu": "Apple M4 Pro",
+        "availableParallelism": 14,
+        "device": "cpu",
+        "dtype": "q8",
+        "batchSize": 8,
+        "embeddingDimension": 768,
+        "queryPrefix": "query: ",
+        "passagePrefix": "passage: "
+      },
+      "timing": {
+        "loadMs": 442.466542,
+        "loadFileCache": "warmed-by-asset-hashing",
+        "queryMs": 2109.534459,
+        "passagesMs": 7550.857667,
+        "scoringMs": 19.158457999999882,
+        "totalMs": 10331.980917,
+        "batches": {
+          "queries": [
+            {
+              "offset": 0,
+              "count": 8,
+              "elapsedMs": 254.371041
+            },
+            {
+              "offset": 8,
+              "count": 8,
+              "elapsedMs": 166.2516250000001
+            },
+            {
+              "offset": 16,
+              "count": 8,
+              "elapsedMs": 294.112625
+            },
+            {
+              "offset": 24,
+              "count": 8,
+              "elapsedMs": 268.0669580000001
+            },
+            {
+              "offset": 32,
+              "count": 8,
+              "elapsedMs": 273.75350000000003
+            },
+            {
+              "offset": 40,
+              "count": 8,
+              "elapsedMs": 244.85362499999997
+            },
+            {
+              "offset": 48,
+              "count": 8,
+              "elapsedMs": 298.08275000000003
+            },
+            {
+              "offset": 56,
+              "count": 8,
+              "elapsedMs": 252.8497500000003
+            },
+            {
+              "offset": 64,
+              "count": 8,
+              "elapsedMs": 56.833665999999994
+            }
+          ],
+          "passages": [
+            {
+              "offset": 0,
+              "count": 8,
+              "elapsedMs": 161.9139580000001
+            },
+            {
+              "offset": 8,
+              "count": 8,
+              "elapsedMs": 155.98733400000037
+            },
+            {
+              "offset": 16,
+              "count": 8,
+              "elapsedMs": 171.48191599999973
+            },
+            {
+              "offset": 24,
+              "count": 8,
+              "elapsedMs": 242.57999999999993
+            },
+            {
+              "offset": 32,
+              "count": 8,
+              "elapsedMs": 263.431333
+            },
+            {
+              "offset": 40,
+              "count": 8,
+              "elapsedMs": 258.50808300000017
+            },
+            {
+              "offset": 48,
+              "count": 8,
+              "elapsedMs": 201.85033300000032
+            },
+            {
+              "offset": 56,
+              "count": 8,
+              "elapsedMs": 164.22749999999996
+            },
+            {
+              "offset": 64,
+              "count": 8,
+              "elapsedMs": 245.7569169999997
+            },
+            {
+              "offset": 72,
+              "count": 8,
+              "elapsedMs": 277.8008749999999
+            },
+            {
+              "offset": 80,
+              "count": 8,
+              "elapsedMs": 197.08841699999994
+            },
+            {
+              "offset": 88,
+              "count": 8,
+              "elapsedMs": 265.3119999999999
+            },
+            {
+              "offset": 96,
+              "count": 8,
+              "elapsedMs": 205.58879200000047
+            },
+            {
+              "offset": 104,
+              "count": 8,
+              "elapsedMs": 214.17458299999998
+            },
+            {
+              "offset": 112,
+              "count": 8,
+              "elapsedMs": 271.1542499999996
+            },
+            {
+              "offset": 120,
+              "count": 8,
+              "elapsedMs": 266.595875
+            },
+            {
+              "offset": 128,
+              "count": 8,
+              "elapsedMs": 230.34158300000036
+            },
+            {
+              "offset": 136,
+              "count": 8,
+              "elapsedMs": 156.9047499999997
+            },
+            {
+              "offset": 144,
+              "count": 8,
+              "elapsedMs": 156.6745409999994
+            },
+            {
+              "offset": 152,
+              "count": 8,
+              "elapsedMs": 164.97258299999976
+            },
+            {
+              "offset": 160,
+              "count": 8,
+              "elapsedMs": 129.83050000000003
+            },
+            {
+              "offset": 168,
+              "count": 8,
+              "elapsedMs": 254.56466699999964
+            },
+            {
+              "offset": 176,
+              "count": 8,
+              "elapsedMs": 265.81741599999987
+            },
+            {
+              "offset": 184,
+              "count": 8,
+              "elapsedMs": 187.1012499999997
+            },
+            {
+              "offset": 192,
+              "count": 8,
+              "elapsedMs": 142.8117089999996
+            },
+            {
+              "offset": 200,
+              "count": 8,
+              "elapsedMs": 121.15162499999951
+            },
+            {
+              "offset": 208,
+              "count": 8,
+              "elapsedMs": 271.90308300000015
+            },
+            {
+              "offset": 216,
+              "count": 8,
+              "elapsedMs": 287.19791599999917
+            },
+            {
+              "offset": 224,
+              "count": 8,
+              "elapsedMs": 218.3809170000004
+            },
+            {
+              "offset": 232,
+              "count": 8,
+              "elapsedMs": 274.00929200000064
+            },
+            {
+              "offset": 240,
+              "count": 8,
+              "elapsedMs": 151.01675000000068
+            },
+            {
+              "offset": 248,
+              "count": 8,
+              "elapsedMs": 242.0986670000002
+            },
+            {
+              "offset": 256,
+              "count": 8,
+              "elapsedMs": 295.0358329999999
+            },
+            {
+              "offset": 264,
+              "count": 8,
+              "elapsedMs": 269.717584
+            },
+            {
+              "offset": 272,
+              "count": 8,
+              "elapsedMs": 150.67849999999999
+            },
+            {
+              "offset": 280,
+              "count": 1,
+              "elapsedMs": 16.519459000001007
+            }
+          ]
+        }
+      },
+      "cache": {
+        "distinctQueries": 72,
+        "queryReferences": 144,
+        "queryReuses": 72,
+        "distinctPassages": 281,
+        "passageReferences": 2728,
+        "passageReuses": 2447,
+        "queryOrderSha256": "6700f059882ae608d76e11bd1e878f4ef86034075f148ca1488a80115a15b23b",
+        "passageOrderSha256": "3e72f7f741719ef804d409d97ea591ced7a808d0a0e658966b8078cc6657814a"
+      },
+      "resource": {
+        "modelBytes": 295737413,
+        "peakRssBytes": 1272840192,
+        "rssSamplingIntervalMs": 25
+      },
+      "tokenization": {
+        "maxTokens": 512,
+        "queriesTruncated": 0,
+        "passagesTruncated": 0,
+        "longestQueryTokens": 240,
+        "longestPassageTokens": 234
+      },
+      "weights": {
+        "semantic": 0.55,
+        "lexical": 0.2,
+        "skills": 0.25
+      },
+      "provenance": {
+        "inputs": [
+          {
+            "file": "education--lead--mixed-a--ar.json",
+            "sha256": "687475ad10e29cb0dde7f501e5164221b1206b6cbd828976403ce788090c1a91"
+          },
+          {
+            "file": "education--lead--mixed-a--en.json",
+            "sha256": "ab23f8f25abcdbd582eaba2c3881d9f3ee4c80f16ff225659c8541927a298cfe"
+          },
+          {
+            "file": "education--lead--mixed-b--ar.json",
+            "sha256": "e621fe0889565f2f6a0bdde32f6a0aa4a2076699177e040847262acfb929151a"
+          },
+          {
+            "file": "education--lead--mixed-b--en.json",
+            "sha256": "b47e2484ac5b24a37c4c7bf3995cd7f2fcacb3428130f75a3185386877e40297"
+          },
+          {
+            "file": "education--specialist--mixed-a--ar.json",
+            "sha256": "f80b809f06fad702914e14b6aa916ff0b01f6bfb077faef98350ff94209f208d"
+          },
+          {
+            "file": "education--specialist--mixed-a--en.json",
+            "sha256": "b85443898438497bd45cc768ae3247bb2c3d694dcfbdc7785e8a3b1e66ceca4f"
+          },
+          {
+            "file": "education--specialist--mixed-b--ar.json",
+            "sha256": "6ecc28c5b0c27ac120d7686eb9aa1cfdad95da19ac0793e2669a64117bfa21cc"
+          },
+          {
+            "file": "education--specialist--mixed-b--en.json",
+            "sha256": "165cc51487a6e630bd15ea20c51ff448280c3d83b4db1d4d2229b57a12730549"
+          },
+          {
+            "file": "legal--lead--mixed-a--ar.json",
+            "sha256": "69c261609b9b0512cb470507fcfbc5da20a7e5559cf1eeb1ef90d9aa6d39363c"
+          },
+          {
+            "file": "legal--lead--mixed-a--en.json",
+            "sha256": "b60d6be47942e65c3577ddf7ec8e7024571a908829d8113969e82cc66970aabf"
+          },
+          {
+            "file": "legal--lead--mixed-b--ar.json",
+            "sha256": "30b437aab759a0aaf33586ecb6b28a077386f9f3fb15f39531fefa2ef23b988b"
+          },
+          {
+            "file": "legal--lead--mixed-b--en.json",
+            "sha256": "85f117a52700f8a1536b0a97406a11ac892709d12d36361de28a395dae7279ac"
+          },
+          {
+            "file": "legal--specialist--mixed-a--ar.json",
+            "sha256": "c4c00e2312f246d8cef537e64e98f9b9b9f9aad9f1883ce0453e9c63f5d14732"
+          },
+          {
+            "file": "legal--specialist--mixed-a--en.json",
+            "sha256": "0092e752cc3904434c3f1ef06e8c53f06eaf62e7b20da82539f49000e7ee74d4"
+          },
+          {
+            "file": "legal--specialist--mixed-b--ar.json",
+            "sha256": "b3f54a85e33d5a1d950a7d42bc780ee965dc2c212dee0cf0e94d0cc823ea2627"
+          },
+          {
+            "file": "legal--specialist--mixed-b--en.json",
+            "sha256": "9e2e4d02a9ee3c23db1bf0fc787907d470cae60a32929af61cfe9ae2fbe7aa50"
+          }
+        ],
+        "inputFilesSha256": "f294b9fa5b6c6a048c6ca5faa2ab50bc67748aaef8e2ac220e2782b48531ba71",
+        "scoringBundleSha256": "d656ebefa9770df1c5c1a12d4d8b1597c5291e0fc3bef537357480a35654fe56",
+        "modelFiles": [
+          {
+            "file": "benchmark-manifest.json",
+            "bytes": 1587,
+            "sha256": "fb030202193225a0a0d7750fcc03e5432447fd118acf3ce7f99eb3d0a8c3d86d"
+          },
+          {
+            "file": "config.json",
+            "bytes": 686,
+            "sha256": "4c27930e59106027abab56f7531c1fa6b14bbf31e8229ec36d68affa4e869bcd"
+          },
+          {
+            "file": "onnx/model_quantized.onnx",
+            "bytes": 278647662,
+            "sha256": "df7a9a29309e3ad491e1783adf8baee710262cc06079c7cbab63c630277fac94"
+          },
+          {
+            "file": "source-manifest.json",
+            "bytes": 4120,
+            "sha256": "3a14a1278b37c7acb26cbd9d9c9644c38e40be922123540acc9efbc71026aa8f"
+          },
+          {
+            "file": "special_tokens_map.json",
+            "bytes": 280,
+            "sha256": "06e405a36dfe4b9604f484f6a1e619af1a7f7d09e34a8555eb0b77b66318067f"
+          },
+          {
+            "file": "tokenizer.json",
+            "bytes": 17082660,
+            "sha256": "62c24cdc13d4c9952d63718d6c9fa4c287974249e16b7ade6d5a85e7bbb75626"
+          },
+          {
+            "file": "tokenizer_config.json",
+            "bytes": 418,
+            "sha256": "efb5c0d09722e5fe59a462cd2a9976ee216d55b037597d997cd3fe833216da15"
+          }
+        ],
+        "modelFilesSha256": "69dd499030172cffb37f47d25543b63c22b8bcfcc09ebc79d0b9a3a430a0653f",
+        "benchmarkScriptSha256": "71e36dfb36be6c9013e60797c2b37e70a22133229fbdc2edad4119d4964372a5",
+        "dependencyLockSha256": "b80c77c833eb1a9cf7c125a3e235b146250f5b344aef6afe67ef997dace20167",
+        "sourceExport": {
+          "modelVectorId": "multilingual-e5-small@761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+          "node": "24.18.1",
+          "electron": "43.4.1",
+          "manifestSha256": "74fd862282f721e6b1cc82d1b7462fcc6bce02ff1150c9becffe1a7840f25ee2",
+          "fixtureHashes": [
+            {
+              "family": "software",
+              "sha256": "9c4541bec65209bb4b1d61d17447939853856caa64a321ebead2adaafd3770fa"
+            },
+            {
+              "family": "construction",
+              "sha256": "98d3f60a7dac5141ac390df1450c6a23b10ddd513746b687957250f07d01fc7c"
+            },
+            {
+              "family": "energy",
+              "sha256": "54d20b1e138bd587bbc984b7078f786676a5c57d4eed1c289932559b2063f60c"
+            },
+            {
+              "family": "healthcare",
+              "sha256": "98ec9cfd3d3d83ed096078f51be046588cab9dab364f8debf218320f9807684c"
+            },
+            {
+              "family": "finance",
+              "sha256": "9d04334c383405fe46a5c607121bb1f1b1ab4fb531ff221230cf37a0529a4773"
+            },
+            {
+              "family": "legal",
+              "sha256": "aa3045f1adfe683e1083d8d18a338edb5c3ccb537ac4f1df517b697153876961"
+            },
+            {
+              "family": "education",
+              "sha256": "c1f0f11e1a396ceeddc402978f00be4ed8aa36d4f9ea96b725c703d46fd66b5e"
+            },
+            {
+              "family": "manufacturing",
+              "sha256": "dc61735b849e15bfeb63f12543eecb412541673220fdbfe8600ae0a117a11a64"
+            },
+            {
+              "family": "logistics",
+              "sha256": "99f51aa8492dbf0844f72e4988c3f65cfd33066d927441a7ddc32ad1cc1768c5"
+            },
+            {
+              "family": "sales",
+              "sha256": "5b4c84e76cdee9c5c7fc6f403606f5424b8d66c8efed2fe7e580eb2dea6f6634"
+            },
+            {
+              "family": "hr",
+              "sha256": "deff455b00173552cf04998af7ff24ffbcc5d3a610c69be9b5540daee86b9c40"
+            },
+            {
+              "family": "hospitality",
+              "sha256": "07dbf1cc5fcc173d66f5584ddaaa2adbd0163e27ffeae01c5aa4fd29b4523b17"
+            }
+          ],
+          "sourceTreeSha256": "1c8a09c67d1da3fa7c58e6b043b6217197e060d00ce161e5f2501851c5057fda",
+          "runtimeBundleSha256": "6f73ae2aec538708bdfc1c384f4554331fa319a851984b42b89e66b3dc81356d",
+          "runtimeFiles": [
+            {
+              "file": "out/main/bench.js",
+              "sha256": "d4f1b82d5c4399de30b392e129f6718f3ee3be9cbf430955b7ab460d6cf5e81a"
+            },
+            {
+              "file": "out/main/chunks/backup-Dz7kQac7.js",
+              "sha256": "4644bb4b0212845002fdcc24ba15ff0e3cbfd5095cf3fd485a8f0fc87167a762"
+            },
+            {
+              "file": "out/main/chunks/client-Bh73xlTh.js",
+              "sha256": "966fca02c4ef02120d7950cca2c3c577329edc95e9ca6f1690a52ad07d67497b"
+            },
+            {
+              "file": "out/main/chunks/corpus-BdEhJT9W.js",
+              "sha256": "618e433d6b21d5d3919933af3ebe2e2bcf7e3a6fe166e80aac513c70fdec23ce"
+            },
+            {
+              "file": "out/main/chunks/derivation-version-BLqfCajs.js",
+              "sha256": "42dff3abddfb7d12bb56d6518d651db8040426f207cec334a4ecbfaaa95d532d"
+            },
+            {
+              "file": "out/main/chunks/derive-CAOn6JBC.js",
+              "sha256": "3f95f2b998c7f888e048fffa1ef7a8e05e3d8b2227456519a77b40bc80f3fb68"
+            },
+            {
+              "file": "out/main/chunks/derived-backfill-sv390hg8.js",
+              "sha256": "db1333906bc44ad575232e55df43f8b756933c75303f1e559dbb73c3553898d7"
+            },
+            {
+              "file": "out/main/chunks/duplicates-CDr0JH3L.js",
+              "sha256": "e339858c10111c59a97730e6a797c53707759f7346598799666cd8090b7d64f8"
+            },
+            {
+              "file": "out/main/chunks/eval-diagnostics-BYffXvBj.js",
+              "sha256": "1c4b5d08e67e55ca4662a2faca5e56ae2258bc3b31fddafd9a1203aa5b81f1c6"
+            },
+            {
+              "file": "out/main/chunks/eval-support-Br-EYfw1.js",
+              "sha256": "4b8765b6e7a1ae68c3c91d91d2fde2ff9bb52ad4ce593dce13aaaf5a549c17f4"
+            },
+            {
+              "file": "out/main/chunks/extraction-protocol-BcXXz5Z5.js",
+              "sha256": "47a5179de710323979bfbd64652d7b9b2966c71ff3e22418b7fa0bce3aac4586"
+            },
+            {
+              "file": "out/main/chunks/ibm-plex-sans-arabic-arabic-400-normal-CyU-ddYS.woff2",
+              "sha256": "6010e7fd0dce5d527583951750728cbe3c895efbd16aa0f809ab8c824878c9d8"
+            },
+            {
+              "file": "out/main/chunks/ibm-plex-sans-arabic-arabic-600-normal-0pRdybE_.woff2",
+              "sha256": "16734a5adb27b0f363e566cbbeacec480da0dc0baa19c8f0053251c2e2bc0eac"
+            },
+            {
+              "file": "out/main/chunks/index-Cz99DUNw.js",
+              "sha256": "21f142ba30a269e3324c1bf816e21e35ac2271bae27f4a44bcec9feaaf7fa42c"
+            },
+            {
+              "file": "out/main/chunks/index-vvB5OeAk.js",
+              "sha256": "59423267e3dc7fa820b6c65cb212885f90a3ed93e81b936addd2c62f0ccd24ba"
+            },
+            {
+              "file": "out/main/chunks/job-requirements-CdhlCbzm.js",
+              "sha256": "a6e4ee3900a6e0058ece74327ab582dee25f4c236e04f1683e05647dc0884ee4"
+            },
+            {
+              "file": "out/main/chunks/migrations-DCoE5OMR.js",
+              "sha256": "18afdb5c1cd7ae3144f9105d2ba36dc97656307617ad21e30e1d9aa576f03bb6"
+            },
+            {
+              "file": "out/main/chunks/normalize-U7knnRF4.js",
+              "sha256": "be0fea270db706092bdc311646dea725488f5a5f17ad2de903ae6e558f102463"
+            },
+            {
+              "file": "out/main/chunks/pipeline-Dx7rKZSX.js",
+              "sha256": "54c60574cbfce00a24cec7ee6ab8ffdc300dbde57fc1ceff0a0ada8ea9a9d0e0"
+            },
+            {
+              "file": "out/main/chunks/planning-BCCXf9u9.js",
+              "sha256": "c4016d070cecf33dc9764d7e1f72f65ffbb1b0f103ca19f1523150922e121c31"
+            },
+            {
+              "file": "out/main/chunks/protocol-xhmDI7TG.js",
+              "sha256": "63826c96d1019a6639908ae4ee0923d455829ca9011b85f2869fd33dbacbcefe"
+            },
+            {
+              "file": "out/main/chunks/rank-BQmwmFrf.js",
+              "sha256": "bf5648c941b499af7c2655116c171789bd14047e0950d399346dd12d83b6d9c3"
+            },
+            {
+              "file": "out/main/chunks/reindex-DeRG3DLn.js",
+              "sha256": "09d39d304eeb2ec81d41c8a087c18b8be2921910076b1ee7a078ba75ed5fff9c"
+            },
+            {
+              "file": "out/main/chunks/schema-Dw_dWwkk.js",
+              "sha256": "d1e3675b4a20cdc87cb94941b6bd8dfb67aaa42f165bd4c22b04dbcf0d3019f2"
+            },
+            {
+              "file": "out/main/chunks/scoring-s25wEYdO.js",
+              "sha256": "eb25adedc36d3a8955dd84ef4c8276c74ac17cdd822bedac4d05a4e7fc601c3c"
+            },
+            {
+              "file": "out/main/chunks/sessions-DB50HskB.js",
+              "sha256": "9625efa92b5970ca8e22342bc8b9ca5d04c05999b617d8a1e4bd4b35eedef30b"
+            },
+            {
+              "file": "out/main/chunks/shortlist-M1T1xvnQ.js",
+              "sha256": "ee85e42e125c0db78e793dc47f1f3b5d97c874f9f8682d60150b614c563ba51e"
+            },
+            {
+              "file": "out/main/chunks/skills-backfill-D6RfXRIg.js",
+              "sha256": "8a09577c7409cc46d4092e98866f5d9dd59a783146b48a9994f8bc65fa595bcb"
+            },
+            {
+              "file": "out/main/chunks/skills-backfill-plan-jyekYTJk.js",
+              "sha256": "82f96b8a919a8e7837cb685fc06671e5bebe0e1aef247f073504dfe4c467d51d"
+            },
+            {
+              "file": "out/main/chunks/skills-BzmpfOrD.js",
+              "sha256": "325e90bff0eac8b6c78a5d87767483cb1ad8b712400e3443e3ccd376f1cfa4b0"
+            },
+            {
+              "file": "out/main/chunks/smoke-derived-DA1M-A9r.js",
+              "sha256": "6cfd68d86bfae700599a8da8e4092563f856c51d2fb86deb2aff5f53f3544b56"
+            },
+            {
+              "file": "out/main/chunks/smoke-requirements-BOpoewBC.js",
+              "sha256": "ea0a75e2a2dbbf8d8df2168883747065cc35e4a345890696ffae573b9285b116"
+            },
+            {
+              "file": "out/main/chunks/smoke-talent-BUA5A9_m.js",
+              "sha256": "60ae0de96abc2e357d9d0abbc52f8c4c79246daf44c3b7560e596f240e9192c8"
+            },
+            {
+              "file": "out/main/chunks/storage-lUu4EK8i.js",
+              "sha256": "91c9c581ef1292732b1f090bd02a8452d1fc83ff4d12621f0055f1437807107f"
+            },
+            {
+              "file": "out/main/chunks/talent-DP5gL2TE.js",
+              "sha256": "25cda4d858c2e78e310c543e57bf73dafa30802db4b6ecd6e0c9e60d119f8476"
+            },
+            {
+              "file": "out/main/chunks/temporary-CHrjtfUl.js",
+              "sha256": "90c75e16bc1c4448b16dedf0af4010e1a67a2a2da7243fcecae0896ce9ef54eb"
+            },
+            {
+              "file": "out/main/embed-worker.js",
+              "sha256": "20ce0d785de6d8a044837be91c14f9e15e95f48e23f876ab43800b5d221dd433"
+            },
+            {
+              "file": "out/main/eval-cross-domain.js",
+              "sha256": "6f73ae2aec538708bdfc1c384f4554331fa319a851984b42b89e66b3dc81356d"
+            },
+            {
+              "file": "out/main/eval.js",
+              "sha256": "ab86074242df32025b509ce739dd04f4f8d86ca6a5feeb44616de2ee49c945a0"
+            },
+            {
+              "file": "out/main/extraction-worker.js",
+              "sha256": "54f348c73ee0c4088cb7f36064a24ddeb5f55ac8d4c32ded2c67a8a10fac7007"
+            },
+            {
+              "file": "out/main/index.js",
+              "sha256": "a37ffe370a1768836f356b655fcd60c2e53c96d186832db8d6be9ad7daa49884"
+            },
+            {
+              "file": "out/main/seed.js",
+              "sha256": "b5fd2e665ec82fc4299f261accb89b88c52c413bba088df450a5516eb165f56b"
+            },
+            {
+              "file": "out/main/smoke.js",
+              "sha256": "b86e668c3060faa8ce7af2d7f55cf8d03fbd1fd6425103e35ac7243c688a6ca4"
+            }
+          ],
+          "modelFiles": [
+            {
+              "file": "resources/models/multilingual-e5-small/config.json",
+              "sha256": "cb99455288675345e1a4f411438d5d0adbba5fbd3a67ea4fb03c015433b996c1"
+            },
+            {
+              "file": "resources/models/multilingual-e5-small/onnx/model_quantized.onnx",
+              "sha256": "f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193"
+            },
+            {
+              "file": "resources/models/multilingual-e5-small/special_tokens_map.json",
+              "sha256": "d05497f1da52c5e09554c0cd874037a083e1dc1b9cfd48034d1c717f1afc07a7"
+            },
+            {
+              "file": "resources/models/multilingual-e5-small/tokenizer_config.json",
+              "sha256": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b"
+            },
+            {
+              "file": "resources/models/multilingual-e5-small/tokenizer.json",
+              "sha256": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39"
+            }
+          ],
+          "packageSha256": "00fc34c480f033d361a6ddadefd60713915cf0bd7ba7fbbf4e1cceab8f6a9595",
+          "lockSha256": "b80c77c833eb1a9cf7c125a3e235b146250f5b344aef6afe67ef997dace20167",
+          "weights": {
+            "semantic": 0.55,
+            "lexical": 0.2,
+            "skills": 0.25
+          }
+        }
+      },
+      "summary": {
+        "cases": 16,
+        "distinctVacancies": 4,
+        "aggregation": "Equal case; complete identical grids make this equal vacancy.",
+        "macro": {
+          "precisionAt3": 0.49999999999999994,
+          "recallAt3": 0.4270833333333333,
+          "recallAt10": 0.4947916666666667,
+          "top3TargetCoverage": 0.49999999999999994,
+          "reciprocalRank": 0.7860576923076923,
+          "mrr": 0.7860576923076923,
+          "ndcg10": 0.5489733733393073
+        },
+        "pooledLanguageRecall": {
+          "same": {
+            "relevant": 28,
+            "hits3": 23,
+            "hits10": 27,
+            "recallAt3": 0.8214285714285714,
+            "recallAt10": 0.9642857142857143
+          },
+          "cross": {
+            "relevant": 28,
+            "hits3": 1,
+            "hits10": 1,
+            "recallAt3": 0.03571428571428571,
+            "recallAt10": 0.03571428571428571
+          }
+        },
+        "byFamily": {
+          "education": {
+            "cases": 8,
+            "metrics": {
+              "precisionAt3": 0.5416666666666666,
+              "recallAt3": 0.4583333333333333,
+              "recallAt10": 0.4895833333333333,
+              "top3TargetCoverage": 0.5416666666666666,
+              "reciprocalRank": 0.6971153846153846,
+              "mrr": 0.6971153846153846,
+              "ndcg10": 0.5324631572390601
+            },
+            "pooledLanguageRecall": {
+              "same": {
+                "relevant": 14,
+                "hits3": 12,
+                "hits10": 13,
+                "recallAt3": 0.8571428571428571,
+                "recallAt10": 0.9285714285714286
+              },
+              "cross": {
+                "relevant": 14,
+                "hits3": 1,
+                "hits10": 1,
+                "recallAt3": 0.07142857142857142,
+                "recallAt10": 0.07142857142857142
+              }
+            }
+          },
+          "legal": {
+            "cases": 8,
+            "metrics": {
+              "precisionAt3": 0.4583333333333333,
+              "recallAt3": 0.3958333333333333,
+              "recallAt10": 0.5,
+              "top3TargetCoverage": 0.4583333333333333,
+              "reciprocalRank": 0.875,
+              "mrr": 0.875,
+              "ndcg10": 0.5654835894395541
+            },
+            "pooledLanguageRecall": {
+              "same": {
+                "relevant": 14,
+                "hits3": 11,
+                "hits10": 14,
+                "recallAt3": 0.7857142857142857,
+                "recallAt10": 1
+              },
+              "cross": {
+                "relevant": 14,
+                "hits3": 0,
+                "hits10": 0,
+                "recallAt3": 0,
+                "recallAt10": 0
+              }
+            }
+          }
+        },
+        "byPostingLanguage": {
+          "ar": {
+            "cases": 8,
+            "metrics": {
+              "precisionAt3": 0.5,
+              "recallAt3": 0.4270833333333333,
+              "recallAt10": 0.4895833333333333,
+              "top3TargetCoverage": 0.5,
+              "reciprocalRank": 0.7596153846153846,
+              "mrr": 0.7596153846153846,
+              "ndcg10": 0.5221108044558713
+            },
+            "pooledLanguageRecall": {
+              "same": {
+                "relevant": 14,
+                "hits3": 11,
+                "hits10": 13,
+                "recallAt3": 0.7857142857142857,
+                "recallAt10": 0.9285714285714286
+              },
+              "cross": {
+                "relevant": 14,
+                "hits3": 1,
+                "hits10": 1,
+                "recallAt3": 0.07142857142857142,
+                "recallAt10": 0.07142857142857142
+              }
+            }
+          },
+          "en": {
+            "cases": 8,
+            "metrics": {
+              "precisionAt3": 0.5,
+              "recallAt3": 0.42708333333333337,
+              "recallAt10": 0.5,
+              "top3TargetCoverage": 0.5,
+              "reciprocalRank": 0.8125,
+              "mrr": 0.8125,
+              "ndcg10": 0.5758359422227429
+            },
+            "pooledLanguageRecall": {
+              "same": {
+                "relevant": 14,
+                "hits3": 12,
+                "hits10": 14,
+                "recallAt3": 0.8571428571428571,
+                "recallAt10": 1
+              },
+              "cross": {
+                "relevant": 14,
+                "hits3": 0,
+                "hits10": 0,
+                "recallAt3": 0,
+                "recallAt10": 0
+              }
+            }
+          }
+        },
+        "byCohort": {
+          "mixed-a": {
+            "cases": 8,
+            "metrics": {
+              "precisionAt3": 0.45833333333333337,
+              "recallAt3": 0.38541666666666663,
+              "recallAt10": 0.4895833333333333,
+              "top3TargetCoverage": 0.45833333333333337,
+              "reciprocalRank": 0.6971153846153846,
+              "mrr": 0.6971153846153846,
+              "ndcg10": 0.5306501129704738
+            },
+            "pooledLanguageRecall": {
+              "same": {
+                "relevant": 14,
+                "hits3": 10,
+                "hits10": 13,
+                "recallAt3": 0.7142857142857143,
+                "recallAt10": 0.9285714285714286
+              },
+              "cross": {
+                "relevant": 14,
+                "hits3": 1,
+                "hits10": 1,
+                "recallAt3": 0.07142857142857142,
+                "recallAt10": 0.07142857142857142
+              }
+            }
+          },
+          "mixed-b": {
+            "cases": 8,
+            "metrics": {
+              "precisionAt3": 0.5416666666666666,
+              "recallAt3": 0.46875,
+              "recallAt10": 0.5,
+              "top3TargetCoverage": 0.5416666666666666,
+              "reciprocalRank": 0.875,
+              "mrr": 0.875,
+              "ndcg10": 0.5672966337081404
+            },
+            "pooledLanguageRecall": {
+              "same": {
+                "relevant": 14,
+                "hits3": 13,
+                "hits10": 14,
+                "recallAt3": 0.9285714285714286,
+                "recallAt10": 1
+              },
+              "cross": {
+                "relevant": 14,
+                "hits3": 0,
+                "hits10": 0,
+                "recallAt3": 0,
+                "recallAt10": 0
+              }
+            }
+          }
+        }
+      },
+      "limitations": [
+        "Synthetic input labels and translations require independent review.",
+        "Shared embedding caches and batch size differ from the desktop ingest/search execution pattern; small numerical differences are possible.",
+        "Timings include one first query forward and unique-text batching; these are not per-search application latency measurements.",
+        "Sampled Node RSS excludes desktop renderer processes and is not total installed-app memory.",
+        "Input SQLite lexical scores are frozen; this comparison changes the embedding model only."
+      ],
+      "caseMetrics": [
+        {
+          "id": "education/lead/mixed-a/ar",
+          "family": "education",
+          "vacancy": "lead",
+          "cohort": "mixed-a",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership"
+          ],
+          "metrics": {
+            "precisionAt3": 0,
+            "recallAt3": 0,
+            "recallAt10": 0,
+            "top3TargetCoverage": 0,
+            "reciprocalRank": 0.07692307692307693,
+            "mrr": 0.07692307692307693,
+            "ndcg10": 0.15147399301772024
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 1,
+              "hits3": 0,
+              "hits10": 0
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            13,
+            25,
+            30
+          ],
+          "scoringMs": 2.365583000000697
+        },
+        {
+          "id": "education/lead/mixed-a/en",
+          "family": "education",
+          "vacancy": "lead",
+          "cohort": "mixed-a",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership",
+            "coaching"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.6666666666666666,
+            "recallAt10": 0.6666666666666666,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.699050580338565
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 1,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            45
+          ],
+          "scoringMs": 1.0936670000010054
+        },
+        {
+          "id": "education/lead/mixed-b/ar",
+          "family": "education",
+          "vacancy": "lead",
+          "cohort": "mixed-b",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.6666666666666666,
+            "recallAt10": 0.6666666666666666,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.5401813472270658
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 1,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            3,
+            25
+          ],
+          "scoringMs": 1.0956249999999272
+        },
+        {
+          "id": "education/lead/mixed-b/en",
+          "family": "education",
+          "vacancy": "lead",
+          "cohort": "mixed-b",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership",
+            "coaching"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.3333333333333333,
+            "recallAt10": 0.3333333333333333,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 0.5,
+            "mrr": 0.5,
+            "ndcg10": 0.4672915882941651
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 1,
+              "hits3": 1,
+              "hits10": 1
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            2,
+            42,
+            46
+          ],
+          "scoringMs": 1.1691659999996773
+        },
+        {
+          "id": "education/specialist/mixed-a/ar",
+          "family": "education",
+          "vacancy": "specialist",
+          "cohort": "mixed-a",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "training"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.5,
+            "recallAt10": 0.75,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 0.5,
+            "mrr": 0.5,
+            "ndcg10": 0.6147522881518482
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 1,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 1,
+              "hits10": 1
+            }
+          },
+          "tier1Ranks": [
+            2,
+            3,
+            6,
+            40
+          ],
+          "scoringMs": 1.1904169999997976
+        },
+        {
+          "id": "education/specialist/mixed-a/en",
+          "family": "education",
+          "vacancy": "specialist",
+          "cohort": "mixed-a",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "coaching"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.5,
+            "recallAt10": 0.5,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.6365789677189562
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            19,
+            48
+          ],
+          "scoringMs": 1.0258340000000317
+        },
+        {
+          "id": "education/specialist/mixed-b/ar",
+          "family": "education",
+          "vacancy": "specialist",
+          "cohort": "mixed-b",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "training"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.5,
+            "recallAt10": 0.5,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.5608759573086857
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            3,
+            36,
+            37
+          ],
+          "scoringMs": 1.0540409999994154
+        },
+        {
+          "id": "education/specialist/mixed-b/en",
+          "family": "education",
+          "vacancy": "specialist",
+          "cohort": "mixed-b",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "coaching"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.5,
+            "recallAt10": 0.5,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 0.5,
+            "mrr": 0.5,
+            "ndcg10": 0.5895005358554747
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            2,
+            3,
+            22,
+            32
+          ],
+          "scoringMs": 1.0316249999996217
+        },
+        {
+          "id": "legal/lead/mixed-a/ar",
+          "family": "legal",
+          "vacancy": "lead",
+          "cohort": "mixed-a",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership",
+            "sales",
+            "training",
+            "supply_chain"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.3333333333333333,
+            "recallAt10": 0.3333333333333333,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 0.5,
+            "mrr": 0.5,
+            "ndcg10": 0.5273117379860613
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 1,
+              "hits3": 1,
+              "hits10": 1
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            2,
+            20,
+            28
+          ],
+          "scoringMs": 1.0988749999996799
+        },
+        {
+          "id": "legal/lead/mixed-a/en",
+          "family": "legal",
+          "vacancy": "lead",
+          "cohort": "mixed-a",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership",
+            "sales",
+            "supply_chain",
+            "coaching"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.3333333333333333,
+            "recallAt10": 0.6666666666666666,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.6152501098773382
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 1,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 1,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            4,
+            31
+          ],
+          "scoringMs": 1.0344160000004194
+        },
+        {
+          "id": "legal/lead/mixed-b/ar",
+          "family": "legal",
+          "vacancy": "lead",
+          "cohort": "mixed-b",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership",
+            "sales",
+            "training",
+            "supply_chain"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.6666666666666666,
+            "recallAt10": 0.6666666666666666,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.699050580338565
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 1,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            28
+          ],
+          "scoringMs": 1.0379590000011376
+        },
+        {
+          "id": "legal/lead/mixed-b/en",
+          "family": "legal",
+          "vacancy": "lead",
+          "cohort": "mixed-b",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership",
+            "sales",
+            "supply_chain",
+            "coaching"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.3333333333333333,
+            "recallAt10": 0.3333333333333333,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.5632934341378087
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 1,
+              "hits3": 1,
+              "hits10": 1
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            33,
+            62
+          ],
+          "scoringMs": 1.0382079999999405
+        },
+        {
+          "id": "legal/specialist/mixed-a/ar",
+          "family": "legal",
+          "vacancy": "specialist",
+          "cohort": "mixed-a",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "sales",
+            "supply_chain"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.5,
+            "recallAt10": 0.5,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.5348441690519455
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            14,
+            33
+          ],
+          "scoringMs": 1.0158749999991414
+        },
+        {
+          "id": "legal/specialist/mixed-a/en",
+          "family": "legal",
+          "vacancy": "specialist",
+          "cohort": "mixed-a",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "sales",
+            "supply_chain"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.25,
+            "recallAt10": 0.5,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 0.5,
+            "mrr": 0.5,
+            "ndcg10": 0.46593905762135607
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 1,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            2,
+            6,
+            17,
+            18
+          ],
+          "scoringMs": 1.0205000000005384
+        },
+        {
+          "id": "legal/specialist/mixed-b/ar",
+          "family": "legal",
+          "vacancy": "specialist",
+          "cohort": "mixed-b",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "sales",
+            "supply_chain"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.25,
+            "recallAt10": 0.5,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.5483963625650788
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 1,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            5,
+            13,
+            16
+          ],
+          "scoringMs": 1.1056250000001455
+        },
+        {
+          "id": "legal/specialist/mixed-b/en",
+          "family": "legal",
+          "vacancy": "specialist",
+          "cohort": "mixed-b",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "sales",
+            "supply_chain"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.5,
+            "recallAt10": 0.5,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.5697832639382796
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            3,
+            15,
+            59
+          ],
+          "scoringMs": 1.7690000000002328
+        }
+      ],
+      "detailedResultSha256": "6cb0d422290b20f4bf5415182ce41adb83e95f1003eaf1a76c1bbaecbec37d09"
+    },
+    {
+      "schemaVersion": 1,
+      "status": "completed",
+      "createdAt": "2026-09-27T18:57:27.444Z",
+      "modelId": "multilingual-e5-large",
+      "runtime": {
+        "node": "v22.23.2",
+        "transformers": "4.2.0",
+        "platform": "darwin",
+        "arch": "arm64",
+        "cpu": "Apple M4 Pro",
+        "availableParallelism": 14,
+        "device": "cpu",
+        "dtype": "q8",
+        "batchSize": 8,
+        "embeddingDimension": 1024,
+        "queryPrefix": "query: ",
+        "passagePrefix": "passage: "
+      },
+      "timing": {
+        "loadMs": 677.0756250000001,
+        "loadFileCache": "warmed-by-asset-hashing",
+        "queryMs": 6818.000708,
+        "passagesMs": 25105.651666,
+        "scoringMs": 22.413125000006403,
+        "totalMs": 32950.930459,
+        "batches": {
+          "queries": [
+            {
+              "offset": 0,
+              "count": 8,
+              "elapsedMs": 931.049708
+            },
+            {
+              "offset": 8,
+              "count": 8,
+              "elapsedMs": 780.1337079999998
+            },
+            {
+              "offset": 16,
+              "count": 8,
+              "elapsedMs": 941.7065830000001
+            },
+            {
+              "offset": 24,
+              "count": 8,
+              "elapsedMs": 777.2020000000002
+            },
+            {
+              "offset": 32,
+              "count": 8,
+              "elapsedMs": 948.7026669999996
+            },
+            {
+              "offset": 40,
+              "count": 8,
+              "elapsedMs": 731.4471659999999
+            },
+            {
+              "offset": 48,
+              "count": 8,
+              "elapsedMs": 845.1836670000002
+            },
+            {
+              "offset": 56,
+              "count": 8,
+              "elapsedMs": 709.1446249999999
+            },
+            {
+              "offset": 64,
+              "count": 8,
+              "elapsedMs": 153.0680000000002
+            }
+          ],
+          "passages": [
+            {
+              "offset": 0,
+              "count": 8,
+              "elapsedMs": 701.1494170000005
+            },
+            {
+              "offset": 8,
+              "count": 8,
+              "elapsedMs": 741.6913750000003
+            },
+            {
+              "offset": 16,
+              "count": 8,
+              "elapsedMs": 772.448792000001
+            },
+            {
+              "offset": 24,
+              "count": 8,
+              "elapsedMs": 858.8772079999999
+            },
+            {
+              "offset": 32,
+              "count": 8,
+              "elapsedMs": 899.9784170000003
+            },
+            {
+              "offset": 40,
+              "count": 8,
+              "elapsedMs": 895.4813749999994
+            },
+            {
+              "offset": 48,
+              "count": 8,
+              "elapsedMs": 591.2700409999998
+            },
+            {
+              "offset": 56,
+              "count": 8,
+              "elapsedMs": 592.3111249999984
+            },
+            {
+              "offset": 64,
+              "count": 8,
+              "elapsedMs": 878.5320830000001
+            },
+            {
+              "offset": 72,
+              "count": 8,
+              "elapsedMs": 926.4680420000004
+            },
+            {
+              "offset": 80,
+              "count": 8,
+              "elapsedMs": 869.5304160000014
+            },
+            {
+              "offset": 88,
+              "count": 8,
+              "elapsedMs": 826.6277919999993
+            },
+            {
+              "offset": 96,
+              "count": 8,
+              "elapsedMs": 514.7980410000018
+            },
+            {
+              "offset": 104,
+              "count": 8,
+              "elapsedMs": 841.3511670000007
+            },
+            {
+              "offset": 112,
+              "count": 8,
+              "elapsedMs": 911.9977500000023
+            },
+            {
+              "offset": 120,
+              "count": 8,
+              "elapsedMs": 819.8111250000002
+            },
+            {
+              "offset": 128,
+              "count": 8,
+              "elapsedMs": 714.2299160000002
+            },
+            {
+              "offset": 136,
+              "count": 8,
+              "elapsedMs": 695.3846659999981
+            },
+            {
+              "offset": 144,
+              "count": 8,
+              "elapsedMs": 682.9373750000013
+            },
+            {
+              "offset": 152,
+              "count": 8,
+              "elapsedMs": 754.5522500000006
+            },
+            {
+              "offset": 160,
+              "count": 8,
+              "elapsedMs": 467.01908399999957
+            },
+            {
+              "offset": 168,
+              "count": 8,
+              "elapsedMs": 931.3035000000018
+            },
+            {
+              "offset": 176,
+              "count": 8,
+              "elapsedMs": 854.489333999998
+            },
+            {
+              "offset": 184,
+              "count": 8,
+              "elapsedMs": 623.7378749999989
+            },
+            {
+              "offset": 192,
+              "count": 8,
+              "elapsedMs": 629.5927090000005
+            },
+            {
+              "offset": 200,
+              "count": 8,
+              "elapsedMs": 439.40008300000045
+            },
+            {
+              "offset": 208,
+              "count": 8,
+              "elapsedMs": 868.6996669999971
+            },
+            {
+              "offset": 216,
+              "count": 8,
+              "elapsedMs": 921.2322910000003
+            },
+            {
+              "offset": 224,
+              "count": 8,
+              "elapsedMs": 626.476125000001
+            },
+            {
+              "offset": 232,
+              "count": 8,
+              "elapsedMs": 571.4649580000005
+            },
+            {
+              "offset": 240,
+              "count": 8,
+              "elapsedMs": 366.4185409999991
+            },
+            {
+              "offset": 248,
+              "count": 8,
+              "elapsedMs": 575.9098329999979
+            },
+            {
+              "offset": 256,
+              "count": 8,
+              "elapsedMs": 592.4789170000004
+            },
+            {
+              "offset": 264,
+              "count": 8,
+              "elapsedMs": 684.9099169999972
+            },
+            {
+              "offset": 272,
+              "count": 8,
+              "elapsedMs": 416.63920799999687
+            },
+            {
+              "offset": 280,
+              "count": 1,
+              "elapsedMs": 45.78325000000041
+            }
+          ]
+        }
+      },
+      "cache": {
+        "distinctQueries": 72,
+        "queryReferences": 144,
+        "queryReuses": 72,
+        "distinctPassages": 281,
+        "passageReferences": 2728,
+        "passageReuses": 2447,
+        "queryOrderSha256": "6700f059882ae608d76e11bd1e878f4ef86034075f148ca1488a80115a15b23b",
+        "passageOrderSha256": "3e72f7f741719ef804d409d97ea591ced7a808d0a0e658966b8078cc6657814a"
+      },
+      "resource": {
+        "modelBytes": 578857723,
+        "peakRssBytes": 2129018880,
+        "rssSamplingIntervalMs": 25
+      },
+      "tokenization": {
+        "maxTokens": 512,
+        "queriesTruncated": 0,
+        "passagesTruncated": 0,
+        "longestQueryTokens": 240,
+        "longestPassageTokens": 234
+      },
+      "weights": {
+        "semantic": 0.55,
+        "lexical": 0.2,
+        "skills": 0.25
+      },
+      "provenance": {
+        "inputs": [
+          {
+            "file": "education--lead--mixed-a--ar.json",
+            "sha256": "687475ad10e29cb0dde7f501e5164221b1206b6cbd828976403ce788090c1a91"
+          },
+          {
+            "file": "education--lead--mixed-a--en.json",
+            "sha256": "ab23f8f25abcdbd582eaba2c3881d9f3ee4c80f16ff225659c8541927a298cfe"
+          },
+          {
+            "file": "education--lead--mixed-b--ar.json",
+            "sha256": "e621fe0889565f2f6a0bdde32f6a0aa4a2076699177e040847262acfb929151a"
+          },
+          {
+            "file": "education--lead--mixed-b--en.json",
+            "sha256": "b47e2484ac5b24a37c4c7bf3995cd7f2fcacb3428130f75a3185386877e40297"
+          },
+          {
+            "file": "education--specialist--mixed-a--ar.json",
+            "sha256": "f80b809f06fad702914e14b6aa916ff0b01f6bfb077faef98350ff94209f208d"
+          },
+          {
+            "file": "education--specialist--mixed-a--en.json",
+            "sha256": "b85443898438497bd45cc768ae3247bb2c3d694dcfbdc7785e8a3b1e66ceca4f"
+          },
+          {
+            "file": "education--specialist--mixed-b--ar.json",
+            "sha256": "6ecc28c5b0c27ac120d7686eb9aa1cfdad95da19ac0793e2669a64117bfa21cc"
+          },
+          {
+            "file": "education--specialist--mixed-b--en.json",
+            "sha256": "165cc51487a6e630bd15ea20c51ff448280c3d83b4db1d4d2229b57a12730549"
+          },
+          {
+            "file": "legal--lead--mixed-a--ar.json",
+            "sha256": "69c261609b9b0512cb470507fcfbc5da20a7e5559cf1eeb1ef90d9aa6d39363c"
+          },
+          {
+            "file": "legal--lead--mixed-a--en.json",
+            "sha256": "b60d6be47942e65c3577ddf7ec8e7024571a908829d8113969e82cc66970aabf"
+          },
+          {
+            "file": "legal--lead--mixed-b--ar.json",
+            "sha256": "30b437aab759a0aaf33586ecb6b28a077386f9f3fb15f39531fefa2ef23b988b"
+          },
+          {
+            "file": "legal--lead--mixed-b--en.json",
+            "sha256": "85f117a52700f8a1536b0a97406a11ac892709d12d36361de28a395dae7279ac"
+          },
+          {
+            "file": "legal--specialist--mixed-a--ar.json",
+            "sha256": "c4c00e2312f246d8cef537e64e98f9b9b9f9aad9f1883ce0453e9c63f5d14732"
+          },
+          {
+            "file": "legal--specialist--mixed-a--en.json",
+            "sha256": "0092e752cc3904434c3f1ef06e8c53f06eaf62e7b20da82539f49000e7ee74d4"
+          },
+          {
+            "file": "legal--specialist--mixed-b--ar.json",
+            "sha256": "b3f54a85e33d5a1d950a7d42bc780ee965dc2c212dee0cf0e94d0cc823ea2627"
+          },
+          {
+            "file": "legal--specialist--mixed-b--en.json",
+            "sha256": "9e2e4d02a9ee3c23db1bf0fc787907d470cae60a32929af61cfe9ae2fbe7aa50"
+          }
+        ],
+        "inputFilesSha256": "f294b9fa5b6c6a048c6ca5faa2ab50bc67748aaef8e2ac220e2782b48531ba71",
+        "scoringBundleSha256": "d656ebefa9770df1c5c1a12d4d8b1597c5291e0fc3bef537357480a35654fe56",
+        "modelFiles": [
+          {
+            "file": "benchmark-manifest.json",
+            "bytes": 1590,
+            "sha256": "7cef7351d3cb6e25389bc86e20810374395eb660b07a3647fd78336c896dbf4f"
+          },
+          {
+            "file": "config.json",
+            "bytes": 792,
+            "sha256": "b509e517b78bc01ce8fba4827592354df3fd1b3e077fe663fb58b6b7bddd0751"
+          },
+          {
+            "file": "onnx/model_quantized.onnx",
+            "bytes": 561768762,
+            "sha256": "0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca"
+          },
+          {
+            "file": "source-manifest.json",
+            "bytes": 3221,
+            "sha256": "48790eabce2a2855d97f379dfd3ab8b61a2fc791f07698f8559d9bb5c1bc80e4"
+          },
+          {
+            "file": "special_tokens_map.json",
+            "bytes": 280,
+            "sha256": "06e405a36dfe4b9604f484f6a1e619af1a7f7d09e34a8555eb0b77b66318067f"
+          },
+          {
+            "file": "tokenizer.json",
+            "bytes": 17082660,
+            "sha256": "62c24cdc13d4c9952d63718d6c9fa4c287974249e16b7ade6d5a85e7bbb75626"
+          },
+          {
+            "file": "tokenizer_config.json",
+            "bytes": 418,
+            "sha256": "efb5c0d09722e5fe59a462cd2a9976ee216d55b037597d997cd3fe833216da15"
+          }
+        ],
+        "modelFilesSha256": "6fed14561be808d3dffcfcd1b612ae4d3540e1635402501eb8838e91fd9df27e",
+        "benchmarkScriptSha256": "71e36dfb36be6c9013e60797c2b37e70a22133229fbdc2edad4119d4964372a5",
+        "dependencyLockSha256": "b80c77c833eb1a9cf7c125a3e235b146250f5b344aef6afe67ef997dace20167",
+        "sourceExport": {
+          "modelVectorId": "multilingual-e5-small@761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+          "node": "24.18.1",
+          "electron": "43.4.1",
+          "manifestSha256": "74fd862282f721e6b1cc82d1b7462fcc6bce02ff1150c9becffe1a7840f25ee2",
+          "fixtureHashes": [
+            {
+              "family": "software",
+              "sha256": "9c4541bec65209bb4b1d61d17447939853856caa64a321ebead2adaafd3770fa"
+            },
+            {
+              "family": "construction",
+              "sha256": "98d3f60a7dac5141ac390df1450c6a23b10ddd513746b687957250f07d01fc7c"
+            },
+            {
+              "family": "energy",
+              "sha256": "54d20b1e138bd587bbc984b7078f786676a5c57d4eed1c289932559b2063f60c"
+            },
+            {
+              "family": "healthcare",
+              "sha256": "98ec9cfd3d3d83ed096078f51be046588cab9dab364f8debf218320f9807684c"
+            },
+            {
+              "family": "finance",
+              "sha256": "9d04334c383405fe46a5c607121bb1f1b1ab4fb531ff221230cf37a0529a4773"
+            },
+            {
+              "family": "legal",
+              "sha256": "aa3045f1adfe683e1083d8d18a338edb5c3ccb537ac4f1df517b697153876961"
+            },
+            {
+              "family": "education",
+              "sha256": "c1f0f11e1a396ceeddc402978f00be4ed8aa36d4f9ea96b725c703d46fd66b5e"
+            },
+            {
+              "family": "manufacturing",
+              "sha256": "dc61735b849e15bfeb63f12543eecb412541673220fdbfe8600ae0a117a11a64"
+            },
+            {
+              "family": "logistics",
+              "sha256": "99f51aa8492dbf0844f72e4988c3f65cfd33066d927441a7ddc32ad1cc1768c5"
+            },
+            {
+              "family": "sales",
+              "sha256": "5b4c84e76cdee9c5c7fc6f403606f5424b8d66c8efed2fe7e580eb2dea6f6634"
+            },
+            {
+              "family": "hr",
+              "sha256": "deff455b00173552cf04998af7ff24ffbcc5d3a610c69be9b5540daee86b9c40"
+            },
+            {
+              "family": "hospitality",
+              "sha256": "07dbf1cc5fcc173d66f5584ddaaa2adbd0163e27ffeae01c5aa4fd29b4523b17"
+            }
+          ],
+          "sourceTreeSha256": "1c8a09c67d1da3fa7c58e6b043b6217197e060d00ce161e5f2501851c5057fda",
+          "runtimeBundleSha256": "6f73ae2aec538708bdfc1c384f4554331fa319a851984b42b89e66b3dc81356d",
+          "runtimeFiles": [
+            {
+              "file": "out/main/bench.js",
+              "sha256": "d4f1b82d5c4399de30b392e129f6718f3ee3be9cbf430955b7ab460d6cf5e81a"
+            },
+            {
+              "file": "out/main/chunks/backup-Dz7kQac7.js",
+              "sha256": "4644bb4b0212845002fdcc24ba15ff0e3cbfd5095cf3fd485a8f0fc87167a762"
+            },
+            {
+              "file": "out/main/chunks/client-Bh73xlTh.js",
+              "sha256": "966fca02c4ef02120d7950cca2c3c577329edc95e9ca6f1690a52ad07d67497b"
+            },
+            {
+              "file": "out/main/chunks/corpus-BdEhJT9W.js",
+              "sha256": "618e433d6b21d5d3919933af3ebe2e2bcf7e3a6fe166e80aac513c70fdec23ce"
+            },
+            {
+              "file": "out/main/chunks/derivation-version-BLqfCajs.js",
+              "sha256": "42dff3abddfb7d12bb56d6518d651db8040426f207cec334a4ecbfaaa95d532d"
+            },
+            {
+              "file": "out/main/chunks/derive-CAOn6JBC.js",
+              "sha256": "3f95f2b998c7f888e048fffa1ef7a8e05e3d8b2227456519a77b40bc80f3fb68"
+            },
+            {
+              "file": "out/main/chunks/derived-backfill-sv390hg8.js",
+              "sha256": "db1333906bc44ad575232e55df43f8b756933c75303f1e559dbb73c3553898d7"
+            },
+            {
+              "file": "out/main/chunks/duplicates-CDr0JH3L.js",
+              "sha256": "e339858c10111c59a97730e6a797c53707759f7346598799666cd8090b7d64f8"
+            },
+            {
+              "file": "out/main/chunks/eval-diagnostics-BYffXvBj.js",
+              "sha256": "1c4b5d08e67e55ca4662a2faca5e56ae2258bc3b31fddafd9a1203aa5b81f1c6"
+            },
+            {
+              "file": "out/main/chunks/eval-support-Br-EYfw1.js",
+              "sha256": "4b8765b6e7a1ae68c3c91d91d2fde2ff9bb52ad4ce593dce13aaaf5a549c17f4"
+            },
+            {
+              "file": "out/main/chunks/extraction-protocol-BcXXz5Z5.js",
+              "sha256": "47a5179de710323979bfbd64652d7b9b2966c71ff3e22418b7fa0bce3aac4586"
+            },
+            {
+              "file": "out/main/chunks/ibm-plex-sans-arabic-arabic-400-normal-CyU-ddYS.woff2",
+              "sha256": "6010e7fd0dce5d527583951750728cbe3c895efbd16aa0f809ab8c824878c9d8"
+            },
+            {
+              "file": "out/main/chunks/ibm-plex-sans-arabic-arabic-600-normal-0pRdybE_.woff2",
+              "sha256": "16734a5adb27b0f363e566cbbeacec480da0dc0baa19c8f0053251c2e2bc0eac"
+            },
+            {
+              "file": "out/main/chunks/index-Cz99DUNw.js",
+              "sha256": "21f142ba30a269e3324c1bf816e21e35ac2271bae27f4a44bcec9feaaf7fa42c"
+            },
+            {
+              "file": "out/main/chunks/index-vvB5OeAk.js",
+              "sha256": "59423267e3dc7fa820b6c65cb212885f90a3ed93e81b936addd2c62f0ccd24ba"
+            },
+            {
+              "file": "out/main/chunks/job-requirements-CdhlCbzm.js",
+              "sha256": "a6e4ee3900a6e0058ece74327ab582dee25f4c236e04f1683e05647dc0884ee4"
+            },
+            {
+              "file": "out/main/chunks/migrations-DCoE5OMR.js",
+              "sha256": "18afdb5c1cd7ae3144f9105d2ba36dc97656307617ad21e30e1d9aa576f03bb6"
+            },
+            {
+              "file": "out/main/chunks/normalize-U7knnRF4.js",
+              "sha256": "be0fea270db706092bdc311646dea725488f5a5f17ad2de903ae6e558f102463"
+            },
+            {
+              "file": "out/main/chunks/pipeline-Dx7rKZSX.js",
+              "sha256": "54c60574cbfce00a24cec7ee6ab8ffdc300dbde57fc1ceff0a0ada8ea9a9d0e0"
+            },
+            {
+              "file": "out/main/chunks/planning-BCCXf9u9.js",
+              "sha256": "c4016d070cecf33dc9764d7e1f72f65ffbb1b0f103ca19f1523150922e121c31"
+            },
+            {
+              "file": "out/main/chunks/protocol-xhmDI7TG.js",
+              "sha256": "63826c96d1019a6639908ae4ee0923d455829ca9011b85f2869fd33dbacbcefe"
+            },
+            {
+              "file": "out/main/chunks/rank-BQmwmFrf.js",
+              "sha256": "bf5648c941b499af7c2655116c171789bd14047e0950d399346dd12d83b6d9c3"
+            },
+            {
+              "file": "out/main/chunks/reindex-DeRG3DLn.js",
+              "sha256": "09d39d304eeb2ec81d41c8a087c18b8be2921910076b1ee7a078ba75ed5fff9c"
+            },
+            {
+              "file": "out/main/chunks/schema-Dw_dWwkk.js",
+              "sha256": "d1e3675b4a20cdc87cb94941b6bd8dfb67aaa42f165bd4c22b04dbcf0d3019f2"
+            },
+            {
+              "file": "out/main/chunks/scoring-s25wEYdO.js",
+              "sha256": "eb25adedc36d3a8955dd84ef4c8276c74ac17cdd822bedac4d05a4e7fc601c3c"
+            },
+            {
+              "file": "out/main/chunks/sessions-DB50HskB.js",
+              "sha256": "9625efa92b5970ca8e22342bc8b9ca5d04c05999b617d8a1e4bd4b35eedef30b"
+            },
+            {
+              "file": "out/main/chunks/shortlist-M1T1xvnQ.js",
+              "sha256": "ee85e42e125c0db78e793dc47f1f3b5d97c874f9f8682d60150b614c563ba51e"
+            },
+            {
+              "file": "out/main/chunks/skills-backfill-D6RfXRIg.js",
+              "sha256": "8a09577c7409cc46d4092e98866f5d9dd59a783146b48a9994f8bc65fa595bcb"
+            },
+            {
+              "file": "out/main/chunks/skills-backfill-plan-jyekYTJk.js",
+              "sha256": "82f96b8a919a8e7837cb685fc06671e5bebe0e1aef247f073504dfe4c467d51d"
+            },
+            {
+              "file": "out/main/chunks/skills-BzmpfOrD.js",
+              "sha256": "325e90bff0eac8b6c78a5d87767483cb1ad8b712400e3443e3ccd376f1cfa4b0"
+            },
+            {
+              "file": "out/main/chunks/smoke-derived-DA1M-A9r.js",
+              "sha256": "6cfd68d86bfae700599a8da8e4092563f856c51d2fb86deb2aff5f53f3544b56"
+            },
+            {
+              "file": "out/main/chunks/smoke-requirements-BOpoewBC.js",
+              "sha256": "ea0a75e2a2dbbf8d8df2168883747065cc35e4a345890696ffae573b9285b116"
+            },
+            {
+              "file": "out/main/chunks/smoke-talent-BUA5A9_m.js",
+              "sha256": "60ae0de96abc2e357d9d0abbc52f8c4c79246daf44c3b7560e596f240e9192c8"
+            },
+            {
+              "file": "out/main/chunks/storage-lUu4EK8i.js",
+              "sha256": "91c9c581ef1292732b1f090bd02a8452d1fc83ff4d12621f0055f1437807107f"
+            },
+            {
+              "file": "out/main/chunks/talent-DP5gL2TE.js",
+              "sha256": "25cda4d858c2e78e310c543e57bf73dafa30802db4b6ecd6e0c9e60d119f8476"
+            },
+            {
+              "file": "out/main/chunks/temporary-CHrjtfUl.js",
+              "sha256": "90c75e16bc1c4448b16dedf0af4010e1a67a2a2da7243fcecae0896ce9ef54eb"
+            },
+            {
+              "file": "out/main/embed-worker.js",
+              "sha256": "20ce0d785de6d8a044837be91c14f9e15e95f48e23f876ab43800b5d221dd433"
+            },
+            {
+              "file": "out/main/eval-cross-domain.js",
+              "sha256": "6f73ae2aec538708bdfc1c384f4554331fa319a851984b42b89e66b3dc81356d"
+            },
+            {
+              "file": "out/main/eval.js",
+              "sha256": "ab86074242df32025b509ce739dd04f4f8d86ca6a5feeb44616de2ee49c945a0"
+            },
+            {
+              "file": "out/main/extraction-worker.js",
+              "sha256": "54f348c73ee0c4088cb7f36064a24ddeb5f55ac8d4c32ded2c67a8a10fac7007"
+            },
+            {
+              "file": "out/main/index.js",
+              "sha256": "a37ffe370a1768836f356b655fcd60c2e53c96d186832db8d6be9ad7daa49884"
+            },
+            {
+              "file": "out/main/seed.js",
+              "sha256": "b5fd2e665ec82fc4299f261accb89b88c52c413bba088df450a5516eb165f56b"
+            },
+            {
+              "file": "out/main/smoke.js",
+              "sha256": "b86e668c3060faa8ce7af2d7f55cf8d03fbd1fd6425103e35ac7243c688a6ca4"
+            }
+          ],
+          "modelFiles": [
+            {
+              "file": "resources/models/multilingual-e5-small/config.json",
+              "sha256": "cb99455288675345e1a4f411438d5d0adbba5fbd3a67ea4fb03c015433b996c1"
+            },
+            {
+              "file": "resources/models/multilingual-e5-small/onnx/model_quantized.onnx",
+              "sha256": "f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193"
+            },
+            {
+              "file": "resources/models/multilingual-e5-small/special_tokens_map.json",
+              "sha256": "d05497f1da52c5e09554c0cd874037a083e1dc1b9cfd48034d1c717f1afc07a7"
+            },
+            {
+              "file": "resources/models/multilingual-e5-small/tokenizer_config.json",
+              "sha256": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b"
+            },
+            {
+              "file": "resources/models/multilingual-e5-small/tokenizer.json",
+              "sha256": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39"
+            }
+          ],
+          "packageSha256": "00fc34c480f033d361a6ddadefd60713915cf0bd7ba7fbbf4e1cceab8f6a9595",
+          "lockSha256": "b80c77c833eb1a9cf7c125a3e235b146250f5b344aef6afe67ef997dace20167",
+          "weights": {
+            "semantic": 0.55,
+            "lexical": 0.2,
+            "skills": 0.25
+          }
+        }
+      },
+      "summary": {
+        "cases": 16,
+        "distinctVacancies": 4,
+        "aggregation": "Equal case; complete identical grids make this equal vacancy.",
+        "macro": {
+          "precisionAt3": 0.4583333333333333,
+          "recallAt3": 0.3958333333333333,
+          "recallAt10": 0.5104166666666666,
+          "top3TargetCoverage": 0.4583333333333333,
+          "reciprocalRank": 0.8181818181818181,
+          "mrr": 0.8181818181818181,
+          "ndcg10": 0.5494970360613173
+        },
+        "pooledLanguageRecall": {
+          "same": {
+            "relevant": 28,
+            "hits3": 22,
+            "hits10": 27,
+            "recallAt3": 0.7857142857142857,
+            "recallAt10": 0.9642857142857143
+          },
+          "cross": {
+            "relevant": 28,
+            "hits3": 0,
+            "hits10": 2,
+            "recallAt3": 0,
+            "recallAt10": 0.07142857142857142
+          }
+        },
+        "byFamily": {
+          "education": {
+            "cases": 8,
+            "metrics": {
+              "precisionAt3": 0.41666666666666663,
+              "recallAt3": 0.35416666666666663,
+              "recallAt10": 0.5208333333333333,
+              "top3TargetCoverage": 0.41666666666666663,
+              "reciprocalRank": 0.6988636363636364,
+              "mrr": 0.6988636363636364,
+              "ndcg10": 0.5262053470773868
+            },
+            "pooledLanguageRecall": {
+              "same": {
+                "relevant": 14,
+                "hits3": 10,
+                "hits10": 13,
+                "recallAt3": 0.7142857142857143,
+                "recallAt10": 0.9285714285714286
+              },
+              "cross": {
+                "relevant": 14,
+                "hits3": 0,
+                "hits10": 2,
+                "recallAt3": 0,
+                "recallAt10": 0.14285714285714285
+              }
+            }
+          },
+          "legal": {
+            "cases": 8,
+            "metrics": {
+              "precisionAt3": 0.5,
+              "recallAt3": 0.4375,
+              "recallAt10": 0.5,
+              "top3TargetCoverage": 0.5,
+              "reciprocalRank": 0.9375,
+              "mrr": 0.9375,
+              "ndcg10": 0.5727887250452475
+            },
+            "pooledLanguageRecall": {
+              "same": {
+                "relevant": 14,
+                "hits3": 12,
+                "hits10": 14,
+                "recallAt3": 0.8571428571428571,
+                "recallAt10": 1
+              },
+              "cross": {
+                "relevant": 14,
+                "hits3": 0,
+                "hits10": 0,
+                "recallAt3": 0,
+                "recallAt10": 0
+              }
+            }
+          }
+        },
+        "byPostingLanguage": {
+          "ar": {
+            "cases": 8,
+            "metrics": {
+              "precisionAt3": 0.41666666666666663,
+              "recallAt3": 0.35416666666666663,
+              "recallAt10": 0.4895833333333333,
+              "top3TargetCoverage": 0.41666666666666663,
+              "reciprocalRank": 0.7613636363636364,
+              "mrr": 0.7613636363636364,
+              "ndcg10": 0.5050306281958334
+            },
+            "pooledLanguageRecall": {
+              "same": {
+                "relevant": 14,
+                "hits3": 10,
+                "hits10": 13,
+                "recallAt3": 0.7142857142857143,
+                "recallAt10": 0.9285714285714286
+              },
+              "cross": {
+                "relevant": 14,
+                "hits3": 0,
+                "hits10": 1,
+                "recallAt3": 0,
+                "recallAt10": 0.07142857142857142
+              }
+            }
+          },
+          "en": {
+            "cases": 8,
+            "metrics": {
+              "precisionAt3": 0.5,
+              "recallAt3": 0.4375,
+              "recallAt10": 0.53125,
+              "top3TargetCoverage": 0.5,
+              "reciprocalRank": 0.875,
+              "mrr": 0.875,
+              "ndcg10": 0.5939634439268009
+            },
+            "pooledLanguageRecall": {
+              "same": {
+                "relevant": 14,
+                "hits3": 12,
+                "hits10": 14,
+                "recallAt3": 0.8571428571428571,
+                "recallAt10": 1
+              },
+              "cross": {
+                "relevant": 14,
+                "hits3": 0,
+                "hits10": 1,
+                "recallAt3": 0,
+                "recallAt10": 0.07142857142857142
+              }
+            }
+          }
+        },
+        "byCohort": {
+          "mixed-a": {
+            "cases": 8,
+            "metrics": {
+              "precisionAt3": 0.4583333333333333,
+              "recallAt3": 0.3958333333333333,
+              "recallAt10": 0.5208333333333333,
+              "top3TargetCoverage": 0.4583333333333333,
+              "reciprocalRank": 0.7613636363636364,
+              "mrr": 0.7613636363636364,
+              "ndcg10": 0.5334060713893822
+            },
+            "pooledLanguageRecall": {
+              "same": {
+                "relevant": 14,
+                "hits3": 11,
+                "hits10": 13,
+                "recallAt3": 0.7857142857142857,
+                "recallAt10": 0.9285714285714286
+              },
+              "cross": {
+                "relevant": 14,
+                "hits3": 0,
+                "hits10": 2,
+                "recallAt3": 0,
+                "recallAt10": 0.14285714285714285
+              }
+            }
+          },
+          "mixed-b": {
+            "cases": 8,
+            "metrics": {
+              "precisionAt3": 0.4583333333333333,
+              "recallAt3": 0.3958333333333333,
+              "recallAt10": 0.5,
+              "top3TargetCoverage": 0.4583333333333333,
+              "reciprocalRank": 0.875,
+              "mrr": 0.875,
+              "ndcg10": 0.5655880007332519
+            },
+            "pooledLanguageRecall": {
+              "same": {
+                "relevant": 14,
+                "hits3": 11,
+                "hits10": 14,
+                "recallAt3": 0.7857142857142857,
+                "recallAt10": 1
+              },
+              "cross": {
+                "relevant": 14,
+                "hits3": 0,
+                "hits10": 0,
+                "recallAt3": 0,
+                "recallAt10": 0
+              }
+            }
+          }
+        }
+      },
+      "limitations": [
+        "Synthetic input labels and translations require independent review.",
+        "Shared embedding caches and batch size differ from the desktop ingest/search execution pattern; small numerical differences are possible.",
+        "Timings include one first query forward and unique-text batching; these are not per-search application latency measurements.",
+        "Sampled Node RSS excludes desktop renderer processes and is not total installed-app memory.",
+        "Input SQLite lexical scores are frozen; this comparison changes the embedding model only."
+      ],
+      "caseMetrics": [
+        {
+          "id": "education/lead/mixed-a/ar",
+          "family": "education",
+          "vacancy": "lead",
+          "cohort": "mixed-a",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership"
+          ],
+          "metrics": {
+            "precisionAt3": 0,
+            "recallAt3": 0,
+            "recallAt10": 0,
+            "top3TargetCoverage": 0,
+            "reciprocalRank": 0.09090909090909091,
+            "mrr": 0.09090909090909091,
+            "ndcg10": 0.0928758535957898
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 1,
+              "hits3": 0,
+              "hits10": 0
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            11,
+            48,
+            49
+          ],
+          "scoringMs": 2.6232919999965816
+        },
+        {
+          "id": "education/lead/mixed-a/en",
+          "family": "education",
+          "vacancy": "lead",
+          "cohort": "mixed-a",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership",
+            "coaching"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.6666666666666666,
+            "recallAt10": 0.6666666666666666,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.699050580338565
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 1,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            31
+          ],
+          "scoringMs": 1.3640840000007302
+        },
+        {
+          "id": "education/lead/mixed-b/ar",
+          "family": "education",
+          "vacancy": "lead",
+          "cohort": "mixed-b",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.3333333333333333,
+            "recallAt10": 0.6666666666666666,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.5152165270575113
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 1,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 1,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            4,
+            55
+          ],
+          "scoringMs": 1.3904170000023441
+        },
+        {
+          "id": "education/lead/mixed-b/en",
+          "family": "education",
+          "vacancy": "lead",
+          "cohort": "mixed-b",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership",
+            "coaching"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.3333333333333333,
+            "recallAt10": 0.3333333333333333,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 0.5,
+            "mrr": 0.5,
+            "ndcg10": 0.4672915882941651
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 1,
+              "hits3": 1,
+              "hits10": 1
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            2,
+            32,
+            33
+          ],
+          "scoringMs": 1.3450000000011642
+        },
+        {
+          "id": "education/specialist/mixed-a/ar",
+          "family": "education",
+          "vacancy": "specialist",
+          "cohort": "mixed-a",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "training"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.25,
+            "recallAt10": 0.75,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 0.5,
+            "mrr": 0.5,
+            "ndcg10": 0.5616738376630305
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 1,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 1
+            }
+          },
+          "tier1Ranks": [
+            2,
+            6,
+            7,
+            64
+          ],
+          "scoringMs": 1.3308749999996508
+        },
+        {
+          "id": "education/specialist/mixed-a/en",
+          "family": "education",
+          "vacancy": "specialist",
+          "cohort": "mixed-a",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "coaching"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.5,
+            "recallAt10": 0.75,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.7458917013260145
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 1
+            }
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            7,
+            37
+          ],
+          "scoringMs": 1.2942910000056145
+        },
+        {
+          "id": "education/specialist/mixed-b/ar",
+          "family": "education",
+          "vacancy": "specialist",
+          "cohort": "mixed-b",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "training"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.5,
+            "recallAt10": 0.5,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.5608759573086857
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            3,
+            54,
+            56
+          ],
+          "scoringMs": 1.3276249999980791
+        },
+        {
+          "id": "education/specialist/mixed-b/en",
+          "family": "education",
+          "vacancy": "specialist",
+          "cohort": "mixed-b",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "coaching"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.25,
+            "recallAt10": 0.5,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 0.5,
+            "mrr": 0.5,
+            "ndcg10": 0.566766731035332
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 1,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            2,
+            4,
+            19,
+            20
+          ],
+          "scoringMs": 1.3222910000040429
+        },
+        {
+          "id": "legal/lead/mixed-a/ar",
+          "family": "legal",
+          "vacancy": "lead",
+          "cohort": "mixed-a",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership",
+            "sales",
+            "training",
+            "supply_chain"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.3333333333333333,
+            "recallAt10": 0.3333333333333333,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 0.5,
+            "mrr": 0.5,
+            "ndcg10": 0.5273117379860613
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 1,
+              "hits3": 1,
+              "hits10": 1
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            2,
+            40,
+            41
+          ],
+          "scoringMs": 1.3344579999975394
+        },
+        {
+          "id": "legal/lead/mixed-a/en",
+          "family": "legal",
+          "vacancy": "lead",
+          "cohort": "mixed-a",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership",
+            "sales",
+            "supply_chain",
+            "coaching"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.6666666666666666,
+            "recallAt10": 0.6666666666666666,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.591879890195777
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 1,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            3,
+            28
+          ],
+          "scoringMs": 1.291417000000365
+        },
+        {
+          "id": "legal/lead/mixed-b/ar",
+          "family": "legal",
+          "vacancy": "lead",
+          "cohort": "mixed-b",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership",
+            "sales",
+            "training",
+            "supply_chain"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.6666666666666666,
+            "recallAt10": 0.6666666666666666,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.699050580338565
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 1,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            46
+          ],
+          "scoringMs": 1.3110000000015134
+        },
+        {
+          "id": "legal/lead/mixed-b/en",
+          "family": "legal",
+          "vacancy": "lead",
+          "cohort": "mixed-b",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "leadership",
+            "sales",
+            "supply_chain",
+            "coaching"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.3333333333333333,
+            "recallAt10": 0.3333333333333333,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.5632934341378087
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 1,
+              "hits3": 1,
+              "hits10": 1
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            28,
+            49
+          ],
+          "scoringMs": 1.300666999995883
+        },
+        {
+          "id": "legal/specialist/mixed-a/ar",
+          "family": "legal",
+          "vacancy": "specialist",
+          "cohort": "mixed-a",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "sales",
+            "supply_chain"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.5,
+            "recallAt10": 0.5,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.5348441690519455
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            12,
+            51
+          ],
+          "scoringMs": 1.2750000000014552
+        },
+        {
+          "id": "legal/specialist/mixed-a/en",
+          "family": "legal",
+          "vacancy": "specialist",
+          "cohort": "mixed-a",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "sales",
+            "supply_chain"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.25,
+            "recallAt10": 0.5,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.5137208009578746
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 1,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            6,
+            12,
+            18
+          ],
+          "scoringMs": 1.2594170000011218
+        },
+        {
+          "id": "legal/specialist/mixed-b/ar",
+          "family": "legal",
+          "vacancy": "specialist",
+          "cohort": "mixed-b",
+          "language": "ar",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "sales",
+            "supply_chain"
+          ],
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.25,
+            "recallAt10": 0.5,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.5483963625650788
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 1,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            5,
+            16,
+            17
+          ],
+          "scoringMs": 1.323541000005207
+        },
+        {
+          "id": "legal/specialist/mixed-b/en",
+          "family": "legal",
+          "vacancy": "specialist",
+          "cohort": "mixed-b",
+          "language": "en",
+          "candidates": 96,
+          "queries": 9,
+          "requiredSkills": [
+            "sales",
+            "supply_chain"
+          ],
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.5,
+            "recallAt10": 0.5,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.6038128251288692
+          },
+          "languageHits": {
+            "same": {
+              "relevant": 2,
+              "hits3": 2,
+              "hits10": 2
+            },
+            "cross": {
+              "relevant": 2,
+              "hits3": 0,
+              "hits10": 0
+            }
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            13,
+            55
+          ],
+          "scoringMs": 1.3104999999995925
+        }
+      ],
+      "detailedResultSha256": "1448934654f3365e2aecb8adfa3a989d35f35b1c92dc5536a13a4466934eea73"
+    }
+  ]
+}

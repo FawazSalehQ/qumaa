@@ -754,9 +754,17 @@
       "a&e",
       "triage",
       "trauma care",
-      "الطوارئ",
+      "emergency medicine",
+      "emergency nursing",
       "قسم الطوارئ",
-      "الفرز"
+      "طب الطوارئ",
+      "تمريض الطوارئ",
+      "ممرض طوارئ",
+      "ممرضة طوارئ",
+      "رعاية الطوارئ",
+      "الرعاية الطارئة",
+      "الفرز الطبي",
+      "فرز المرضى"
     ]
   },
   {
@@ -1325,6 +1333,151 @@
       "secret shopper",
       "العميل السري",
       "التسوق الخفي"
+    ]
+  },
+  {
+    "id": "well_planning",
+    "label": "Well Planning",
+    "aliases": [
+      "well-planning",
+      "well design",
+      "well-design",
+      "well construction planning",
+      "drilling program",
+      "drilling programs",
+      "drilling programme",
+      "drilling programmes",
+      "تخطيط الآبار",
+      "تخطيط الابار",
+      "تصميم الآبار",
+      "تصميم الابار",
+      "تصميم البئر",
+      "برنامج حفر الآبار",
+      "برامج حفر الآبار"
+    ]
+  },
+  {
+    "id": "casing_design",
+    "label": "Casing Design",
+    "aliases": [
+      "casing string design",
+      "casing and tubing design",
+      "casing load cases",
+      "casing load analysis",
+      "تصميم تغليف الآبار",
+      "تصميم تغليف الابار",
+      "تصميم أنابيب التغليف",
+      "تصميم انابيب التغليف",
+      "تصميم مواسير التغليف",
+      "تصميم أغلفة الآبار",
+      "أحمال أنابيب التغليف"
+    ]
+  },
+  {
+    "id": "well_cementing",
+    "label": "Well Cementing",
+    "aliases": [
+      "primary cementing",
+      "casing cementing",
+      "cementing design",
+      "cementing program",
+      "cementing programme",
+      "سمنتة الآبار",
+      "سمنتة الابار",
+      "إسمنت الآبار",
+      "اسمنت الآبار",
+      "أسمنت الآبار",
+      "تسميت الآبار",
+      "تسميت الابار",
+      "تصميم عمليات التسميت"
+    ]
+  },
+  {
+    "id": "drilling_fluids",
+    "label": "Drilling Fluids",
+    "aliases": [
+      "drilling fluid",
+      "drilling mud",
+      "mud engineering",
+      "سوائل الحفر",
+      "مائع الحفر",
+      "موائع الحفر",
+      "طين الحفر"
+    ]
+  },
+  {
+    "id": "drilling_hydraulics",
+    "label": "Drilling Hydraulics",
+    "aliases": [
+      "wellbore hydraulics",
+      "drilling hydraulic calculations",
+      "equivalent circulating density",
+      "swab and surge",
+      "surge and swab",
+      "هيدروليكا الحفر",
+      "هيدروليك الحفر",
+      "هيدروليكية الحفر",
+      "هيدروليكيات الحفر",
+      "هيدروليكا البئر",
+      "الكثافة المكافئة أثناء الدوران"
+    ]
+  },
+  {
+    "id": "torque_and_drag",
+    "label": "Torque and Drag",
+    "aliases": [
+      "torque & drag",
+      "torque/drag",
+      "torque-and-drag",
+      "العزم والسحب",
+      "عزم الدوران والسحب",
+      "عزم الدوران والاحتكاك",
+      "عزم واحتكاك سلسلة الحفر"
+    ]
+  },
+  {
+    "id": "well_control",
+    "label": "Well Control",
+    "aliases": [
+      "well-control",
+      "التحكم في الآبار",
+      "التحكم في الابار",
+      "السيطرة على الآبار",
+      "السيطرة على الابار",
+      "التحكم بالبئر",
+      "السيطرة على البئر"
+    ]
+  },
+  {
+    "id": "directional_drilling",
+    "label": "Directional Drilling",
+    "aliases": [
+      "well trajectory design",
+      "well trajectory planning",
+      "rotary steerable",
+      "rotary-steerable",
+      "الحفر الموجه",
+      "الحفر الاتجاهي",
+      "تصميم مسار البئر",
+      "تخطيط مسار البئر"
+    ]
+  },
+  {
+    "id": "bottomhole_assembly",
+    "label": "Bottomhole Assembly",
+    "aliases": [
+      "bottomhole assemblies",
+      "bottom-hole assembly",
+      "bottom-hole assemblies",
+      "bottom hole assembly",
+      "bottom hole assemblies",
+      "BHA design",
+      "BHA selection",
+      "BHA optimization",
+      "BHA optimisation",
+      "تجميعة قاع البئر",
+      "تجميعات قاع البئر",
+      "تجميعة أسفل البئر"
     ]
   }
 ]

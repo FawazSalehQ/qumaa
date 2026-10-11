@@ -18,6 +18,7 @@ import {
 } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, join, resolve } from 'node:path'
+import type { Company } from '@shared/recruiting.js'
 
 const scratch = mkdtempSync(join(tmpdir(), 'cv-filter-smoke-'))
 app.setPath('userData', scratch)
@@ -140,6 +141,59 @@ async function run(): Promise<void> {
     freshV3Migration.adoptedLegacySchema && freshV3Migration.toVersion === CURRENT_SCHEMA_VERSION
   )
   freshV3Fixture.close()
+
+  const { RECRUITING_TABLE_SQL, readRecord } = await import('./recruiting/storage.js')
+  for (const publishedVersion of [4, 7, 8, 9, 10, 11]) {
+    const fixture = new Database(join(scratch, `published-v${publishedVersion}.db`))
+    fixture.exec(PUBLISHED_SCHEMA_V1_SQL)
+    fixture.exec('ALTER TABLE resumes ADD COLUMN doc_vector BLOB')
+    fixture.exec("ALTER TABLE resumes ADD COLUMN skills_version TEXT NOT NULL DEFAULT ''")
+    fixture.exec(RECRUITING_TABLE_SQL)
+    const legacyJob = {
+      id: 'a30da3dc-59a5-4d41-bd24-a1a33972c036',
+      posting: { position: 'Legacy vacancy', jobDescription: '', requirements: '', educationAndCertifications: '' },
+      status: 'open', criteria: [], createdAt: 1, updatedAt: 1, lastSearchedAt: null
+    }
+    const legacyV11Company = { id: 'aa03201f-5642-4154-bc04-c6bc36514a29', name: 'Existing company', industry: ['Engineering'], location: ['Riyadh'], website: '', contactName: [], contactEmail: [], note: '', createdAt: 1, updatedAt: 1 }
+    const legacyJson = JSON.stringify(publishedVersion === 11 ? { ...legacyJob, companyId: legacyV11Company.id } : legacyJob)
+    if (publishedVersion === 11) fixture.prepare("INSERT INTO recruiting_records(kind, id, data) VALUES ('company', ?, ?)").run(legacyV11Company.id, JSON.stringify(legacyV11Company))
+    fixture.prepare("INSERT INTO recruiting_records(kind, id, data) VALUES ('job', ?, ?)").run(legacyJob.id, legacyJson)
+    fixture.pragma(`application_id = ${QUMAA_APPLICATION_ID}`)
+    fixture.pragma(`user_version = ${publishedVersion}`)
+    const migration = migrateDatabase(fixture)
+    const stored = fixture.prepare("SELECT data FROM recruiting_records WHERE kind = 'job' AND id = ?").get(legacyJob.id) as { data: string }
+    check(`upgrades genuine v${publishedVersion} jobs without fabricating company, budget or history`, migration.fromVersion === publishedVersion && migration.toVersion === CURRENT_SCHEMA_VERSION && stored.data === legacyJson)
+    if (publishedVersion === 11) check('schema 12 preserves existing company identity and details without creating cost plans', (fixture.prepare("SELECT data FROM recruiting_records WHERE kind = 'company' AND id = ?").get(legacyV11Company.id) as { data: string }).data === JSON.stringify(legacyV11Company) && (fixture.prepare("SELECT COUNT(*) AS count FROM recruiting_records WHERE kind = 'hiringBudget'").get() as { count: number }).count === 0)
+    fixture.close()
+  }
+
+  const legacyCompanyFixture = new Database(join(scratch, 'published-v10-company.db'))
+  legacyCompanyFixture.exec(PUBLISHED_SCHEMA_V1_SQL)
+  legacyCompanyFixture.exec('ALTER TABLE resumes ADD COLUMN doc_vector BLOB')
+  legacyCompanyFixture.exec("ALTER TABLE resumes ADD COLUMN skills_version TEXT NOT NULL DEFAULT ''")
+  legacyCompanyFixture.exec(RECRUITING_TABLE_SQL)
+  const legacyCompanyRecord = {
+    id: '233315e2-bb3e-4bd4-bd85-94736d7b3776', name: 'Legacy client',
+    industry: 'Energy, Construction / Consulting', location: 'الرياض، المملكة العربية السعودية',
+    website: '', contactName: 'أحمد / مدير التوظيف', contactEmail: 'first@example.com; second@example.com',
+    note: 'Preserve the original relationship', createdAt: 1, updatedAt: 2
+  }
+  const legacyCompanyJob = {
+    id: '297f5f98-9b30-4102-91d0-346feef72c0a', companyId: legacyCompanyRecord.id,
+    posting: { position: 'Legacy company vacancy', jobDescription: '', requirements: '', educationAndCertifications: '' },
+    status: 'open', criteria: [], createdAt: 1, updatedAt: 1, lastSearchedAt: null
+  }
+  const legacyCompanyJson = JSON.stringify(legacyCompanyRecord)
+  const legacyCompanyJobJson = JSON.stringify(legacyCompanyJob)
+  legacyCompanyFixture.prepare("INSERT INTO recruiting_records(kind, id, data) VALUES ('company', ?, ?)").run(legacyCompanyRecord.id, legacyCompanyJson)
+  legacyCompanyFixture.prepare("INSERT INTO recruiting_records(kind, id, data) VALUES ('job', ?, ?)").run(legacyCompanyJob.id, legacyCompanyJobJson)
+  legacyCompanyFixture.pragma(`application_id = ${QUMAA_APPLICATION_ID}`)
+  legacyCompanyFixture.pragma('user_version = 10')
+  const companyMigration = migrateDatabase(legacyCompanyFixture)
+  const normalizedLegacyCompany = readRecord<Company>(legacyCompanyFixture, 'company', legacyCompanyRecord.id)!
+  check('v10 company details normalize to whole-value lists on read without changing identity', companyMigration.fromVersion === 10 && companyMigration.toVersion === CURRENT_SCHEMA_VERSION && normalizedLegacyCompany.id === legacyCompanyRecord.id && normalizedLegacyCompany.createdAt === 1 && normalizedLegacyCompany.updatedAt === 2 && normalizedLegacyCompany.industry.length === 1 && normalizedLegacyCompany.industry[0] === legacyCompanyRecord.industry && normalizedLegacyCompany.location[0] === legacyCompanyRecord.location && normalizedLegacyCompany.contactName[0] === legacyCompanyRecord.contactName && normalizedLegacyCompany.contactEmail[0] === legacyCompanyRecord.contactEmail)
+  check('v10 company migration preserves raw records and linked job identities verbatim', (legacyCompanyFixture.prepare("SELECT data FROM recruiting_records WHERE kind = 'company' AND id = ?").get(legacyCompanyRecord.id) as { data: string }).data === legacyCompanyJson && (legacyCompanyFixture.prepare("SELECT data FROM recruiting_records WHERE kind = 'job' AND id = ?").get(legacyCompanyJob.id) as { data: string }).data === legacyCompanyJobJson)
+  legacyCompanyFixture.close()
 
   // SQLite length(TEXT) stops at U+0000. This tail is larger than the logical
   // character limit but remains inside the UTF-8 storage budget, so the bounded
@@ -420,9 +474,24 @@ Requirements:
   const { emptyProfile } = await import('./recruiting/planning.js')
   const { searchSessions } = await import('./search/sessions.js')
   const posting = { position: 'Backend Engineer', jobDescription: 'Build Python services and operate Kubernetes clusters.', requirements: 'PostgreSQL and AWS', educationAndCertifications: '' }
-  const savedJob = recruiting.saveJob({ posting, status: 'open', criteria: [{ id: 'python', text: 'Python services', importance: 'required' }] })
+  const companyInput = { name: 'شركة طاقة', industry: 'Energy', location: 'الدمام', website: 'example.com', contactName: 'أحمد', contactEmail: 'recruiter@example.com', note: 'Call next month about the regional engineering team.' }
+  const clientCompany = recruiting.saveCompany(companyInput)
+  check('legacy company save callers receive canonical lists for every detail field', clientCompany.industry.join('|') === companyInput.industry && clientCompany.location.join('|') === companyInput.location && clientCompany.contactName.join('|') === companyInput.contactName && clientCompany.contactEmail.join('|') === companyInput.contactEmail)
+  const companyDetailFields = ['industry', 'location', 'contactName', 'contactEmail'] as const
+  const companyDetails = { industry: ['Energy', 'Renewable Energy'], location: ['الدمام', 'Riyadh'], contactName: ['أحمد', 'Dana Lee'], contactEmail: ['recruiter@example.com', 'hiring@example.com'] }
+  const editedCompany = recruiting.saveCompany({ ...companyInput, ...companyDetails, id: clientCompany.id, note: 'Client confirmed the role budget.' })
+  const sourceCompany = recruiting.saveCompany({ ...companyInput, name: 'Platform Services', contactName: '', contactEmail: '', note: 'Research source company.' })
+  // A migrated library may retain untouched legacy JSON beside new array-valued records.
+  const rawLegacySourceCompany = { ...sourceCompany, industry: companyInput.industry, location: companyInput.location, contactName: '', contactEmail: '' }
+  getDb().prepare("UPDATE recruiting_records SET data = ? WHERE kind = 'company' AND id = ?").run(JSON.stringify(rawLegacySourceCompany), sourceCompany.id)
+  const initialBudget = { min: 15_000.25, max: 25_000.75, currency: 'SAR', period: 'monthly' as const }
+  const totalHiringBudget = { min: 50_000, max: 75_000, currency: 'SAR' }
+  check('creates and edits companies with stable identity and monotonic dates', recruiting.listCompanies().length === 2 && editedCompany.id === clientCompany.id && editedCompany.createdAt === clientCompany.createdAt && editedCompany.updatedAt > clientCompany.updatedAt && recruiting.listCompanies().find((company) => company.id === clientCompany.id)?.note === editedCompany.note)
+  check('persists multiple company industries, locations, contact names and emails in order', companyDetailFields.every((field) => JSON.stringify(editedCompany[field]) === JSON.stringify(companyDetails[field])))
+  const savedJob = recruiting.saveJob({ posting, status: 'open', criteria: [{ id: 'python', text: 'Python services', importance: 'required' }], companyId: clientCompany.id, budget: initialBudget, hiringBudget: totalHiringBudget })
   const otherJob = recruiting.saveJob({ posting: { ...posting, position: 'Future vacancy' }, status: 'open', criteria: [] })
   check('persists multiple independent job drafts', recruiting.listJobs().length === 2 && recruiting.getJob(savedJob.id).response === null)
+  check('associates the hiring company, salary range and total hiring budget with only its own job', savedJob.companyId === clientCompany.id && JSON.stringify(savedJob.budget) === JSON.stringify(initialBudget) && JSON.stringify(savedJob.hiringBudget) === JSON.stringify(totalHiringBudget) && otherJob.companyId === undefined && otherJob.budget === undefined && otherJob.hiringBudget === undefined)
   check('new jobs record their initial status at creation', savedJob.statusHistory?.length === 1 && savedJob.statusHistory[0].kind === 'created' && savedJob.statusHistory[0].status === 'open' && savedJob.statusHistory[0].at === savedJob.createdAt)
   const heldJob = recruiting.changeJobStatus({ jobId: otherJob.id, expectedUpdatedAt: otherJob.updatedAt, status: 'on-hold' }).job
   check('status changes append a timestamp without replacing creation', heldJob.statusHistory?.length === 2 && heldJob.statusHistory[1].status === 'on-hold' && heldJob.statusHistory[1].kind === 'status-changed' && heldJob.statusHistory[1].at > otherJob.createdAt && heldJob.createdAt === otherJob.createdAt)
@@ -433,7 +502,7 @@ Requirements:
   check('posting edits cannot bypass the filled-job requirements', statusBypassRejected && recruiting.getJob(otherJob.id).job.status === 'on-hold')
   const { temporarySearch } = await import('./recruiting/temporary.js')
   const recordsBeforeTemporary = (getDb().prepare('SELECT COUNT(*) AS count FROM recruiting_records').get() as { count: number }).count
-  const temporary = await recruiting.searchTemporary({ posting, status: 'open', criteria: [] })
+  const temporary = await recruiting.searchTemporary({ posting, status: 'open', criteria: [], companyId: clientCompany.id, budget: initialBudget, hiringBudget: totalHiringBudget })
   const temporaryRef = { jobId: temporary.job.id, sessionId: temporary.response!.sessionId }
   check('temporary matching creates no saved job or snapshot', temporary.temporary === true && temporary.response!.results.length === stats().resumeCount && (getDb().prepare('SELECT COUNT(*) AS count FROM recruiting_records').get() as { count: number }).count === recordsBeforeTemporary)
   let temporaryReviewRejected = false
@@ -452,6 +521,7 @@ Requirements:
   check('explicit save preserves exact temporary posting, results and Claude reasons', temporarySaved.temporary === false && temporarySaved.job.id !== temporary.job.id && JSON.stringify(temporarySaved.job.posting) === JSON.stringify(posting) && JSON.stringify(temporarySaved.response!.results) === JSON.stringify(temporaryReranked.response!.results) && temporarySearch.id === null)
   check('saving Express results starts history at the actual save time', temporarySaved.job.statusHistory?.length === 1 && temporarySaved.job.statusHistory[0].kind === 'created' && temporarySaved.job.statusHistory[0].at === temporarySaved.job.createdAt && temporarySaved.job.createdAt >= temporary.job.createdAt)
   check('saving Express results retains the actual reranking provider and model', temporarySaved.response?.rerankConfig?.provider === 'openai' && temporarySaved.response.rerankConfig.model === 'gpt-6-astra')
+  check('saving Express results preserves its hiring company, salary and total hiring budget', temporarySaved.job.companyId === clientCompany.id && JSON.stringify(temporarySaved.job.budget) === JSON.stringify(initialBudget) && JSON.stringify(temporarySaved.job.hiringBudget) === JSON.stringify(totalHiringBudget))
   let promotedCapabilityRejected = false
   try { recruiting.jobRerankSource(temporaryRef) } catch { promotedCapabilityRejected = true }
   check('promotion revokes temporary capabilities without addressing the saved job', promotedCapabilityRejected)
@@ -475,6 +545,34 @@ Requirements:
   recruiting.saveProfile({ resume: { id: selectedResume.id, recordKey: selectedResume.recordKey }, ...profileFields })
   check('keeps job decisions independent', recruiting.getJob(otherJob.id).reviews[0].status === 'maybe' && recruiting.getJob(savedJob.id).reviews[0].status === 'shortlisted')
   check('keeps recruiter corrections separate from CV extraction', recruiting.getJob(savedJob.id).response?.results.find((result) => result.resume.recordKey === selectedResume.recordKey)?.resume.name === selectedResume.name)
+
+  const beforeCompanyMetadata = recruiting.getJob(savedJob.id)
+  const snapshotBeforeCompanyMetadata = (getDb().prepare("SELECT data FROM recruiting_records WHERE kind = 'snapshot' AND id = ?").get(savedJob.id) as { data: string }).data
+  const updatedBudget = { ...initialBudget, max: 28_000.75 }
+  const budgetedJob = recruiting.saveJob({ id: savedJob.id, posting, status: 'open', criteria: savedJob.criteria, budget: updatedBudget })
+  check('editing the salary range preserves the independent total hiring budget', JSON.stringify(budgetedJob.budget) === JSON.stringify(updatedBudget) && JSON.stringify(budgetedJob.hiringBudget) === JSON.stringify(totalHiringBudget))
+  const mappedTargets = [{ companyId: sourceCompany.id, status: 'researching' as const, focusRoles: 'Platform backend engineers', note: 'Map regional engineering leadership.' }]
+  const mappedWorkspace = recruiting.saveTargetCompanies({ jobId: savedJob.id, expectedUpdatedAt: budgetedJob.updatedAt, companies: mappedTargets })
+  check('keeps per-job target research separate from the hiring company', mappedWorkspace.job.companyId === clientCompany.id && JSON.stringify(mappedWorkspace.job.targetCompanies) === JSON.stringify(mappedTargets) && recruiting.getJob(otherJob.id).job.targetCompanies === undefined)
+  check('company, budget and map edits preserve exact rankings, fingerprints, history and reviews', !mappedWorkspace.job.stale && JSON.stringify(mappedWorkspace.response?.results) === JSON.stringify(beforeCompanyMetadata.response?.results) && JSON.stringify(mappedWorkspace.reviews) === JSON.stringify(beforeCompanyMetadata.reviews) && JSON.stringify(mappedWorkspace.job.statusHistory) === JSON.stringify(beforeCompanyMetadata.job.statusHistory) && (getDb().prepare("SELECT data FROM recruiting_records WHERE kind = 'snapshot' AND id = ?").get(savedJob.id) as { data: string }).data === snapshotBeforeCompanyMetadata)
+  const validMetadataRecord = (getDb().prepare("SELECT data FROM recruiting_records WHERE kind = 'job' AND id = ?").get(savedJob.id) as { data: string }).data
+  const unknownCompanyId = '689af5c4-3b85-4524-858b-946e1572dfbc'
+  const invalidMetadataEdits = [
+    () => recruiting.saveJob({ id: savedJob.id, posting, status: 'open', criteria: savedJob.criteria, companyId: unknownCompanyId }),
+    () => recruiting.saveJob({ id: savedJob.id, posting, status: 'open', criteria: savedJob.criteria, companyId: sourceCompany.id }),
+    () => recruiting.saveJob({ id: savedJob.id, posting, status: 'open', criteria: savedJob.criteria, budget: { ...updatedBudget, min: updatedBudget.max + 1 } }),
+    () => recruiting.saveJob({ id: savedJob.id, posting, status: 'open', criteria: savedJob.criteria, hiringBudget: { ...totalHiringBudget, min: totalHiringBudget.max + 1 } }),
+    () => recruiting.saveJob({ id: savedJob.id, posting, status: 'open', criteria: savedJob.criteria, hiringBudget: { ...totalHiringBudget, max: Infinity } }),
+    () => recruiting.saveTargetCompanies({ jobId: savedJob.id, expectedUpdatedAt: mappedWorkspace.job.updatedAt, companies: [{ ...mappedTargets[0], companyId: unknownCompanyId }] }),
+    () => recruiting.saveTargetCompanies({ jobId: savedJob.id, expectedUpdatedAt: mappedWorkspace.job.updatedAt, companies: [{ ...mappedTargets[0], companyId: clientCompany.id }] }),
+    () => recruiting.saveTargetCompanies({ jobId: savedJob.id, expectedUpdatedAt: budgetedJob.updatedAt, companies: [] })
+  ].map((edit) => { try { edit(); return false } catch { return true } })
+  check('rejects unknown companies, self-targets, reversed budgets and stale maps without writing', invalidMetadataEdits.every(Boolean) && (getDb().prepare("SELECT data FROM recruiting_records WHERE kind = 'job' AND id = ?").get(savedJob.id) as { data: string }).data === validMetadataRecord)
+  const omittedMetadata = recruiting.saveJob({ id: savedJob.id, posting, status: 'open', criteria: savedJob.criteria })
+  check('older job editors preserve omitted company, salary, hiring budget and target fields', omittedMetadata.companyId === clientCompany.id && JSON.stringify(omittedMetadata.budget) === JSON.stringify(updatedBudget) && JSON.stringify(omittedMetadata.hiringBudget) === JSON.stringify(totalHiringBudget) && JSON.stringify(omittedMetadata.targetCompanies) === JSON.stringify(mappedTargets))
+  const clearedMetadata = recruiting.saveJob({ id: savedJob.id, posting, status: 'open', criteria: savedJob.criteria, companyId: null, budget: null, hiringBudget: null, targetCompanies: [] })
+  check('explicit clearing removes job company, salary, hiring budget and targets without deleting company records', clearedMetadata.companyId === null && clearedMetadata.budget === null && clearedMetadata.hiringBudget === null && clearedMetadata.targetCompanies?.length === 0 && recruiting.listCompanies().length === 2)
+  recruiting.saveJob({ id: savedJob.id, posting, status: 'open', criteria: savedJob.criteria, companyId: clientCompany.id, budget: updatedBudget, hiringBudget: totalHiringBudget, targetCompanies: mappedTargets })
   const hiringRefs = workspace.response!.results.slice(0, 3).map(({ resume }) => ({ id: resume.id, recordKey: resume.recordKey }))
   const fillInput = { jobId: otherJob.id, expectedUpdatedAt: heldJob.updatedAt, status: 'filled' as const }
   const rejectedPlacements = [
@@ -507,7 +605,7 @@ Requirements:
   check('legacy jobs do not acquire invented transition dates', recruiting.getJob(otherJob.id).job.statusHistory === undefined && recruiting.getJob(otherJob.id).job.createdAt === otherJob.createdAt)
   const repairedLegacyJob = recruiting.changeJobStatus({ jobId: otherJob.id, expectedUpdatedAt: legacyRecord.updatedAt, status: 'filled', placement: { hired: hiringRefs[0] } }).job
   check('legacy filled jobs can record their missing hire with an honest update date', repairedLegacyJob.statusHistory?.length === 1 && repairedLegacyJob.statusHistory[0].kind === 'placement-updated' && repairedLegacyJob.statusHistory[0].at > legacyRecord.updatedAt && repairedLegacyJob.createdAt === otherJob.createdAt)
-  const suggested = recruiting.getEvidence({ jobId: savedJob.id, resumes: [{ id: selectedResume.id, recordKey: selectedResume.recordKey }] })[selectedResume.recordKey][0].passage
+  const suggested = (await recruiting.getEvidence({ jobId: savedJob.id, resumes: [{ id: selectedResume.id, recordKey: selectedResume.recordKey }] }))[selectedResume.recordKey][0].passage
   // Passage windows intentionally normalise whitespace while chunking. Check
   // the stored canonical passage, not the PDF extractor's original line breaks.
   const canonicalPassages = getDb().prepare('SELECT text FROM chunks WHERE resume_id = ?').all(selectedResume.id) as Array<{ text: string }>
@@ -518,12 +616,12 @@ Requirements:
   let foreignCriterionRejected = false
   try { recruiting.saveReview({ jobId: savedJob.id, resume: { id: selectedResume.id, recordKey: selectedResume.recordKey }, status: 'maybe', note: '', order: 0, assessments: [{ criterionId: 'foreign', status: 'confirmed', note: '' }] }) } catch { foreignCriterionRejected = true }
   check('rejects assessments for another job’s criterion', foreignCriterionRejected)
-  // A released v4 library has the same tables but no saved Claude metadata.
-  getDb().pragma('user_version = 4')
+  // Restart the current library without relabelling new records as an older schema.
   closeDbForMaintenance()
   const reopenedWorkspace = recruiting.getJob(savedJob.id)
-  check('upgrades v4 recruiting records without losing saved work', getDb().pragma('user_version', { simple: true }) === CURRENT_SCHEMA_VERSION)
+  check('reopens the current schema without losing saved work', getDb().pragma('user_version', { simple: true }) === CURRENT_SCHEMA_VERSION)
   check('reopens saved results and recruiter work after a database restart', reopenedWorkspace.response !== null && reopenedWorkspace.reviews[0].note === 'Arrange technical interview' && reopenedWorkspace.profiles[0].expectedSalary === 'SAR 22000' && !reopenedWorkspace.job.stale)
+  check('reopens companies, salary ranges, hiring budgets and target maps after a database restart', JSON.stringify(recruiting.listCompanies().find((company) => company.id === clientCompany.id)) === JSON.stringify(editedCompany) && reopenedWorkspace.job.companyId === clientCompany.id && JSON.stringify(reopenedWorkspace.job.budget) === JSON.stringify(updatedBudget) && JSON.stringify(reopenedWorkspace.job.hiringBudget) === JSON.stringify(totalHiringBudget) && JSON.stringify(reopenedWorkspace.job.targetCompanies) === JSON.stringify(mappedTargets))
   check('reconstructs trusted search sessions from canonical stored CV rows', searchSessions.get(reopenedWorkspace.response!.sessionId).response.results.find((result) => result.resume.recordKey === selectedResume.recordKey)?.resume.name === selectedResume.name)
 
   const rerankRef = { jobId: savedJob.id, sessionId: reopenedWorkspace.response!.sessionId }
@@ -592,6 +690,12 @@ Requirements:
   const persistedHiring = recruiting.getJob(savedJob.id).job
   check('hiring evidence and status timestamps survive a database restart', JSON.stringify(persistedHiring.statusHistory) === JSON.stringify(hiredWorkspace.job.statusHistory) && JSON.stringify(persistedHiring.placement) === JSON.stringify(hiredWorkspace.job.placement))
 
+  const { smokeTalent, talentSnapshot } = await import('./smoke-talent.js')
+  const talentFixture = smokeTalent(check, savedJob.id, primaryRef)
+  const talent = await import('./recruiting/talent.js')
+  const { smokeHiringBudgets, hiringBudgetsSnapshot } = await import('./smoke-hiring-budgets.js')
+  const hiringBudgetsFixture = smokeHiringBudgets(check, clientCompany.id, savedJob.id, sourceCompany.id)
+
   console.log('\n7b. Portable backup and restore')
   const {
     commitRestore,
@@ -657,10 +761,17 @@ Requirements:
     }
   ).count
   const backedRecruitingKinds = (backupDb.prepare('SELECT kind FROM recruiting_records GROUP BY kind ORDER BY kind').all() as Array<{ kind: string }>).map((row) => row.kind)
+  const backedCompany = JSON.parse((backupDb.prepare("SELECT data FROM recruiting_records WHERE kind = 'company' AND id = ?").get(clientCompany.id) as { data: string }).data)
+  const backedLegacyCompany = (backupDb.prepare("SELECT data FROM recruiting_records WHERE kind = 'company' AND id = ?").get(sourceCompany.id) as { data: string }).data
+  const backedJob = JSON.parse((backupDb.prepare("SELECT data FROM recruiting_records WHERE kind = 'job' AND id = ?").get(savedJob.id) as { data: string }).data)
+  const backedHiringBudgets = JSON.stringify(backupDb.prepare("SELECT id,data FROM recruiting_records WHERE kind = 'hiringBudget' ORDER BY id").all())
   backupDb.close()
+  check('backs up all cost-plan inputs, calculation versions and stable company/job links', backedHiringBudgets === hiringBudgetsFixture.snapshot)
   check('keeps only portable settings', backupKeys.join(',') === 'language,theme', backupKeys.join(','))
   check('removes source paths from the portable copy', backedPaths === 0, `${backedPaths} paths`)
-  check('backs up recruiter work while excluding derived search snapshots', backedRecruitingKinds.join(',') === 'job,profile,review')
+  check('backs up recruiter work while excluding derived search snapshots', backedRecruitingKinds.join(',') === 'activity,assignment,company,hiringBudget,job,person,pool,profile,review,screening')
+  check('backs up all company detail lists, job relationships, salary ranges, hiring budgets and research maps', backedCompany.id === editedCompany.id && backedCompany.note === editedCompany.note && companyDetailFields.every((field) => JSON.stringify(backedCompany[field]) === JSON.stringify(editedCompany[field])) && backedJob.id === savedJob.id && backedJob.companyId === clientCompany.id && JSON.stringify(backedJob.budget) === JSON.stringify(updatedBudget) && JSON.stringify(backedJob.hiringBudget) === JSON.stringify(totalHiringBudget) && JSON.stringify(backedJob.targetCompanies) === JSON.stringify(mappedTargets))
+  check('portable backup preserves untouched legacy company JSON without rewriting its details', backedLegacyCompany === JSON.stringify(rawLegacySourceCompany))
 
   const malformedRecruitingPath = join(scratch, 'malformed-recruiting.qumaa-backup')
   copyFileSync(backupPath, malformedRecruitingPath)
@@ -670,6 +781,49 @@ Requirements:
   let malformedRecruitingRejected = false
   try { validatePortableBackup(malformedRecruitingPath) } catch { malformedRecruitingRejected = true }
   check('rejects malformed recruiter records before portable restore', malformedRecruitingRejected)
+  const malformedCompanyCases = [
+    { label: 'dangling hiring company', change: { companyId: unknownCompanyId }, error: 'unknown company' },
+    { label: 'dangling target company', change: { targetCompanies: [{ ...mappedTargets[0], companyId: unknownCompanyId }] }, error: 'target company no longer exists' },
+    { label: 'hiring company in its own target map', change: { targetCompanies: [{ ...mappedTargets[0], companyId: clientCompany.id }] }, error: 'hiring company cannot' },
+    { label: 'reversed salary range', change: { budget: { ...updatedBudget, min: updatedBudget.max + 1 } }, error: 'minimum budget cannot' },
+    { label: 'reversed total hiring budget', change: { hiringBudget: { ...totalHiringBudget, min: totalHiringBudget.max + 1 } }, error: 'minimum budget cannot' },
+    { label: 'invalid total hiring currency', change: { hiringBudget: { ...totalHiringBudget, currency: 'sar' } }, error: 'hiringBudget.currency' }
+  ]
+  for (const [index, malformed] of malformedCompanyCases.entries()) {
+    const path = join(scratch, `malformed-company-${index}.qumaa-backup`)
+    copyFileSync(backupPath, path)
+    const database = new Database(path)
+    database.prepare("UPDATE recruiting_records SET data = ? WHERE kind = 'job' AND id = ?").run(JSON.stringify({ ...backedJob, ...malformed.change }), savedJob.id)
+    database.close()
+    let rejection = ''
+    try { validatePortableBackup(path) } catch (error) { rejection = String(error) }
+    check(`rejects ${malformed.label} before portable restore`, rejection.includes(malformed.error))
+  }
+  for (const [index, change] of [
+    { companyId: unknownCompanyId }, { companyId: sourceCompany.id }, { jobId: unknownCompanyId },
+    { calculationVersion: 'unsupported-rules' }, { inputs: { ...hiringBudgetsFixture.plan.inputs, headcount: 0 } }
+  ].entries()) {
+    const path = join(scratch, `invalid-hiring-budget-${index}.qumaa-backup`)
+    copyFileSync(backupPath, path)
+    const database = new Database(path)
+    database.prepare("UPDATE recruiting_records SET data = ? WHERE kind = 'hiringBudget' AND id = ?").run(JSON.stringify({ ...hiringBudgetsFixture.plan, ...change }), hiringBudgetsFixture.plan.id)
+    database.close()
+    let rejected = false
+    try { validatePortableBackup(path) } catch { rejected = true }
+    check(`rejects invalid cost-plan references, engine version or inputs before restore (case ${index + 1})`, rejected)
+  }
+  for (const [kind, field] of [['activity', 'personId'], ['assignment', 'jobId'], ['screening', 'personId']] as const) {
+    const path = join(scratch, `dangling-${kind}.qumaa-backup`)
+    copyFileSync(backupPath, path)
+    const database = new Database(path)
+    const row = database.prepare('SELECT id,data FROM recruiting_records WHERE kind = ? LIMIT 1').get(kind) as { id: string; data: string }
+    const invalid = { ...JSON.parse(row.data), [field]: unknownCompanyId }
+    database.prepare('UPDATE recruiting_records SET data = ? WHERE kind = ? AND id = ?').run(JSON.stringify(invalid), kind, row.id)
+    database.close()
+    let rejected = false
+    try { validatePortableBackup(path) } catch { rejected = true }
+    check(`rejects dangling ${kind} references before restoring recruiter history`, rejected)
+  }
   check(
     'leaves no plaintext API key bytes in the backup',
     !readFileSync(backupPath).includes(Buffer.from('must-not-leave-this-machine'))
@@ -936,9 +1090,9 @@ Requirements:
   const forgedDerived = new Database(forgedDerivedPath)
   const forgedTarget = forgedDerived
     .prepare(
-      "SELECT id, raw_text AS rawText FROM resumes WHERE name = 'Maria Chen' LIMIT 1"
+      "SELECT id, content_hash AS recordKey, raw_text AS rawText FROM resumes WHERE name = 'Maria Chen' LIMIT 1"
     )
-    .get() as { id: number; rawText: string }
+    .get() as { id: number; recordKey: string; rawText: string }
   let forgedHash = 'f'.repeat(64)
   if (forgedDerived.prepare('SELECT 1 FROM resumes WHERE content_hash = ?').get(forgedHash)) {
     forgedHash = 'e'.repeat(64)
@@ -962,6 +1116,13 @@ Requirements:
        WHERE resume_id = ?`
     )
     .run(v.byteLength, forgedTarget.id)
+  // Keep the intentionally forged fixture referentially valid, so this case
+  // reaches derivative rebuilding rather than the earlier dangling-CV guard.
+  for (const row of forgedDerived.prepare("SELECT id, data FROM recruiting_records WHERE kind = 'person'").all() as Array<{ id: string; data: string }>) {
+    const person = JSON.parse(row.data)
+    person.recordKeys = person.recordKeys.map((key: string) => key === forgedTarget.recordKey ? forgedHash : key)
+    forgedDerived.prepare("UPDATE recruiting_records SET data = ? WHERE kind = 'person' AND id = ?").run(JSON.stringify(person), row.id)
+  }
   forgedDerived.close()
 
   const expectedDerived = deriveResumeText(forgedTarget.rawText)
@@ -1076,7 +1237,7 @@ Requirements:
   const staleFts = new Database(staleFtsPath)
   const staleFtsResume = staleFts
     .prepare("SELECT id, raw_text AS rawText FROM resumes WHERE raw_text LIKE '%Kubernetes%' LIMIT 1")
-    .get() as { id: number; rawText: string }
+    .get() as { id: number; recordKey: string; rawText: string }
   staleFts
     .prepare(
       "INSERT INTO resumes_fts(resumes_fts, rowid, raw_text) VALUES ('delete', ?, ?)"
@@ -1098,7 +1259,8 @@ Requirements:
   rollbackRestore(repairedFtsRestore.rollbackPath)
 
   const exportedCount = stats().resumeCount
-  getDb().prepare('DELETE FROM resumes WHERE id = (SELECT MAX(id) FROM resumes)').run()
+  const removedBeforeRestore = getDb().prepare('SELECT id, content_hash AS recordKey FROM resumes ORDER BY id DESC LIMIT 1').get() as { id: number; recordKey: string }
+  deleteResume(removedBeforeRestore)
   setSetting('theme', 'light')
   setSetting('language', 'en')
   const restored = await restorePortableBackup(backupPath)
@@ -1111,7 +1273,13 @@ Requirements:
   check('does not restore machine window state', getSetting('windowState') === null)
   check('does not enable cloud reranking without a key', getSetting('rerankEnabled') === null)
   const restoredWorkspace = recruiting.getJob(savedJob.id)
+  check('restores all recruiter desk records exactly with their references and dates', talentSnapshot() === talentFixture.snapshot)
+  check('restores every hiring cost plan and its original inputs, versions, dates and company/job links', hiringBudgetsSnapshot() === hiringBudgetsFixture.snapshot)
   check('restores jobs, notes, profile corrections and explicit CV history', restoredWorkspace.reviews[0].note === 'Arrange technical interview' && restoredWorkspace.profiles[0].recordKeys.length === 2 && restoredWorkspace.profiles[0].expectedSalary === 'SAR 22000')
+  const restoredCompany = recruiting.listCompanies().find((company) => company.id === clientCompany.id)!
+  const restoredLegacyCompany = recruiting.listCompanies().find((company) => company.id === sourceCompany.id)!
+  check('restores all company detail lists, salary ranges, total hiring budgets and target research', recruiting.listCompanies().length === 2 && restoredCompany.id === editedCompany.id && restoredCompany.createdAt === editedCompany.createdAt && restoredCompany.note === editedCompany.note && companyDetailFields.every((field) => JSON.stringify(restoredCompany[field]) === JSON.stringify(editedCompany[field])) && restoredWorkspace.job.id === savedJob.id && restoredWorkspace.job.companyId === clientCompany.id && JSON.stringify(restoredWorkspace.job.budget) === JSON.stringify(updatedBudget) && JSON.stringify(restoredWorkspace.job.hiringBudget) === JSON.stringify(totalHiringBudget) && JSON.stringify(restoredWorkspace.job.targetCompanies) === JSON.stringify(mappedTargets))
+  check('restores legacy company details as whole-value lists with original identity and dates', restoredLegacyCompany.id === sourceCompany.id && restoredLegacyCompany.createdAt === sourceCompany.createdAt && restoredLegacyCompany.updatedAt === sourceCompany.updatedAt && restoredLegacyCompany.industry.length === 1 && restoredLegacyCompany.industry[0] === rawLegacySourceCompany.industry && restoredLegacyCompany.location[0] === rawLegacySourceCompany.location && restoredLegacyCompany.contactName.length === 0 && restoredLegacyCompany.contactEmail.length === 0)
   check('portable restore preserves hiring selections and recorded status dates', JSON.stringify(restoredWorkspace.job.statusHistory) === JSON.stringify(persistedHiring.statusHistory) && JSON.stringify(restoredWorkspace.job.placement) === JSON.stringify(persistedHiring.placement))
   check('requires fresh local matching after restore instead of trusting backup rankings', restoredWorkspace.response === null && restoredWorkspace.job.stale)
   check('retains the exact pre-restore database for rollback', statSync(restored.rollbackPath).size > 0)
@@ -1134,6 +1302,10 @@ Requirements:
   const scrubbedHiring = recruiting.getJob(savedJob.id).job
   check('CV deletion scrubs private hiring identities while preserving status dates', scrubbedHiring.placement?.hired.recordKey === null && scrubbedHiring.placement.hired.name === null && scrubbedHiring.statusHistory?.at(-1)?.placement?.hired.recordKey === null && scrubbedHiring.statusHistory.at(-1)?.placement?.hired.name === null && scrubbedHiring.statusHistory.at(-1)?.at === persistedHiring.statusHistory?.at(-1)?.at)
   check('bulk-deleting the last CV removes its private profile and every job review', deleteResumes([versionRef]) === 1 && recruiting.listProfiles().length === 0 && recruiting.getJob(savedJob.id).reviews.length === 0 && recruiting.getJob(otherJob.id).reviews.length === 0)
+  check('deleting the final CV removes its library contact, pipeline and screenings', !talent.overview().people.some((person) => person.id === talentFixture.libraryPersonId) && !talent.overview().assignments.some((row) => row.personId === talentFixture.libraryPersonId) && !talent.overview().screenings.some((row) => row.personId === talentFixture.libraryPersonId))
+  check('CV deletion preserves manually created prospects and their contact histories', talent.overview().people.some((person) => person.id === talentFixture.prospectId) && talent.overview().activities.filter((row) => row.personId === talentFixture.prospectId).length === 2)
+  check('CV deletion preserves independent company cost plans', hiringBudgetsSnapshot() === hiringBudgetsFixture.snapshot)
+  check('CV deletion preserves independent companies, job budgets and target research', recruiting.listCompanies().length === 2 && recruiting.getJob(savedJob.id).job.companyId === clientCompany.id && JSON.stringify(recruiting.getJob(savedJob.id).job.targetCompanies) === JSON.stringify(mappedTargets))
   check('deleting a reranked CV removes its stored Claude explanation', !(getDb().prepare("SELECT data FROM recruiting_records WHERE kind = 'snapshot' AND id = ?").get(savedJob.id) as { data: string }).data.includes('Private explanation for the deletion fixture.'))
 
   console.log(`\n8. Final state: ${stats().resumeCount} resumes, ${stats().chunkCount} chunks`)
@@ -1163,6 +1335,9 @@ Requirements:
   check('removes stored settings', getSetting('theme') === null, String(getSetting('theme')))
   check('removes the interface language preference', getSetting('language') === null)
   check('removes saved jobs and recruiter records', recruiting.listJobs().length === 0 && recruiting.listProfiles().length === 0)
+  check('removes every company and its private contact notes', recruiting.listCompanies().length === 0)
+  check('full library wipe removes all hiring cost plans and private assumptions', hiringBudgetsSnapshot() === '[]')
+  check('removes all prospects, reminders, submissions, screenings and pools', Object.values(talent.overview()).every((records) => records.length === 0))
   const databaseArtifacts = [dbPath(), `${dbPath()}-wal`, `${dbPath()}-shm`]
     .filter(existsSync)
     .map((path) => readFileSync(path))
@@ -1239,6 +1414,10 @@ Requirements:
   await recruiting.searchTemporary({ posting, status: 'open', criteria: [] })
   deleteAllData()
   check('full deletion also clears temporary postings and results', temporarySearch.id === null)
+  const { smokeDerived } = await import('./smoke-derived.js')
+  await smokeDerived(check)
+  const { smokeRequirements } = await import('./smoke-requirements.js')
+  await smokeRequirements(check)
   keeperWindow.destroy()
 }
 

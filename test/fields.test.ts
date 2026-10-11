@@ -27,6 +27,17 @@ describe('yearsFromDateRanges', () => {
     expect(yearsFromDateRanges('2019 - 2020')).toBe(2)
   })
 
+  it('keeps bare year ranges following a job title or heading', () => {
+    expect(yearsFromDateRanges('Engineer 2019–2023')).toBe(5)
+    expect(yearsFromDateRanges('Engineer\n2019–2023')).toBe(5)
+    expect(yearsFromDateRanges('Experience\n2019–2023')).toBe(5)
+  })
+
+  it('continues to recognise full month names and common abbreviations', () => {
+    expect(yearsFromDateRanges('January 2019–December 2023')).toBe(5)
+    expect(yearsFromDateRanges('Sept. 2019–September 2020')).toBe(1.1)
+  })
+
   it('handles numeric month/year formats', () => {
     expect(yearsFromDateRanges('01/2019 - 12/2019')).toBe(1)
   })
@@ -135,6 +146,40 @@ describe('extractFields', () => {
   it('still finds a genuine city, country pair', () => {
     const text = normalizeText('Jane Doe\nLondon, United Kingdom\njane@example.com')
     expect(extractFields(text, splitSections(text)).location).toBe('London, United Kingdom')
+  })
+
+  it('does not infer Khobar from Arabic experience headings or other partial words', () => {
+    for (const line of ['الخبرة العملية', '## الخبرة العملية', 'الخبرات المهنية', 'الخبراء', 'خبيرالخبر', 'عمانيات', 'الخبر_العملية']) {
+      const text = `أحمد القحطاني\n${line}\nمهندس حفر منذ 2019.`
+      expect(extractFields(text, splitSections(text)).location).toBeNull()
+    }
+  })
+
+  it('retains real Khobar locations with whitespace and Arabic punctuation', () => {
+    for (const line of ['الخبر', 'الخبر، السعودية', '(الخبر)', 'الخبر | ahmed@example.com']) {
+      const text = `أحمد القحطاني\n${line}\nالخبرة العملية\nمهندس حفر.`
+      expect(extractFields(text, splitSections(text)).location).toBe('الخبر')
+    }
+    const labelled = 'أحمد القحطاني\nالعنوان: الخبر، المملكة العربية السعودية\nالخبرة العملية'
+    expect(extractFields(labelled, splitSections(labelled)).location).toBe('الخبر، المملكة العربية السعودية')
+  })
+
+  it('retains complete Arabic multiword place names', () => {
+    for (const location of ['مكة المكرمة', 'المدينة المنورة', 'أبو ظبي', 'المملكة العربية السعودية']) {
+      const text = `أحمد القحطاني\n${location}`
+      expect(extractFields(text, splitSections(text)).location).toBe(location)
+    }
+  })
+
+  it('excludes education date ranges after Arabic and Markdown employment headings', () => {
+    for (const [experience, education] of [
+      ['## Employment', '## Education and training'],
+      ['## الخبرة العملية', '## التعليم والتدريب'],
+      ['الخبرة المهنية', 'المؤهلات العلمية']
+    ]) {
+      const text = `Candidate\n${experience}\nEngineer\n2019–2023\n${education}\nEngineering degree\n2013–2016`
+      expect(extractFields(text, splitSections(text)).yearsExperience).toBe(5)
+    }
   })
 
   it('returns nulls rather than throwing on a sparse document', () => {

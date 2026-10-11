@@ -1,5 +1,16 @@
 /** Arabic copy for the library, quick matching, and source-CV details. */
 export const matchingAr: Record<string, string> = {
+  'CV text similarity is high relative to this candidate pool.': 'تشابه نص السيرة الذاتية مرتفع مقارنةً بهذه المجموعة من المرشحين.',
+  'CV text similarity is moderate relative to this candidate pool.': 'تشابه نص السيرة الذاتية متوسط مقارنةً بهذه المجموعة من المرشحين.',
+  'CV text similarity is low relative to this candidate pool.': 'تشابه نص السيرة الذاتية منخفض مقارنةً بهذه المجموعة من المرشحين.',
+  'The CV mentions {matched} of {total} recognized skill terms.': 'تذكر السيرة الذاتية {matched} من أصل {total} من مصطلحات المهارات المرصودة.',
+  'No skill terms were recognized in this job description. Review its requirements and source passages.': 'لم تُرصد مصطلحات مهارات في هذا الوصف الوظيفي. راجع متطلباته والمقاطع الأصلية.',
+  'Keyword overlap is high relative to this candidate pool.': 'تطابق الكلمات المفتاحية مرتفع مقارنةً بهذه المجموعة من المرشحين.',
+  'Keyword overlap is low relative to this candidate pool.': 'تطابق الكلمات المفتاحية منخفض مقارنةً بهذه المجموعة من المرشحين.',
+  'Recognized skill terms': 'مصطلحات المهارات المرصودة',
+  'Mentioned in CV text': 'مذكور في نص السيرة الذاتية',
+  'Not found in CV text': 'لم يُعثر عليه في نص السيرة الذاتية',
+  'Text matches suggest passages to review; they do not verify qualifications or professional responsibility.': 'تقترح المطابقات النصية مقاطع للمراجعة؛ ولا تثبت المؤهلات أو المسؤولية المهنية.',
   'Library': 'المكتبة',
   'Match': 'المطابقة',
   'Add files…': 'إضافة ملفات…',

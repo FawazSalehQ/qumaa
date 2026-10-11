@@ -17,6 +17,11 @@ function operation<T>(work: () => T | Promise<T>): Promise<T> {
 }
 
 export function registerRecruitingHandlers(getWindow: () => BrowserWindow): void {
+  ipcMain.handle(CH.recruitingListCompanies, () => operation(recruiting.listCompanies))
+  ipcMain.handle(CH.recruitingSaveCompany, (_event, input: unknown) =>
+    operation(() => recruiting.saveCompany(input)))
+  ipcMain.handle(CH.recruitingSaveTargetCompanies, (_event, input: unknown) =>
+    operation(() => recruiting.saveTargetCompanies(input)))
   ipcMain.handle(CH.recruitingListJobs, () => operation(recruiting.listJobs))
   ipcMain.handle(CH.recruitingSaveJob, (_event, input: unknown) =>
     operation(() => recruiting.saveJob(input)))
@@ -24,8 +29,10 @@ export function registerRecruitingHandlers(getWindow: () => BrowserWindow): void
     operation(() => recruiting.changeJobStatus(input)))
   ipcMain.handle(CH.recruitingGetJob, (_event, input: unknown) =>
     operation(() => recruiting.getJob(input)))
-  ipcMain.handle(CH.recruitingGetEvidence, (_event, input: unknown) =>
-    operation(() => recruiting.getEvidence(input)))
+  ipcMain.handle(CH.recruitingGetEvidence, async (_event, input: unknown) => {
+    await indexReadiness.waitUntilReady()
+    return operation(() => recruiting.getEvidence(input))
+  })
   ipcMain.handle(CH.recruitingSearchJob, async (_event, input: unknown) => {
     await indexReadiness.waitUntilReady()
     return operation(() => recruiting.searchJob(input))

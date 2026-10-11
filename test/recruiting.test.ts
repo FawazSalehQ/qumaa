@@ -3,6 +3,7 @@ import { applySavedRerank, deduplicateVersions, emptyProfile, isShortlisted, mer
 import { profileRecordSchema, recruitingSchemas, snapshotRecordSchema } from '../src/main/recruiting/schema.js'
 import type { CandidateReview } from '../src/shared/recruiting.js'
 import type { MatchResult } from '../src/shared/types.js'
+import { extractJobRequirements } from '../src/shared/job-requirements.js'
 
 const keyA = 'a'.repeat(64)
 const keyB = 'b'.repeat(64)
@@ -38,6 +39,20 @@ describe('recruiter workflow rules', () => {
 
   it('uses every confirmed job criterion in the matching text without adding eligibility rules', () => {
     expect(postingText({ position: ' Engineer ', jobDescription: '', requirements: 'Python', educationAndCertifications: '' }, [{ id: 'one', text: 'Kubernetes', importance: 'preferred' }])).toBe('Engineer\n\nPython\n\nKubernetes')
+  })
+
+  it('does not change the ranking query merely by importing existing vacancy wording into a scorecard', () => {
+    const posting = { position: 'Archivist', jobDescription: 'Maintain fragile manuscripts. Coordinate conservation projects.', requirements: 'Required:\n• Must document pigment deterioration\nPreferred:\nGIS', educationAndCertifications: 'ترميم المخطوطات' }
+    const criteria = extractJobRequirements(posting).requirements.map((criterion, i) => ({ ...criterion, id: String(i) }))
+    expect(postingText(posting, criteria)).toBe(postingText(posting))
+    expect(postingText(posting, [...criteria, { id: 'new', text: 'Assess archival humidity', importance: 'unspecified' }])).toBe(postingText(posting) + '\n\nAssess archival humidity')
+  })
+
+  it('retains changed qualifications and avoids repeating manual criteria without fuzzy term deletion', () => {
+    const posting = { position: 'Planner', jobDescription: '10.5 years of practice', requirements: '', educationAndCertifications: '' }
+    const criteria = [{ id: 'new', text: '5 years of practice', importance: 'required' as const }, { id: 'copy', text: '5 years of practice', importance: 'preferred' as const }]
+    expect(postingText(posting, criteria)).toBe('Planner\n\n10.5 years of practice\n\n5 years of practice')
+    expect(postingText({ ...posting, jobDescription: 'We do not require 5 years of practice' }, criteria)).toBe('Planner\n\nWe do not require 5 years of practice\n\n5 years of practice')
   })
 
   it('represents explicitly linked CVs by the newest version even when its score is lower', () => {

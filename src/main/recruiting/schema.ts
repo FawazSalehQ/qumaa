@@ -1,9 +1,15 @@
 /** Bounded, strict contracts shared by IPC, local records, and portable restore. */
 import { z } from 'zod'
 import { isRerankConfig, RERANK_MODELS, type RerankConfig } from '@shared/rerank.js'
+import { COMPANY_DETAIL_LIMIT, normalizeCompanyDetailKey, type JobTargetCompany } from '@shared/recruiting.js'
+import { talentRecordSchemas, TALENT_LIMITS } from './talent-schema.js'
+import { hiringBudgetRecordSchema } from './hiring-budget-schema.js'
 
 export const RECRUITING_LIMITS = Object.freeze({
   jobs: 250,
+  companies: 1_000,
+  hiringBudgets: 1_000,
+  targetCompanies: 100,
   profiles: 5_000,
   reviews: 50_000,
   snapshots: 250,
@@ -45,14 +51,18 @@ const statusEvent = z.strictObject({
 })
 const assessment = z.strictObject({
   criterionId: label(100).min(1),
-  status: z.enum(['unreviewed', 'evidence-found', 'needs-clarification', 'not-stated', 'confirmed']),
+  status: z.enum(['unreviewed', 'evidence-found', 'needs-clarification', 'not-stated', 'confirmed', 'contradicted']),
   note: text(10_000)
 })
 const assessments = z.array(assessment).max(40).refine((values) => unique(values.map((value) => value.criterionId)), 'criterion IDs must be unique')
 const criteria = z.array(z.strictObject({
   id: label(100).min(1),
   text: text(1_000).trim().min(1),
-  importance: z.enum(['required', 'preferred'])
+  importance: z.enum(['required', 'preferred', 'unspecified']),
+  source: z.strictObject({
+    field: z.enum(['jobDescription', 'requirements', 'educationAndCertifications']),
+    text: text(30_000).min(1)
+  }).optional()
 })).max(40).refine((values) => unique(values.map((value) => value.id)), 'criterion IDs must be unique')
 const posting = z.strictObject({
   position: label(512),
@@ -60,6 +70,60 @@ const posting = z.strictObject({
   requirements: text(30_000),
   educationAndCertifications: text(30_000)
 }).refine((value) => Object.values(value).some((part) => part.trim().length > 0), 'a job needs a title or description')
+
+/** Preserve each legacy string intact: commas and slashes can be meaningful data. */
+const companyDetails = z.union([
+  label(512).transform((value) => value.trim() ? [value.trim()] : []),
+  z.array(label(512).trim().min(1)).max(COMPANY_DETAIL_LIMIT)
+    .refine((values) => unique(values.map(normalizeCompanyDetailKey)), 'Company details must be unique.')
+])
+const companyFields = {
+  name: label(512).trim().min(1),
+  industry: companyDetails,
+  location: companyDetails,
+  website: label(2_048),
+  contactName: companyDetails,
+  contactEmail: companyDetails,
+  note: text(10_000)
+}
+const amount = z.number().finite().min(0).max(1e9)
+  .refine((value) => Number(value.toFixed(2)) === value, 'Budget amounts can have at most two decimal places.')
+export const jobBudgetSchema = z.strictObject({
+  min: amount,
+  max: amount,
+  currency: z.string().regex(/^[A-Z]{3}$/),
+  period: z.enum(['monthly', 'annual', 'hourly'])
+}).refine((value) => value.min <= value.max, 'The minimum budget cannot exceed the maximum.')
+export const jobHiringBudgetSchema = z.strictObject({
+  min: amount,
+  max: amount,
+  currency: z.string().regex(/^[A-Z]{3}$/)
+}).refine((value) => value.min <= value.max, 'The minimum budget cannot exceed the maximum.')
+const targetCompanies = z.array(z.strictObject({
+  companyId: jobId,
+  status: z.enum(['to-research', 'researching', 'mapped', 'excluded']),
+  focusRoles: text(2_000),
+  note: text(10_000)
+})).max(RECRUITING_LIMITS.targetCompanies)
+  .refine((values) => unique(values.map((value) => value.companyId)), 'Target companies must be unique.')
+const jobCompanyFields = {
+  companyId: jobId.nullable().optional(),
+  budget: jobBudgetSchema.nullable().optional(),
+  hiringBudget: jobHiringBudgetSchema.nullable().optional(),
+  targetCompanies: targetCompanies.optional()
+}
+
+/** Validate after merging edits, and after reading all company records on restore. */
+export function assertJobCompanyReferences(
+  job: { companyId?: string | null; targetCompanies?: JobTargetCompany[] },
+  companyIds: ReadonlySet<string>
+): void {
+  if (job.companyId && !companyIds.has(job.companyId)) throw new Error('This job references an unknown company.')
+  for (const target of job.targetCompanies ?? []) {
+    if (!companyIds.has(target.companyId)) throw new Error('A target company no longer exists.')
+    if (target.companyId === job.companyId) throw new Error('The hiring company cannot be a target company for the same job.')
+  }
+}
 
 const profileFields = {
   name: label(512).nullable(),
@@ -85,13 +149,15 @@ const reviewFields = {
 
 export const recruitingSchemas = {
   jobId,
+  saveCompany: z.strictObject({ id: jobId.optional(), ...companyFields }),
+  saveTargetCompanies: z.strictObject({ jobId, expectedUpdatedAt: timestamp, companies: targetCompanies }),
   rerankPreview: z.strictObject({ jobId, sessionId: z.string().uuid() }),
   rerank: z.strictObject({ jobId, sessionId: z.string().uuid(), approvalToken: z.string().uuid() }),
-  saveJob: z.strictObject({ id: jobId.optional(), posting, status: jobStatus, criteria }),
+  saveJob: z.strictObject({ id: jobId.optional(), posting, status: jobStatus, criteria, ...jobCompanyFields }),
   changeJobStatus: z.strictObject({ jobId, expectedUpdatedAt: timestamp, status: jobStatus, placement: placementInput.optional() })
     .refine((value) => value.status !== 'filled' || !!value.placement, 'Select the hired candidate before marking this job filled.')
     .refine((value) => value.status === 'filled' || !value.placement, 'Hiring details can only be changed when marking a job filled.'),
-  temporarySearch: z.strictObject({ posting, status: jobStatus, criteria }),
+  temporarySearch: z.strictObject({ posting, status: jobStatus, criteria, ...jobCompanyFields }),
   saveReview: z.strictObject({ jobId, resume, ...reviewFields }),
   saveProfile: z.strictObject({ resume, ...profileFields }),
   linkVersions: z.strictObject({ primary: resume, version: resume }),
@@ -103,6 +169,7 @@ export const recruitingSchemas = {
 
 export const jobRecordSchema = z.strictObject({
   id: jobId,
+  ...jobCompanyFields,
   posting,
   status: jobStatus,
   criteria,
@@ -112,6 +179,9 @@ export const jobRecordSchema = z.strictObject({
   statusHistory: z.array(statusEvent).max(RECRUITING_LIMITS.statusEvents).optional(),
   placement: jobPlacementSchema.optional()
 }).superRefine((job, context) => {
+  if (job.companyId && job.targetCompanies?.some((target) => target.companyId === job.companyId)) {
+    context.addIssue({ code: 'custom', message: 'The hiring company cannot be a target company for the same job.' })
+  }
   const history = job.statusHistory ?? []
   if (!unique(history.map((event) => event.id))) context.addIssue({ code: 'custom', message: 'Status event identities must be unique.' })
   for (const [index, event] of history.entries()) {
@@ -128,6 +198,12 @@ export const jobRecordSchema = z.strictObject({
   const latestPlacement = history.findLast((event) => event.placement)?.placement
   if (JSON.stringify(latestPlacement) !== JSON.stringify(job.placement)) context.addIssue({ code: 'custom', message: 'Current hiring details must match the latest recorded decision.' })
 })
+export const companyRecordSchema = z.strictObject({
+  id: jobId,
+  ...companyFields,
+  createdAt: timestamp,
+  updatedAt: timestamp
+}).refine((value) => value.updatedAt >= value.createdAt, 'Company updates cannot precede creation.')
 export const profileRecordSchema = z.strictObject({
   candidateKey: recordKey,
   recordKeys: z.array(recordKey).min(1).max(5_000).refine(unique, 'resume identities must be unique'),
@@ -165,8 +241,12 @@ export const snapshotRecordSchema = z.strictObject({
   })).max(5_000).refine((values) => unique(values.map((value) => value.recordKey)), 'candidate results must be unique')
 })
 
-export const recordSchemas = { job: jobRecordSchema, profile: profileRecordSchema, review: reviewRecordSchema, snapshot: snapshotRecordSchema }
+export const recordSchemas = { hiringBudget: hiringBudgetRecordSchema, company: companyRecordSchema, job: jobRecordSchema, profile: profileRecordSchema, review: reviewRecordSchema, snapshot: snapshotRecordSchema, ...talentRecordSchemas }
 export type RecordKind = keyof typeof recordSchemas
+export const RECORD_LIMITS: Readonly<Record<RecordKind, number>> = Object.freeze({
+  hiringBudget: RECRUITING_LIMITS.hiringBudgets, company: RECRUITING_LIMITS.companies, job: RECRUITING_LIMITS.jobs, review: RECRUITING_LIMITS.reviews,
+  profile: RECRUITING_LIMITS.profiles, snapshot: RECRUITING_LIMITS.snapshots, ...TALENT_LIMITS
+})
 export type JobRecord = z.infer<typeof jobRecordSchema>
 export type SnapshotRecord = z.infer<typeof snapshotRecordSchema>
 export type StoredRecord = z.infer<(typeof recordSchemas)[RecordKind]>
@@ -180,6 +260,9 @@ export function parseRecruiting<T>(schema: z.ZodType<T>, value: unknown): T {
 }
 
 export function recordId(kind: RecordKind, value: StoredRecord): string {
+  if (Object.hasOwn(talentRecordSchemas, kind)) return (value as { id: string }).id
+  if (kind === 'hiringBudget') return (value as { id: string }).id
+  if (kind === 'company') return (value as z.infer<typeof companyRecordSchema>).id
   if (kind === 'job') return (value as JobRecord).id
   if (kind === 'snapshot') return (value as SnapshotRecord).jobId
   if (kind === 'review') {

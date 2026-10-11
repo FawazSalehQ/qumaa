@@ -1,6 +1,6 @@
 {
   "name": "cv-filter",
-  "version": "0.1.0-beta.2",
+  "version": "0.1.0-beta.5",
   "description": "Local-first resume matching desktop app",
   "main": "./out/main/index.js",
   "author": "Fawaz Alqahtani",
@@ -25,6 +25,7 @@
     "seed": "npm run build && electron out/main/seed.js",
     "bench": "npm run build && electron out/main/bench.js",
     "eval": "npm run build && electron out/main/eval.js",
+    "eval:domains": "npm run build && electron out/main/eval-cross-domain.js",
     "smoke": "npm run build && electron out/main/smoke.js",
     "test": "vitest run",
     "test:watch": "vitest",

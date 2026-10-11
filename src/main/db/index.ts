@@ -155,7 +155,7 @@ export function recordResumeInserted(
   usage.chunkTextChars += chunkTextChars
 }
 
-function invalidateLibraryUsage(): void {
+export function invalidateLibraryUsage(): void {
   libraryUsage = null
 }
 

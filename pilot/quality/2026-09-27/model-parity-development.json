@@ -1,0 +1,824 @@
+{
+  "split": "development",
+  "caseCount": 80,
+  "changedFullRankings": [
+    "construction/lead/mixed-a/ar",
+    "construction/lead/mixed-a/en",
+    "construction/lead/mixed-b/ar",
+    "construction/lead/mixed-b/en",
+    "construction/specialist/mixed-a/ar",
+    "construction/specialist/mixed-a/en",
+    "construction/specialist/mixed-b/ar",
+    "construction/specialist/mixed-b/en",
+    "energy/lead/mixed-a/ar",
+    "energy/lead/mixed-a/en",
+    "energy/lead/mixed-b/ar",
+    "energy/lead/mixed-b/en",
+    "energy/specialist/mixed-a/ar",
+    "energy/specialist/mixed-a/en",
+    "energy/specialist/mixed-b/ar",
+    "energy/specialist/mixed-b/en",
+    "finance/lead/mixed-a/ar",
+    "finance/lead/mixed-a/en",
+    "finance/lead/mixed-b/ar",
+    "finance/lead/mixed-b/en",
+    "finance/specialist/mixed-a/ar",
+    "finance/specialist/mixed-a/en",
+    "finance/specialist/mixed-b/ar",
+    "finance/specialist/mixed-b/en",
+    "healthcare/lead/mixed-a/ar",
+    "healthcare/lead/mixed-a/en",
+    "healthcare/lead/mixed-b/ar",
+    "healthcare/lead/mixed-b/en",
+    "healthcare/specialist/mixed-a/ar",
+    "healthcare/specialist/mixed-a/en",
+    "healthcare/specialist/mixed-b/ar",
+    "healthcare/specialist/mixed-b/en",
+    "hospitality/lead/mixed-a/ar",
+    "hospitality/lead/mixed-a/en",
+    "hospitality/lead/mixed-b/ar",
+    "hospitality/lead/mixed-b/en",
+    "hospitality/specialist/mixed-a/ar",
+    "hospitality/specialist/mixed-a/en",
+    "hospitality/specialist/mixed-b/ar",
+    "hospitality/specialist/mixed-b/en",
+    "hr/lead/mixed-a/ar",
+    "hr/lead/mixed-a/en",
+    "hr/lead/mixed-b/ar",
+    "hr/lead/mixed-b/en",
+    "hr/specialist/mixed-a/ar",
+    "hr/specialist/mixed-a/en",
+    "hr/specialist/mixed-b/ar",
+    "hr/specialist/mixed-b/en",
+    "logistics/lead/mixed-a/ar",
+    "logistics/lead/mixed-a/en",
+    "logistics/lead/mixed-b/ar",
+    "logistics/lead/mixed-b/en",
+    "logistics/specialist/mixed-a/ar",
+    "logistics/specialist/mixed-a/en",
+    "logistics/specialist/mixed-b/ar",
+    "logistics/specialist/mixed-b/en",
+    "manufacturing/lead/mixed-a/ar",
+    "manufacturing/lead/mixed-a/en",
+    "manufacturing/lead/mixed-b/ar",
+    "manufacturing/lead/mixed-b/en",
+    "manufacturing/specialist/mixed-a/ar",
+    "manufacturing/specialist/mixed-a/en",
+    "manufacturing/specialist/mixed-b/ar",
+    "manufacturing/specialist/mixed-b/en",
+    "sales/lead/mixed-a/ar",
+    "sales/lead/mixed-a/en",
+    "sales/lead/mixed-b/ar",
+    "sales/lead/mixed-b/en",
+    "sales/specialist/mixed-a/ar",
+    "sales/specialist/mixed-a/en",
+    "sales/specialist/mixed-b/ar",
+    "sales/specialist/mixed-b/en",
+    "software/lead/mixed-a/ar",
+    "software/lead/mixed-a/en",
+    "software/lead/mixed-b/ar",
+    "software/lead/mixed-b/en",
+    "software/specialist/mixed-a/ar",
+    "software/specialist/mixed-a/en",
+    "software/specialist/mixed-b/ar",
+    "software/specialist/mixed-b/en"
+  ],
+  "changedTop3OrdersOrMembers": [
+    "construction/lead/mixed-b/ar",
+    "energy/lead/mixed-a/en",
+    "finance/lead/mixed-b/ar",
+    "hospitality/specialist/mixed-a/ar",
+    "hr/lead/mixed-a/en",
+    "hr/specialist/mixed-a/en",
+    "logistics/lead/mixed-b/ar",
+    "manufacturing/lead/mixed-b/ar",
+    "manufacturing/specialist/mixed-a/ar",
+    "manufacturing/specialist/mixed-b/ar",
+    "sales/specialist/mixed-b/ar",
+    "software/specialist/mixed-b/ar"
+  ],
+  "maximumScoreDifference": 0.014460787812093367,
+  "cases": [
+    {
+      "id": "construction/lead/mixed-a/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "construction/lead/mixed-a/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "construction/lead/mixed-b/ar",
+      "metricDelta": {
+        "precisionAt3": 0,
+        "recallAt10": 0.0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "construction/lead/mixed-b/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "construction/specialist/mixed-a/ar",
+      "metricDelta": {
+        "precisionAt3": 0,
+        "recallAt10": 0,
+        "mrr": -0.0021645021645021606,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "construction/specialist/mixed-a/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "construction/specialist/mixed-b/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "construction/specialist/mixed-b/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "energy/lead/mixed-a/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "energy/lead/mixed-a/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": -0.015904635162926506
+      }
+    },
+    {
+      "id": "energy/lead/mixed-b/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "energy/lead/mixed-b/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": -0.003311744360654567
+      }
+    },
+    {
+      "id": "energy/specialist/mixed-a/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "energy/specialist/mixed-a/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "energy/specialist/mixed-b/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "energy/specialist/mixed-b/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "finance/lead/mixed-a/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "finance/lead/mixed-a/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "finance/lead/mixed-b/ar",
+      "metricDelta": {
+        "precisionAt3": 0,
+        "recallAt10": 0.0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "finance/lead/mixed-b/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "finance/specialist/mixed-a/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "finance/specialist/mixed-a/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "finance/specialist/mixed-b/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "finance/specialist/mixed-b/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0.0,
+        "ndcg10": 0.005165119079441616
+      }
+    },
+    {
+      "id": "healthcare/lead/mixed-a/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "healthcare/lead/mixed-a/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "healthcare/lead/mixed-b/ar",
+      "metricDelta": {
+        "precisionAt3": 0,
+        "recallAt10": 0.0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "healthcare/lead/mixed-b/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "healthcare/specialist/mixed-a/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": -0.003443412719627781
+      }
+    },
+    {
+      "id": "healthcare/specialist/mixed-a/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "healthcare/specialist/mixed-b/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "healthcare/specialist/mixed-b/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "hospitality/lead/mixed-a/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "hospitality/lead/mixed-a/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "hospitality/lead/mixed-b/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "hospitality/lead/mixed-b/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "hospitality/specialist/mixed-a/ar",
+      "metricDelta": {
+        "precisionAt3": 0,
+        "recallAt10": 0,
+        "mrr": -0.013986013986013984,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "hospitality/specialist/mixed-a/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "hospitality/specialist/mixed-b/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": -0.06658308284095726
+      }
+    },
+    {
+      "id": "hospitality/specialist/mixed-b/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "hr/lead/mixed-a/ar",
+      "metricDelta": {
+        "precisionAt3": 0,
+        "recallAt10": 0.0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "hr/lead/mixed-a/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": -0.002144934873500648
+      }
+    },
+    {
+      "id": "hr/lead/mixed-b/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "hr/lead/mixed-b/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.010521232341632825
+      }
+    },
+    {
+      "id": "hr/specialist/mixed-a/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "hr/specialist/mixed-a/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "hr/specialist/mixed-b/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": -0.014371482003328384
+      }
+    },
+    {
+      "id": "hr/specialist/mixed-b/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "logistics/lead/mixed-a/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "logistics/lead/mixed-a/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "logistics/lead/mixed-b/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": -0.5,
+        "ndcg10": -0.06631450901434222
+      }
+    },
+    {
+      "id": "logistics/lead/mixed-b/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "logistics/specialist/mixed-a/ar",
+      "metricDelta": {
+        "precisionAt3": 0,
+        "recallAt10": 0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "logistics/specialist/mixed-a/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "logistics/specialist/mixed-b/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "logistics/specialist/mixed-b/en",
+      "metricDelta": {
+        "precisionAt3": 0,
+        "recallAt10": 0.0,
+        "mrr": 0.04999999999999999,
+        "ndcg10": 0.009383424835179455
+      }
+    },
+    {
+      "id": "manufacturing/lead/mixed-a/ar",
+      "metricDelta": {
+        "precisionAt3": 0,
+        "recallAt10": 0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "manufacturing/lead/mixed-a/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "manufacturing/lead/mixed-b/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0013725635068273512
+      }
+    },
+    {
+      "id": "manufacturing/lead/mixed-b/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "manufacturing/specialist/mixed-a/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "manufacturing/specialist/mixed-a/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "manufacturing/specialist/mixed-b/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "manufacturing/specialist/mixed-b/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "sales/lead/mixed-a/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "sales/lead/mixed-a/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "sales/lead/mixed-b/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "sales/lead/mixed-b/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "sales/specialist/mixed-a/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "sales/specialist/mixed-a/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "sales/specialist/mixed-b/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": -0.013775884153115814
+      }
+    },
+    {
+      "id": "sales/specialist/mixed-b/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "software/lead/mixed-a/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.03614574358637601
+      }
+    },
+    {
+      "id": "software/lead/mixed-a/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "software/lead/mixed-b/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0.0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "software/lead/mixed-b/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "software/specialist/mixed-a/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "software/specialist/mixed-a/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    },
+    {
+      "id": "software/specialist/mixed-b/ar",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.015616518592121875
+      }
+    },
+    {
+      "id": "software/specialist/mixed-b/en",
+      "metricDelta": {
+        "precisionAt3": 0.0,
+        "recallAt10": 0.0,
+        "mrr": 0,
+        "ndcg10": 0.0
+      }
+    }
+  ],
+  "limitations": "Different quantized batch composition from desktop; use identical runner for all model comparisons."
+}

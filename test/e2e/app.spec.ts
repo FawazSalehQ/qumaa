@@ -151,7 +151,7 @@ async function installOpenAIProvider(): Promise<void> {
 
 test('imports, runs Express search across tabs, saves it deliberately, and removes deleted candidates', async ({}, testInfo) => {
   const navigation = page.getByRole('navigation')
-  await expect(navigation.getByRole('button')).toHaveText(['Jobs', 'Library 0', 'Settings'])
+  await expect(navigation.getByRole('button')).toHaveText(['Jobs', 'Companies', 'Recruiter desk', 'Library 0', 'Settings'])
   await expect(navigation.getByRole('button', { name: 'Jobs', exact: true })).toHaveAttribute('aria-current', 'page')
   const expressEntry = page.getByRole('button', { name: 'Express search', exact: true })
   const newJobEntry = page.getByRole('button', { name: '+ New job', exact: true })
@@ -229,7 +229,7 @@ Maintain SOPs and food-safety standards`,
   await expect(page.getByRole('textbox', { name: 'Position', exact: true })).toHaveCount(0)
   await expect(page.getByRole('combobox', { name: 'Job status', exact: true })).toHaveCount(0)
   await expect(page.getByRole('textbox', { name: 'Education and certifications', exact: true })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: 'Use requirement lines', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Use requirement lines', exact: true })).toHaveCount(1)
   await expect(page.getByRole('button', { name: 'Save job', exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Find matches', exact: true })).toBeDisabled()
   await page.getByRole('textbox', { name: 'Job description', exact: true }).fill(originalPosting.jobDescription)
@@ -605,13 +605,7 @@ test('requires exact consent for a saved job rerank and preserves independent sh
     const [job] = await window.api.recruiting.listJobs()
     return window.api.recruiting.getJob(job.id)
   })
-  const legacyPreview = await page.evaluate(async (sessionId) => {
-    try {
-      await window.api.search.previewRerank({ sessionId })
-      return 'accepted'
-    } catch (error) { return String(error) }
-  }, localJob.response!.sessionId)
-  expect(legacyPreview).toContain('saved job rerank action')
+  expect(await page.evaluate(() => 'search' in window.api)).toBe(false)
 
   // Choose and manually order a shortlist before Claude reverses the candidate
   // ranking, so the two independently persisted orders can be distinguished.
@@ -1049,6 +1043,7 @@ test('saves a job, reviews and compares candidates, rediscovers CVs, and exports
   await page.getByLabel('Job description', { exact: true }).fill('Develop TypeScript services and support a reliable cloud platform.')
   await page.getByLabel('Requirements', { exact: true }).fill('TypeScript\nAWS')
   await page.getByRole('button', { name: 'Use requirement lines' }).click()
+  await page.getByLabel('Importance of criterion 1').selectOption('required')
   await page.getByLabel('Importance of criterion 2').selectOption('preferred')
   // Navigation keeps the job editor and later an unsaved review mounted.
   await page.getByRole('button', { name: 'Settings', exact: true }).click()
@@ -1074,7 +1069,7 @@ test('saves a job, reviews and compares candidates, rediscovers CVs, and exports
   await page.getByRole('button', { name: 'Compare candidates', exact: true }).click()
   const comparison = page.getByLabel('Candidate comparison table', { exact: true })
   await expect(comparison.getByText('Confirmed during the technical screen.', { exact: true })).toBeVisible()
-  await expect(comparison.getByText('Suggested passage · experience', { exact: true }).first()).toBeVisible()
+  await expect(comparison.getByText('Nearest passage · experience · Review needed', { exact: true }).first()).toBeVisible()
   await page.getByRole('button', { name: 'Shortlist 2', exact: true }).click()
   await page.getByRole('button', { name: 'Move Sam Parker up', exact: true }).click()
   await expect(page.locator('.recruit-candidate-table tbody tr').first()).toContainText('Sam Parker')
@@ -1113,7 +1108,8 @@ test('saves a job, reviews and compares candidates, rediscovers CVs, and exports
     const job = (await window.api.recruiting.listJobs())[0]
     return window.api.recruiting.getJob(job.id)
   })
-  expect(persisted.job.criteria.map((criterion) => criterion.importance)).toEqual(['required', 'preferred'])
+  expect(persisted.job.criteria.slice(0, 2).map((criterion) => criterion.importance)).toEqual(['required', 'preferred'])
+  expect(persisted.job.criteria.slice(2).every((criterion) => criterion.importance === 'unspecified')).toBe(true)
   expect(persisted.response?.results).toHaveLength(3)
 })
 

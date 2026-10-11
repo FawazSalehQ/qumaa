@@ -1,26 +1,31 @@
+import type { SavedHiringBudget } from '@shared/hiring-budget.js'
 /** Main-process ownership of persistent local recruiting workspaces. */
 import { createHash, randomUUID } from 'node:crypto'
-import { getDb, getSetting, listResumes } from '../db/index.js'
+import { blobToVector, getDb, getSetting, listResumes } from '../db/index.js'
 import { MODEL_ID } from '../embed/protocol.js'
+import { embedder } from '../embed/client.js'
+import { isIndexCommitted } from '../embed/reindex.js'
 import { SKILL_GAZETTEER_VERSION } from '../ingest/skills-backfill-plan.js'
+import { RESUME_DERIVATION_VERSION } from '../ingest/derivation-version.js'
 import { search } from '../search/rank.js'
 import { searchSessions } from '../search/sessions.js'
 import { RERANK_LIMIT } from '../search/rerankPrivacy.js'
 import { DEFAULT_RERANK_CONFIG, type RerankConfig } from '@shared/rerank.js'
 import { candidateWithProfile, profileForResume } from '@shared/recruiting.js'
-import type { CandidateProfile, CandidateReview, JobPlacement, JobPlacementCandidate, JobWorkspace, SavedJob } from '@shared/recruiting.js'
+import type { CandidateProfile, CandidateReview, Company, JobPlacement, JobPlacementCandidate, JobWorkspace, SavedJob } from '@shared/recruiting.js'
 import type { MatchResult, ResumeRef, ResumeSummary, SectionKind } from '@shared/types.js'
-import { parseRecruiting, recruitingSchemas, RECRUITING_LIMITS, recordId, type JobRecord, type SnapshotRecord } from './schema.js'
+import { assertJobCompanyReferences, parseRecruiting, recruitingSchemas, RECRUITING_LIMITS, recordId, type JobRecord, type SnapshotRecord } from './schema.js'
 import { putRecord, readRecord, readRecords, replaceExistingRecords } from './storage.js'
 import { temporarySearch } from './temporary.js'
+import { assertTalentVersionLink } from './talent.js'
 import { samePlacementPeople } from './job-status.js'
-import { applySavedRerank, deduplicateVersions, emptyProfile, isShortlisted, mergeProfiles, mergeReviews, passageExcerpt, postingText, suggestCriterionEvidence } from './planning.js'
+import { applySavedRerank, deduplicateVersions, emptyProfile, isShortlisted, mergeProfiles, mergeReviews, passageExcerpt, postingText, suggestSemanticCriterionEvidence } from './planning.js'
 
 function digest(value: unknown): string {
   return createHash('sha256').update(JSON.stringify(value)).digest('hex')
 }
 function modelFingerprint(): string {
-  return digest(['recruiting-ranking-v1', MODEL_ID, SKILL_GAZETTEER_VERSION, getSetting('embeddingModel')])
+  return digest(['recruiting-ranking-v3-unique-criteria', MODEL_ID, RESUME_DERIVATION_VERSION, SKILL_GAZETTEER_VERSION, getSetting('embeddingModel')])
 }
 function postingFingerprint(job: JobRecord): string {
   return digest([job.posting, job.criteria])
@@ -56,6 +61,24 @@ export function listProfiles(): CandidateProfile[] {
   return readRecords<CandidateProfile>(getDb(), 'profile')
 }
 
+export function listCompanies(): Company[] {
+  return readRecords<Company>(getDb(), 'company').sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id))
+}
+
+export function saveCompany(input: unknown): Company {
+  const args = parseRecruiting(recruitingSchemas.saveCompany, input)
+  const previous = args.id ? readRecord<Company>(getDb(), 'company', args.id) : null
+  if (args.id && !previous) throw new Error('This company no longer exists.')
+  const now = Math.max(Date.now(), (previous?.updatedAt ?? -1) + 1)
+  const company: Company = { ...args, id: previous?.id ?? randomUUID(), createdAt: previous?.createdAt ?? now, updatedAt: now }
+  putRecord(getDb(), 'company', company)
+  return company
+}
+
+function requireJobCompanies(job: Pick<JobRecord, 'companyId' | 'targetCompanies'>): void {
+  assertJobCompanyReferences(job, new Set(listCompanies().map((company) => company.id)))
+}
+
 function decorateJob(job: JobRecord, snapshot: SnapshotRecord | null, resumes: ResumeSummary[], profiles: CandidateProfile[], reviews: CandidateReview[]): SavedJob {
   const currentKeys = new Set(resumes.map((resume) => resume.recordKey))
   const owners = new Map(profiles.flatMap((profile) => profile.recordKeys.map((key) => [key, profile.candidateKey] as const)))
@@ -88,9 +111,17 @@ export function saveJob(input: unknown): SavedJob {
   const now = Math.max(Date.now(), (previous?.updatedAt ?? -1) + 1)
   const job: JobRecord = {
     ...previous,
+    ...(args.companyId !== undefined ? { companyId: args.companyId } : {}),
+    ...(args.budget !== undefined ? { budget: args.budget } : {}),
+    ...(args.hiringBudget !== undefined ? { hiringBudget: args.hiringBudget } : {}),
+    ...(args.targetCompanies !== undefined ? { targetCompanies: args.targetCompanies } : {}),
     id: previous?.id ?? randomUUID(), posting: args.posting, status: args.status, criteria: args.criteria,
     createdAt: previous?.createdAt ?? now, updatedAt: now, lastSearchedAt: previous?.lastSearchedAt ?? null,
     ...(!previous ? { statusHistory: [{ id: randomUUID(), status: 'open' as const, at: now, kind: 'created' as const }] } : {})
+  }
+  requireJobCompanies(job)
+  if (previous && (previous.companyId ?? null) !== (job.companyId ?? null) && readRecords<SavedHiringBudget>(getDb(), 'hiringBudget').some((plan) => plan.jobId === job.id)) {
+    throw new Error('Detach this job from its hiring budget plans before changing its company.')
   }
   getDb().transaction(() => {
     putRecord(getDb(), 'job', job)
@@ -105,6 +136,17 @@ export function saveJob(input: unknown): SavedJob {
     }
   })()
   return decorateJob(job, readRecord<SnapshotRecord>(getDb(), 'snapshot', job.id), listResumes(), listProfiles(), reviewsForJob(job.id))
+}
+
+/** Research progress changes only job metadata, preserving matches and decisions. */
+export function saveTargetCompanies(input: unknown): JobWorkspace {
+  const args = parseRecruiting(recruitingSchemas.saveTargetCompanies, input)
+  const previous = requireJob(args.jobId)
+  if (previous.updatedAt !== args.expectedUpdatedAt) throw new Error('This job changed. Reopen it before updating target companies.')
+  const job: JobRecord = { ...previous, targetCompanies: args.companies, updatedAt: Math.max(Date.now(), previous.updatedAt + 1) }
+  requireJobCompanies(job)
+  putRecord(getDb(), 'job', job)
+  return getJob(job.id)
 }
 
 /** Only this operation can transition a saved job or record who filled it. */
@@ -221,14 +263,30 @@ export function saveJobRerank(input: unknown, ordered: MatchResult[], config: Re
 }
 
 /** Scorecard evidence is loaded only for the open candidate or comparison. */
-export function getEvidence(input: unknown): JobWorkspace['evidence'] {
+export async function getEvidence(input: unknown): Promise<JobWorkspace['evidence']> {
   const { jobId, resumes } = parseRecruiting(recruitingSchemas.evidence, input)
   const { job } = workspaceRecord(jobId)
-  const statement = getDb().prepare('SELECT section, ordinal, text FROM chunks WHERE resume_id = ? ORDER BY ordinal')
+  resumes.forEach(requireResume)
+  if (!job.criteria.length) return Object.fromEntries(resumes.map((resume) => [resume.recordKey, []]))
+  if (!isIndexCommitted()) throw new Error('The search index is being updated. Try requirement evidence again when it is ready.')
+  const libraryAtStart = libraryFingerprint(listResumes())
+  const modelAtStart = modelFingerprint()
+  // One bounded embedding request, shared by every selected candidate. Source
+  // excerpts and recruiter importance do not enter these retrieval queries.
+  const texts = [...new Set(job.criteria.map((criterion) => criterion.text))]
+  const vectors = await embedder.embedQueries(texts)
+  const byText = new Map(texts.map((text, index) => [text, vectors[index]]))
+  const current = workspaceRecord(jobId).job
+  if (!isIndexCommitted() || modelAtStart !== modelFingerprint() || libraryAtStart !== libraryFingerprint(listResumes()) || postingFingerprint(job) !== postingFingerprint(current)) {
+    throw new Error('The job or library changed while finding requirement evidence. Reopen the candidate and try again.')
+  }
+  const statement = getDb().prepare('SELECT section, text, embedding FROM chunks WHERE resume_id = ? ORDER BY ordinal')
   return Object.fromEntries(resumes.map((resume) => {
     requireResume(resume)
-    const passages = statement.all(resume.id) as StoredPassage[]
-    return [resume.recordKey, suggestCriterionEvidence(job.criteria, passages)]
+    const rows = statement.all(resume.id) as Array<StoredPassage & { embedding: Buffer }>
+    return [resume.recordKey, suggestSemanticCriterionEvidence(job.criteria,
+      rows.map((row) => ({ section: row.section, text: row.text, vector: blobToVector(row.embedding) })),
+      job.criteria.map((criterion) => byText.get(criterion.text)!))]
   }))
 }
 
@@ -274,6 +332,7 @@ export async function searchJob(input: unknown): Promise<JobWorkspace> {
 
 export async function searchTemporary(input: unknown): Promise<JobWorkspace> {
   const args = parseRecruiting(recruitingSchemas.temporarySearch, input)
+  requireJobCompanies(args)
   const generation = temporarySearch.begin()
   const now = Date.now()
   const job: JobRecord = { ...args, id: randomUUID(), createdAt: now, updatedAt: now, lastSearchedAt: null }
@@ -295,6 +354,7 @@ export function saveTemporary(input: unknown): JobWorkspace {
   workspaceSessionSource(args, true)
   const transient = temporarySearch.get(args.jobId)
   if (!transient) throw new Error('This temporary search is no longer available.')
+  requireJobCompanies(transient.job)
   // Promotion writes the full snapshot, not the bounded 50-candidate rerank session.
   // A new ID prevents outstanding temporary capabilities from addressing the saved job.
   const id = randomUUID()
@@ -352,6 +412,7 @@ export function linkVersions(input: unknown): CandidateProfile {
   const primary = profileForResume(profiles, args.primary.recordKey) ?? emptyProfile(args.primary.recordKey)
   const version = profileForResume(profiles, args.version.recordKey) ?? emptyProfile(args.version.recordKey)
   if (primary.candidateKey === version.candidateKey) return primary
+  assertTalentVersionLink(primary.recordKeys, version.recordKeys)
   const merged = mergeProfiles(primary, version)
   const reviews = readRecords<CandidateReview>(getDb(), 'review')
   const transferred = reviews.filter((review) => review.candidateKey === version.candidateKey).map((review) => {

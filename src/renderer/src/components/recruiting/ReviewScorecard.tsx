@@ -1,3 +1,5 @@
+import { CriterionSource } from './JobCriteriaEditor.js'
+import { criterionImportanceLabel } from '@shared/job-requirements.js'
 import { useI18n } from '../../i18n.js'
 import { useLayoutEffect, useRef, useState } from 'react'
 import type { AssessmentStatus, CandidateReview, CriterionAssessment, JobWorkspace, ReviewStatus, SaveReviewInput } from '@shared/recruiting.js'
@@ -132,7 +134,7 @@ export default function ReviewScorecard({ workspace, match, busy, onSave, onClos
           <div className="recruit-section-head">
             <div>
               <h4>{t("Requirements scorecard")}</h4>
-              <p className="hint">{t("Suggested passages need your review. Missing information is a follow-up question, not a rejection.")}</p>
+              <p className="hint">{t("Nearest passages need review. Similar wording does not establish experience, ownership, qualifications, or eligibility.")}</p>
             </div>
             <button className="btn sm" type="button" onClick={() => onOpenCandidate(match)}>{t("Open candidate profile")}</button>
           </div>
@@ -144,11 +146,12 @@ export default function ReviewScorecard({ workspace, match, busy, onSave, onClos
               return (
                 <article key={criterion.id} className="recruit-criterion-review">
                   <div className="recruit-criterion-title">
-                    <span className={`recruit-importance ${criterion.importance}`}>{t(criterion.importance === 'required' ? 'Required' : 'Preferred')}</span>
+                    <span className={`recruit-importance ${criterion.importance}`}>{t(criterionImportanceLabel(criterion.importance))}</span>
                     <strong dir="auto">{criterion.text}</strong>
                   </div>
+                  <CriterionSource criterion={criterion} />
                   {passage ? <div className="recruit-passage">
-                    <span className="recruit-evidence-label">{t('Suggested passage · {section}', { section: t(passage.section) })}</span>
+                    <span className="recruit-evidence-label">{t('Nearest passage · {section} · Review needed', { section: t(passage.section) })}</span>
                     <blockquote dir="auto">{passage.text}</blockquote>
                     <button type="button" className="recruit-text-button" onClick={() => onOpenCandidate({ ...match, evidence: [passage, ...match.evidence.filter((item) => item.text !== passage.text)] })}>{t("Read with candidate evidence")}</button>
                   </div> : <p className="hint">{evidenceLoading ? t('Suggested evidence has not loaded yet.') : t('No suggested passage found. Check the full CV or ask the candidate.')}</p>}

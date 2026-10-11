@@ -1,0 +1,231 @@
+{
+  "schemaVersion": 2,
+  "status": "completed",
+  "ranAt": "2026-09-23T08:29:21.377Z",
+  "provenance": {
+    "modelVectorId": "multilingual-e5-small@761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+    "nodeVersion": "24.18.1",
+    "electronVersion": "43.4.1",
+    "sourceHead": "48cbbc09dd61df162a945aeedd235b30c7577821",
+    "sourceTreeSha256": "0b9f33b5e60b1e08bcb0e71357df9c9a1ca03a1e8cec4a060470bcb33ae09332",
+    "runtimeBundleSha256": "6ffe2144d0b4cf1a9496f8ec6038b45999bbba3fd151f93113f6e5263d7060eb",
+    "postingSha256": "0bf3ef42c6fdba9ac5b674eec5f2e172c70cf08f6be45c9e6b6c7ee7f2ab6cb6",
+    "labelsSha256": "90c5780b6ef9f5729ce0f65b2746ca61bb6b8090b9147fdb0add85626083d2f7",
+    "labelsFileSha256": "941843917721b93a79043ebe550911ae40abe8ba7c84872d4e8abf951e9392b8",
+    "corpusSha256": "cea1e4c79bcd23875c2e2dccb8c3b335f34e4b66fd84a5a5ff00db6a86a1e84a",
+    "corpusFiles": [
+      {
+        "file": "H02.md",
+        "sha256": "34fc76ae41013bad9829f833141e03603ff8c579009fa407a421dee602ad0cb8"
+      },
+      {
+        "file": "H03.md",
+        "sha256": "0fc424318eb5a38cbe15b8860cdd2c25285cb4c90a5c359c8346eec745e1414f"
+      },
+      {
+        "file": "H06.md",
+        "sha256": "7e8ebe2bd5a6fbe7a9587dd73271845e746552e7385028922e7b96447eae8a70"
+      },
+      {
+        "file": "H08.md",
+        "sha256": "6bf9606ba8e25411a835d3f5159ecaee25728d572c459de0506997fd991576d8"
+      },
+      {
+        "file": "H11.md",
+        "sha256": "17d636473ff006030fb0ddc72683d2cb8b529099cbad038136a2113803d8600e"
+      },
+      {
+        "file": "H12.md",
+        "sha256": "eb0962fa00ba3a586921cf4aebd7b13156b0e85a88c56ec5398d0156185da5af"
+      }
+    ]
+  },
+  "ignoredUnlabelled": 0,
+  "corpusSize": 6,
+  "imported": 6,
+  "ingestMs": 591,
+  "searchMs": 675,
+  "metrics": {
+    "precisionAt3": 0.6666666666666666,
+    "recallAt3": 0.6666666666666666,
+    "recallAt10": 1,
+    "top3TargetCoverage": 0.6666666666666666,
+    "reciprocalRank": 1,
+    "mrr": 1,
+    "ndcg10": 0.9909274328465879
+  },
+  "tier1Ranks": [
+    1,
+    2,
+    4
+  ],
+  "meanByTier": {
+    "1": 0.5984308398183634,
+    "2": 0.47195414483465103,
+    "3": 0.26342188994728094,
+    "4": 0.0674120983095497
+  },
+  "spread": 0.7197523997257753,
+  "requiredSkills": [
+    "Well Planning",
+    "Drilling Fluids",
+    "Drilling Hydraulics",
+    "Torque and Drag",
+    "Well Control",
+    "Bottomhole Assembly"
+  ],
+  "nearDuplicates": [],
+  "problems": [],
+  "ranking": [
+    {
+      "rank": 1,
+      "tier": 1,
+      "file": "H03.md",
+      "score": 0.7871644980353251,
+      "breakdown": {
+        "semantic": 1,
+        "lexical": 0.14415582350995837,
+        "skills": 0.8333333333333334
+      },
+      "evidence": [
+        {
+          "section": "experience",
+          "similarity": 0.835954028345179
+        },
+        {
+          "section": "experience",
+          "similarity": 0.8346826132918675
+        },
+        {
+          "section": "other",
+          "similarity": 0.8017744236282954
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "tier": 1,
+      "file": "H08.md",
+      "score": 0.5940229888147236,
+      "breakdown": {
+        "semantic": 0.8527690705722246,
+        "lexical": 0,
+        "skills": 0.5
+      },
+      "evidence": [
+        {
+          "section": "experience",
+          "similarity": 0.8425761674559318
+        },
+        {
+          "section": "experience",
+          "similarity": 0.8375949675394565
+        },
+        {
+          "section": "other",
+          "similarity": 0.8220346783585462
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "tier": 2,
+      "file": "H02.md",
+      "score": 0.47195414483465103,
+      "breakdown": {
+        "semantic": 0.26718935424482,
+        "lexical": 1,
+        "skills": 0.5
+      },
+      "evidence": [
+        {
+          "section": "experience",
+          "similarity": 0.8420103120878788
+        },
+        {
+          "section": "experience",
+          "similarity": 0.8292451266402113
+        },
+        {
+          "section": "other",
+          "similarity": 0.8143900958040373
+        }
+      ]
+    },
+    {
+      "rank": 4,
+      "tier": 1,
+      "file": "H11.md",
+      "score": 0.4141050326050415,
+      "breakdown": {
+        "semantic": 0.3974214209001955,
+        "lexical": 0.14428292221633643,
+        "skills": 0.6666666666666666
+      },
+      "evidence": [
+        {
+          "section": "experience",
+          "similarity": 0.8312199485677031
+        },
+        {
+          "section": "experience",
+          "similarity": 0.8309066087418524
+        },
+        {
+          "section": "other",
+          "similarity": 0.8088038731855787
+        }
+      ]
+    },
+    {
+      "rank": 5,
+      "tier": 3,
+      "file": "H12.md",
+      "score": 0.26342188994728094,
+      "breakdown": {
+        "semantic": 0.2826456805176646,
+        "lexical": 0.33150049497949374,
+        "skills": 0.16666666666666666
+      },
+      "evidence": [
+        {
+          "section": "other",
+          "similarity": 0.8343634233270671
+        },
+        {
+          "section": "experience",
+          "similarity": 0.8252177529428076
+        },
+        {
+          "section": "experience",
+          "similarity": 0.8059602072185595
+        }
+      ]
+    },
+    {
+      "rank": 6,
+      "tier": 4,
+      "file": "H06.md",
+      "score": 0.0674120983095497,
+      "breakdown": {
+        "semantic": 0,
+        "lexical": 0.3370604915477485,
+        "skills": 0
+      },
+      "evidence": [
+        {
+          "section": "experience",
+          "similarity": 0.8345886047012275
+        },
+        {
+          "section": "experience",
+          "similarity": 0.8249897460787952
+        },
+        {
+          "section": "other",
+          "similarity": 0.814371621843316
+        }
+      ]
+    }
+  ]
+}

@@ -244,3 +244,38 @@
   .recruit-hiring-cards { grid-template-columns: minmax(0, 1fr); }
   .recruit-status-dialog { padding: 18px; }
 }
+.recruit-company-filter { display: grid; gap: 12px; padding: 16px; border-bottom: 1px solid var(--border); }
+.recruit-company-filter .recruit-text-button { justify-self: start; }
+.recruit-budget-editor { padding: 16px; border: 1px solid var(--border); background: var(--bg-strip); border-radius: var(--radius-sm); }
+.recruit-budget-toggle { display: flex; align-items: center; gap: 9px; color: var(--text); font-size: 12px; font-weight: 500; }
+.recruit-budget-editor > .hint { margin: 10px 0 0; }
+.recruit-budget-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
+.recruit-budget-fields > .hint { grid-column: 1 / -1; margin: 0; }
+.recruit-job-context { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 0 24px 20px; padding: 16px; background: var(--bg-strip); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.recruit-job-context > div { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.recruit-job-context strong { font-size: 13px; font-weight: 500; overflow-wrap: anywhere; }
+.recruit-job-context > details { grid-column: 1 / -1; }
+.recruit-company-context { font-size: 12px; color: var(--text-dim); line-height: 1.7; }
+.recruit-company-context summary { cursor: pointer; }
+.recruit-company-context p { margin: 10px 0 0; }
+.recruit-target-companies { padding: 24px; }
+.recruit-target-companies h4 { margin-bottom: 5px; }
+.recruit-target-companies .hint { margin-bottom: 0; }
+.recruit-target-add { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: end; padding: 16px; margin-bottom: 20px; background: var(--bg-strip); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.recruit-target-add > .hint { grid-column: 1 / -1; }
+.recruit-target-list { display: grid; gap: 14px; }
+.recruit-target-card { padding: 18px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; }
+.recruit-target-card.excluded { border-inline-start: 3px solid var(--text-faint); }
+.recruit-target-card.mapped { border-inline-start: 3px solid var(--good); }
+.recruit-target-card.researching { border-inline-start: 3px solid var(--accent); }
+.recruit-target-card p { overflow-wrap: anywhere; line-height: 1.7; }
+.recruit-tabs { flex-wrap: wrap; }
+@media (max-width: 760px) {
+  .recruit-budget-fields, .recruit-job-context, .recruit-target-add { grid-template-columns: minmax(0, 1fr); }
+  .recruit-target-companies { padding: 16px; }
+}
+
+.recruit-criterion-source { margin: .35rem 0 .75rem; margin-inline-start: 1.5rem; color: var(--text-dim); font-size: .85rem; }
+.recruit-criterion-source summary { cursor: pointer; }
+.recruit-criterion-source blockquote { margin: .5rem 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.recruit-importance.unspecified { background: var(--bg-strip); color: var(--text-faint); }

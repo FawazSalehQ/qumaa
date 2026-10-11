@@ -9,6 +9,57 @@ export interface JobPosting {
 
 export type JobStatus = 'open' | 'on-hold' | 'filled' | 'archived'
 
+/** Per-field bound for company industries, locations and contact details. */
+export const COMPANY_DETAIL_LIMIT = 50
+export type CompanyDetailField = 'industry' | 'location' | 'contactName' | 'contactEmail'
+export function normalizeCompanyDetailKey(value: string): string {
+  return value.trim().normalize('NFKC').toLowerCase()
+}
+
+export interface Company {
+  id: string
+  name: string
+  industry: string[]
+  location: string[]
+  website: string
+  contactName: string[]
+  contactEmail: string[]
+  note: string
+  createdAt: number
+  updatedAt: number
+}
+
+/** Legacy callers can supply one string; reads always return arrays. */
+export type SaveCompanyInput = Omit<Company, 'id' | 'createdAt' | 'updatedAt' | CompanyDetailField>
+  & Record<CompanyDetailField, string | string[]> & { id?: string }
+
+export interface JobBudget {
+  min: number
+  max: number
+  currency: string
+  period: 'monthly' | 'annual' | 'hourly'
+}
+
+/** Total allocation for filling the vacancy, independent of recurring salary. */
+export interface JobHiringBudget {
+  min: number
+  max: number
+  currency: string
+}
+
+export interface JobTargetCompany {
+  companyId: string
+  status: 'to-research' | 'researching' | 'mapped' | 'excluded'
+  focusRoles: string
+  note: string
+}
+
+export interface SaveTargetCompaniesInput {
+  jobId: string
+  expectedUpdatedAt: number
+  companies: JobTargetCompany[]
+}
+
 /** Main-process snapshots of the people selected for a hiring decision. */
 export interface JobPlacementCandidate {
   recordKey: string | null
@@ -36,12 +87,14 @@ export interface ChangeJobStatusInput {
   placement?: { hired: ResumeRef; backup2?: ResumeRef; backup3?: ResumeRef }
 }
 export type ReviewStatus = 'unreviewed' | 'maybe' | 'shortlisted' | 'contacted' | 'not-proceeding'
-export type AssessmentStatus = 'unreviewed' | 'evidence-found' | 'needs-clarification' | 'not-stated' | 'confirmed'
+export type AssessmentStatus = 'unreviewed' | 'evidence-found' | 'needs-clarification' | 'not-stated' | 'confirmed' | 'contradicted'
 
 export interface JobCriterion {
   id: string
   text: string
-  importance: 'required' | 'preferred'
+  importance: 'required' | 'preferred' | 'unspecified'
+  /** Original vacancy wording retained when the recruiter edits the criterion. */
+  source?: { field: 'jobDescription' | 'requirements' | 'educationAndCertifications'; text: string }
 }
 
 export interface CriterionAssessment {
@@ -82,6 +135,10 @@ export interface CandidateProfile {
 
 export interface SavedJob {
   id: string
+  companyId?: string | null
+  budget?: JobBudget | null
+  hiringBudget?: JobHiringBudget | null
+  targetCompanies?: JobTargetCompany[]
   posting: JobPosting
   status: JobStatus
   criteria: JobCriterion[]
@@ -100,6 +157,9 @@ export interface SavedJob {
 
 export interface CriterionEvidence {
   criterionId: string
+  /** Retrieval locates a passage; it never confirms a qualification. */
+  method?: 'lexical' | 'semantic'
+  reviewNeeded?: true
   passage: Evidence | null
 }
 
@@ -116,6 +176,10 @@ export interface JobWorkspace {
 
 export interface SaveJobInput {
   id?: string
+  companyId?: string | null
+  budget?: JobBudget | null
+  hiringBudget?: JobHiringBudget | null
+  targetCompanies?: JobTargetCompany[]
   posting: JobPosting
   status: JobStatus
   criteria: JobCriterion[]
@@ -135,6 +199,9 @@ export type SaveProfileInput = Omit<CandidateProfile, 'candidateKey' | 'recordKe
 }
 
 export interface RecruitingApi {
+  listCompanies(): Promise<Company[]>
+  saveCompany(input: SaveCompanyInput): Promise<Company>
+  saveTargetCompanies(input: SaveTargetCompaniesInput): Promise<JobWorkspace>
   listJobs(): Promise<SavedJob[]>
   saveJob(input: SaveJobInput): Promise<SavedJob>
   changeJobStatus(input: ChangeJobStatusInput): Promise<JobWorkspace>

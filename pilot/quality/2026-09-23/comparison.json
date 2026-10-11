@@ -1,0 +1,280 @@
+{
+  "date": "2026-09-23",
+  "beforeRuntime": "Previously built September 22 bundle, run before rebuilding today. Source fingerprint captures the live checkout during concurrent edits and is not proof of the pre-change runtime source. Runtime bundle fingerprints identify what ran.",
+  "cases": {
+    "before-fnb": {
+      "ranAt": "2026-09-23T08:11:21.126Z",
+      "corpusSize": 100,
+      "imported": 100,
+      "ignoredUnlabelled": 2,
+      "metrics": {
+        "precisionAt3": 0.6666666666666666,
+        "recallAt3": 0.25,
+        "recallAt10": 0.625,
+        "top3TargetCoverage": 0.6666666666666666,
+        "reciprocalRank": 1,
+        "mrr": 1,
+        "ndcg10": 0.7858801280838563
+      },
+      "tier1Ranks": [
+        1,
+        3,
+        4,
+        8,
+        10,
+        11,
+        17,
+        18
+      ],
+      "requiredSkills": [
+        "Training",
+        "Arabic",
+        "English",
+        "SOPs",
+        "Coaching",
+        "Facilitation",
+        "KPIs",
+        "Food & Beverage",
+        "HACCP",
+        "Food Safety",
+        "Front of House",
+        "Back of House",
+        "Restaurant Operations",
+        "Menu Development",
+        "Brand Standards",
+        "Hospitality",
+        "Catering"
+      ],
+      "problems": [],
+      "provenance": {
+        "modelVectorId": "multilingual-e5-small@761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+        "nodeVersion": "24.18.1",
+        "electronVersion": "43.4.1",
+        "sourceHead": "48cbbc09dd61df162a945aeedd235b30c7577821",
+        "sourceTreeSha256": "3870785cf00e4df1810075f9c1d9b2155c854e88fdf483598a94faed55d10b57",
+        "runtimeBundleSha256": "62dd61e541c03c45d3b3ba283828514be927d5b926b4049ba30b680bd29ded25",
+        "postingSha256": "806bee2c364a2fd11ac484854eeb44bfdac327ded108177e1edd6f4a54f35295",
+        "labelsSha256": "903b0fbadc9a85acd560a4c5499ea687272c711ddb7a563b7e592c7dcad8d2b9",
+        "labelsFileSha256": null,
+        "corpusSha256": "1e67da840a4e24b8ab6a7c04f7e2e11fa0ab418b9061cc90dc5848ff6f6f8dc2"
+      }
+    },
+    "after-fnb": {
+      "ranAt": "2026-09-23T08:20:35.378Z",
+      "corpusSize": 100,
+      "imported": 100,
+      "ignoredUnlabelled": 2,
+      "metrics": {
+        "precisionAt3": 0.6666666666666666,
+        "recallAt3": 0.25,
+        "recallAt10": 0.625,
+        "top3TargetCoverage": 0.6666666666666666,
+        "reciprocalRank": 1,
+        "mrr": 1,
+        "ndcg10": 0.7847732081778287
+      },
+      "tier1Ranks": [
+        1,
+        3,
+        4,
+        9,
+        10,
+        11,
+        17,
+        18
+      ],
+      "requiredSkills": [
+        "Training",
+        "Arabic",
+        "English",
+        "SOPs",
+        "Coaching",
+        "Facilitation",
+        "KPIs",
+        "Food & Beverage",
+        "HACCP",
+        "Food Safety",
+        "Front of House",
+        "Back of House",
+        "Restaurant Operations",
+        "Menu Development",
+        "Brand Standards",
+        "Hospitality",
+        "Catering"
+      ],
+      "problems": [],
+      "provenance": {
+        "modelVectorId": "multilingual-e5-small@761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+        "nodeVersion": "24.18.1",
+        "electronVersion": "43.4.1",
+        "sourceHead": "48cbbc09dd61df162a945aeedd235b30c7577821",
+        "sourceTreeSha256": "0b9f33b5e60b1e08bcb0e71357df9c9a1ca03a1e8cec4a060470bcb33ae09332",
+        "runtimeBundleSha256": "6ffe2144d0b4cf1a9496f8ec6038b45999bbba3fd151f93113f6e5263d7060eb",
+        "postingSha256": "806bee2c364a2fd11ac484854eeb44bfdac327ded108177e1edd6f4a54f35295",
+        "labelsSha256": "903b0fbadc9a85acd560a4c5499ea687272c711ddb7a563b7e592c7dcad8d2b9",
+        "labelsFileSha256": null,
+        "corpusSha256": "1e67da840a4e24b8ab6a7c04f7e2e11fa0ab418b9061cc90dc5848ff6f6f8dc2"
+      }
+    },
+    "before-drilling-en": {
+      "ranAt": "2026-09-23T08:12:09.248Z",
+      "corpusSize": 16,
+      "imported": 16,
+      "ignoredUnlabelled": 0,
+      "metrics": {
+        "precisionAt3": 0.3333333333333333,
+        "recallAt3": 0.25,
+        "recallAt10": 0.5,
+        "top3TargetCoverage": 0.3333333333333333,
+        "reciprocalRank": 1,
+        "mrr": 1,
+        "ndcg10": 0.71628430234591
+      },
+      "tier1Ranks": [
+        1,
+        4,
+        13,
+        15
+      ],
+      "requiredSkills": [
+        "Training"
+      ],
+      "problems": [],
+      "provenance": {
+        "modelVectorId": "multilingual-e5-small@761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+        "nodeVersion": "24.18.1",
+        "electronVersion": "43.4.1",
+        "sourceHead": "48cbbc09dd61df162a945aeedd235b30c7577821",
+        "sourceTreeSha256": "7256341a8d8ea6a5c012c5f258ad7b773cf95a20a43bcbdca8d3f8f0fb10ae25",
+        "runtimeBundleSha256": "62dd61e541c03c45d3b3ba283828514be927d5b926b4049ba30b680bd29ded25",
+        "postingSha256": "a0221ce709eeabceebed29c5fcfece933af8f810dba071da6abf5003d7d24819",
+        "labelsSha256": "b66bc42bbc286c80e00691de05f2bd56a36026255a805f368c342c2999ab516c",
+        "labelsFileSha256": "9b66cd386fc219b7f6a983a622161080feedd80f1f5d7b448c294a49c6e88098",
+        "corpusSha256": "2c9738bc10800521843d31f0613fbb2256ffff6f83b330929d6390662f03c5ff"
+      }
+    },
+    "after-drilling-en": {
+      "ranAt": "2026-09-23T08:20:38.022Z",
+      "corpusSize": 16,
+      "imported": 16,
+      "ignoredUnlabelled": 0,
+      "metrics": {
+        "precisionAt3": 0.3333333333333333,
+        "recallAt3": 0.25,
+        "recallAt10": 0.75,
+        "top3TargetCoverage": 0.3333333333333333,
+        "reciprocalRank": 1,
+        "mrr": 1,
+        "ndcg10": 0.7552496405348124
+      },
+      "tier1Ranks": [
+        1,
+        4,
+        10,
+        15
+      ],
+      "requiredSkills": [
+        "Training",
+        "Well Planning",
+        "Drilling Fluids",
+        "Drilling Hydraulics",
+        "Torque and Drag",
+        "Well Control",
+        "Bottomhole Assembly"
+      ],
+      "problems": [],
+      "provenance": {
+        "modelVectorId": "multilingual-e5-small@761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+        "nodeVersion": "24.18.1",
+        "electronVersion": "43.4.1",
+        "sourceHead": "48cbbc09dd61df162a945aeedd235b30c7577821",
+        "sourceTreeSha256": "0b9f33b5e60b1e08bcb0e71357df9c9a1ca03a1e8cec4a060470bcb33ae09332",
+        "runtimeBundleSha256": "6ffe2144d0b4cf1a9496f8ec6038b45999bbba3fd151f93113f6e5263d7060eb",
+        "postingSha256": "a0221ce709eeabceebed29c5fcfece933af8f810dba071da6abf5003d7d24819",
+        "labelsSha256": "b66bc42bbc286c80e00691de05f2bd56a36026255a805f368c342c2999ab516c",
+        "labelsFileSha256": "9b66cd386fc219b7f6a983a622161080feedd80f1f5d7b448c294a49c6e88098",
+        "corpusSha256": "2c9738bc10800521843d31f0613fbb2256ffff6f83b330929d6390662f03c5ff"
+      }
+    },
+    "before-drilling-ar": {
+      "ranAt": "2026-09-23T08:12:59.829Z",
+      "corpusSize": 16,
+      "imported": 16,
+      "ignoredUnlabelled": 0,
+      "metrics": {
+        "precisionAt3": 0.3333333333333333,
+        "recallAt3": 0.25,
+        "recallAt10": 0.5,
+        "top3TargetCoverage": 0.3333333333333333,
+        "reciprocalRank": 1,
+        "mrr": 1,
+        "ndcg10": 0.6624812910234603
+      },
+      "tier1Ranks": [
+        1,
+        6,
+        12,
+        16
+      ],
+      "requiredSkills": [
+        "Emergency Care",
+        "Training"
+      ],
+      "problems": [],
+      "provenance": {
+        "modelVectorId": "multilingual-e5-small@761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+        "nodeVersion": "24.18.1",
+        "electronVersion": "43.4.1",
+        "sourceHead": "48cbbc09dd61df162a945aeedd235b30c7577821",
+        "sourceTreeSha256": "22752ddbb5329d2b419b1d07c56a156e3595094b216f9904b48736737073f72d",
+        "runtimeBundleSha256": "62dd61e541c03c45d3b3ba283828514be927d5b926b4049ba30b680bd29ded25",
+        "postingSha256": "1872c7f8d4ab31db6bb5af8929892d3171803bfd92939010659d1bcfa6a28740",
+        "labelsSha256": "b66bc42bbc286c80e00691de05f2bd56a36026255a805f368c342c2999ab516c",
+        "labelsFileSha256": "9b66cd386fc219b7f6a983a622161080feedd80f1f5d7b448c294a49c6e88098",
+        "corpusSha256": "2c9738bc10800521843d31f0613fbb2256ffff6f83b330929d6390662f03c5ff"
+      }
+    },
+    "after-drilling-ar": {
+      "ranAt": "2026-09-23T08:20:40.787Z",
+      "corpusSize": 16,
+      "imported": 16,
+      "ignoredUnlabelled": 0,
+      "metrics": {
+        "precisionAt3": 0.3333333333333333,
+        "recallAt3": 0.25,
+        "recallAt10": 0.75,
+        "top3TargetCoverage": 0.3333333333333333,
+        "reciprocalRank": 1,
+        "mrr": 1,
+        "ndcg10": 0.7494427228362216
+      },
+      "tier1Ranks": [
+        1,
+        6,
+        9,
+        12
+      ],
+      "requiredSkills": [
+        "Training",
+        "Well Planning",
+        "Drilling Fluids",
+        "Drilling Hydraulics",
+        "Torque and Drag",
+        "Well Control"
+      ],
+      "problems": [],
+      "provenance": {
+        "modelVectorId": "multilingual-e5-small@761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+        "nodeVersion": "24.18.1",
+        "electronVersion": "43.4.1",
+        "sourceHead": "48cbbc09dd61df162a945aeedd235b30c7577821",
+        "sourceTreeSha256": "0b9f33b5e60b1e08bcb0e71357df9c9a1ca03a1e8cec4a060470bcb33ae09332",
+        "runtimeBundleSha256": "6ffe2144d0b4cf1a9496f8ec6038b45999bbba3fd151f93113f6e5263d7060eb",
+        "postingSha256": "1872c7f8d4ab31db6bb5af8929892d3171803bfd92939010659d1bcfa6a28740",
+        "labelsSha256": "b66bc42bbc286c80e00691de05f2bd56a36026255a805f368c342c2999ab516c",
+        "labelsFileSha256": "9b66cd386fc219b7f6a983a622161080feedd80f1f5d7b448c294a49c6e88098",
+        "corpusSha256": "2c9738bc10800521843d31f0613fbb2256ffff6f83b330929d6390662f03c5ff"
+      }
+    }
+  }
+}

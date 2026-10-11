@@ -1,0 +1,1145 @@
+{
+  "schemaVersion": 1,
+  "status": "exploratory-development-only",
+  "formula": {
+    "baseline": ".55 * globally normalized semantic + .20 * lexical + .25 * dictionary overlap",
+    "languageSemantic25": "semantic = .75 * existing semantic + .25 * minmax(existing semantic within known CV language); original lexical/skills unchanged",
+    "languageSemantic50": "semantic = .50 * existing semantic + .50 * minmax(existing semantic within known CV language); original lexical/skills unchanged",
+    "languageSemantic100": "semantic = minmax(existing semantic within known CV language); original lexical/skills unchanged",
+    "languageSemantic100WithoutLexical": "(.55 * within-language minmax semantic + .25 * dictionary overlap) / .80",
+    "minmax": "(x-min)/(max-min); range < 1e-9 maps to 1 if max>0 else 0, matching normalizeScores",
+    "ties": "Original manifest family ingestion order then numeric career ID."
+  },
+  "provenance": {
+    "inputs": [
+      {
+        "file": "construction--lead--mixed-a--ar.json",
+        "sha256": "4144d8ff6a0078709413ebedd85ec2b8d9c0b4fd0b131dde21af570000a86d38"
+      },
+      {
+        "file": "construction--lead--mixed-a--en.json",
+        "sha256": "484391958b876c07c00f40dd495d1ff82c7d8a07e747ffd3aa827d56ce7a649c"
+      },
+      {
+        "file": "construction--lead--mixed-b--ar.json",
+        "sha256": "27b094ba8b931dc50cfc9a5f15be01932fa73b118c451776f68e9cd364221aa7"
+      },
+      {
+        "file": "construction--lead--mixed-b--en.json",
+        "sha256": "a258f0404b5655b2d2c96b59f0afd6c629b07db68aaf97e1d48c2fa763a5dcfb"
+      },
+      {
+        "file": "construction--specialist--mixed-a--ar.json",
+        "sha256": "abfb53eddc05f0c8b863e632e482243666a89733941c0e1a8e8821c14f00e262"
+      },
+      {
+        "file": "construction--specialist--mixed-a--en.json",
+        "sha256": "7f100e6d7f733df296cc24301d29eafa326736ac7b8321123805d84f8c1a44c0"
+      },
+      {
+        "file": "construction--specialist--mixed-b--ar.json",
+        "sha256": "11213053233d6bf3945df4711a08d1f28fc4a2ea975b47c649bdf003e8e40c2b"
+      },
+      {
+        "file": "construction--specialist--mixed-b--en.json",
+        "sha256": "f5f48e263b5c637fa54ae574cb15a0172299cb3e68908ca68a040fac2a071f98"
+      },
+      {
+        "file": "energy--lead--mixed-a--ar.json",
+        "sha256": "0b3a79cdc153da05d343a0207d9d745fa4449de9bb7f51f639b29f5e6a7e2013"
+      },
+      {
+        "file": "energy--lead--mixed-a--en.json",
+        "sha256": "e24d43a2fa5ae01afb38c6f884091ea98658d91b68369a4cd1da1c649062834d"
+      },
+      {
+        "file": "energy--lead--mixed-b--ar.json",
+        "sha256": "16de15985f9cff5420c1a65f06a2042f81b696c13e9efc0590a2b341d2586a37"
+      },
+      {
+        "file": "energy--lead--mixed-b--en.json",
+        "sha256": "4304e3944ef217de9f957396402993e8d39ae62518bfb0955047f76372a4c598"
+      },
+      {
+        "file": "energy--specialist--mixed-a--ar.json",
+        "sha256": "0b1baba19e57f7864497320a5f0191045194bbac22d1236cfad6fc158a609728"
+      },
+      {
+        "file": "energy--specialist--mixed-a--en.json",
+        "sha256": "7c0cde0ecea14b7d626a4447da436b4dce5951dfcf9aa861dc3864a97bf04352"
+      },
+      {
+        "file": "energy--specialist--mixed-b--ar.json",
+        "sha256": "a2e4feeb2195b73924451e5fe7393f0045d7930cc67289b3c8a4144f2596ba73"
+      },
+      {
+        "file": "energy--specialist--mixed-b--en.json",
+        "sha256": "f0c63f4415c64500547c0ee1658a23ca25aee02648ce6dc33395ba1903b2e250"
+      },
+      {
+        "file": "finance--lead--mixed-a--ar.json",
+        "sha256": "f5b522d531844abdb1ce72f012f07b34973a2ca3a86c5b31d9ad546b81973bca"
+      },
+      {
+        "file": "finance--lead--mixed-a--en.json",
+        "sha256": "72efb40c1537d3aa57a1e12295516b50452a24e55a63525248ebb08eec58cfc8"
+      },
+      {
+        "file": "finance--lead--mixed-b--ar.json",
+        "sha256": "18ee9b0721c098bfcdfeff9594b56573884a167e2ab5fa060ddfee726f64688f"
+      },
+      {
+        "file": "finance--lead--mixed-b--en.json",
+        "sha256": "4b1362b9c6501a6378b2103fea2dc810e8ad8f000680cf47a78f2563d730ceb5"
+      },
+      {
+        "file": "finance--specialist--mixed-a--ar.json",
+        "sha256": "e8c1184abfe2715d2fee50f7f79b466f7828fbb7bda155701f729db62d72352c"
+      },
+      {
+        "file": "finance--specialist--mixed-a--en.json",
+        "sha256": "e1314215f211003feb99979be91c51cd277f3db24ae4a940169ad1a0e7bf3d16"
+      },
+      {
+        "file": "finance--specialist--mixed-b--ar.json",
+        "sha256": "361eab5336fb685e28879e0c70626457be135db9de567dae9f4dff41ef224528"
+      },
+      {
+        "file": "finance--specialist--mixed-b--en.json",
+        "sha256": "ab0027ae4f497bc4d13dc789385aa448d4ea366f3ab35eaf64f5a50fbcff1c88"
+      },
+      {
+        "file": "healthcare--lead--mixed-a--ar.json",
+        "sha256": "bf977bc5a28519bc2d2a50d8ced70fadfd8a48449b61dbab6fd76837bdbf4f41"
+      },
+      {
+        "file": "healthcare--lead--mixed-a--en.json",
+        "sha256": "fd782303ba43c27f08b2b61dd3c9d848d7a272f53a49b6e25135371ed62cef7f"
+      },
+      {
+        "file": "healthcare--lead--mixed-b--ar.json",
+        "sha256": "3b1276df2cdd4a5c3df898eb1710a7958bef58b9c8c3c4a999979540d775e315"
+      },
+      {
+        "file": "healthcare--lead--mixed-b--en.json",
+        "sha256": "3b907d3e4c117e012a9fe7230792bc4315ebfcfdbba6ff6aca52741f4bbaebd9"
+      },
+      {
+        "file": "healthcare--specialist--mixed-a--ar.json",
+        "sha256": "28f5730e3287e9b8226e95df6a42d126c7bbeee43a9e605e849cf440be7f8232"
+      },
+      {
+        "file": "healthcare--specialist--mixed-a--en.json",
+        "sha256": "c12d39d3042024be6d47ecde9979d529add3eddc822131de40ad998c1015daf8"
+      },
+      {
+        "file": "healthcare--specialist--mixed-b--ar.json",
+        "sha256": "6502e840d67ab2f60287e05616bcb4428e27538faca4016308878d7745bb0135"
+      },
+      {
+        "file": "healthcare--specialist--mixed-b--en.json",
+        "sha256": "7d1bad67bec013abacc2499b309ea654c9465511f9b913fff5c3c43765e3593a"
+      },
+      {
+        "file": "hospitality--lead--mixed-a--ar.json",
+        "sha256": "f753a137e72e7dc7be5d94288ab618a36a82eccce63f741194867a3d8c561529"
+      },
+      {
+        "file": "hospitality--lead--mixed-a--en.json",
+        "sha256": "09e63ad996c621ecfa1c3ed435bee93d54b3adddc28f7da4f5b2bb647b0c9448"
+      },
+      {
+        "file": "hospitality--lead--mixed-b--ar.json",
+        "sha256": "e3ee211c22be985a884575ff31470d1b4e173db149a568d169572198f3ba2498"
+      },
+      {
+        "file": "hospitality--lead--mixed-b--en.json",
+        "sha256": "dd254e622b4d7ca2d54be5f74b89cb3bde97b43df516ce47a15c22ba9aae0bef"
+      },
+      {
+        "file": "hospitality--specialist--mixed-a--ar.json",
+        "sha256": "2faaf4b5cff3854b7cece1cb6b75c94606bd88212a227c2aa87cdc49b41e0626"
+      },
+      {
+        "file": "hospitality--specialist--mixed-a--en.json",
+        "sha256": "d60bd53af20e46286f2d335d978d33ae8cd4b6cfe53dcb8d0c2ae4edf58a698a"
+      },
+      {
+        "file": "hospitality--specialist--mixed-b--ar.json",
+        "sha256": "55b6a8ba53b3805c17bbbf0d3b8d8d8f700e3be6410af780e5ca762343368d11"
+      },
+      {
+        "file": "hospitality--specialist--mixed-b--en.json",
+        "sha256": "88f09db62b42f2eebfdec9f8c35486bbe2419f7a01912efd232c5322d158963d"
+      },
+      {
+        "file": "hr--lead--mixed-a--ar.json",
+        "sha256": "1904be1b7ac6c01757b3bb69aaa9909e6d6eebd2870844bbb01d5f6730ece1b6"
+      },
+      {
+        "file": "hr--lead--mixed-a--en.json",
+        "sha256": "892a3017e5231faa0274e37ec6ec71dfaaff650efb5982e93124ccd1738668f6"
+      },
+      {
+        "file": "hr--lead--mixed-b--ar.json",
+        "sha256": "7a4737882aacdffa926d1e9755fea4b098f5cebed96a3270bdec45f63c990e5f"
+      },
+      {
+        "file": "hr--lead--mixed-b--en.json",
+        "sha256": "c393dff345dce74ead8139faf82855c58f04b662fb2869107cfc51e0f10c97d9"
+      },
+      {
+        "file": "hr--specialist--mixed-a--ar.json",
+        "sha256": "6c9f7d7df4a1d1ad88d9e255c712a9d932eba9fd08b1045b925c20cf389519db"
+      },
+      {
+        "file": "hr--specialist--mixed-a--en.json",
+        "sha256": "19e04484a1e3253e34ca541468afe99f97ab948d38eb557f480dd85f3cee6d6b"
+      },
+      {
+        "file": "hr--specialist--mixed-b--ar.json",
+        "sha256": "cbdbba29a61b0b001ce6cfcde4cbd7a93db66ac47f43fac6e44b67dba17f510f"
+      },
+      {
+        "file": "hr--specialist--mixed-b--en.json",
+        "sha256": "b78029eae37432a75c71010463163abff6b3e47b07dd0606f31371132572f07f"
+      },
+      {
+        "file": "logistics--lead--mixed-a--ar.json",
+        "sha256": "1f67ef57df6664b11313cae584dfab44a99e487ba0c2456a9f2d2a153588a02b"
+      },
+      {
+        "file": "logistics--lead--mixed-a--en.json",
+        "sha256": "41d84e388b3db7c9824fd11262c02c7a6a7b1d62eaa72842e3550b76ad70b7d6"
+      },
+      {
+        "file": "logistics--lead--mixed-b--ar.json",
+        "sha256": "f72328af36d9e4c40ceed896c7fb17e4e6edfb5f793942224b16dd0e8d2d9bc3"
+      },
+      {
+        "file": "logistics--lead--mixed-b--en.json",
+        "sha256": "857fb1bb463d53cbc625383e3c35aa72d413730ea910b46f570265cac4ecf945"
+      },
+      {
+        "file": "logistics--specialist--mixed-a--ar.json",
+        "sha256": "466f5d23be3065af9db5f8f34c0f78c0e40fd8eab3ba3e7fdfb623e7df9d4de8"
+      },
+      {
+        "file": "logistics--specialist--mixed-a--en.json",
+        "sha256": "91c930aa73293f6e34defb8c314b77dc81a51abbbd9ff91e081c3e0400480748"
+      },
+      {
+        "file": "logistics--specialist--mixed-b--ar.json",
+        "sha256": "8f6271e8462a02ed311d00377ecae9571065650aaad509920d6b91c448c59639"
+      },
+      {
+        "file": "logistics--specialist--mixed-b--en.json",
+        "sha256": "cd9a6b1af86f92c1a77e03de2eadf59613c305db90a55ef5cae334aaaa1db3bf"
+      },
+      {
+        "file": "manufacturing--lead--mixed-a--ar.json",
+        "sha256": "3bcd603d54c61e6f166cdb2011a9060b7156eece4fc55f57ec316c8588c791fc"
+      },
+      {
+        "file": "manufacturing--lead--mixed-a--en.json",
+        "sha256": "bc338b0614c325f72e57904487acebc5cd89fb563f679c2f3c29eeb6e3ce108b"
+      },
+      {
+        "file": "manufacturing--lead--mixed-b--ar.json",
+        "sha256": "b3aabd77b50b9691e9b25ab7dc8eb94ac708160d5d5dcfcfec86fb38a82b1aff"
+      },
+      {
+        "file": "manufacturing--lead--mixed-b--en.json",
+        "sha256": "c5adc2f16f382654b1213dc550f36a94ba466482170a1ad3bab216e61fbecbcd"
+      },
+      {
+        "file": "manufacturing--specialist--mixed-a--ar.json",
+        "sha256": "657f0ba8d27cf1cbacdc8384597577a1e4dbe9f1f49300acfdba554d6e5a59af"
+      },
+      {
+        "file": "manufacturing--specialist--mixed-a--en.json",
+        "sha256": "65c17c0fc7d62a3bcc333a0e9acac6112cdc5dcacdda81847b47c0584acb79a0"
+      },
+      {
+        "file": "manufacturing--specialist--mixed-b--ar.json",
+        "sha256": "4f63a43f0d8275266fef0cb72ed173544942b69cba90aa3a3132b727097087e6"
+      },
+      {
+        "file": "manufacturing--specialist--mixed-b--en.json",
+        "sha256": "269d521bbf39b2feee5e3c003e4a342aacf13724ac093ca9f3cd66089f53ea30"
+      },
+      {
+        "file": "sales--lead--mixed-a--ar.json",
+        "sha256": "80e98b3cf5d0f7f8f597508c3993e507ba568fe32c017efe7382991d66830790"
+      },
+      {
+        "file": "sales--lead--mixed-a--en.json",
+        "sha256": "5afca458c4d7d5a89ca22053cf9b3467f0c447c6b7751c23588f5f7e9def9ae7"
+      },
+      {
+        "file": "sales--lead--mixed-b--ar.json",
+        "sha256": "57092f6acdc30d7eb7753cd867d93fa87aab59c0f8aeae540264aaf2d5be88c1"
+      },
+      {
+        "file": "sales--lead--mixed-b--en.json",
+        "sha256": "ce961633836879a9c7cb79149e504880521fafc54e91055a8cb0bfd5b544a4dd"
+      },
+      {
+        "file": "sales--specialist--mixed-a--ar.json",
+        "sha256": "1835b1d69aeda64e335840938be7a535ce48c7dc1e3b294727c153fc180f7027"
+      },
+      {
+        "file": "sales--specialist--mixed-a--en.json",
+        "sha256": "316238d0d9e4528d82bfe02a3ab2fcec1aebbc7868ecebafad9098c912dc1ac1"
+      },
+      {
+        "file": "sales--specialist--mixed-b--ar.json",
+        "sha256": "6d1ce5d5213fbf705a3a8d49cb9468bc671cf57248be7164528cf72503595627"
+      },
+      {
+        "file": "sales--specialist--mixed-b--en.json",
+        "sha256": "0a50362d8bff3af782b83aafb91985361ef5b71796d6204d305004eef3f5e55d"
+      },
+      {
+        "file": "software--lead--mixed-a--ar.json",
+        "sha256": "9889661a11c976b593c4261818fd4ee2dc71a039070059e3490a68e7dc95a49f"
+      },
+      {
+        "file": "software--lead--mixed-a--en.json",
+        "sha256": "21092e68dbdb9a7997222977ef30a27a4cb229caa0ee191de5384fb44f2c903e"
+      },
+      {
+        "file": "software--lead--mixed-b--ar.json",
+        "sha256": "ad601c083e48546eb9b62d1c0ec79c8e49eeddd029a79ebcb4753122ef0e88ea"
+      },
+      {
+        "file": "software--lead--mixed-b--en.json",
+        "sha256": "7a03e6e9ccd62fa48c1420f3ea73ba7d2999a0590c0e1941b9cc07d75ddc1b08"
+      },
+      {
+        "file": "software--specialist--mixed-a--ar.json",
+        "sha256": "3e95eba138dde93fc8fa42fc930df996df4eccc7679027602871ed0b73f57744"
+      },
+      {
+        "file": "software--specialist--mixed-a--en.json",
+        "sha256": "9cf43016a5d12e67c2fc23bf5519dc047e43d7fb8011c4ccc528e6f5710bcf16"
+      },
+      {
+        "file": "software--specialist--mixed-b--ar.json",
+        "sha256": "1c7a5694bf43cb7e2c92ab83179f31b176f86821fad32b300e82d717b7666cae"
+      },
+      {
+        "file": "software--specialist--mixed-b--en.json",
+        "sha256": "a1885cc39e5cdf0403ea57d71d1d772fff339c1f4c06ab002a1e1abc3df8d191"
+      }
+    ],
+    "scriptSha256": "2662d6ae7d438bd594551c8877f62d84390e58de7a75b9ff945b53da7e8dc917",
+    "productionBaselineMetricTolerance": 1e-12,
+    "maxBaselineScoreDelta": 0
+  },
+  "scope": {
+    "cases": 80,
+    "careersPerCase": 80,
+    "careersPerLanguage": 40,
+    "reservedAccessed": false,
+    "rankingFeatures": [
+      "recorded semantic",
+      "recorded lexical",
+      "recorded skill overlap",
+      "known CV language"
+    ],
+    "labelsUsedForRanking": false
+  },
+  "limitations": [
+    "Synthetic unreviewed cases only; this is an exploratory calibration, not independent validation.",
+    "Known CV language is an oracle fixture annotation; production needs robust detection for mixed-language documents.",
+    "Within-language minmax promotes the best candidate in every language even when a language has no relevant candidate.",
+    "Small or unbalanced language groups yield unstable extrema; no such negative control is present in this balanced cohort.",
+    "Different candidate pools change group extrema and therefore scores; one outlier can alter rankings.",
+    "Language normalization cannot repair professional ownership, tenure, negation or qualification interpretation.",
+    "Parameter variants were inspected on development cases and must not be described as held-out gains."
+  ],
+  "summaries": {
+    "baseline": {
+      "macro": {
+        "precisionAt3": 0.4291666666666666,
+        "recallAt3": 0.3989583333333333,
+        "recallAt10": 0.4979166666666666,
+        "top3TargetCoverage": 0.4291666666666666,
+        "reciprocalRank": 0.7879301948051948,
+        "mrr": 0.7879301948051948,
+        "ndcg10": 0.5573488372297509
+      },
+      "pooledLanguageRecall": {
+        "same": {
+          "relevant": 128,
+          "hits3": 99,
+          "hits10": 113,
+          "recallAt3": 0.7734375,
+          "recallAt10": 0.8828125
+        },
+        "cross": {
+          "relevant": 128,
+          "hits3": 4,
+          "hits10": 15,
+          "recallAt3": 0.03125,
+          "recallAt10": 0.1171875
+        }
+      },
+      "byFamily": {
+        "software": {
+          "precisionAt3": 0.5,
+          "recallAt3": 0.5,
+          "recallAt10": 0.5,
+          "top3TargetCoverage": 0.5,
+          "reciprocalRank": 0.9375,
+          "mrr": 0.9375,
+          "ndcg10": 0.596536813599744
+        },
+        "construction": {
+          "precisionAt3": 0.29166666666666663,
+          "recallAt3": 0.29166666666666663,
+          "recallAt10": 0.375,
+          "top3TargetCoverage": 0.29166666666666663,
+          "reciprocalRank": 0.6934523809523809,
+          "mrr": 0.6934523809523809,
+          "ndcg10": 0.45789712401495286
+        },
+        "energy": {
+          "precisionAt3": 0.5833333333333333,
+          "recallAt3": 0.5,
+          "recallAt10": 0.5,
+          "top3TargetCoverage": 0.5833333333333333,
+          "reciprocalRank": 0.9375,
+          "mrr": 0.9375,
+          "ndcg10": 0.6041147490797406
+        },
+        "healthcare": {
+          "precisionAt3": 0.41666666666666663,
+          "recallAt3": 0.41666666666666663,
+          "recallAt10": 0.5833333333333333,
+          "top3TargetCoverage": 0.41666666666666663,
+          "reciprocalRank": 0.7708333333333333,
+          "mrr": 0.7708333333333333,
+          "ndcg10": 0.6319857450312287
+        },
+        "finance": {
+          "precisionAt3": 0.41666666666666663,
+          "recallAt3": 0.41666666666666663,
+          "recallAt10": 0.625,
+          "top3TargetCoverage": 0.41666666666666663,
+          "reciprocalRank": 0.6845238095238095,
+          "mrr": 0.6845238095238095,
+          "ndcg10": 0.6780403984737329
+        },
+        "manufacturing": {
+          "precisionAt3": 0.45833333333333326,
+          "recallAt3": 0.38541666666666663,
+          "recallAt10": 0.4583333333333333,
+          "top3TargetCoverage": 0.45833333333333326,
+          "reciprocalRank": 0.8238636363636364,
+          "mrr": 0.8238636363636364,
+          "ndcg10": 0.47460205529301736
+        },
+        "logistics": {
+          "precisionAt3": 0.29166666666666663,
+          "recallAt3": 0.29166666666666663,
+          "recallAt10": 0.41666666666666663,
+          "top3TargetCoverage": 0.29166666666666663,
+          "reciprocalRank": 0.7181818181818181,
+          "mrr": 0.7181818181818181,
+          "ndcg10": 0.4766032052139484
+        },
+        "sales": {
+          "precisionAt3": 0.49999999999999994,
+          "recallAt3": 0.4270833333333333,
+          "recallAt10": 0.6041666666666666,
+          "top3TargetCoverage": 0.49999999999999994,
+          "reciprocalRank": 0.875,
+          "mrr": 0.875,
+          "ndcg10": 0.6540670128090946
+        },
+        "hr": {
+          "precisionAt3": 0.45833333333333326,
+          "recallAt3": 0.38541666666666663,
+          "recallAt10": 0.5,
+          "top3TargetCoverage": 0.45833333333333326,
+          "reciprocalRank": 0.84375,
+          "mrr": 0.84375,
+          "ndcg10": 0.5565028936901808
+        },
+        "hospitality": {
+          "precisionAt3": 0.375,
+          "recallAt3": 0.375,
+          "recallAt10": 0.41666666666666663,
+          "top3TargetCoverage": 0.375,
+          "reciprocalRank": 0.5946969696969697,
+          "mrr": 0.5946969696969697,
+          "ndcg10": 0.44313837509186904
+        }
+      },
+      "byPostingLanguage": {
+        "en": {
+          "precisionAt3": 0.4833333333333333,
+          "recallAt3": 0.4520833333333333,
+          "recallAt10": 0.5458333333333333,
+          "top3TargetCoverage": 0.4833333333333333,
+          "reciprocalRank": 0.8425,
+          "mrr": 0.8425,
+          "ndcg10": 0.5977601865133778
+        },
+        "ar": {
+          "precisionAt3": 0.375,
+          "recallAt3": 0.3458333333333333,
+          "recallAt10": 0.45,
+          "top3TargetCoverage": 0.375,
+          "reciprocalRank": 0.7333603896103896,
+          "mrr": 0.7333603896103896,
+          "ndcg10": 0.516937487946124
+        }
+      },
+      "caseChanges": {
+        "precisionAt3": {
+          "improved": 0,
+          "regressed": 0,
+          "unchanged": 80
+        },
+        "recallAt10": {
+          "improved": 0,
+          "regressed": 0,
+          "unchanged": 80
+        },
+        "ndcg10": {
+          "improved": 0,
+          "regressed": 0,
+          "unchanged": 80
+        }
+      }
+    },
+    "languageSemantic25": {
+      "macro": {
+        "precisionAt3": 0.4375,
+        "recallAt3": 0.4072916666666666,
+        "recallAt10": 0.534375,
+        "top3TargetCoverage": 0.4375,
+        "reciprocalRank": 0.8055205211455212,
+        "mrr": 0.8055205211455212,
+        "ndcg10": 0.574869732507415
+      },
+      "pooledLanguageRecall": {
+        "same": {
+          "relevant": 128,
+          "hits3": 100,
+          "hits10": 113,
+          "recallAt3": 0.78125,
+          "recallAt10": 0.8828125
+        },
+        "cross": {
+          "relevant": 128,
+          "hits3": 5,
+          "hits10": 24,
+          "recallAt3": 0.0390625,
+          "recallAt10": 0.1875
+        }
+      },
+      "byFamily": {
+        "software": {
+          "precisionAt3": 0.5,
+          "recallAt3": 0.5,
+          "recallAt10": 0.5,
+          "top3TargetCoverage": 0.5,
+          "reciprocalRank": 0.9375,
+          "mrr": 0.9375,
+          "ndcg10": 0.596536813599744
+        },
+        "construction": {
+          "precisionAt3": 0.3333333333333333,
+          "recallAt3": 0.3333333333333333,
+          "recallAt10": 0.41666666666666663,
+          "top3TargetCoverage": 0.3333333333333333,
+          "reciprocalRank": 0.7351190476190477,
+          "mrr": 0.7351190476190477,
+          "ndcg10": 0.4843843700233934
+        },
+        "energy": {
+          "precisionAt3": 0.5833333333333333,
+          "recallAt3": 0.5,
+          "recallAt10": 0.5,
+          "top3TargetCoverage": 0.5833333333333333,
+          "reciprocalRank": 0.9375,
+          "mrr": 0.9375,
+          "ndcg10": 0.6033890597535052
+        },
+        "healthcare": {
+          "precisionAt3": 0.375,
+          "recallAt3": 0.375,
+          "recallAt10": 0.625,
+          "top3TargetCoverage": 0.375,
+          "reciprocalRank": 0.7541666666666667,
+          "mrr": 0.7541666666666667,
+          "ndcg10": 0.6402421766467594
+        },
+        "finance": {
+          "precisionAt3": 0.4583333333333333,
+          "recallAt3": 0.4583333333333333,
+          "recallAt10": 0.7083333333333333,
+          "top3TargetCoverage": 0.4583333333333333,
+          "reciprocalRank": 0.7470238095238095,
+          "mrr": 0.7470238095238095,
+          "ndcg10": 0.718088724481097
+        },
+        "manufacturing": {
+          "precisionAt3": 0.45833333333333326,
+          "recallAt3": 0.38541666666666663,
+          "recallAt10": 0.4583333333333333,
+          "top3TargetCoverage": 0.45833333333333326,
+          "reciprocalRank": 0.8238636363636364,
+          "mrr": 0.8238636363636364,
+          "ndcg10": 0.47403251348336484
+        },
+        "logistics": {
+          "precisionAt3": 0.3333333333333333,
+          "recallAt3": 0.3333333333333333,
+          "recallAt10": 0.45833333333333326,
+          "top3TargetCoverage": 0.3333333333333333,
+          "reciprocalRank": 0.7221153846153846,
+          "mrr": 0.7221153846153846,
+          "ndcg10": 0.5033524208529951
+        },
+        "sales": {
+          "precisionAt3": 0.49999999999999994,
+          "recallAt3": 0.4270833333333333,
+          "recallAt10": 0.6770833333333333,
+          "top3TargetCoverage": 0.49999999999999994,
+          "reciprocalRank": 0.875,
+          "mrr": 0.875,
+          "ndcg10": 0.6799782363599265
+        },
+        "hr": {
+          "precisionAt3": 0.45833333333333326,
+          "recallAt3": 0.38541666666666663,
+          "recallAt10": 0.5,
+          "top3TargetCoverage": 0.45833333333333326,
+          "reciprocalRank": 0.84375,
+          "mrr": 0.84375,
+          "ndcg10": 0.5541595768463907
+        },
+        "hospitality": {
+          "precisionAt3": 0.375,
+          "recallAt3": 0.375,
+          "recallAt10": 0.5,
+          "top3TargetCoverage": 0.375,
+          "reciprocalRank": 0.6791666666666667,
+          "mrr": 0.6791666666666667,
+          "ndcg10": 0.4945334330269744
+        }
+      },
+      "byPostingLanguage": {
+        "en": {
+          "precisionAt3": 0.4916666666666667,
+          "recallAt3": 0.4604166666666667,
+          "recallAt10": 0.5854166666666666,
+          "top3TargetCoverage": 0.4916666666666667,
+          "reciprocalRank": 0.8633333333333333,
+          "mrr": 0.8633333333333333,
+          "ndcg10": 0.6159573051634418
+        },
+        "ar": {
+          "precisionAt3": 0.3833333333333333,
+          "recallAt3": 0.35416666666666663,
+          "recallAt10": 0.4833333333333333,
+          "top3TargetCoverage": 0.3833333333333333,
+          "reciprocalRank": 0.7477077089577089,
+          "mrr": 0.7477077089577089,
+          "ndcg10": 0.5337821598513883
+        }
+      },
+      "caseChanges": {
+        "precisionAt3": {
+          "improved": 3,
+          "regressed": 1,
+          "unchanged": 76
+        },
+        "recallAt10": {
+          "improved": 9,
+          "regressed": 0,
+          "unchanged": 71
+        },
+        "ndcg10": {
+          "improved": 22,
+          "regressed": 9,
+          "unchanged": 49
+        }
+      }
+    },
+    "languageSemantic50": {
+      "macro": {
+        "precisionAt3": 0.4416666666666666,
+        "recallAt3": 0.4104166666666666,
+        "recallAt10": 0.571875,
+        "top3TargetCoverage": 0.4416666666666666,
+        "reciprocalRank": 0.7974688615478089,
+        "mrr": 0.7974688615478089,
+        "ndcg10": 0.589704269711375
+      },
+      "pooledLanguageRecall": {
+        "same": {
+          "relevant": 128,
+          "hits3": 100,
+          "hits10": 113,
+          "recallAt3": 0.78125,
+          "recallAt10": 0.8828125
+        },
+        "cross": {
+          "relevant": 128,
+          "hits3": 6,
+          "hits10": 34,
+          "recallAt3": 0.046875,
+          "recallAt10": 0.265625
+        }
+      },
+      "byFamily": {
+        "software": {
+          "precisionAt3": 0.5,
+          "recallAt3": 0.5,
+          "recallAt10": 0.5,
+          "top3TargetCoverage": 0.5,
+          "reciprocalRank": 0.9375,
+          "mrr": 0.9375,
+          "ndcg10": 0.596536813599744
+        },
+        "construction": {
+          "precisionAt3": 0.3333333333333333,
+          "recallAt3": 0.3333333333333333,
+          "recallAt10": 0.41666666666666663,
+          "top3TargetCoverage": 0.3333333333333333,
+          "reciprocalRank": 0.7357456140350878,
+          "mrr": 0.7357456140350878,
+          "ndcg10": 0.49425814655479394
+        },
+        "energy": {
+          "precisionAt3": 0.5833333333333333,
+          "recallAt3": 0.5,
+          "recallAt10": 0.5,
+          "top3TargetCoverage": 0.5833333333333333,
+          "reciprocalRank": 0.9375,
+          "mrr": 0.9375,
+          "ndcg10": 0.5994299192279937
+        },
+        "healthcare": {
+          "precisionAt3": 0.375,
+          "recallAt3": 0.375,
+          "recallAt10": 0.7083333333333333,
+          "top3TargetCoverage": 0.375,
+          "reciprocalRank": 0.7541666666666667,
+          "mrr": 0.7541666666666667,
+          "ndcg10": 0.6775065587307743
+        },
+        "finance": {
+          "precisionAt3": 0.41666666666666663,
+          "recallAt3": 0.41666666666666663,
+          "recallAt10": 0.7916666666666666,
+          "top3TargetCoverage": 0.41666666666666663,
+          "reciprocalRank": 0.7470238095238095,
+          "mrr": 0.7470238095238095,
+          "ndcg10": 0.7538975112677708
+        },
+        "manufacturing": {
+          "precisionAt3": 0.45833333333333326,
+          "recallAt3": 0.38541666666666663,
+          "recallAt10": 0.5208333333333333,
+          "top3TargetCoverage": 0.45833333333333326,
+          "reciprocalRank": 0.7613636363636364,
+          "mrr": 0.7613636363636364,
+          "ndcg10": 0.4692851586953227
+        },
+        "logistics": {
+          "precisionAt3": 0.375,
+          "recallAt3": 0.375,
+          "recallAt10": 0.49999999999999994,
+          "top3TargetCoverage": 0.375,
+          "reciprocalRank": 0.7263888888888889,
+          "mrr": 0.7263888888888889,
+          "ndcg10": 0.5353448878828422
+        },
+        "sales": {
+          "precisionAt3": 0.5416666666666666,
+          "recallAt3": 0.4583333333333333,
+          "recallAt10": 0.7083333333333333,
+          "top3TargetCoverage": 0.5416666666666666,
+          "reciprocalRank": 0.875,
+          "mrr": 0.875,
+          "ndcg10": 0.7047547563303538
+        },
+        "hr": {
+          "precisionAt3": 0.45833333333333326,
+          "recallAt3": 0.38541666666666663,
+          "recallAt10": 0.53125,
+          "top3TargetCoverage": 0.45833333333333326,
+          "reciprocalRank": 0.8125,
+          "mrr": 0.8125,
+          "ndcg10": 0.5459998341100775
+        },
+        "hospitality": {
+          "precisionAt3": 0.375,
+          "recallAt3": 0.375,
+          "recallAt10": 0.5416666666666666,
+          "top3TargetCoverage": 0.375,
+          "reciprocalRank": 0.6875,
+          "mrr": 0.6875,
+          "ndcg10": 0.5200291107140776
+        }
+      },
+      "byPostingLanguage": {
+        "en": {
+          "precisionAt3": 0.5,
+          "recallAt3": 0.4666666666666667,
+          "recallAt10": 0.6354166666666666,
+          "top3TargetCoverage": 0.5,
+          "reciprocalRank": 0.8633333333333333,
+          "mrr": 0.8633333333333333,
+          "ndcg10": 0.640447929633221
+        },
+        "ar": {
+          "precisionAt3": 0.3833333333333333,
+          "recallAt3": 0.35416666666666663,
+          "recallAt10": 0.5083333333333333,
+          "top3TargetCoverage": 0.3833333333333333,
+          "reciprocalRank": 0.7316043897622845,
+          "mrr": 0.7316043897622845,
+          "ndcg10": 0.5389606097895292
+        }
+      },
+      "caseChanges": {
+        "precisionAt3": {
+          "improved": 5,
+          "regressed": 2,
+          "unchanged": 73
+        },
+        "recallAt10": {
+          "improved": 16,
+          "regressed": 0,
+          "unchanged": 64
+        },
+        "ndcg10": {
+          "improved": 30,
+          "regressed": 12,
+          "unchanged": 38
+        }
+      }
+    },
+    "languageSemantic100": {
+      "macro": {
+        "precisionAt3": 0.4416666666666666,
+        "recallAt3": 0.4104166666666667,
+        "recallAt10": 0.603125,
+        "top3TargetCoverage": 0.4416666666666666,
+        "reciprocalRank": 0.8045323536113009,
+        "mrr": 0.8045323536113009,
+        "ndcg10": 0.6202286437764611
+      },
+      "pooledLanguageRecall": {
+        "same": {
+          "relevant": 128,
+          "hits3": 98,
+          "hits10": 111,
+          "recallAt3": 0.765625,
+          "recallAt10": 0.8671875
+        },
+        "cross": {
+          "relevant": 128,
+          "hits3": 8,
+          "hits10": 45,
+          "recallAt3": 0.0625,
+          "recallAt10": 0.3515625
+        }
+      },
+      "byFamily": {
+        "software": {
+          "precisionAt3": 0.5,
+          "recallAt3": 0.5,
+          "recallAt10": 0.5833333333333333,
+          "top3TargetCoverage": 0.5,
+          "reciprocalRank": 0.9375,
+          "mrr": 0.9375,
+          "ndcg10": 0.63341172442306
+        },
+        "construction": {
+          "precisionAt3": 0.3333333333333333,
+          "recallAt3": 0.3333333333333333,
+          "recallAt10": 0.4583333333333333,
+          "top3TargetCoverage": 0.3333333333333333,
+          "reciprocalRank": 0.7357456140350878,
+          "mrr": 0.7357456140350878,
+          "ndcg10": 0.5414935251184236
+        },
+        "energy": {
+          "precisionAt3": 0.5833333333333333,
+          "recallAt3": 0.5,
+          "recallAt10": 0.59375,
+          "top3TargetCoverage": 0.5833333333333333,
+          "reciprocalRank": 0.9375,
+          "mrr": 0.9375,
+          "ndcg10": 0.6468138754671783
+        },
+        "healthcare": {
+          "precisionAt3": 0.375,
+          "recallAt3": 0.375,
+          "recallAt10": 0.7083333333333333,
+          "top3TargetCoverage": 0.375,
+          "reciprocalRank": 0.7604166666666667,
+          "mrr": 0.7604166666666667,
+          "ndcg10": 0.7024948935777864
+        },
+        "finance": {
+          "precisionAt3": 0.4583333333333333,
+          "recallAt3": 0.4583333333333333,
+          "recallAt10": 0.75,
+          "top3TargetCoverage": 0.4583333333333333,
+          "reciprocalRank": 0.7916666666666667,
+          "mrr": 0.7916666666666667,
+          "ndcg10": 0.7801207108412639
+        },
+        "manufacturing": {
+          "precisionAt3": 0.41666666666666663,
+          "recallAt3": 0.35416666666666663,
+          "recallAt10": 0.5625,
+          "top3TargetCoverage": 0.41666666666666663,
+          "reciprocalRank": 0.6988636363636364,
+          "mrr": 0.6988636363636364,
+          "ndcg10": 0.4726732777811349
+        },
+        "logistics": {
+          "precisionAt3": 0.3333333333333333,
+          "recallAt3": 0.3333333333333333,
+          "recallAt10": 0.49999999999999994,
+          "top3TargetCoverage": 0.3333333333333333,
+          "reciprocalRank": 0.6991071428571429,
+          "mrr": 0.6991071428571429,
+          "ndcg10": 0.5338030610291814
+        },
+        "sales": {
+          "precisionAt3": 0.5833333333333333,
+          "recallAt3": 0.5,
+          "recallAt10": 0.7395833333333333,
+          "top3TargetCoverage": 0.5833333333333333,
+          "reciprocalRank": 0.9375,
+          "mrr": 0.9375,
+          "ndcg10": 0.7517064971075316
+        },
+        "hr": {
+          "precisionAt3": 0.4583333333333333,
+          "recallAt3": 0.375,
+          "recallAt10": 0.6354166666666666,
+          "top3TargetCoverage": 0.4583333333333333,
+          "reciprocalRank": 0.7928571428571429,
+          "mrr": 0.7928571428571429,
+          "ndcg10": 0.5978535273036492
+        },
+        "hospitality": {
+          "precisionAt3": 0.375,
+          "recallAt3": 0.375,
+          "recallAt10": 0.5,
+          "top3TargetCoverage": 0.375,
+          "reciprocalRank": 0.7541666666666667,
+          "mrr": 0.7541666666666667,
+          "ndcg10": 0.5419153451154017
+        }
+      },
+      "byPostingLanguage": {
+        "en": {
+          "precisionAt3": 0.5,
+          "recallAt3": 0.4666666666666667,
+          "recallAt10": 0.7,
+          "top3TargetCoverage": 0.5,
+          "reciprocalRank": 0.866904761904762,
+          "mrr": 0.866904761904762,
+          "ndcg10": 0.6928253173289691
+        },
+        "ar": {
+          "precisionAt3": 0.3833333333333333,
+          "recallAt3": 0.35416666666666663,
+          "recallAt10": 0.50625,
+          "top3TargetCoverage": 0.3833333333333333,
+          "reciprocalRank": 0.74215994531784,
+          "mrr": 0.74215994531784,
+          "ndcg10": 0.5476319702239532
+        }
+      },
+      "caseChanges": {
+        "precisionAt3": {
+          "improved": 8,
+          "regressed": 5,
+          "unchanged": 67
+        },
+        "recallAt10": {
+          "improved": 25,
+          "regressed": 1,
+          "unchanged": 54
+        },
+        "ndcg10": {
+          "improved": 45,
+          "regressed": 15,
+          "unchanged": 20
+        }
+      }
+    },
+    "languageSemantic100WithoutLexical": {
+      "macro": {
+        "precisionAt3": 0.3375,
+        "recallAt3": 0.3145833333333333,
+        "recallAt10": 0.571875,
+        "top3TargetCoverage": 0.3375,
+        "reciprocalRank": 0.6514029077540107,
+        "mrr": 0.6514029077540107,
+        "ndcg10": 0.5258579672319378
+      },
+      "pooledLanguageRecall": {
+        "same": {
+          "relevant": 128,
+          "hits3": 53,
+          "hits10": 92,
+          "recallAt3": 0.4140625,
+          "recallAt10": 0.71875
+        },
+        "cross": {
+          "relevant": 128,
+          "hits3": 28,
+          "hits10": 56,
+          "recallAt3": 0.21875,
+          "recallAt10": 0.4375
+        }
+      },
+      "byFamily": {
+        "software": {
+          "precisionAt3": 0.375,
+          "recallAt3": 0.375,
+          "recallAt10": 0.6666666666666667,
+          "top3TargetCoverage": 0.375,
+          "reciprocalRank": 0.78125,
+          "mrr": 0.78125,
+          "ndcg10": 0.5528725842340002
+        },
+        "construction": {
+          "precisionAt3": 0.29166666666666663,
+          "recallAt3": 0.29166666666666663,
+          "recallAt10": 0.45833333333333326,
+          "top3TargetCoverage": 0.29166666666666663,
+          "reciprocalRank": 0.778125,
+          "mrr": 0.778125,
+          "ndcg10": 0.49226859230510545
+        },
+        "energy": {
+          "precisionAt3": 0.375,
+          "recallAt3": 0.3125,
+          "recallAt10": 0.6666666666666666,
+          "top3TargetCoverage": 0.375,
+          "reciprocalRank": 0.65625,
+          "mrr": 0.65625,
+          "ndcg10": 0.5259496050276828
+        },
+        "healthcare": {
+          "precisionAt3": 0.3333333333333333,
+          "recallAt3": 0.3333333333333333,
+          "recallAt10": 0.6666666666666666,
+          "top3TargetCoverage": 0.3333333333333333,
+          "reciprocalRank": 0.3958333333333333,
+          "mrr": 0.3958333333333333,
+          "ndcg10": 0.5760622458855248
+        },
+        "finance": {
+          "precisionAt3": 0.41666666666666663,
+          "recallAt3": 0.41666666666666663,
+          "recallAt10": 0.6666666666666666,
+          "top3TargetCoverage": 0.41666666666666663,
+          "reciprocalRank": 0.6875,
+          "mrr": 0.6875,
+          "ndcg10": 0.7518580144546223
+        },
+        "manufacturing": {
+          "precisionAt3": 0.20833333333333331,
+          "recallAt3": 0.17708333333333331,
+          "recallAt10": 0.41666666666666663,
+          "top3TargetCoverage": 0.20833333333333331,
+          "reciprocalRank": 0.47698863636363636,
+          "mrr": 0.47698863636363636,
+          "ndcg10": 0.3060098471353039
+        },
+        "logistics": {
+          "precisionAt3": 0.37499999999999994,
+          "recallAt3": 0.37499999999999994,
+          "recallAt10": 0.41666666666666663,
+          "top3TargetCoverage": 0.37499999999999994,
+          "reciprocalRank": 0.7708333333333333,
+          "mrr": 0.7708333333333333,
+          "ndcg10": 0.4908836070307124
+        },
+        "sales": {
+          "precisionAt3": 0.4583333333333333,
+          "recallAt3": 0.3958333333333333,
+          "recallAt10": 0.7083333333333333,
+          "top3TargetCoverage": 0.4583333333333333,
+          "reciprocalRank": 0.775,
+          "mrr": 0.775,
+          "ndcg10": 0.6608127758370552
+        },
+        "hr": {
+          "precisionAt3": 0.29166666666666663,
+          "recallAt3": 0.21875,
+          "recallAt10": 0.5520833333333333,
+          "top3TargetCoverage": 0.29166666666666663,
+          "reciprocalRank": 0.5047487745098039,
+          "mrr": 0.5047487745098039,
+          "ndcg10": 0.4303525783469738
+        },
+        "hospitality": {
+          "precisionAt3": 0.25,
+          "recallAt3": 0.25,
+          "recallAt10": 0.5,
+          "top3TargetCoverage": 0.25,
+          "reciprocalRank": 0.6875,
+          "mrr": 0.6875,
+          "ndcg10": 0.4715098220623973
+        }
+      },
+      "byPostingLanguage": {
+        "en": {
+          "precisionAt3": 0.3583333333333333,
+          "recallAt3": 0.32916666666666666,
+          "recallAt10": 0.6875,
+          "top3TargetCoverage": 0.3583333333333333,
+          "reciprocalRank": 0.6677083333333333,
+          "mrr": 0.6677083333333333,
+          "ndcg10": 0.5955336282889528
+        },
+        "ar": {
+          "precisionAt3": 0.31666666666666665,
+          "recallAt3": 0.3,
+          "recallAt10": 0.45625,
+          "top3TargetCoverage": 0.31666666666666665,
+          "reciprocalRank": 0.635097482174688,
+          "mrr": 0.635097482174688,
+          "ndcg10": 0.4561823061749227
+        }
+      },
+      "caseChanges": {
+        "precisionAt3": {
+          "improved": 13,
+          "regressed": 33,
+          "unchanged": 34
+        },
+        "recallAt10": {
+          "improved": 29,
+          "regressed": 11,
+          "unchanged": 40
+        },
+        "ndcg10": {
+          "improved": 31,
+          "regressed": 46,
+          "unchanged": 3
+        }
+      }
+    }
+  },
+  "detailedResultSha256": "ee535f1d8f8c28360b9a3cea40cf22dd71ec5a200f50b1a7917710eb79adb959"
+}

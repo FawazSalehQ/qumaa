@@ -345,7 +345,7 @@ export default function SettingsView({
           {/* Uninstalling leaves this folder in place on both platforms, so the
               app has to be the thing that can remove it. */}
           <div className="desc">{t("Uninstalling the app does not remove this data.")}</div>
-          <div className="desc">{t("Portable backups include resume text, saved jobs, recruiter profiles, review notes, and portable preferences. On restore, Qumaa rebuilds the search index; refresh your saved jobs to generate updated matches. API keys, watched folders, original-file paths, consent, and window position are excluded. Backup files are not encrypted, so store them securely.")}</div>
+          <div className="desc">{t("Portable backups include resume text, companies, jobs, contacts, activity, talent pools, pipelines, submissions, screening kits, recruiter profiles, review notes, and portable preferences. On restore, Qumaa rebuilds the search index; refresh your saved jobs to generate updated matches. API keys, watched folders, original-file paths, consent, and window position are excluded. Backup files are not encrypted, so store them securely.")}</div>
           <div className="row">
             <button className="btn sm" disabled={dataAction !== null || aiBusy} onClick={() => void backUp()}>
               {t(dataAction === 'backup' ? 'Backing up…' : 'Back up…')}
@@ -360,7 +360,7 @@ export default function SettingsView({
           <div className="setting-danger">
             <div>
               <div className="label">{t("Delete local data")}</div>
-              <p className="desc">{t("Remove the library and reset your preferences.")}</p>
+              <p className="desc">{t("Remove all local CVs, companies, jobs, contacts, and recruiting records, and reset your preferences.")}</p>
             </div>
             <button className="btn sm danger" disabled={dataAction !== null || aiBusy} onClick={() => void wipe()}>{t("Delete all data…")}</button>
           </div>

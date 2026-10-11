@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "cross-domain-2026-09-27",
+  "families": [
+    { "family": "software", "split": "development" },
+    { "family": "construction", "split": "development" },
+    { "family": "energy", "split": "development" },
+    { "family": "healthcare", "split": "development" },
+    { "family": "finance", "split": "development" },
+    { "family": "legal", "split": "reserved" },
+    { "family": "education", "split": "reserved" },
+    { "family": "manufacturing", "split": "development" },
+    { "family": "logistics", "split": "development" },
+    { "family": "sales", "split": "development" },
+    { "family": "hr", "split": "development" },
+    { "family": "hospitality", "split": "development" }
+  ]
+}

@@ -12,10 +12,7 @@ import { isRerankConfig } from '../shared/rerank.js'
 
 const MAX_PATH = 4_096
 const MAX_LABEL = 512
-const MAX_JOB_TEXT = 100_000
 const MAX_RESUME_TEXT = 500_000
-const MAX_RESULTS = 50
-const opaqueToken = z.string().uuid()
 
 const boundedString = (max: number): z.ZodString => z.string().max(max)
 const textLabel = boundedString(MAX_LABEL)
@@ -27,43 +24,8 @@ const absolutePath = boundedString(MAX_PATH)
 const resumeId = z.number().int().positive().max(Number.MAX_SAFE_INTEGER)
 const recordKey = z.string().regex(/^[a-f0-9]{64}$/)
 const resumeRef = z.object({ id: resumeId, recordKey })
-const score = z.number().finite().min(0).max(1)
-
-const resumeSummary = z.object({
-  id: resumeId,
-  recordKey,
-  fileName: boundedString(MAX_LABEL),
-  filePath: boundedString(MAX_PATH),
-  importedAt: z.number().int().nonnegative(),
-  name: boundedString(MAX_LABEL).nullable(),
-  email: boundedString(512).nullable(),
-  phone: boundedString(128).nullable(),
-  location: boundedString(MAX_LABEL).nullable(),
-  yearsExperience: z.number().finite().min(0).max(100).nullable(),
-  educationLevel: z.enum(['phd', 'masters', 'bachelors', 'associate']).nullable(),
-  skills: z.array(boundedString(256)).max(512)
-})
-
-const matchResult = z.object({
-  llmReason: boundedString(1_000).optional(),
-  resume: resumeSummary,
-  score,
-  breakdown: z.object({ semantic: score, lexical: score, skills: score }),
-  matchedSkills: z.array(boundedString(256)).max(512),
-  missingSkills: z.array(boundedString(256)).max(512),
-  evidence: z
-    .array(
-      z.object({
-        section: z.enum(['summary', 'experience', 'education', 'skills', 'projects', 'other']),
-        text: boundedString(20_000),
-        similarity: z.number().finite().min(-1).max(1)
-      })
-    )
-    .max(100)
-})
 
 export const ipcSchemas = {
-  resumeId,
   resumeRef,
   resumeRefs: z
     .array(resumeRef)
@@ -78,19 +40,6 @@ export const ipcSchemas = {
   ingestText: z.object({
     text: boundedString(MAX_RESUME_TEXT).trim().min(1),
     label: textLabel
-  }),
-  jobDescription: boundedString(MAX_JOB_TEXT).trim().min(1),
-  exportArgs: z.object({
-    jobTitle: boundedString(MAX_LABEL).trim(),
-    requiredSkills: z.array(boundedString(256)).max(512),
-    results: z.array(matchResult).min(1).max(MAX_RESULTS)
-  }),
-  rerankPreviewArgs: z.object({
-    sessionId: opaqueToken
-  }),
-  rerankArgs: z.object({
-    sessionId: opaqueToken,
-    approvalToken: opaqueToken.optional()
   }),
   apiKey: boundedString(4_096).trim().min(1).nullable(),
   rerankProvider: z.enum(['anthropic', 'openai']),

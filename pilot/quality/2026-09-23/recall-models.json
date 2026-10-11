@@ -1,0 +1,1548 @@
+{
+  "date": "2026-09-23",
+  "decision": "Retain multilingual-e5-small; larger candidates do not provide consistent drilling recall gains.",
+  "conditions": {
+    "backend": "Node CPU, q8, batch size 8; production Electron batch size is 32",
+    "warmQueryRepetitions": 3,
+    "memory": "sampled Node process RSS, not whole-app memory",
+    "load": "file cache warmed by hashing",
+    "labels": "provisional synthetic; paired six-career cases are not independent datasets",
+    "source": "same frozen queries, chunks, skills and SQLite lexical values for all models"
+  },
+  "mixedCohorts": {
+    "rule": "Alternating EN/AR career assignments A-F, plus complement; one version per career; frozen before evaluation.",
+    "cohorts": {
+      "mixed-a": [
+        "H01",
+        "H03",
+        "H04",
+        "H02",
+        "H05",
+        "H06"
+      ],
+      "mixed-b": [
+        "H08",
+        "H10",
+        "H11",
+        "H09",
+        "H12",
+        "H07"
+      ]
+    },
+    "inputSha256": {
+      "H01.md": "0672989c8c03af887d5c5d2527af22d55a08e059943d658efc7f7ec1b65aeb75",
+      "H03.md": "0fc424318eb5a38cbe15b8860cdd2c25285cb4c90a5c359c8346eec745e1414f",
+      "H04.md": "63dcd6980a1faa1c6f0c4009e863f42dfed58855e4159824afde206b2cbe0b4d",
+      "H02.md": "34fc76ae41013bad9829f833141e03603ff8c579009fa407a421dee602ad0cb8",
+      "H05.md": "8ae4983bacf5d753c1055eddb0ae81929dc233a5f9e12221afd8fc04e815c7a4",
+      "H06.md": "7e8ebe2bd5a6fbe7a9587dd73271845e746552e7385028922e7b96447eae8a70",
+      "H08.md": "6bf9606ba8e25411a835d3f5159ecaee25728d572c459de0506997fd991576d8",
+      "H10.md": "86ab9d6785bc116ba574865d5b8d6682df923ebaae026e3e5c5db69c3f4c8430",
+      "H11.md": "17d636473ff006030fb0ddc72683d2cb8b529099cbad038136a2113803d8600e",
+      "H09.md": "b826b55d47886f1034177cca5f7240aa1b3ac85195b0859f9dde299b5cdf70ca",
+      "H12.md": "eb0962fa00ba3a586921cf4aebd7b13156b0e85a88c56ec5398d0156185da5af",
+      "H07.md": "a6dc50e03718efd0f976d1332057c94528e18c6d1210380b1b7bf921931c8669"
+    }
+  },
+  "models": {
+    "small": {
+      "modelId": "multilingual-e5-small",
+      "modelBytes": 135392183,
+      "runtime": {
+        "node": "v22.23.2",
+        "transformers": "4.2.0",
+        "platform": "darwin",
+        "arch": "arm64",
+        "cpu": "Apple M4 Pro",
+        "availableParallelism": 14,
+        "device": "cpu",
+        "dtype": "q8",
+        "batchSize": 8,
+        "embeddingDimension": 384,
+        "queryPrefix": "query: ",
+        "passagePrefix": "passage: "
+      },
+      "modelFiles": [
+        {
+          "file": "config.json",
+          "bytes": 658,
+          "sha256": "cb99455288675345e1a4f411438d5d0adbba5fbd3a67ea4fb03c015433b996c1"
+        },
+        {
+          "file": "onnx/model_quantized.onnx",
+          "bytes": 118308185,
+          "sha256": "f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193"
+        },
+        {
+          "file": "special_tokens_map.json",
+          "bytes": 167,
+          "sha256": "d05497f1da52c5e09554c0cd874037a083e1dc1b9cfd48034d1c717f1afc07a7"
+        },
+        {
+          "file": "tokenizer_config.json",
+          "bytes": 443,
+          "sha256": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b"
+        },
+        {
+          "file": "tokenizer.json",
+          "bytes": 17082730,
+          "sha256": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39"
+        }
+      ],
+      "scoringBundleSha256": "d656ebefa9770df1c5c1a12d4d8b1597c5291e0fc3bef537357480a35654fe56",
+      "benchmarkScriptSha256": "b35e9555033aa5b5eba35ecafda7a55e54f1b50f66dae351763c5ff10285efe3",
+      "cases": {
+        "drilling-en": {
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.25,
+            "recallAt10": 0.75,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.7552496405348124
+          },
+          "loadMs": 364.388834,
+          "passagesMs": 1564.0446230000007,
+          "queryMs": 368.32875,
+          "warmQueryMs": [
+            326.57183399999985,
+            341.657459,
+            311.45416699999987
+          ],
+          "warmQueryMedianMs": 326.57183399999985,
+          "scoringMs": 2.008581999999933,
+          "candidateCount": 16,
+          "passageCount": 64,
+          "peakRssBytes": 1176780800,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 471,
+            "longestPassageTokens": 395
+          },
+          "tier1Ranks": [
+            1,
+            4,
+            10,
+            15
+          ],
+          "resultSha256": "a735a5ac89a564e5303cdeea5399cf9a8be766ea725dff30300c94e14f6558cf",
+          "inputSha256": "2715daa8f4d0609e986a4525f8ac86c9398e3cbe0b4a97bbf1515751836e429a"
+        },
+        "drilling-ar": {
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.25,
+            "recallAt10": 0.75,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.7494427228362216
+          },
+          "loadMs": 364.482625,
+          "passagesMs": 1591.6388309999998,
+          "queryMs": 385.146167,
+          "warmQueryMs": [
+            367.2190419999997,
+            341.8941669999999,
+            360.0812500000002
+          ],
+          "warmQueryMedianMs": 360.0812500000002,
+          "scoringMs": 2.0279999999999063,
+          "candidateCount": 16,
+          "passageCount": 64,
+          "peakRssBytes": 1374650368,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 1,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 551,
+            "longestPassageTokens": 395
+          },
+          "tier1Ranks": [
+            1,
+            6,
+            9,
+            12
+          ],
+          "resultSha256": "1a5598cbf7c4956ca1b4488c1795b2c98389ccba176e8ad3a36c82854662c39f",
+          "inputSha256": "4690e2afa49ea02e5f8490dd5998c6ee14ccc9af6ff704f83fd91d45c647e9c7"
+        },
+        "fnb": {
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.25,
+            "recallAt10": 0.625,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.7847732081778287
+          },
+          "loadMs": 376.107041,
+          "passagesMs": 12746.331835999996,
+          "queryMs": 210.86374999999998,
+          "warmQueryMs": [
+            167.53558300000077,
+            165.280084,
+            165.73133400000006
+          ],
+          "warmQueryMedianMs": 165.73133400000006,
+          "scoringMs": 7.72987599999874,
+          "candidateCount": 100,
+          "passageCount": 535,
+          "peakRssBytes": 1177845760,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 312,
+            "longestPassageTokens": 347
+          },
+          "tier1Ranks": [
+            1,
+            3,
+            4,
+            9,
+            10,
+            11,
+            17,
+            18
+          ],
+          "resultSha256": "f86649fdaa3746a7d0bc995cd2de3531421ccfaeddcd2a8db3ed09c90bfd231c",
+          "inputSha256": "5435523efd0c223721edb7609fddd013b04f5b1572344f07cf8eba33cd0558f1"
+        },
+        "mixed-a-en": {
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.6666666666666666,
+            "recallAt10": 1,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.976119519735876
+          },
+          "loadMs": 366.364666,
+          "passagesMs": 616.855334,
+          "queryMs": 335.52799999999996,
+          "warmQueryMs": [
+            294.3749160000002,
+            272.602083,
+            278.1079579999998
+          ],
+          "warmQueryMedianMs": 278.1079579999998,
+          "scoringMs": 1.2527939999998807,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 1139720192,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 427,
+            "longestPassageTokens": 428
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            4
+          ],
+          "resultSha256": "4dc668f6a50ff7806c61d84edd4e3169cad9a59816eabfae66eefea6438d1d50",
+          "inputSha256": "632fb52ef2f5083cf8c3db9ad9b4ed190602818472ce19cf432460d707d5d7e0"
+        },
+        "mixed-a-ar": {
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.3333333333333333,
+            "recallAt10": 1,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.9253578388443315
+          },
+          "loadMs": 369.888042,
+          "passagesMs": 612.8245000000002,
+          "queryMs": 364.538916,
+          "warmQueryMs": [
+            320.37970900000005,
+            319.817,
+            349.00020799999993
+          ],
+          "warmQueryMedianMs": 320.37970900000005,
+          "scoringMs": 1.2190430000001697,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 1247821824,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 501,
+            "longestPassageTokens": 428
+          },
+          "tier1Ranks": [
+            1,
+            4,
+            5
+          ],
+          "resultSha256": "08e723e96b1cf718a8d139eeed841912efba838f04c3532bd3082a56c9274501",
+          "inputSha256": "3feacb4340a7390b3972f1e8ec3e981a7955e926b6b6467f06a100539f809161"
+        },
+        "mixed-b-en": {
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.6666666666666666,
+            "recallAt10": 1,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.9737922625687713
+          },
+          "loadMs": 368.550125,
+          "passagesMs": 608.4321239999998,
+          "queryMs": 305.439417,
+          "warmQueryMs": [
+            260.118166,
+            288.71854200000007,
+            289.5501250000002
+          ],
+          "warmQueryMedianMs": 288.71854200000007,
+          "scoringMs": 1.2378729999998086,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 1139425280,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 427,
+            "longestPassageTokens": 413
+          },
+          "tier1Ranks": [
+            1,
+            3,
+            4
+          ],
+          "resultSha256": "579a4cb242186f6f170f70975e7f4fe75187c79024338552face632474369187",
+          "inputSha256": "50856c6f276db1995668967204319aa22edac3fd70cfad6a5a7a3ebd898ff6bd"
+        },
+        "mixed-b-ar": {
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.6666666666666666,
+            "recallAt10": 1,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.976119519735876
+          },
+          "loadMs": 375.95983299999995,
+          "passagesMs": 614.9147499999998,
+          "queryMs": 371.138959,
+          "warmQueryMs": [
+            340.3208750000001,
+            352.29604200000017,
+            345.2401249999998
+          ],
+          "warmQueryMedianMs": 345.2401249999998,
+          "scoringMs": 1.252498999999716,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 1252376576,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 501,
+            "longestPassageTokens": 413
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            4
+          ],
+          "resultSha256": "a2f74262743d11a855484adf3201d968ef456ca966e4e3bd2c1fff546ec5e75a",
+          "inputSha256": "42b8ccbe625bb71738068c8cc89a090aed7731da1c5535380d2de63b89851806"
+        },
+        "cv-en-jd-en": {
+          "metrics": {
+            "precisionAt3": 1,
+            "recallAt3": 1,
+            "recallAt10": 1,
+            "top3TargetCoverage": 1,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 1
+          },
+          "loadMs": 372.974833,
+          "passagesMs": 633.0425009999997,
+          "queryMs": 306.51725,
+          "warmQueryMs": [
+            267.7529169999998,
+            258.96849999999995,
+            291.40683300000023
+          ],
+          "warmQueryMedianMs": 267.7529169999998,
+          "scoringMs": 1.2456669999996848,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 1132036096,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 427,
+            "longestPassageTokens": 340
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            3
+          ],
+          "resultSha256": "c5eceebe363f1a37cd12d90dfb9fe93d4de8c915ca90062fe8248b3a5c5820fd",
+          "inputSha256": "5140008d318a4141ea4431c4a0ce08da17dc94a3bf453de9350b888a9891c3f9"
+        },
+        "cv-en-jd-ar": {
+          "metrics": {
+            "precisionAt3": 1,
+            "recallAt3": 1,
+            "recallAt10": 1,
+            "top3TargetCoverage": 1,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 1
+          },
+          "loadMs": 372.31120799999997,
+          "passagesMs": 633.2369590000002,
+          "queryMs": 361.21850000000006,
+          "warmQueryMs": [
+            331.622333,
+            369.9051669999999,
+            351.3762499999998
+          ],
+          "warmQueryMedianMs": 351.3762499999998,
+          "scoringMs": 1.2324579999998377,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 1244774400,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 501,
+            "longestPassageTokens": 340
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            3
+          ],
+          "resultSha256": "cef112d1b8cd1e230af3c5a77fcfa328856099d5ba34100deeb11ec586cd088d",
+          "inputSha256": "064f78240aa9f8b30e3efa47e3fe5dd17ea961e65b3c4187b36875c0bb3c08b2"
+        },
+        "cv-ar-jd-en": {
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.6666666666666666,
+            "recallAt10": 1,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.9909274328465879
+          },
+          "loadMs": 385.3173750000001,
+          "passagesMs": 586.4097919999999,
+          "queryMs": 338.572625,
+          "warmQueryMs": [
+            295.204917,
+            312.08716600000025,
+            304.53345800000034
+          ],
+          "warmQueryMedianMs": 304.53345800000034,
+          "scoringMs": 1.2334580000002688,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 1130938368,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 427,
+            "longestPassageTokens": 428
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            4
+          ],
+          "resultSha256": "b3926e733510591ae408833b78f60d8fd13a2ad697c226ed3b1e578917d775d9",
+          "inputSha256": "88ac76d60db118bab0d472a1a1e8708172986488c196f1f7bf45a4593e14c38e"
+        },
+        "cv-ar-jd-ar": {
+          "metrics": {
+            "precisionAt3": 1,
+            "recallAt3": 1,
+            "recallAt10": 1,
+            "top3TargetCoverage": 1,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.9959893156076964
+          },
+          "loadMs": 370.36679200000003,
+          "passagesMs": 583.0272510000001,
+          "queryMs": 344.78037499999994,
+          "warmQueryMs": [
+            343.5347919999999,
+            320.36837500000024,
+            353.84633399999984
+          ],
+          "warmQueryMedianMs": 343.5347919999999,
+          "scoringMs": 1.269749000000047,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 1246117888,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 501,
+            "longestPassageTokens": 428
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            3
+          ],
+          "resultSha256": "b74e4ef8d0b746a52a82d08760e17c2998f4bc45a460f7528cf8845da4c920b8",
+          "inputSha256": "e6312bc72b775f4b98932f4b849c66c946e892fdb5229ec7a6c1cfdf122cf35e"
+        }
+      }
+    },
+    "base": {
+      "modelId": "multilingual-e5-base",
+      "modelBytes": 295737413,
+      "runtime": {
+        "node": "v22.23.2",
+        "transformers": "4.2.0",
+        "platform": "darwin",
+        "arch": "arm64",
+        "cpu": "Apple M4 Pro",
+        "availableParallelism": 14,
+        "device": "cpu",
+        "dtype": "q8",
+        "batchSize": 8,
+        "embeddingDimension": 768,
+        "queryPrefix": "query: ",
+        "passagePrefix": "passage: "
+      },
+      "modelFiles": [
+        {
+          "file": "benchmark-manifest.json",
+          "bytes": 1587,
+          "sha256": "fb030202193225a0a0d7750fcc03e5432447fd118acf3ce7f99eb3d0a8c3d86d"
+        },
+        {
+          "file": "config.json",
+          "bytes": 686,
+          "sha256": "4c27930e59106027abab56f7531c1fa6b14bbf31e8229ec36d68affa4e869bcd"
+        },
+        {
+          "file": "onnx/model_quantized.onnx",
+          "bytes": 278647662,
+          "sha256": "df7a9a29309e3ad491e1783adf8baee710262cc06079c7cbab63c630277fac94"
+        },
+        {
+          "file": "source-manifest.json",
+          "bytes": 4120,
+          "sha256": "3a14a1278b37c7acb26cbd9d9c9644c38e40be922123540acc9efbc71026aa8f"
+        },
+        {
+          "file": "special_tokens_map.json",
+          "bytes": 280,
+          "sha256": "06e405a36dfe4b9604f484f6a1e619af1a7f7d09e34a8555eb0b77b66318067f"
+        },
+        {
+          "file": "tokenizer_config.json",
+          "bytes": 418,
+          "sha256": "efb5c0d09722e5fe59a462cd2a9976ee216d55b037597d997cd3fe833216da15"
+        },
+        {
+          "file": "tokenizer.json",
+          "bytes": 17082660,
+          "sha256": "62c24cdc13d4c9952d63718d6c9fa4c287974249e16b7ade6d5a85e7bbb75626"
+        }
+      ],
+      "scoringBundleSha256": "d656ebefa9770df1c5c1a12d4d8b1597c5291e0fc3bef537357480a35654fe56",
+      "benchmarkScriptSha256": "b35e9555033aa5b5eba35ecafda7a55e54f1b50f66dae351763c5ff10285efe3",
+      "cases": {
+        "drilling-en": {
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.25,
+            "recallAt10": 0.75,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.7552496405348124
+          },
+          "loadMs": 427.12770800000004,
+          "passagesMs": 2709.8230379999995,
+          "queryMs": 715.876375,
+          "warmQueryMs": [
+            670.1979999999999,
+            733.1313330000003,
+            720.7383749999999
+          ],
+          "warmQueryMedianMs": 720.7383749999999,
+          "scoringMs": 2.382208999999193,
+          "candidateCount": 16,
+          "passageCount": 64,
+          "peakRssBytes": 1552138240,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 470,
+            "longestPassageTokens": 395
+          },
+          "tier1Ranks": [
+            1,
+            4,
+            10,
+            16
+          ],
+          "resultSha256": "c255e945c39240fe21b6ebd761f1149b23aa29da35ac6a9c53f2c68cf05c61d7",
+          "inputSha256": "2715daa8f4d0609e986a4525f8ac86c9398e3cbe0b4a97bbf1515751836e429a"
+        },
+        "drilling-ar": {
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.25,
+            "recallAt10": 0.75,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 0.5,
+            "mrr": 0.5,
+            "ndcg10": 0.648596548150622
+          },
+          "loadMs": 431.7336250000001,
+          "passagesMs": 2600.4984179999997,
+          "queryMs": 812.92025,
+          "warmQueryMs": [
+            719.107458,
+            763.4757090000003,
+            770.9066249999996
+          ],
+          "warmQueryMedianMs": 763.4757090000003,
+          "scoringMs": 2.3411670000002687,
+          "candidateCount": 16,
+          "passageCount": 64,
+          "peakRssBytes": 1710030848,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 1,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 550,
+            "longestPassageTokens": 395
+          },
+          "tier1Ranks": [
+            2,
+            4,
+            8,
+            11
+          ],
+          "resultSha256": "66c821dec96c6d29a32bd616f81b50eca92bda81c6cf28b362d0fe6c52ae8f50",
+          "inputSha256": "4690e2afa49ea02e5f8490dd5998c6ee14ccc9af6ff704f83fd91d45c647e9c7"
+        },
+        "fnb": {
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.25,
+            "recallAt10": 0.75,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 0.5,
+            "mrr": 0.5,
+            "ndcg10": 0.8158604064749755
+          },
+          "loadMs": 489.76879099999996,
+          "passagesMs": 21820.188007999997,
+          "queryMs": 435.48579200000006,
+          "warmQueryMs": [
+            386.59349999999904,
+            412.9842499999977,
+            421.22258299999885
+          ],
+          "warmQueryMedianMs": 412.9842499999977,
+          "scoringMs": 11.006785999986278,
+          "candidateCount": 100,
+          "passageCount": 535,
+          "peakRssBytes": 1315291136,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 311,
+            "longestPassageTokens": 347
+          },
+          "tier1Ranks": [
+            2,
+            3,
+            4,
+            6,
+            7,
+            9,
+            22,
+            23
+          ],
+          "resultSha256": "74690297281bd8ab2e5c337f5ce5bdd01128830ac126819ec03785a3d19e3d58",
+          "inputSha256": "5435523efd0c223721edb7609fddd013b04f5b1572344f07cf8eba33cd0558f1"
+        },
+        "mixed-a-en": {
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.6666666666666666,
+            "recallAt10": 1,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.976119519735876
+          },
+          "loadMs": 435.69387499999993,
+          "passagesMs": 811.3774999999994,
+          "queryMs": 661.0013749999999,
+          "warmQueryMs": [
+            667.9329170000001,
+            622.6280420000003,
+            651.7635420000001
+          ],
+          "warmQueryMedianMs": 651.7635420000001,
+          "scoringMs": 1.4622070000002623,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 1509539840,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 426,
+            "longestPassageTokens": 428
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            4
+          ],
+          "resultSha256": "ed636b2065714dc281adf79fe6da715f1ea83792bd23579e10a4dab83c3a583d",
+          "inputSha256": "632fb52ef2f5083cf8c3db9ad9b4ed190602818472ce19cf432460d707d5d7e0"
+        },
+        "mixed-a-ar": {
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.6666666666666666,
+            "recallAt10": 1,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.9697815781764677
+          },
+          "loadMs": 442.2944580000001,
+          "passagesMs": 784.702875,
+          "queryMs": 729.250291,
+          "warmQueryMs": [
+            770.1514999999999,
+            766.7377500000002,
+            756.7595409999999
+          ],
+          "warmQueryMedianMs": 766.7377500000002,
+          "scoringMs": 1.3504159999997682,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 1593032704,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 500,
+            "longestPassageTokens": 428
+          },
+          "tier1Ranks": [
+            1,
+            3,
+            4
+          ],
+          "resultSha256": "5033917366feed27189a573d54fc3fba6bbf28f7deda920466cf79ec7f4abd7c",
+          "inputSha256": "3feacb4340a7390b3972f1e8ec3e981a7955e926b6b6467f06a100539f809161"
+        },
+        "mixed-b-en": {
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.3333333333333333,
+            "recallAt10": 1,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.9253578388443315
+          },
+          "loadMs": 453.36408300000005,
+          "passagesMs": 785.0203750000001,
+          "queryMs": 659.9611659999999,
+          "warmQueryMs": [
+            647.542625,
+            652.4003749999997,
+            653.174
+          ],
+          "warmQueryMedianMs": 652.4003749999997,
+          "scoringMs": 1.4056249999998727,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 1536458752,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 426,
+            "longestPassageTokens": 413
+          },
+          "tier1Ranks": [
+            1,
+            4,
+            5
+          ],
+          "resultSha256": "2eac6fa88552c8ae89d2e2227ce2ce4d76244addc62498b1be2f2ef70db7891c",
+          "inputSha256": "50856c6f276db1995668967204319aa22edac3fd70cfad6a5a7a3ebd898ff6bd"
+        },
+        "mixed-b-ar": {
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.6666666666666666,
+            "recallAt10": 1,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.976119519735876
+          },
+          "loadMs": 444.23366699999997,
+          "passagesMs": 848.2539569999997,
+          "queryMs": 778.1847910000001,
+          "warmQueryMs": [
+            780.325875,
+            750.9424590000003,
+            768.7330000000002
+          ],
+          "warmQueryMedianMs": 768.7330000000002,
+          "scoringMs": 1.7899579999993875,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 1611284480,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 500,
+            "longestPassageTokens": 413
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            4
+          ],
+          "resultSha256": "3f70baf9af82733eb0cbf7afdedef90478430555241513c368365c4fb2877661",
+          "inputSha256": "42b8ccbe625bb71738068c8cc89a090aed7731da1c5535380d2de63b89851806"
+        },
+        "cv-en-jd-en": {
+          "metrics": {
+            "precisionAt3": 1,
+            "recallAt3": 1,
+            "recallAt10": 1,
+            "top3TargetCoverage": 1,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 1
+          },
+          "loadMs": 445.64675,
+          "passagesMs": 756.1488340000001,
+          "queryMs": 668.7952500000001,
+          "warmQueryMs": [
+            663.7846250000002,
+            666.2679170000001,
+            644.4685829999999
+          ],
+          "warmQueryMedianMs": 663.7846250000002,
+          "scoringMs": 1.4157069999996565,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 1529741312,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 426,
+            "longestPassageTokens": 340
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            3
+          ],
+          "resultSha256": "7f02161e6e7238fd0b56dec8791416afb51567c317572b90d658bff5c4d6d14e",
+          "inputSha256": "5140008d318a4141ea4431c4a0ce08da17dc94a3bf453de9350b888a9891c3f9"
+        },
+        "cv-en-jd-ar": {
+          "metrics": {
+            "precisionAt3": 1,
+            "recallAt3": 1,
+            "recallAt10": 1,
+            "top3TargetCoverage": 1,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 1
+          },
+          "loadMs": 442.815833,
+          "passagesMs": 700.0641239999998,
+          "queryMs": 817.870583,
+          "warmQueryMs": [
+            765.2047499999999,
+            747.5760829999999,
+            774.105959
+          ],
+          "warmQueryMedianMs": 765.2047499999999,
+          "scoringMs": 1.3620009999997365,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 1607598080,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 500,
+            "longestPassageTokens": 340
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            3
+          ],
+          "resultSha256": "046834ba3805aa3e4afa3d226a9b21293f0dfd9d071f4ded597c977b950028c5",
+          "inputSha256": "064f78240aa9f8b30e3efa47e3fe5dd17ea961e65b3c4187b36875c0bb3c08b2"
+        },
+        "cv-ar-jd-en": {
+          "metrics": {
+            "precisionAt3": 1,
+            "recallAt3": 1,
+            "recallAt10": 1,
+            "top3TargetCoverage": 1,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.9959893156076964
+          },
+          "loadMs": 446.39558300000004,
+          "passagesMs": 862.8875840000001,
+          "queryMs": 659.3251669999999,
+          "warmQueryMs": [
+            635.111167,
+            640.7935420000003,
+            676.0931249999999
+          ],
+          "warmQueryMedianMs": 640.7935420000003,
+          "scoringMs": 1.53416500000003,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 1521090560,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 426,
+            "longestPassageTokens": 428
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            3
+          ],
+          "resultSha256": "aa55ed1a42f041abfc88525273ee2d0bf5eb8fc9a6ef8fee95e1a3149da80c03",
+          "inputSha256": "88ac76d60db118bab0d472a1a1e8708172986488c196f1f7bf45a4593e14c38e"
+        },
+        "cv-ar-jd-ar": {
+          "metrics": {
+            "precisionAt3": 1,
+            "recallAt3": 1,
+            "recallAt10": 1,
+            "top3TargetCoverage": 1,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 1
+          },
+          "loadMs": 444.94233299999996,
+          "passagesMs": 874.9020819999996,
+          "queryMs": 795.408584,
+          "warmQueryMs": [
+            756.6887080000001,
+            751.5105840000001,
+            753.6892920000005
+          ],
+          "warmQueryMedianMs": 753.6892920000005,
+          "scoringMs": 1.3851680000002489,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 1619984384,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 500,
+            "longestPassageTokens": 428
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            3
+          ],
+          "resultSha256": "3b4d010ecfc8387bb0dbf129514d89195dd22e1100e0a61654388767abfa7036",
+          "inputSha256": "e6312bc72b775f4b98932f4b849c66c946e892fdb5229ec7a6c1cfdf122cf35e"
+        }
+      }
+    },
+    "large": {
+      "modelId": "multilingual-e5-large",
+      "modelBytes": 578857723,
+      "runtime": {
+        "node": "v22.23.2",
+        "transformers": "4.2.0",
+        "platform": "darwin",
+        "arch": "arm64",
+        "cpu": "Apple M4 Pro",
+        "availableParallelism": 14,
+        "device": "cpu",
+        "dtype": "q8",
+        "batchSize": 8,
+        "embeddingDimension": 1024,
+        "queryPrefix": "query: ",
+        "passagePrefix": "passage: "
+      },
+      "modelFiles": [
+        {
+          "file": "benchmark-manifest.json",
+          "bytes": 1590,
+          "sha256": "7cef7351d3cb6e25389bc86e20810374395eb660b07a3647fd78336c896dbf4f"
+        },
+        {
+          "file": "config.json",
+          "bytes": 792,
+          "sha256": "b509e517b78bc01ce8fba4827592354df3fd1b3e077fe663fb58b6b7bddd0751"
+        },
+        {
+          "file": "onnx/model_quantized.onnx",
+          "bytes": 561768762,
+          "sha256": "0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca"
+        },
+        {
+          "file": "source-manifest.json",
+          "bytes": 3221,
+          "sha256": "48790eabce2a2855d97f379dfd3ab8b61a2fc791f07698f8559d9bb5c1bc80e4"
+        },
+        {
+          "file": "special_tokens_map.json",
+          "bytes": 280,
+          "sha256": "06e405a36dfe4b9604f484f6a1e619af1a7f7d09e34a8555eb0b77b66318067f"
+        },
+        {
+          "file": "tokenizer_config.json",
+          "bytes": 418,
+          "sha256": "efb5c0d09722e5fe59a462cd2a9976ee216d55b037597d997cd3fe833216da15"
+        },
+        {
+          "file": "tokenizer.json",
+          "bytes": 17082660,
+          "sha256": "62c24cdc13d4c9952d63718d6c9fa4c287974249e16b7ade6d5a85e7bbb75626"
+        }
+      ],
+      "scoringBundleSha256": "d656ebefa9770df1c5c1a12d4d8b1597c5291e0fc3bef537357480a35654fe56",
+      "benchmarkScriptSha256": "b35e9555033aa5b5eba35ecafda7a55e54f1b50f66dae351763c5ff10285efe3",
+      "cases": {
+        "drilling-en": {
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.25,
+            "recallAt10": 0.5,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 0.5,
+            "mrr": 0.5,
+            "ndcg10": 0.6880893211489816
+          },
+          "loadMs": 704.519292,
+          "passagesMs": 10038.533414000001,
+          "queryMs": 2044.9738750000001,
+          "warmQueryMs": [
+            2167.274125,
+            2126.1362500000014,
+            2115.546542
+          ],
+          "warmQueryMedianMs": 2126.1362500000014,
+          "scoringMs": 2.7607080000007045,
+          "candidateCount": 16,
+          "passageCount": 64,
+          "peakRssBytes": 2594914304,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 470,
+            "longestPassageTokens": 395
+          },
+          "tier1Ranks": [
+            2,
+            5,
+            11,
+            14
+          ],
+          "resultSha256": "77d78a2226b33f6bcb3ffa7e5f2b11276d8768044ee49bfcb58e63f62df23777",
+          "inputSha256": "2715daa8f4d0609e986a4525f8ac86c9398e3cbe0b4a97bbf1515751836e429a"
+        },
+        "drilling-ar": {
+          "metrics": {
+            "precisionAt3": 0,
+            "recallAt3": 0,
+            "recallAt10": 0.5,
+            "top3TargetCoverage": 0,
+            "reciprocalRank": 0.25,
+            "mrr": 0.25,
+            "ndcg10": 0.6191516300831514
+          },
+          "loadMs": 727.5314579999999,
+          "passagesMs": 10388.693166,
+          "queryMs": 2285.0775830000002,
+          "warmQueryMs": [
+            2303.6166250000006,
+            2320.0346659999996,
+            2303.6284589999996
+          ],
+          "warmQueryMedianMs": 2303.6284589999996,
+          "scoringMs": 2.8067919999980404,
+          "candidateCount": 16,
+          "passageCount": 64,
+          "peakRssBytes": 2679881728,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 1,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 550,
+            "longestPassageTokens": 395
+          },
+          "tier1Ranks": [
+            4,
+            6,
+            11,
+            13
+          ],
+          "resultSha256": "3b8fd8bb18226784ea9d4dede23b6af8f1d9c8a6c80467eca25c915cac0d0f7d",
+          "inputSha256": "4690e2afa49ea02e5f8490dd5998c6ee14ccc9af6ff704f83fd91d45c647e9c7"
+        },
+        "fnb": {
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.25,
+            "recallAt10": 0.625,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.7629928377733656
+          },
+          "loadMs": 668.4425840000001,
+          "passagesMs": 76603.20745800002,
+          "queryMs": 1370.1856670000002,
+          "warmQueryMs": [
+            1374.0776249999908,
+            1370.1494999999995,
+            1340.7956669999985
+          ],
+          "warmQueryMedianMs": 1370.1494999999995,
+          "scoringMs": 13.339664999999513,
+          "candidateCount": 100,
+          "passageCount": 535,
+          "peakRssBytes": 2183020544,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 311,
+            "longestPassageTokens": 347
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            8,
+            9,
+            10,
+            11,
+            17,
+            25
+          ],
+          "resultSha256": "9b2f400f1a5cb6b0afdcbb0c656092261db7ce4762b8447ee082a84a63009b89",
+          "inputSha256": "5435523efd0c223721edb7609fddd013b04f5b1572344f07cf8eba33cd0558f1"
+        },
+        "mixed-a-en": {
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.6666666666666666,
+            "recallAt10": 1,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.976119519735876
+          },
+          "loadMs": 703.356792,
+          "passagesMs": 3054.007375,
+          "queryMs": 1950.8690420000003,
+          "warmQueryMs": [
+            1946.4210830000002,
+            1954.0228749999997,
+            1874.7370410000003
+          ],
+          "warmQueryMedianMs": 1946.4210830000002,
+          "scoringMs": 1.6611250000009932,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 2116141056,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 426,
+            "longestPassageTokens": 428
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            4
+          ],
+          "resultSha256": "c0631a14cd0fdf2d7553966ce5ffa1ec1852a8adfb91deb90087896ed2e6faa3",
+          "inputSha256": "632fb52ef2f5083cf8c3db9ad9b4ed190602818472ce19cf432460d707d5d7e0"
+        },
+        "mixed-a-ar": {
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.3333333333333333,
+            "recallAt10": 1,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.9253578388443315
+          },
+          "loadMs": 730.268542,
+          "passagesMs": 2712.2111660000005,
+          "queryMs": 2284.586375,
+          "warmQueryMs": [
+            2275.3229999999994,
+            2248.708125000001,
+            2206.379417
+          ],
+          "warmQueryMedianMs": 2248.708125000001,
+          "scoringMs": 1.5171650000002046,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 2605596672,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 500,
+            "longestPassageTokens": 428
+          },
+          "tier1Ranks": [
+            1,
+            4,
+            5
+          ],
+          "resultSha256": "b68a2c827f854f7db50ee8fc070bba85bdf492b7da73a4c4ff40718cf76017b2",
+          "inputSha256": "3feacb4340a7390b3972f1e8ec3e981a7955e926b6b6467f06a100539f809161"
+        },
+        "mixed-b-en": {
+          "metrics": {
+            "precisionAt3": 0.3333333333333333,
+            "recallAt3": 0.3333333333333333,
+            "recallAt10": 1,
+            "top3TargetCoverage": 0.3333333333333333,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.9253578388443315
+          },
+          "loadMs": 732.5081670000001,
+          "passagesMs": 2512.207043000001,
+          "queryMs": 1953.2967919999999,
+          "warmQueryMs": [
+            1920.1304999999993,
+            1916.4993329999988,
+            1887.9539590000004
+          ],
+          "warmQueryMedianMs": 1916.4993329999988,
+          "scoringMs": 1.56412599999976,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 2130919424,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 426,
+            "longestPassageTokens": 413
+          },
+          "tier1Ranks": [
+            1,
+            4,
+            5
+          ],
+          "resultSha256": "28547a61a427b9dc654187902995d01662c2a9f613c7e23b6273f41384289249",
+          "inputSha256": "50856c6f276db1995668967204319aa22edac3fd70cfad6a5a7a3ebd898ff6bd"
+        },
+        "mixed-b-ar": {
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.6666666666666666,
+            "recallAt10": 1,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.976119519735876
+          },
+          "loadMs": 723.0512920000001,
+          "passagesMs": 2383.224709000001,
+          "queryMs": 2226.5531250000004,
+          "warmQueryMs": [
+            2166.667125,
+            2229.2960829999993,
+            2156.4921669999985
+          ],
+          "warmQueryMedianMs": 2166.667125,
+          "scoringMs": 1.4803759999995236,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 2645065728,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 500,
+            "longestPassageTokens": 413
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            4
+          ],
+          "resultSha256": "31c339879ba1c8f445849ffbbeec0362238957b4c8cb538d0f7e9d95ce048703",
+          "inputSha256": "42b8ccbe625bb71738068c8cc89a090aed7731da1c5535380d2de63b89851806"
+        },
+        "cv-en-jd-en": {
+          "metrics": {
+            "precisionAt3": 1,
+            "recallAt3": 1,
+            "recallAt10": 1,
+            "top3TargetCoverage": 1,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.9942646540427001
+          },
+          "loadMs": 681.15725,
+          "passagesMs": 2305.2060000000006,
+          "queryMs": 1952.326291,
+          "warmQueryMs": [
+            1913.9345830000002,
+            1892.6685829999997,
+            1920.3861660000002
+          ],
+          "warmQueryMedianMs": 1913.9345830000002,
+          "scoringMs": 1.558165999997982,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 2115665920,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 426,
+            "longestPassageTokens": 340
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            3
+          ],
+          "resultSha256": "31b0a799c963447b74f9884afa2b7019ba592ca61bfe3f451c63cfa442f6da27",
+          "inputSha256": "5140008d318a4141ea4431c4a0ce08da17dc94a3bf453de9350b888a9891c3f9"
+        },
+        "cv-en-jd-ar": {
+          "metrics": {
+            "precisionAt3": 1,
+            "recallAt3": 1,
+            "recallAt10": 1,
+            "top3TargetCoverage": 1,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.9942646540427001
+          },
+          "loadMs": 759.930042,
+          "passagesMs": 2014.8835000000004,
+          "queryMs": 2206.565708,
+          "warmQueryMs": [
+            2240.087292,
+            2302.5022499999995,
+            2231.25
+          ],
+          "warmQueryMedianMs": 2240.087292,
+          "scoringMs": 1.5173350000000028,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 2619162624,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 500,
+            "longestPassageTokens": 340
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            3
+          ],
+          "resultSha256": "cc33536c1de4441832f8d05dfcf39c0cd3a8d6a1f8cfc54094728906c57bdf4d",
+          "inputSha256": "064f78240aa9f8b30e3efa47e3fe5dd17ea961e65b3c4187b36875c0bb3c08b2"
+        },
+        "cv-ar-jd-en": {
+          "metrics": {
+            "precisionAt3": 0.6666666666666666,
+            "recallAt3": 0.6666666666666666,
+            "recallAt10": 1,
+            "top3TargetCoverage": 0.6666666666666666,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 0.976119519735876
+          },
+          "loadMs": 742.074583,
+          "passagesMs": 3480.5565410000004,
+          "queryMs": 1945.358875,
+          "warmQueryMs": [
+            1963.0155829999994,
+            1944.8722080000007,
+            1930.515042000001
+          ],
+          "warmQueryMedianMs": 1944.8722080000007,
+          "scoringMs": 1.5151260000011462,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 2156232704,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 426,
+            "longestPassageTokens": 428
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            4
+          ],
+          "resultSha256": "3118241f642c487390e1010514a37c4429b0b12dd0edf54a66962ab5ca61e384",
+          "inputSha256": "88ac76d60db118bab0d472a1a1e8708172986488c196f1f7bf45a4593e14c38e"
+        },
+        "cv-ar-jd-ar": {
+          "metrics": {
+            "precisionAt3": 1,
+            "recallAt3": 1,
+            "recallAt10": 1,
+            "top3TargetCoverage": 1,
+            "reciprocalRank": 1,
+            "mrr": 1,
+            "ndcg10": 1
+          },
+          "loadMs": 747.0807080000001,
+          "passagesMs": 3282.3452500000008,
+          "queryMs": 2301.060291,
+          "warmQueryMs": [
+            2213.928917,
+            2218.1664580000015,
+            2271.989042000001
+          ],
+          "warmQueryMedianMs": 2218.1664580000015,
+          "scoringMs": 1.5385859999992135,
+          "candidateCount": 6,
+          "passageCount": 18,
+          "peakRssBytes": 2647867392,
+          "tokenization": {
+            "maxTokens": 512,
+            "queriesTruncated": 0,
+            "passagesTruncated": 0,
+            "longestQueryTokens": 500,
+            "longestPassageTokens": 428
+          },
+          "tier1Ranks": [
+            1,
+            2,
+            3
+          ],
+          "resultSha256": "b1290d514e85637724f3e2655f86e4bca026251664bf0c1bf1909abac625c221",
+          "inputSha256": "e6312bc72b775f4b98932f4b849c66c946e892fdb5229ec7a6c1cfdf122cf35e"
+        }
+      }
+    }
+  },
+  "baselineParity": {
+    "drilling-en": {
+      "metricsEqual": true,
+      "sameCandidateOrder": true,
+      "maxScoreDifference": 0.002497069052586287
+    },
+    "drilling-ar": {
+      "metricsEqual": true,
+      "sameCandidateOrder": true,
+      "maxScoreDifference": 0.002212755480174189
+    },
+    "fnb": {
+      "metricsEqual": true,
+      "sameCandidateOrder": false,
+      "maxScoreDifference": 0.0031834434066899675
+    },
+    "mixed-a-en": {
+      "metricsEqual": true,
+      "sameCandidateOrder": true,
+      "maxScoreDifference": 0.007311257643132174
+    },
+    "mixed-a-ar": {
+      "metricsEqual": true,
+      "sameCandidateOrder": true,
+      "maxScoreDifference": 0.003186421394754002
+    },
+    "mixed-b-en": {
+      "metricsEqual": true,
+      "sameCandidateOrder": true,
+      "maxScoreDifference": 0.00477377401400636
+    },
+    "mixed-b-ar": {
+      "metricsEqual": true,
+      "sameCandidateOrder": true,
+      "maxScoreDifference": 0.0031066239337128876
+    },
+    "cv-en-jd-en": {
+      "metricsEqual": true,
+      "sameCandidateOrder": true,
+      "maxScoreDifference": 0.004659003513246662
+    },
+    "cv-en-jd-ar": {
+      "metricsEqual": true,
+      "sameCandidateOrder": true,
+      "maxScoreDifference": 0.007915627835239691
+    },
+    "cv-ar-jd-en": {
+      "metricsEqual": true,
+      "sameCandidateOrder": true,
+      "maxScoreDifference": 0.010030387872705271
+    },
+    "cv-ar-jd-ar": {
+      "metricsEqual": true,
+      "sameCandidateOrder": true,
+      "maxScoreDifference": 0.0031203897486941634
+    }
+  }
+}

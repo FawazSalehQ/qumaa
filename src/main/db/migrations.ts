@@ -12,7 +12,7 @@ import { assertRecruitingData, RECRUITING_TABLE_SQL } from '../recruiting/storag
 
 /** ASCII "QUMA", stored in SQLite's standard application_id header field. */
 export const QUMAA_APPLICATION_ID = 0x51554d41
-export const CURRENT_SCHEMA_VERSION = 7
+export const CURRENT_SCHEMA_VERSION = 12
 
 const BASE_RESUME_COLUMNS = [
   'id',
@@ -1277,6 +1277,43 @@ const MIGRATIONS: readonly Migration[] = [
     up() {
       // Saved AI rankings now identify the provider and model that produced them.
       // Older Claude rankings remain readable without rewriting their evidence.
+    }
+  },
+  {
+    version: 8,
+    up() {
+      // Company records, job budgets, and target-company research are optional.
+      // Advance the version so older strict readers cannot open these records.
+    }
+  },
+  {
+    version: 9,
+    up() {
+      // Stable contacts, activity history, pipelines, screening kits and talent
+      // pools share bounded recruiting storage; older readers must not open it.
+    }
+  },
+  {
+    version: 10,
+    up() {
+      // Criteria can retain original posting text and unspecified importance.
+      // Preserve legacy records verbatim; prevent older strict JSON readers
+      // from treating the expanded contract as malformed recruiting data.
+    }
+  },
+  {
+    version: 11,
+    up() {
+      // Company details can contain multiple values. Normalize legacy strings
+      // when read, without rewriting saved values or their company identities.
+      // Older strict readers must not open the expanded array-valued records.
+    }
+  },
+  {
+    version: 12,
+    up() {
+      // Company hiring-cost plans add a versioned record kind. Existing company
+      // and job records retain their identities and original data verbatim.
     }
   }
 ]

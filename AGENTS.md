@@ -8,13 +8,22 @@ SQLite, paste a job description, get the best-matching candidates with evidence.
 Everything runs on-device. The one exception is optional AI reranking through
 Anthropic or OpenAI, inert unless the user supplies that provider's API key.
 
+**Product scope: hiring across all domains.** F&B and drilling are existing
+regression datasets, not the target market or a complete quality gate. Matching
+must accept arbitrary job descriptions without an industry allowlist. Evaluate
+general improvements across professions, seniority and Arabic/English, including
+roles absent from the built-in skill vocabulary. The active quality plan is
+`pilot/CROSS-DOMAIN-QUALITY.md`; narrow historical results do not establish broad
+matching quality.
+
 ## Commands
 
 ```bash
-npm test            # 111 vitest tests, pure logic only
+npm test            # vitest tests, pure logic only; use run output for current count
 npm run smoke       # integration check inside Electron (DB, model, ingest, search, wipe)
 npm run bench       # capacity: ingest/dup-scan/search at 500/1500/3000
 npm run eval        # ranking QUALITY against a labelled corpus (see below)
+npm run eval:domains # multi-profession, bilingual synthetic regression suite
 npm run dev
 npm run build:mac   # release/Qumaa-<v>-arm64.dmg
 npm run build:win   # release/Qumaa-<v>-Setup-x64.exe (cross-builds from macOS)
@@ -81,14 +90,35 @@ cross-profession separation and Arabic→English retrieval in
 The sanity tests are the guard; the eval is the target. Improving one while
 breaking the other is not progress.
 
-**The skills gazetteer (`src/main/data/skills.json`, 153 entries) is
-domain-limited.** It covers software, finance, nursing, and hospitality/F&B. For
+**The skills gazetteer (`src/main/data/skills.json`, 162 entries) is
+domain-limited.** It covers software, finance, nursing, hospitality/F&B, and a
+first set of drilling/well-engineering concepts. Arabic drilling terminology
+still needs independent domain review; sources are in `skills-sources.md`. For
 an uncovered domain the skill component collapses toward a constant and a quarter
 of the score stops discriminating. Symptom: `Detected requirements` in the eval
-output lists only two or three generic terms. The fix is more entries, with
-Arabic aliases, following the existing `{id, label, aliases}` shape.
+output lists only two or three generic terms. Full-text semantic and lexical
+matching still run for arbitrary roles; vocabulary coverage is not an industry
+support boundary. Adding validated entries and Arabic aliases can address a
+specific terminology gap, but is not the general solution for all professions.
+Prioritize job-specific requirement/evidence matching and validate how sparse
+dictionary coverage affects ranking and explanations across domains. Do not
+treat unrecognized terminology as evidence that a candidate lacks a requirement.
+Retain the existing `{id, label, aliases}` shape for vocabulary additions.
+
+**Parser changes must reach existing libraries.** `src/main/ingest/derivation-version.ts`
+versions the section/field/chunk derivation. A version change rebuilds these
+caches from stored text behind startup readiness, retaining CV identities and
+recruiter records while invalidating saved match evidence. Interrupted rebuilds
+retry on the next launch. Cover DB upgrade behavior in `smoke-derived.ts`;
+portable restore also marks the completed derivation version.
 
 ## The evaluation harness
+
+`npm run eval:domains` runs the mixed-language development families in
+`eval/cross-domain/`; see its README for reserved families and output controls.
+Keep fixtures and labels frozen before experiments. Report each profession and
+language as well as equal-vacancy averages; the largest corpus must not dominate
+quality decisions. All synthetic labels and translations remain unreviewed.
 
 `npm run eval` grades ranking quality against `eval/corpus/` (gitignored) and
 `eval/posting.txt`, reporting precision@3, recall@3, MRR, and NDCG@10.

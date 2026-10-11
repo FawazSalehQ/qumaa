@@ -1,3 +1,4 @@
+import { criterionImportanceLabel } from '@shared/job-requirements.js'
 import { useI18n } from '../../i18n.js'
 import type { JobWorkspace } from '@shared/recruiting.js'
 import { candidateWithProfile, reviewForMatch } from '@shared/recruiting.js'
@@ -33,14 +34,14 @@ export default function CandidateComparison({ workspace, matches, onOpenCandidat
           <tr><th scope="row">{t("Preferred location")}</th>{matches.map((match) => <td key={match.resume.recordKey} dir="auto">{matchProfile(workspace, match)?.preferredLocation || t('Not confirmed')}</td>)}</tr>
           <tr><th scope="row">{t("Skills")}</th>{matches.map((match) => <td key={match.resume.recordKey} dir="auto">{candidateWithProfile(match.resume, matchProfile(workspace, match)).skills.join(', ') || t('Not stated')}</td>)}</tr>
           {workspace.job.criteria.map((criterion) => <tr key={criterion.id}>
-            <th scope="row"><span className={`recruit-importance ${criterion.importance}`}>{t(criterion.importance === 'required' ? 'Required' : 'Preferred')}</span><div dir="auto">{criterion.text}</div></th>
+            <th scope="row"><span className={`recruit-importance ${criterion.importance}`}>{t(criterionImportanceLabel(criterion.importance))}</span><div dir="auto">{criterion.text}</div></th>
             {matches.map((match) => {
               const assessment = reviewForMatch(workspace.reviews, workspace.profiles, match)?.assessments.find((item) => item.criterionId === criterion.id)
               const passage = workspace.evidence[match.resume.recordKey]?.find((item) => item.criterionId === criterion.id)?.passage
               return <td key={match.resume.recordKey}>
                 <strong className="recruit-assessment-status">{t(ASSESSMENT_LABELS[assessment?.status ?? 'unreviewed'])}</strong>
                 {assessment?.note && <p dir="auto">{assessment.note}</p>}
-                {passage ? <><span className="recruit-evidence-label">{t('Suggested passage · {section}', { section: t(passage.section) })}</span><blockquote dir="auto">{passage.text}</blockquote><button className="recruit-text-button" type="button" onClick={() => onOpenCandidate({ ...match, evidence: [passage, ...match.evidence.filter((item) => item.text !== passage.text)] })}>{t("Read evidence")}</button></> : <p className="hint">{workspace.evidence[match.resume.recordKey] === undefined ? t('Suggested evidence has not loaded yet.') : t('No suggested passage. Verify with the candidate.')}</p>}
+                {passage ? <><span className="recruit-evidence-label">{t('Nearest passage · {section} · Review needed', { section: t(passage.section) })}</span><blockquote dir="auto">{passage.text}</blockquote><button className="recruit-text-button" type="button" onClick={() => onOpenCandidate({ ...match, evidence: [passage, ...match.evidence.filter((item) => item.text !== passage.text)] })}>{t("Read evidence")}</button></> : <p className="hint">{workspace.evidence[match.resume.recordKey] === undefined ? t('Suggested evidence has not loaded yet.') : t('No suggested passage. Verify with the candidate.')}</p>}
               </td>
             })}
           </tr>)}

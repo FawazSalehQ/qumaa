@@ -1,7 +1,10 @@
+import JobCriteriaEditor from '../components/recruiting/JobCriteriaEditor.js'
+import RequirementPassages from '../components/recruiting/RequirementPassages.js'
+import { criterionImportanceLabel } from '@shared/job-requirements.js'
 import { DEFAULT_RERANK_CONFIG, rerankModelLabel } from '@shared/rerank.js'
 import { useI18n } from '../i18n.js'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import type { CandidateProfile, JobCriterion, JobPosting, JobStatus, JobWorkspace, ReviewStatus, SavedJob, SaveReviewInput } from '@shared/recruiting.js'
+import type { CandidateProfile, Company, JobCriterion, JobPosting, JobStatus, JobTargetCompany, JobWorkspace, ReviewStatus, SavedJob, SaveReviewInput } from '@shared/recruiting.js'
 import { candidateWithProfile, reviewForMatch } from '@shared/recruiting.js'
 import type { MatchResult, ResumeSummary } from '@shared/types.js'
 import type { Toast } from '../components/Toasts.js'
@@ -12,6 +15,10 @@ import JobStatusPanel from '../components/recruiting/JobStatusPanel.js'
 import { bidiValue, candidateName, errorMessage, recruitingError, indexWorkspace, isShortlisted, matchProfile, REVIEW_LABELS, shortlistMatches } from '../components/recruiting/helpers.js'
 import { emptyJobPosting, hasJobPostingContent, jobPostingTitle } from '../jobPosting.js'
 import LocalizedNumberInput from '../components/LocalizedNumberInput.js'
+import JobBudgetEditor, { budgetFromDraft, budgetLabel, budgetToDraft, HiringBudgetEditor, hiringBudgetFromDraft, hiringBudgetLabel, hiringBudgetToDraft, type BudgetDraft, type HiringBudgetDraft } from '../components/recruiting/JobBudgetEditor.js'
+import TargetCompanies from '../components/recruiting/TargetCompanies.js'
+import JobPipeline from '../components/recruiting/JobPipeline.js'
+import ClientPack from '../components/recruiting/ClientPack.js'
 import '../recruiting.css'
 
 interface Props {
@@ -19,6 +26,10 @@ interface Props {
   libraryRevision: number
   active?: boolean
   newJobSignal?: number
+  companyRevision?: number
+  talentRevision?: number
+  navigationRequest?: { id: number; companyId?: string; jobId?: string; tab?: 'pipeline' }
+  onOpenCompanies: () => void
   onOpenCandidate: (match: MatchResult) => void
   onOpenResume: (resume: ResumeSummary) => void
   onToast: (toasts: Toast[]) => void
@@ -31,11 +42,16 @@ interface JobDraft {
   posting: JobPosting
   status: JobStatus
   criteria: JobCriterion[]
+  companyId?: string | null
+  budget?: BudgetDraft
+  hiringBudget?: HiringBudgetDraft
 }
 
 const JOB_LABELS: Record<JobStatus, string> = { open: 'Open', 'on-hold': 'On hold', filled: 'Filled', archived: 'Archived' }
 const PAGE_SIZE = 50
 const EMPTY_FILTERS = { query: '', status: '', location: '', years: '', skill: '', tag: '', availability: '' }
+
+const belongsToCompany = (job: SavedJob, filter: string): boolean => filter === 'all' || (filter === 'unassigned' ? !job.companyId : job.companyId === filter)
 
 function lastSelectedJob(): string | null {
   try { return localStorage.getItem('qumaa-selected-job') } catch { return null }
@@ -55,11 +71,16 @@ function matchesFilters(match: MatchResult, profile: CandidateProfile | undefine
   return true
 }
 
-export default function JobsView({ resumes, libraryRevision, active = true, newJobSignal = 0, onOpenCandidate, onOpenResume, onToast }: Props): React.JSX.Element {
+export default function JobsView({ resumes, libraryRevision, active = true, newJobSignal = 0, companyRevision = 0, talentRevision = 0, navigationRequest, onOpenCompanies, onOpenCandidate, onOpenResume, onToast }: Props): React.JSX.Element {
   const { t, language, formatNumber, formatDate } = useI18n()
   const dateLabel = (value: number | null): string => value === null ? t('Not matched yet') : formatDate(value, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
   const postingTitle = (posting: JobPosting): string => hasJobPostingContent(posting) ? jobPostingTitle(posting) : t('Job description')
   const [jobs, setJobs] = useState<SavedJob[]>([])
+  const [companies, setCompanies] = useState<Company[]>([])
+  const [companyFilter, setCompanyFilter] = useState('all')
+  const [targetDirty, setTargetDirty] = useState(false)
+  const [pipelineDirty, setPipelineDirty] = useState(false)
+  const [packDirty, setPackDirty] = useState(false)
   const [temporaryJob, setTemporaryJob] = useState<SavedJob | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(lastSelectedJob)
   const [workspaceReloadRevision, setWorkspaceReloadRevision] = useState(0)
@@ -72,7 +93,7 @@ export default function JobsView({ resumes, libraryRevision, active = true, newJ
   const [rerankBusy, setRerankBusy] = useState(false)
   const [statusBusy, setStatusBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [tab, setTab] = useState<'candidates' | 'shortlist' | 'compare'>('candidates')
+  const [tab, setTab] = useState<'candidates' | 'shortlist' | 'compare' | 'targets' | 'pipeline' | 'pack'>('candidates')
   const [jobFilter, setJobFilter] = useState('active')
   const [filters, setFilters] = useState(EMPTY_FILTERS)
   const [page, setPage] = useState(0)
@@ -95,7 +116,8 @@ export default function JobsView({ resumes, libraryRevision, active = true, newJ
   const rerankReloadPending = useRef(false)
   const creatingJob = useRef(false)
   const lastNewJobSignal = useRef(newJobSignal)
-  const workflowDisabled = Boolean(busy || loading || listLoading || draft || reviewDirty)
+  const lastNavigationRequest = useRef<number | undefined>(undefined)
+  const workflowDisabled = Boolean(busy || loading || listLoading || draft || reviewDirty || targetDirty || pipelineDirty || packDirty)
   const rerankDisabled = workflowDisabled || statusBusy
   const locked = rerankDisabled || rerankBusy
   const evidenceKeys = (tab === 'compare' ? compareKeys : reviewKey ? [reviewKey] : []).join('|')
@@ -113,6 +135,17 @@ export default function JobsView({ resumes, libraryRevision, active = true, newJ
   }, [])
 
   useEffect(() => {
+    let cancelled = false
+    void window.api.recruiting.listCompanies().then((list) => {
+      if (!cancelled) {
+        setCompanies(list)
+        setCompanyFilter((current) => current === 'all' || current === 'unassigned' || list.some((company) => company.id === current) ? current : 'all')
+      }
+    }).catch((failure: unknown) => { if (!cancelled) setError(errorMessage(failure)) })
+    return () => { cancelled = true }
+  }, [companyRevision, libraryRevision])
+
+  useEffect(() => {
     const request = ++jobsRequestId.current
     let cancelled = false
     void window.api.recruiting.listJobs().then((list) => {
@@ -120,11 +153,12 @@ export default function JobsView({ resumes, libraryRevision, active = true, newJ
       const previous = recoveringTemporary.current ? lastSelectedJob() : null
       recoveringTemporary.current = false
       setJobs(list)
-      setSelectedId((current) => current && (current === temporaryJobId.current || list.some((job) => job.id === current)) ? current : creatingJob.current ? null : list.find((job) => job.id === previous)?.id ?? list[0]?.id ?? null)
+      const eligible = list.filter((job) => belongsToCompany(job, companyFilter))
+      setSelectedId((current) => current && (current === temporaryJobId.current || eligible.some((job) => job.id === current)) ? current : creatingJob.current ? null : eligible.find((job) => job.id === previous)?.id ?? eligible[0]?.id ?? null)
     }).catch((failure: unknown) => { if (!cancelled && request === jobsRequestId.current) setError(errorMessage(failure)) })
       .finally(() => { if (!cancelled && request === jobsRequestId.current) setListLoading(false) })
     return () => { cancelled = true }
-  }, [libraryRevision, jobsReloadRevision])
+  }, [libraryRevision, jobsReloadRevision, companyFilter])
 
   useEffect(() => {
     const request = ++requestId.current
@@ -189,7 +223,7 @@ export default function JobsView({ resumes, libraryRevision, active = true, newJ
       const match = workspace?.response?.results.find((item) => item.resume.recordKey === key) ?? (reviewSnapshot.current?.resume.recordKey === key ? reviewSnapshot.current : undefined)
       return match && workspace?.evidence[key] === undefined ? [{ id: match.resume.id, recordKey: key }] : []
     })
-    if (!workspace || workspace.temporary || records.length === 0 || loading) { setEvidenceLoading(false); return }
+    if (!workspace || records.length === 0 || loading) { setEvidenceLoading(false); return }
     const id = workspace.job.id
     setEvidenceLoading(true)
     void window.api.recruiting.getEvidence({ jobId: id, resumes: records }).then((evidence) => {
@@ -224,12 +258,51 @@ export default function JobsView({ resumes, libraryRevision, active = true, newJ
     setTab('candidates')
   }
 
+  const filterCompany = (filter: string): void => {
+    if (locked || filter === companyFilter) return
+    setCompanyFilter(filter)
+    const nextId = jobs.find((job) => belongsToCompany(job, filter))?.id ?? null
+    setSelectedId(nextId)
+    if (nextId !== selectedId) setWorkspace(null)
+    setReviewKey(null)
+    setCompareKeys([])
+    setFilters(EMPTY_FILTERS)
+    setTab('candidates')
+    setError(null)
+  }
+
+  const cancelDraft = (): void => {
+    setDraft(null)
+    creatingJob.current = false
+    if (!selectedId) setSelectedId(jobs.find((job) => belongsToCompany(job, companyFilter))?.id ?? null)
+  }
+
   const createJob = useCallback((): void => {
     if (locked) return
     creatingJob.current = true
-    setDraft({ mode: 'job', posting: emptyJobPosting(), status: 'open', criteria: [] })
+    setDraft({ mode: 'job', posting: emptyJobPosting(), status: 'open', criteria: [], companyId: companies.some((company) => company.id === companyFilter) ? companyFilter : null, budget: budgetToDraft() })
     setError(null)
-  }, [locked])
+  }, [locked, companyFilter, companies])
+
+  useEffect(() => {
+    if (!navigationRequest || navigationRequest.id === lastNavigationRequest.current || locked || !active) return
+    lastNavigationRequest.current = navigationRequest.id
+    setError(null)
+    setCompanyFilter(navigationRequest.companyId ?? 'all')
+    if (navigationRequest.jobId) {
+      setSelectedId(navigationRequest.jobId)
+      setWorkspaceReloadRevision((revision) => revision + 1)
+      setTab(navigationRequest.tab ?? 'candidates')
+      setReviewKey(null)
+      setCompareKeys([])
+      setFilters(EMPTY_FILTERS)
+    } else {
+      creatingJob.current = true
+      setSelectedId(null)
+      setWorkspace(null)
+      setDraft({ mode: 'job', posting: emptyJobPosting(), status: 'open', criteria: [], companyId: navigationRequest.companyId ?? null, budget: budgetToDraft() })
+    }
+  }, [navigationRequest, locked, active])
 
   const createExpressSearch = (): void => {
     if (locked) return
@@ -251,10 +324,11 @@ export default function JobsView({ resumes, libraryRevision, active = true, newJ
     setBusy('save-job')
     setError(null)
     try {
-      const job = await window.api.recruiting.saveJob({ ...(draft.id ? { id: draft.id } : {}), posting: draft.posting, status: draft.status, criteria: draft.criteria.filter((criterion) => criterion.text.trim()).map((criterion) => ({ ...criterion, text: criterion.text.trim() })) })
+      const job = await window.api.recruiting.saveJob({ ...(draft.id ? { id: draft.id } : {}), posting: draft.posting, status: draft.status, companyId: draft.companyId ?? null, budget: budgetFromDraft(draft.budget ?? budgetToDraft()), hiringBudget: hiringBudgetFromDraft(draft.hiringBudget ?? hiringBudgetToDraft()), criteria: draft.criteria.filter((criterion) => criterion.text.trim()).map((criterion) => ({ ...criterion, text: criterion.text.trim() })) })
       const result = await window.api.recruiting.getJob(job.id)
       if (!mounted.current) return
       upsertJob(job)
+      setCompanyFilter((current) => current === 'all' || current === (job.companyId ?? 'unassigned') ? current : 'all')
       setWorkspace(result)
       setSelectedId(job.id)
       setDraft(null)
@@ -307,6 +381,7 @@ export default function JobsView({ resumes, libraryRevision, active = true, newJ
       setLoading(false)
       rememberTemporary(null)
       upsertJob(result.job)
+      setCompanyFilter((current) => belongsToCompany(result.job, current) ? current : 'all')
       setWorkspace(result)
       setSelectedId(result.job.id)
       announce(t('Job saved'))
@@ -326,7 +401,8 @@ export default function JobsView({ resumes, libraryRevision, active = true, newJ
       rememberTemporary(null)
       setWorkspace(null)
       const previous = lastSelectedJob()
-      setSelectedId(jobs.find((job) => job.id === previous)?.id ?? jobs[0]?.id ?? null)
+      const eligible = jobs.filter((job) => belongsToCompany(job, companyFilter))
+      setSelectedId(eligible.find((job) => job.id === previous)?.id ?? eligible[0]?.id ?? null)
       setReviewKey(null)
       setCompareKeys([])
       setFilters(EMPTY_FILTERS)
@@ -403,6 +479,20 @@ export default function JobsView({ resumes, libraryRevision, active = true, newJ
     if (saved && reviewKey === match.resume.recordKey) setReviewKey(null)
   }
 
+  const addToPipeline = async (match: MatchResult): Promise<void> => {
+    if (!workspace || workspace.temporary || locked) return
+    setBusy('pipeline'); setError(null)
+    try {
+      const person = await window.api.talent.ensurePerson({ id: match.resume.id, recordKey: match.resume.recordKey })
+      const overview = await window.api.talent.overview()
+      if (!overview.assignments.some((row) => row.personId === person.id && row.jobId === workspace.job.id)) {
+        await window.api.talent.saveAssignment({ personId: person.id, jobId: workspace.job.id, stage: 'sourced', nextAction: '', dueAt: null, note: '', clientFeedback: '' })
+      }
+      setTab('pipeline'); setReviewKey(null)
+    } catch (failure) { setError(errorMessage(failure)) }
+    finally { setBusy(null) }
+  }
+
   const exportShortlist = async (format: 'pdf' | 'csv'): Promise<void> => {
     if (!workspace || workspace.temporary || locked) return
     setBusy(`export-${format}`)
@@ -430,7 +520,27 @@ export default function JobsView({ resumes, libraryRevision, active = true, newJ
     const match = allMatches.find((item) => item.resume.recordKey === key)
     return match ? [match] : []
   })
-  const filteredJobs = jobs.filter((job) => jobFilter === 'all' || (jobFilter === 'active' ? job.status === 'open' || job.status === 'on-hold' : job.status === jobFilter) || job.id === selectedId)
+  const filteredJobs = jobs.filter((job) => belongsToCompany(job, companyFilter) && (jobFilter === 'all' || (jobFilter === 'active' ? job.status === 'open' || job.status === 'on-hold' : job.status === jobFilter) || job.id === selectedId))
+  const hiringCompany = companies.find((company) => company.id === workspace?.job.companyId)
+
+  const saveTargets = async (targets: JobTargetCompany[], expectedUpdatedAt: number): Promise<boolean> => {
+    if (!workspace || workspace.temporary || busy || loading || statusBusy || rerankBusy) return false
+    const jobId = workspace.job.id
+    setBusy('targets')
+    setError(null)
+    try {
+      const result = await window.api.recruiting.saveTargetCompanies({ jobId, expectedUpdatedAt, companies: targets })
+      if (mounted.current) {
+        ++requestId.current
+        setLoading(false)
+        setWorkspace((current) => current?.job.id === jobId ? { ...result, evidence: current.evidence } : current)
+        upsertJob(result.job)
+        announce(t('Company map saved'))
+      }
+      return true
+    } catch (failure) { if (mounted.current) setError(errorMessage(failure)); return false }
+    finally { if (mounted.current) setBusy(null) }
+  }
   const activeFilters = Object.values(filters).filter(Boolean).length
   const saveFirstHint = t('Save as a job to review candidates, build a shortlist, or compare finalists.')
 
@@ -456,19 +566,7 @@ export default function JobsView({ resumes, libraryRevision, active = true, newJ
   }
 
   const updatePosting = (field: keyof JobPosting, value: string): void => setDraft((current) => current ? { ...current, posting: { ...current.posting, [field]: value } } : current)
-  const addCriterion = (): void => setDraft((current) => current && current.criteria.length < 40 ? { ...current, criteria: [...current.criteria, { id: crypto.randomUUID(), text: '', importance: 'required' }] } : current)
-  const seedCriteria = (): void => setDraft((current) => {
-    if (!current) return current
-    const existing = new Set(current.criteria.map((criterion) => criterion.text.trim().toLocaleLowerCase()))
-    const lines = `${current.posting.requirements}\n${current.posting.educationAndCertifications}`.split('\n').map((line) => line.replace(/^\s*(?:[-*•]\s+|\d+[.)]\s+)/u, '').trim()).filter(Boolean)
-    const added: JobCriterion[] = []
-    for (const text of lines) {
-      if (existing.has(text.toLocaleLowerCase())) continue
-      existing.add(text.toLocaleLowerCase())
-      added.push({ id: crypto.randomUUID(), text: text.slice(0, 1000), importance: 'required' })
-    }
-    return { ...current, criteria: [...current.criteria, ...added].slice(0, 40) }
-  })
+
 
   return (
     <div className="recruiting">
@@ -483,8 +581,10 @@ export default function JobsView({ resumes, libraryRevision, active = true, newJ
         </div>
       </header>
       {error && <div className="recruit-error" role="alert"><span>{recruitingError(error, t, language)}</span><button type="button" className="recruit-text-button" onClick={() => setError(null)} aria-label={t("Dismiss error")}>{t("Dismiss")}</button></div>}
+      {navigationRequest && navigationRequest.id !== lastNavigationRequest.current && (draft || reviewDirty || targetDirty || pipelineDirty || packDirty) && <p className="recruit-notice" role="status">{t('Save or cancel your current work to open the requested company job.')}</p>}
       <div className="recruit-layout">
         <aside className="recruit-job-list" aria-label={t("Saved jobs")}>
+          <div className="recruit-company-filter"><label className="recruit-field">{t('Filter by company')}<select aria-label={t('Filter by company')} value={companyFilter} disabled={locked} onChange={(event) => filterCompany(event.target.value)}><option value="all">{t('All companies')}</option><option value="unassigned">{t('No company assigned')}</option>{companies.map((company) => <option key={company.id} value={company.id}>{company.name}</option>)}</select></label><button className="recruit-text-button" disabled={locked} onClick={onOpenCompanies}>{t('Manage companies')}</button></div>
           {temporaryJob && <button type="button" className={`recruit-job-button recruit-temporary-entry ${selectedId === temporaryJob.id ? 'selected' : ''}`} disabled={locked} aria-label={t('Open express search')} aria-current={selectedId === temporaryJob.id ? 'page' : undefined} onClick={() => selectJob(temporaryJob.id)}>
             <span className="recruit-eyebrow">{t('Express search')}</span>
             <span className="recruit-job-title" dir="auto">{postingTitle(temporaryJob.posting)}</span>
@@ -493,6 +593,7 @@ export default function JobsView({ resumes, libraryRevision, active = true, newJ
           <div className="recruit-job-list-head"><span className="recruit-eyebrow">{t("Saved jobs")} <span>{formatNumber(jobs.length)}</span></span><label className="sr-only" htmlFor="job-list-filter">{t("Filter saved jobs")}</label><select id="job-list-filter" value={jobFilter} onChange={(event) => setJobFilter(event.target.value)}><option value="active">{t("Active jobs")}</option><option value="all">{t("All jobs")}</option><option value="open">{t("Open")}</option><option value="on-hold">{t("On hold")}</option><option value="filled">{t("Filled")}</option><option value="archived">{t("Archived")}</option></select></div>
           {listLoading ? <p className="recruit-empty-inline" role="status">{t("Loading jobs…")}</p> : filteredJobs.length === 0 ? <p className="recruit-empty-inline">{jobs.length ? t('No jobs in this view.') : t('Your saved vacancies will appear here.')}</p> : <div className="recruit-job-buttons">{filteredJobs.map((job) => <button key={job.id} type="button" className={`recruit-job-button ${job.id === selectedId ? 'selected' : ''}`} aria-current={job.id === selectedId ? 'page' : undefined} disabled={locked} onClick={() => selectJob(job.id)}>
             <span className="recruit-job-title" dir="auto">{postingTitle(job.posting)}</span>
+            {job.companyId && <span className="hint" dir="auto">{companies.find((company) => company.id === job.companyId)?.name}</span>}
             <span className="recruit-job-meta"><span className={`recruit-job-state ${job.status}`}>{t(JOB_LABELS[job.status])}</span><span>{t('{count} shortlisted', { count: job.shortlistCount })}</span></span>
             <span className="recruit-job-date">{(() => {
               const event = [...(job.statusHistory ?? [])].reverse().find((item) => item.kind !== 'placement-updated' && item.status === job.status)
@@ -509,10 +610,11 @@ export default function JobsView({ resumes, libraryRevision, active = true, newJ
             <fieldset disabled={Boolean(busy)} className="recruit-fieldset">
               <label className="recruit-field">{t('Job description')}<textarea autoFocus rows={8} dir="auto" maxLength={30000} value={draft.posting.jobDescription} onChange={(event) => updatePosting('jobDescription', event.target.value)} placeholder={t('Paste the job description here…')} /></label>
               <label className="recruit-field">{t('Requirements')}<textarea rows={5} dir="auto" maxLength={30000} value={draft.posting.requirements} onChange={(event) => updatePosting('requirements', event.target.value)} placeholder={t('Paste requirements here (optional)…')} /></label>
+              <JobCriteriaEditor posting={draft.posting} criteria={draft.criteria} onChange={(criteria) => setDraft({ ...draft, criteria })} />
               {resumes.length === 0 && <p className="hint">{t('Import CVs from Library, then return here to run your express search.')}</p>}
               <div className="recruit-actions recruit-editor-footer">
                 <button className="btn primary" type="submit" disabled={!hasJobPostingContent(draft.posting) || resumes.length === 0}>{busy === 'temporary-search' ? t('Matching…') : t('Find matches')}</button>
-                <button className="btn" type="button" onClick={() => { setDraft(null); creatingJob.current = false }}>{t('Cancel')}</button>
+                <button className="btn" type="button" onClick={cancelDraft}>{t('Cancel')}</button>
                 {temporaryJob && !draft.temporaryId && <span className="hint">{t('Finding matches replaces your current express search.')}</span>}
               </div>
             </fieldset>
@@ -520,15 +622,17 @@ export default function JobsView({ resumes, libraryRevision, active = true, newJ
             <div className="recruit-section-head"><div><p className="recruit-eyebrow">{draft.id ? t('Job settings') : t('Start a vacancy')}</p><h3>{draft.id ? t('Edit job') : t('New job')}</h3></div><span className="hint">{t('Saved after you choose Save job')}</span></div>
             <fieldset disabled={Boolean(busy)} className="recruit-fieldset">
               <label className="recruit-field">{t("Position")}<input autoFocus dir="auto" maxLength={512} value={draft.posting.position} onChange={(event) => updatePosting('position', event.target.value)} placeholder={t("e.g. Senior Accountant")} /></label>
+              <label className="recruit-field">{t('Hiring company')}<select aria-label={t('Hiring company')} value={draft.companyId ?? ''} onChange={(event) => setDraft({ ...draft, companyId: event.target.value || null })}><option value="">{t('No company assigned')}</option>{companies.map((company) => <option key={company.id} value={company.id}>{company.name}</option>)}</select></label>
+              {draft.companyId && companies.find((company) => company.id === draft.companyId)?.note && <details className="recruit-company-context"><summary>{t('Company hiring notes')}</summary><p dir="auto" className="recruit-prewrap">{companies.find((company) => company.id === draft.companyId)?.note}</p></details>}
+              <JobBudgetEditor value={draft.budget ?? budgetToDraft()} onChange={(budget) => setDraft({ ...draft, budget })} />
+              <HiringBudgetEditor value={draft.hiringBudget ?? hiringBudgetToDraft()} onChange={(hiringBudget) => setDraft({ ...draft, hiringBudget })} />
               <p className="hint">{draft.id ? t('Current status: {status}', { status: t(JOB_LABELS[draft.status]) }) : t('New jobs start as Open. Change the status after saving.')} {draft.id && t('Change the status from the job workspace.')}</p>
               <label className="recruit-field">{t("Job description")}<textarea rows={5} dir="auto" maxLength={30000} value={draft.posting.jobDescription} onChange={(event) => updatePosting('jobDescription', event.target.value)} placeholder={t("Describe the role and its responsibilities.")} /></label>
               <div className="recruit-editor-columns"><label className="recruit-field">{t("Requirements")}<textarea rows={4} dir="auto" maxLength={30000} value={draft.posting.requirements} onChange={(event) => updatePosting('requirements', event.target.value)} placeholder={t("Skills and experience, one requirement per line.")} /></label><label className="recruit-field">{t("Education and certifications")}<textarea rows={4} dir="auto" maxLength={30000} value={draft.posting.educationAndCertifications} onChange={(event) => updatePosting('educationAndCertifications', event.target.value)} placeholder={t("Degrees, licenses, or certifications.")} /></label></div>
-              <div className="recruit-section-head"><div><h4>{t("Evaluation criteria")} <span className="muted"><bdi>{formatNumber(draft.criteria.length)}/{formatNumber(40)}</bdi></span></h4><p className="hint">{t("Use the same scorecard for each candidate. Required criteria do not automatically reject anyone.")}</p></div></div>
-              <div className="recruit-criteria-editor">{draft.criteria.map((criterion, index) => <div className="recruit-criterion-row" key={criterion.id}><span className="muted">{formatNumber(index + 1)}</span><input aria-label={t('Criterion {count}', { count: index + 1 })} dir="auto" maxLength={1000} value={criterion.text} placeholder={t("e.g. Managed a multi-site restaurant team")} onChange={(event) => setDraft({ ...draft, criteria: draft.criteria.map((item) => item.id === criterion.id ? { ...item, text: event.target.value } : item) })} /><select aria-label={t('Importance of criterion {count}', { count: index + 1 })} value={criterion.importance} onChange={(event) => setDraft({ ...draft, criteria: draft.criteria.map((item) => item.id === criterion.id ? { ...item, importance: event.target.value as 'required' | 'preferred' } : item) })}><option value="required">{t("Required")}</option><option value="preferred">{t("Preferred")}</option></select><button className="btn sm" type="button" aria-label={t('Remove criterion {count}', { count: index + 1 })} onClick={() => setDraft({ ...draft, criteria: draft.criteria.filter((item) => item.id !== criterion.id) })}>{t("Remove")}</button></div>)}</div>
-              <div className="recruit-actions"><button className="btn sm" type="button" disabled={draft.criteria.length >= 40} onClick={addCriterion}>{t("+ Add criterion")}</button><button className="btn sm" type="button" disabled={draft.criteria.length >= 40 || !(draft.posting.requirements.trim() || draft.posting.educationAndCertifications.trim())} onClick={seedCriteria}>{t("Use requirement lines")}</button></div>
+              <JobCriteriaEditor posting={draft.posting} criteria={draft.criteria} onChange={(criteria) => setDraft({ ...draft, criteria })} />
               <div className="recruit-actions recruit-editor-footer">
                 <button className="btn primary" type="submit" disabled={!hasJobPostingContent(draft.posting) || !draft.id && jobs.length >= 250}>{busy === 'save-job' ? t('Saving…') : t('Save job')}</button>
-                <button className="btn" type="button" onClick={() => { setDraft(null); creatingJob.current = false }}>{t('Cancel')}</button>
+                <button className="btn" type="button" onClick={cancelDraft}>{t('Cancel')}</button>
                 <span className="hint">{t('Matching can be refreshed after saving.')}</span>
               </div>
             </fieldset>
@@ -536,7 +640,7 @@ export default function JobsView({ resumes, libraryRevision, active = true, newJ
             <header className="recruit-workspace-head">
               <div><span className={`recruit-job-state ${workspace.temporary ? 'temporary' : workspace.job.status}`}>{workspace.temporary ? t('Express search') : t(JOB_LABELS[workspace.job.status])}</span><h3 dir="auto">{postingTitle(workspace.job.posting)}</h3><p className="hint">{workspace.temporary ? t('Not saved. Available until you quit Qumaa.') : t('{count} evaluation criteria · Last matched {date}', { count: workspace.job.criteria.length, date: dateLabel(workspace.job.lastSearchedAt) })}</p></div>
               <div className="recruit-actions">
-                <button className="btn sm" disabled={locked} onClick={() => setDraft({ mode: workspace.temporary ? 'express' : 'job', ...(workspace.temporary ? { temporaryId: workspace.job.id } : { id: workspace.job.id }), posting: { ...workspace.job.posting }, status: workspace.job.status, criteria: workspace.job.criteria.map((criterion) => ({ ...criterion })) })}>{workspace.temporary ? t('Edit search') : t('Edit job')}</button>
+                <button className="btn sm" disabled={locked} onClick={() => setDraft({ mode: workspace.temporary ? 'express' : 'job', ...(workspace.temporary ? { temporaryId: workspace.job.id } : { id: workspace.job.id }), posting: { ...workspace.job.posting }, status: workspace.job.status, criteria: workspace.job.criteria.map((criterion) => ({ ...criterion })), companyId: workspace.job.companyId ?? null, budget: budgetToDraft(workspace.job.budget), hiringBudget: hiringBudgetToDraft(workspace.job.hiringBudget) })}>{workspace.temporary ? t('Edit search') : t('Edit job')}</button>
                 <button className="btn primary sm" disabled={locked || resumes.length === 0} onClick={() => { void refreshMatches() }}>{busy === 'search' ? t('Matching…') : workspace.response ? t('Refresh matches') : t('Find matches')}</button>
                 <JobRerank workspace={workspace} active={active} disabled={rerankDisabled} libraryRevision={libraryRevision} onBusyChange={setRerankBusy} onError={setError} onReranked={(result, sourceSessionId) => {
                   ++requestId.current
@@ -552,6 +656,12 @@ export default function JobsView({ resumes, libraryRevision, active = true, newJ
                 }} />
               </div>
             </header>
+            {!workspace.temporary && <div className="recruit-job-context">
+              <div><span className="recruit-eyebrow">{t('Hiring company')}</span><strong dir="auto">{hiringCompany?.name ?? t('No company assigned')}</strong>{hiringCompany && <span className="hint" dir="auto">{[...hiringCompany.industry, ...hiringCompany.location].join(' · ')}</span>}</div>
+              <div><span className="recruit-eyebrow">{t('Salary budget')}</span><strong><bdi>{workspace.job.budget ? budgetLabel(workspace.job.budget, formatNumber, t) : t('Not specified')}</bdi></strong></div>
+              <div><span className="recruit-eyebrow">{t('Total hiring budget')}</span><strong><bdi>{workspace.job.hiringBudget ? hiringBudgetLabel(workspace.job.hiringBudget, formatNumber, t) : t('Not specified')}</bdi></strong></div>
+              {hiringCompany?.note && <details className="recruit-company-context"><summary>{t('Company hiring notes')}</summary><p dir="auto" className="recruit-prewrap">{hiringCompany.note}</p></details>}
+            </div>}
             {!workspace.temporary && <JobStatusPanel key={workspace.job.id} workspace={workspace} resumes={resumes} active={active} disabled={workflowDisabled || rerankBusy} libraryRevision={libraryRevision} onBusyChange={setStatusBusy} onOpenResume={onOpenResume} onSaved={(result) => {
               ++requestId.current
               setLoading(false)
@@ -570,12 +680,12 @@ export default function JobsView({ resumes, libraryRevision, active = true, newJ
             {reviewDirty && <div className="recruit-notice" role="status">{t("Save or discard your open review before changing jobs, editing criteria, or refreshing matches.")}</div>}
             {workspace.job.stale && <div className="recruit-notice"><span>{workspace.job.newResumeCount > 0 ? t(workspace.job.newResumeCount === 1 ? '{count} new CV is ready to match against this vacancy.' : '{count} new CVs are ready to match against this vacancy.', { count: workspace.job.newResumeCount }) : t('The posting or library has changed since these matches were saved.')} {workspace.temporary ? t('Refresh matches to update these temporary results before saving or exporting.') : t('Refresh matches to update rankings and suggested evidence. Saved decisions and notes are retained.')}</span></div>}
             {!workspace.job.stale && workspace.job.newResumeCount > 0 && <div className="recruit-notice"><span>{t(workspace.job.newResumeCount === 1 ? '{count} new CV in your library. Refresh matches to rediscover candidates for this job.' : '{count} new CVs in your library. Refresh matches to rediscover candidates for this job.', { count: workspace.job.newResumeCount })}</span></div>}
-            <details className="recruit-posting-summary"><summary>{t("View job description and criteria")}</summary><div>{Object.entries({ Description: workspace.job.posting.jobDescription, Requirements: workspace.job.posting.requirements, 'Education and certifications': workspace.job.posting.educationAndCertifications }).filter(([, value]) => value.trim()).map(([label, value]) => <div key={label}><h4>{t(label)}</h4><p dir="auto" className="recruit-prewrap">{value}</p></div>)}{workspace.job.criteria.length > 0 && <><h4>{t("Evaluation criteria")}</h4><ul>{workspace.job.criteria.map((criterion) => <li key={criterion.id}><span className={`recruit-importance ${criterion.importance}`}>{t(criterion.importance === 'required' ? 'Required' : 'Preferred')}</span> <bdi>{criterion.text}</bdi></li>)}</ul></>}</div></details>
+            <details className="recruit-posting-summary"><summary>{t("View job description and criteria")}</summary><div>{Object.entries({ Description: workspace.job.posting.jobDescription, Requirements: workspace.job.posting.requirements, 'Education and certifications': workspace.job.posting.educationAndCertifications }).filter(([, value]) => value.trim()).map(([label, value]) => <div key={label}><h4>{t(label)}</h4><p dir="auto" className="recruit-prewrap">{value}</p></div>)}{workspace.job.criteria.length > 0 && <><h4>{t("Evaluation criteria")}</h4><ul>{workspace.job.criteria.map((criterion) => <li key={criterion.id}><span className={`recruit-importance ${criterion.importance}`}>{t(criterionImportanceLabel(criterion.importance))}</span> <bdi>{criterion.text}</bdi></li>)}</ul></>}</div></details>
             <div className={`recruit-stats ${workspace.temporary ? 'recruit-temporary-stats' : ''}`} aria-label={t('Screening progress')}><div><strong>{formatNumber(allMatches.length)}</strong><span>{t('Matched candidates')}</span></div>{!workspace.temporary && <><div><strong>{formatNumber(allMatches.filter((match) => (lookup?.reviewsByRecord.get(match.resume.recordKey)?.status ?? 'unreviewed') !== 'unreviewed').length)}</strong><span>{t('Reviewed')}</span></div><div><strong>{formatNumber(shortlist.length)}</strong><span>{t('Shortlisted / contacted')}</span></div></>}</div>
-            <div className="recruit-tabs" role="group" aria-label={t('Candidate views')}><button className={tab === 'candidates' ? 'selected' : ''} aria-pressed={tab === 'candidates'} onClick={() => setTab('candidates')}>{t('Candidates')} <span>{formatNumber(allMatches.length)}</span></button><button className={tab === 'shortlist' ? 'selected' : ''} aria-pressed={tab === 'shortlist'} disabled={workspace.temporary} title={workspace.temporary ? saveFirstHint : undefined} onClick={() => setTab('shortlist')}>{t('Shortlist')} <span>{formatNumber(shortlist.length)}</span></button><button className={tab === 'compare' ? 'selected' : ''} aria-pressed={tab === 'compare'} disabled={workspace.temporary} title={workspace.temporary ? saveFirstHint : undefined} onClick={() => setTab('compare')}>{t('Compare')} <span><bdi>{formatNumber(compareKeys.length)}/{formatNumber(4)}</bdi></span></button></div>
+            <div className="recruit-tabs" role="group" aria-label={t('Candidate views')}><button className={tab === 'candidates' ? 'selected' : ''} aria-pressed={tab === 'candidates'} disabled={targetDirty || pipelineDirty || packDirty} onClick={() => setTab('candidates')}>{t('Candidates')} <span>{formatNumber(allMatches.length)}</span></button><button className={tab === 'shortlist' ? 'selected' : ''} aria-pressed={tab === 'shortlist'} disabled={workspace.temporary || targetDirty || pipelineDirty || packDirty} title={workspace.temporary ? saveFirstHint : undefined} onClick={() => setTab('shortlist')}>{t('Shortlist')} <span>{formatNumber(shortlist.length)}</span></button><button className={tab === 'compare' ? 'selected' : ''} aria-pressed={tab === 'compare'} disabled={workspace.temporary || targetDirty || pipelineDirty || packDirty} title={workspace.temporary ? saveFirstHint : undefined} onClick={() => setTab('compare')}>{t('Compare')} <span><bdi>{formatNumber(compareKeys.length)}/{formatNumber(4)}</bdi></span></button>{!workspace.temporary && <button className={tab === 'targets' ? 'selected' : ''} aria-pressed={tab === 'targets'} disabled={reviewDirty || pipelineDirty || packDirty} onClick={() => setTab('targets')}>{t('Target companies')} <span>{formatNumber(workspace.job.targetCompanies?.length ?? 0)}</span></button>}{!workspace.temporary && <><button className={tab === 'pipeline' ? 'selected' : ''} aria-pressed={tab === 'pipeline'} disabled={reviewDirty || targetDirty || packDirty} onClick={() => setTab('pipeline')}>{t('Pipeline')}</button><button className={tab === 'pack' ? 'selected' : ''} aria-pressed={tab === 'pack'} disabled={reviewDirty || targetDirty || pipelineDirty} onClick={() => setTab('pack')}>{t('Client pack')}</button></>}</div>
             {evidenceLoading && <div className="recruit-notice" role="status">{t("Finding suggested passages for your scorecard…")}</div>}
             {evidenceError && <div className="recruit-error" role="alert"><span>{t('Suggested evidence could not be loaded: {error}', { error: recruitingError(evidenceError, t, language) })}</span><button className="btn sm" onClick={() => setEvidenceRetry((value) => value + 1)}>{t("Retry evidence")}</button></div>}
-            {tab === 'compare' ? <CandidateComparison workspace={workspace} matches={comparisonMatches} onOpenCandidate={onOpenCandidate} onRemove={(key) => setCompareKeys((keys) => keys.filter((item) => item !== key))} /> : <>
+            {tab === 'pipeline' ? <JobPipeline key={workspace.job.id} job={workspace.job} revision={talentRevision + libraryRevision} active={active} disabled={Boolean(busy || loading || listLoading || reviewDirty || rerankBusy || statusBusy)} onDirtyChange={setPipelineDirty} /> : tab === 'pack' ? <ClientPack key={workspace.job.id} jobId={workspace.job.id} active={active} sourceRevision={talentRevision + libraryRevision} disabled={Boolean(busy || loading || listLoading || reviewDirty || rerankBusy || statusBusy)} onDirtyChange={setPackDirty} onToast={announce} /> : tab === 'targets' ? <TargetCompanies key={workspace.job.id} job={workspace.job} companies={companies} disabled={Boolean(busy || loading || listLoading || reviewDirty || rerankBusy || statusBusy)} onDirtyChange={setTargetDirty} onSave={saveTargets} onOpenCompanies={onOpenCompanies} /> : tab === 'compare' ? <CandidateComparison workspace={workspace} matches={comparisonMatches} onOpenCandidate={onOpenCandidate} onRemove={(key) => setCompareKeys((keys) => keys.filter((item) => item !== key))} /> : <>
               <div className="recruit-results-toolbar"><label className="recruit-search"><span className="sr-only">{t("Find candidates")}</span><input dir="auto" value={filters.query} placeholder={t("Search name, contact, skills, or tags…")} onChange={(event) => setFilters({ ...filters, query: event.target.value })} /></label>{!workspace.temporary && <label><span className="sr-only">{t("Filter by review state")}</span><select value={filters.status} onChange={(event) => setFilters({ ...filters, status: event.target.value })}><option value="">{t("All review states")}</option>{Object.entries(REVIEW_LABELS).map(([value, label]) => <option key={value} value={value}>{t(label)}</option>)}</select></label>}<button className="btn sm" aria-expanded={showFilters} aria-controls="recruit-profile-filters" onClick={() => setShowFilters(!showFilters)}>{activeFilters ? t('Filters ({count})', { count: activeFilters }) : t('Filters')}</button></div>
               {showFilters && <div id="recruit-profile-filters" className="recruit-profile-filters"><label className="recruit-field">{t("Location")}<input dir="auto" value={filters.location} placeholder={t("Current or preferred")} onChange={(event) => setFilters({ ...filters, location: event.target.value })} /></label><label className="recruit-field">{t("Min. experience")}<LocalizedNumberInput min={0} max={80} step={0.5} value={filters.years} placeholder={t("Years")} onChangeValue={(years) => setFilters({ ...filters, years })} /></label><label className="recruit-field">{t("Skill")}<input dir="auto" value={filters.skill} placeholder={t("e.g. Excel")} onChange={(event) => setFilters({ ...filters, skill: event.target.value })} /></label><label className="recruit-field">{t("Tag")}<input dir="auto" value={filters.tag} placeholder={t("Recruiter tag")} onChange={(event) => setFilters({ ...filters, tag: event.target.value })} /></label><label className="recruit-field">{t("Availability")}<input dir="auto" value={filters.availability} placeholder={t("e.g. Immediate")} onChange={(event) => setFilters({ ...filters, availability: event.target.value })} /></label><button className="btn sm" disabled={activeFilters === 0} onClick={() => setFilters(EMPTY_FILTERS)}>{t("Clear filters")}</button><p className="hint">{t("Filters use CV details and recruiter corrections. Update screening information in a candidate’s profile.")}</p></div>}
               {tab === 'shortlist' && <div className="recruit-shortlist-toolbar"><p className="hint">{t(activeFilters ? 'Your selection and order. Contacted candidates stay on the shortlist. Exports include the full shortlist, including candidates hidden by filters.' : 'Your selection and order. Contacted candidates stay on the shortlist. Exports include the full shortlist.')}{workspace.job.stale && <> {t('Refresh matches before exporting.')}</>}</p><div className="recruit-actions"><button className="btn sm" disabled={locked || shortlist.length === 0 || workspace.job.stale} onClick={() => { void exportShortlist('pdf') }}>{busy === 'export-pdf' ? t('Exporting…') : t('Export PDF')}</button><button className="btn sm" disabled={locked || shortlist.length === 0 || workspace.job.stale} onClick={() => { void exportShortlist('csv') }}>{busy === 'export-csv' ? t('Exporting…') : t('Export CSV')}</button></div></div>}
@@ -593,13 +703,14 @@ export default function JobsView({ resumes, libraryRevision, active = true, newJ
                     <td><button className="recruit-name" dir="auto" onClick={() => onOpenCandidate(match)}>{candidateName(match, profile)}</button><div className="cell-sub"><bdi>{resume.location || t('Location not stated')}</bdi> · {resume.yearsExperience === null ? t('Experience not stated') : t('{count} years', { count: resume.yearsExperience })}</div><div className="recruit-row-skills" dir="auto">{resume.skills.slice(0, 4).join(' · ')}{resume.skills.length > 4 && ` +${formatNumber(resume.skills.length - 4)}`}</div>{profile && (profile.tags.length > 0 || profile.availability) && <div className="recruit-row-tags">{profile.availability && <span dir="auto">{profile.availability}</span>}{profile.tags.slice(0, 3).map((tag) => <span key={tag} dir="auto">{tag}</span>)}</div>}{match.llmReason && <p className="llm-reason recruit-llm-reason"><span className="tag" dir="ltr">{rerankModelLabel(workspace.response?.rerankConfig?.model ?? DEFAULT_RERANK_CONFIG.model)}</span><bdi>{match.llmReason}</bdi></p>}</td>
                     <td><span className="recruit-score" title={t("Relative match score; review the supporting evidence")}>{formatNumber(Math.round(match.score * 100))}</span></td>
                     {!workspace.temporary && <td><span className={`recruit-review-state ${review?.status ?? 'unreviewed'}`}>{t(REVIEW_LABELS[review?.status ?? 'unreviewed'])}</span>{review?.note && <span className="recruit-note-indicator">{t('Has notes')}</span>}</td>}
-                    <td className="recruit-action-cell">{workspace.temporary ? <button className="btn sm" onClick={() => onOpenCandidate(match)}>{t('View details')}</button> : <div className="recruit-row-actions"><button className="btn sm" aria-label={t('Review {name}', { name: candidateName(match, profile) })} disabled={Boolean(busy || rerankBusy || loading || reviewDirty && reviewKey !== match.resume.recordKey)} onClick={() => { reviewSnapshot.current = match; setReviewKey(match.resume.recordKey); requestAnimationFrame(() => reviewRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })) }}>{t('Review')}</button><button className={`btn sm ${selected ? '' : 'primary'}`} aria-label={selected ? t('Remove {name} from shortlist', { name: candidateName(match, profile) }) : t('Shortlist {name}', { name: candidateName(match, profile) })} disabled={locked} onClick={() => { void setCandidateStatus(match, selected ? 'maybe' : 'shortlisted') }}>{selected ? t('Remove') : t('Shortlist')}</button></div>}</td>
+                    <td className="recruit-action-cell">{workspace.temporary ? <div className="recruit-row-actions"><button className="btn sm" onClick={() => onOpenCandidate(match)}>{t('View details')}</button>{workspace.job.criteria.length > 0 && <button className="btn sm" aria-label={t('Requirement passages for {name}', { name: candidateName(match, profile) })} onClick={() => { reviewSnapshot.current = match; setReviewKey(match.resume.recordKey); requestAnimationFrame(() => reviewRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })) }}>{t('Requirement passages')}</button>}</div> : <div className="recruit-row-actions"><button className="btn sm" aria-label={t('Review {name}', { name: candidateName(match, profile) })} disabled={Boolean(busy || rerankBusy || loading || reviewDirty && reviewKey !== match.resume.recordKey)} onClick={() => { reviewSnapshot.current = match; setReviewKey(match.resume.recordKey); requestAnimationFrame(() => reviewRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })) }}>{t('Review')}</button><button className={`btn sm ${selected ? '' : 'primary'}`} aria-label={selected ? t('Remove {name} from shortlist', { name: candidateName(match, profile) }) : t('Shortlist {name}', { name: candidateName(match, profile) })} disabled={locked} onClick={() => { void setCandidateStatus(match, selected ? 'maybe' : 'shortlisted') }}>{selected ? t('Remove') : t('Shortlist')}</button><button className="btn sm" aria-label={t('Add {name} to pipeline', { name: candidateName(match, profile) })} disabled={locked} onClick={() => { void addToPipeline(match) }}>{t('Add to pipeline')}</button></div>}</td>
                   </tr>
                 })}</tbody></table></div>
                 <div className="recruit-pagination"><span className="hint">{t(activeFilters > 0 ? '{start}–{end} of {count} candidates after filters · Scores are relative, not eligibility decisions.' : '{start}–{end} of {count} candidates · Scores are relative, not eligibility decisions.', { start: currentPage * PAGE_SIZE + 1, end: Math.min((currentPage + 1) * PAGE_SIZE, visible.length), count: visible.length })}</span><div className="recruit-actions"><button className="btn sm" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>{t("Previous")}</button><span className="hint"><bdi>{formatNumber(currentPage + 1)} / {formatNumber(pageCount)}</bdi></span><button className="btn sm" disabled={currentPage >= pageCount - 1} onClick={() => setPage(currentPage + 1)}>{t("Next")}</button></div></div>
               </>}
               {compareKeys.length > 0 && <div className="recruit-compare-bar"><span>{t('{count} selected for comparison', { count: compareKeys.length })}</span><div className="recruit-actions"><button className="recruit-text-button" onClick={() => setCompareKeys([])}>{t("Clear")}</button><button className="btn sm" disabled={compareKeys.length < 2} onClick={() => setTab('compare')}>{t("Compare candidates")}</button></div></div>}
             </>}
+            {workspace.temporary && selectedReview && <div ref={reviewRef}><RequirementPassages workspace={workspace} match={selectedReview} onClose={() => setReviewKey(null)} onOpenCandidate={onOpenCandidate} /></div>}
             {!workspace.temporary && selectedReview && <div ref={reviewRef}><ReviewScorecard key={`${workspace.job.id}:${selectedReview.resume.recordKey}`} workspace={workspace} match={selectedReview} busy={Boolean(busy || rerankBusy || loading)} onSave={saveReview} onClose={() => { setReviewKey(null); setReviewDirty(false) }} onDirty={(dirty) => { reviewDirtyRef.current = dirty; setReviewDirty(dirty) }} onOpenCandidate={onOpenCandidate} /></div>}
           </>}
         </section>

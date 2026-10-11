@@ -30,15 +30,13 @@ import { backfillDocumentVectors } from './ingest/duplicates.js'
 import { SUPPORTED_EXTENSIONS } from './ingest/extract.js'
 import { collectFiles, ingestFile, ingestText } from './ingest/pipeline.js'
 import { backfillResumeSkills } from './ingest/skills-backfill.js'
+import { backfillResumeDerivedData } from './ingest/derived-backfill.js'
 import {
   onWatchIngest,
   startWatching,
   stopWatching,
   withWatcherLifecycle
 } from './ingest/watcher.js'
-import { search } from './search/rank.js'
-import { shortlistHtml, writeShortlistPdf } from './export/shortlist.js'
-import { previewRerankSession, rerankWithConfirmation } from './search/rerank-consent.js'
 import { searchSessions } from './search/sessions.js'
 import { RERANK_CONSENT_VERSION, rerankConsentKey } from '@shared/rerank.js'
 import {
@@ -59,6 +57,9 @@ import {
 import { buildMenu } from './menu.js'
 import { currentLanguage, LANGUAGE_KEY, nativeText as t } from './language.js'
 import { registerRecruitingHandlers } from './recruiting-ipc.js'
+import { registerTalentHandlers } from './talent-ipc.js'
+import { registerClientPackHandlers } from './client-pack-ipc.js'
+import { registerHiringBudgetHandlers } from './hiring-budget-ipc.js'
 import { ipcSchemas, parseIpc } from './ipc-validation.js'
 import { maintenance } from './maintenance.js'
 import { restoredBounds, trackWindow } from './windowState.js'
@@ -333,7 +334,13 @@ function send(channel: string, payload: unknown): void {
 async function initializeSearchIndex(): Promise<void> {
   await embedder.start()
 
-  let rebuilt = false
+  const derived = await backfillResumeDerivedData(({ done, total }) => {
+    send(CH.evIngestProgress, {
+      jobId: 'derivation', processed: done, total, currentFile: 'Updating search index', done: done >= total
+    } satisfies IngestProgress)
+  })
+  let rebuilt = derived > 0
+  if (rebuilt) console.log(`Updated sections and extracted fields for ${derived} resumes.`)
   // An empty library has no vector provenance to migrate; establish its marker
   // before opening ingestion. A non-empty mismatch must be rebuilt in full.
   const empty = markEmptyIndexCurrent()
@@ -408,14 +415,11 @@ async function ingestPathsWithoutGate(paths: string[]): Promise<IngestOutcome[]>
   return outcomes
 }
 
-function standaloneSearchSession(sessionId: string): ReturnType<typeof searchSessions.get> {
-  const source = searchSessions.get(sessionId)
-  if (source.job) throw new Error('Use the saved job rerank action for these matches.')
-  return source
-}
-
 function registerHandlers(): void {
   registerRecruitingHandlers(() => mainWindow!)
+  registerTalentHandlers()
+  registerClientPackHandlers(() => mainWindow!)
+  registerHiringBudgetHandlers(() => mainWindow!)
   ipcMain.handle(CH.settingsOpenLinkedIn, () =>
     shell.openExternal('https://www.linkedin.com/in/fawazsalehq/')
   )
@@ -548,38 +552,6 @@ function registerHandlers(): void {
     })
   })
 
-  ipcMain.handle(CH.searchRun, async (_e, rawJobDescription: unknown) => {
-    const jobDescription = parseIpc(
-      ipcSchemas.jobDescription,
-      rawJobDescription,
-      'job description'
-    )
-    await indexReadiness.waitUntilReady()
-    return maintenance.runOperation(async () => {
-      const response = await search(jobDescription)
-      return searchSessions.create(jobDescription, response)
-    })
-  })
-
-  ipcMain.handle(
-    CH.searchExport,
-    async (_e, rawArgs: unknown) => {
-      const args = parseIpc(ipcSchemas.exportArgs, rawArgs, 'shortlist export')
-      const safeTitle = args.jobTitle.replace(/[^\p{L}\p{N} _-]/gu, '').trim() || t('Shortlist')
-      const { canceled, filePath } = await dialog.showSaveDialog(mainWindow!, {
-        title: t("Export shortlist"),
-        defaultPath: `${safeTitle} ${t('shortlist')}.pdf`,
-        filters: [{ name: 'PDF', extensions: ['pdf'] }]
-      })
-      if (canceled || !filePath) return null
-
-      await maintenance.runOperation(() =>
-        writeShortlistPdf(shortlistHtml({ ...args, language: currentLanguage(), generatedAt: new Date() }), filePath)
-      )
-      return filePath
-    }
-  )
-
   ipcMain.handle(CH.settingsGet, () =>
     maintenance.runOperation((): AppSettings => {
       const storedTheme = ipcSchemas.theme.safeParse(getSetting(THEME_KEY))
@@ -656,17 +628,6 @@ function registerHandlers(): void {
       searchSessions.clearApprovals()
     })
   )
-
-  ipcMain.handle(CH.searchRerankPreview, (_e, rawArgs: unknown) => {
-    const args = parseIpc(ipcSchemas.rerankPreviewArgs, rawArgs, 'rerank preview')
-    return maintenance.runOperation(() => previewRerankSession(standaloneSearchSession(args.sessionId)))
-  })
-
-  ipcMain.handle(CH.searchRerank, (_e, rawArgs: unknown) => {
-    const args = parseIpc(ipcSchemas.rerankArgs, rawArgs, 'rerank request')
-    return rerankWithConfirmation(args, () => mainWindow!,
-      () => standaloneSearchSession(args.sessionId), (ordered) => ordered)
-  })
 
   ipcMain.handle(CH.settingsSetTheme, (_e, rawTheme: unknown) => {
     const theme = parseIpc(ipcSchemas.theme, rawTheme, 'theme')
@@ -825,7 +786,7 @@ function registerHandlers(): void {
       cancelId: 0,
       message: t("Delete all data?"),
       detail:
-        t(resumeCount === 1 ? 'This removes all {count} resume from the library, along with your settings, watched folder, and saved API keys. The original resume files on disk are not touched. This cannot be undone.' : 'This removes all {count} resumes from the library, along with your settings, watched folder, and saved API keys. The original resume files on disk are not touched. This cannot be undone.', { count: resumeCount })
+        t(resumeCount === 1 ? 'This removes all {count} resume from the library, along with all companies, jobs, contacts, recruiting records, settings, watched folder, and saved API keys. The original resume files on disk are not touched. This cannot be undone.' : 'This removes all {count} resumes from the library, along with all companies, jobs, contacts, recruiting records, settings, watched folder, and saved API keys. The original resume files on disk are not touched. This cannot be undone.', { count: resumeCount })
     })
     if (response !== 1) return false
 

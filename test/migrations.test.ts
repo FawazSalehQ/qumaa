@@ -51,7 +51,7 @@ function shape(resumeColumns: string[], objects = REQUIRED_OBJECTS): SchemaShape
 describe('published database schema adoption', () => {
   it('uses a stable application id and current numbered version', () => {
     expect(QUMAA_APPLICATION_ID).toBe(0x51554d41)
-    expect(CURRENT_SCHEMA_VERSION).toBe(7)
+    expect(CURRENT_SCHEMA_VERSION).toBe(12)
   })
 
   it('keeps the 3,000-resume capacity target inside fixed validation budgets', () => {

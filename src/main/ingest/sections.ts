@@ -16,24 +16,39 @@ export interface Section {
 const HEADING_PATTERNS: Array<[SectionKind, RegExp]> = [
   [
     'experience',
-    /^(work\s+|professional\s+|employment\s+|relevant\s+)?(experience|history|employment)\b/i
+    /^(?:(?:work|professional|employment|relevant|career)\s+)?(?:experience|history|employment)$/i
   ],
-  ['education', /^(education|academic\s+background|qualifications)\b/i],
-  ['skills', /^(technical\s+|core\s+|key\s+)?(skills|competencies|technologies|proficiencies)\b/i],
-  ['projects', /^(projects|selected\s+projects|portfolio)\b/i],
-  ['summary', /^(summary|profile|objective|about(\s+me)?|professional\s+summary)\b/i]
+  ['education', /^(?:education(?:\s+(?:and|&)\s+(?:training|qualifications|certifications|skills))?|academic\s+(?:background|qualifications)|educational\s+background|qualifications)$/i],
+  ['skills', /^(?:(?:technical|core|key|professional)\s+)?(?:skills(?:\s+(?:and|&)\s+competencies)?|competencies|technologies|proficiencies)$/i],
+  ['projects', /^(?:projects|selected\s+projects|portfolio)$/i],
+  ['summary', /^(?:(?:(?:professional|career|executive)\s+)?summary|(?:personal\s+)?profile|(?:career\s+)?objective|about(?:\s+me)?)$/i],
+  ['experience', /^(?:(?:ال)?خبر(?:ة|ات)(?:\s+(?:العملية|المهنية|الوظيفية))?|التاريخ\s+(?:الوظيفي|المهني)|المسيرة\s+المهنية)$/u],
+  ['education', /^(?:(?:ال)?تعليم(?:\s+و(?:التدريب|المهارات|التطوير))?|المؤهلات(?:\s+(?:العلمية|الاكاديمية|الدراسية))?|الخلفية\s+(?:العلمية|الاكاديمية)|التحصيل\s+العلمي)$/u],
+  ['skills', /^(?:(?:ال)?مهارات(?:\s+(?:التقنية|الفنية|المهنية|الاساسية|الشخصية))?|الكفاءات(?:\s+(?:الاساسية|المهنية))?)$/u],
+  ['projects', /^(?:(?:ال)?مشاريع(?:\s+(?:المختارة|الشخصية|المهنية))?|المشروعات|معرض\s+الاعمال)$/u],
+  ['summary', /^(?:(?:ال)?ملخص(?:\s+(?:المهني|الشخصي))?|نبذة(?:\s+(?:عني|شخصية|مهنية)|\s+عن\s+(?:نفسي|المرشح))?|الملف\s+الشخصي|الهدف(?:\s+(?:الوظيفي|المهني))?)$/u]
 ]
 
 /**
- * A heading is a short line that matches a known label. The length cap is what
- * stops a sentence like "I have five years of experience building..." from being
- * mistaken for an EXPERIENCE heading.
+ * Recognize a whole label, never a prefix of prose such as "Experience with
+ * Python". Markdown decoration and Arabic marks are normalized only for this
+ * comparison; source text and offsets remain intact.
  */
-const MAX_HEADING_WORDS = 5
-
 function headingKind(line: string): SectionKind | null {
-  const trimmed = line.trim().replace(/[:\-–—]+$/, '')
-  if (!trimmed || trimmed.split(/\s+/).length > MAX_HEADING_WORDS) return null
+  let trimmed = line.trim()
+  if (/^#{1,6}\s/u.test(trimmed)) {
+    trimmed = trimmed.replace(/^#{1,6}\s+/u, '').replace(/\s+#+$/u, '').trim()
+  }
+  // Accept whole-line emphasis, including a colon outside the closing marker.
+  trimmed = trimmed.replace(/[:：\-–—]+$/u, '').trim()
+  const emphasis = trimmed.match(/^(\*{1,3}|_{1,3})(.+)\1$/u)
+  if (emphasis) trimmed = emphasis[2].trim()
+  trimmed = trimmed
+    .replace(/[:：\-–—]+$/u, '')
+    .replace(/[\u0610-\u061a\u064b-\u065f\u0670\u06d6-\u06edـ]/gu, '')
+    .replace(/[أإآ]/gu, 'ا')
+    .trim()
+  if (!trimmed) return null
   for (const [kind, re] of HEADING_PATTERNS) {
     if (re.test(trimmed)) return kind
   }
@@ -50,17 +65,23 @@ export function splitSections(text: string): Section[] {
   let offset = 0
 
   const flush = (): void => {
-    const body = buffer.join('\n').trim()
-    if (body) sections.push({ kind: current, text: body, start: bufferStart })
+    const raw = buffer.join('\n')
+    const body = raw.trim()
+    if (body) sections.push({ kind: current, text: body, start: bufferStart + raw.length - raw.trimStart().length })
     buffer = []
   }
 
-  for (const line of lines) {
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index]
     const kind = headingKind(line)
     if (kind) {
       flush()
       current = kind
       bufferStart = offset
+      // A Setext underline belongs to the recognized heading, not its evidence.
+      if (/^\s*(?:={3,}|-{3,})\s*$/u.test(lines[index + 1] ?? '')) {
+        offset += lines[++index].length + 1
+      }
     } else {
       if (buffer.length === 0) bufferStart = offset
       buffer.push(line)
@@ -71,7 +92,7 @@ export function splitSections(text: string): Section[] {
 
   // A resume with no recognisable headings still needs to be searchable.
   if (sections.length === 0 && text.trim()) {
-    return [{ kind: 'other', text: text.trim(), start: 0 }]
+    return [{ kind: 'other', text: text.trim(), start: text.length - text.trimStart().length }]
   }
   return sections
 }

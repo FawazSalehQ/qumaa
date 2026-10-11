@@ -5,6 +5,14 @@ import { recruitingAr } from '../src/shared/locales/recruiting.js'
 import { matchingAr } from '../src/shared/locales/matching.js'
 import { nativeAr } from '../src/shared/locales/native.js'
 import { exportsAr } from '../src/shared/locales/exports.js'
+import { companiesAr } from '../src/shared/locales/companies.js'
+import { jobsCompanyAr } from '../src/shared/locales/jobs-company.js'
+import { talentAr } from '../src/shared/locales/talent.js'
+import { pipelineAr } from '../src/shared/locales/pipeline.js'
+import { clientPackAr } from '../src/shared/locales/client-pack.js'
+import { hiringCostsAr } from '../src/shared/locales/hiring-costs.js'
+import { hiringCostAssumptionTranslations } from '../src/shared/locales/hiring-costs-assumptions.js'
+import { requirementsAr } from '../src/shared/locales/requirements.js'
 import { ipcSchemas } from '../src/main/ipc-validation.js'
 
 describe('application language', () => {
@@ -43,7 +51,7 @@ describe('application language', () => {
 
   it('keeps identical source messages consistent across every screen and export', () => {
     const seen = new Map<string, string>()
-    for (const catalog of [commonAr, recruitingAr, matchingAr, nativeAr, exportsAr]) {
+    for (const catalog of [commonAr, recruitingAr, matchingAr, nativeAr, exportsAr, companiesAr, jobsCompanyAr, talentAr, pipelineAr, clientPackAr, requirementsAr, hiringCostsAr, hiringCostAssumptionTranslations]) {
       for (const [key, value] of Object.entries(catalog)) {
         if (seen.has(key)) expect(value, `Conflicting Arabic translation for ${key}`).toBe(seen.get(key))
         seen.set(key, value)
