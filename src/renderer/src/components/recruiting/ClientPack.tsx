@@ -20,16 +20,16 @@ const verificationLabel = (value: string): string => value === 'recruiter-verifi
 function DocumentPreview({ document }: { document: ClientPackDocument }): React.JSX.Element {
   const { t, formatDate, formatNumber } = useI18n()
   return <section className="client-pack-preview" aria-label={t('Exact client presentation preview')}>
-    <header className="client-pack-preview-brand"><strong lang="ar" dir="rtl">قُمع</strong>{document.firmName && <b dir="auto">{document.firmName}</b>}<span>{formatDate(document.generatedAt, { year: 'numeric', month: 'long', day: 'numeric' })}</span></header>
-    <p className="client-pack-eyebrow">{t('Client presentation')}</p><h3 dir="auto">{document.jobTitle}</h3>
+    <header className="client-pack-preview-brand"><strong lang="ar" dir="rtl">قُمع</strong>{document.firmName && <b><bdi>{document.firmName}</bdi></b>}<span>{formatDate(document.generatedAt, { year: 'numeric', month: 'long', day: 'numeric' })}</span></header>
+    <p className="client-pack-eyebrow">{t('Client presentation')}</p><h3><bdi>{document.jobTitle}</bdi></h3>
     {document.introduction && <p className="client-pack-text" dir="auto">{document.introduction}</p>}
     {document.blind && <p className="hint">{t('Candidate names and contact fields are hidden. Selected free text may still identify a person.')}</p>}
     {document.criteria.length > 0 && <><h4>{t('Requirements')}</h4><ul>{document.criteria.map((criterion, index) => <li key={index}><bdi>{criterion.text}</bdi> <span className="hint">({t(criterionImportanceLabel(criterion.importance))})</span></li>)}</ul></>}
     {document.candidates.map((candidate, index) => <article key={index} className="client-pack-preview-person">
-      <span className="client-pack-eyebrow">{t('Candidate {count}', { count: formatNumber(index + 1) })}</span><h3 dir="auto">{candidate.label}</h3>
+      <span className="client-pack-eyebrow">{t('Candidate {count}', { count: formatNumber(index + 1) })}</span><h3><bdi>{candidate.label}</bdi></h3>
       {candidate.contact.length > 0 && <p className="hint">{candidate.contact.map((field, fieldIndex) => <span key={field.label}>{fieldIndex > 0 ? ' · ' : ''}<bdi dir="ltr">{field.value}</bdi></span>)}</p>}
       {candidate.recommendation && <><h4>{t('Recruiter recommendation')}</h4><p dir="auto" className="client-pack-text">{candidate.recommendation}</p></>}
-      {candidate.details.length > 0 && <dl className="client-pack-preview-facts">{candidate.details.map((field) => <div key={field.label}><dt>{t(field.label)}</dt><dd dir="auto">{field.value}</dd></div>)}</dl>}
+      {candidate.details.length > 0 && <dl className="client-pack-preview-facts">{candidate.details.map((field) => <div key={field.label}><dt>{t(field.label)}</dt><dd><bdi>{field.value}</bdi></dd></div>)}</dl>}
       {candidate.evidence.length > 0 && <><h4>{t('Selected CV evidence')}</h4>{candidate.evidence.map((evidence, evidenceIndex) => <blockquote key={evidenceIndex}><span className="hint">{t(evidence.section)} · {t('Candidate CV; not independently verified')}</span><p dir="auto" className="client-pack-text">{evidence.text}</p></blockquote>)}</>}
       {candidate.answers.length > 0 && <><h4>{t('Selected screening answers')}</h4>{candidate.answers.map((answer, answerIndex) => <div className="client-pack-preview-answer" key={answerIndex}><strong dir="auto">{answer.question}</strong><p dir="auto" className="client-pack-text">{answer.answer}</p><span className="hint">{t(verificationLabel(answer.verification))}</span></div>)}</>}
     </article>)}

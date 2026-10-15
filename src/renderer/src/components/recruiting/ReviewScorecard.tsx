@@ -71,8 +71,7 @@ export default function ReviewScorecard({ workspace, match, busy, onSave, onClos
     <section className="recruit-review" aria-labelledby="review-title">
       <div className="recruit-section-head">
         <div>
-          <p className="recruit-eyebrow">{t("Job-specific review")}</p>
-          <h3 id="review-title" dir="auto">{candidateName(match, profile)}</h3>
+          <h3 id="review-title"><bdi>{candidateName(match, profile)}</bdi></h3>
           <p className="hint">{t('Reviewing CV: {name}', { name: bidiValue(match.resume.fileName, language) })}</p>
         </div>
         <button className="btn sm" type="button" disabled={busy} onClick={() => {

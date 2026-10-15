@@ -5,6 +5,7 @@ import type { ResumeRef, ResumeSummary } from '@shared/types.js'
 import { useI18n } from '../../i18n.js'
 import { errorMessage, isShortlisted, recruitingError } from './helpers.js'
 import HiringCandidatePicker, { type HiringCandidateOption } from './HiringCandidatePicker.js'
+import { CheckIcon } from '../Icons.js'
 
 interface Props {
   workspace: JobWorkspace
@@ -167,9 +168,9 @@ export default function JobStatusPanel({ workspace, resumes, active, disabled, l
   const placementCard = (candidate: JobPlacementCandidate, rank: number): React.JSX.Element => {
     const resume = resumes.find((item) => item.recordKey === candidate.recordKey)
     return <article className={`recruit-hiring-card ${rank === 1 ? 'hired' : ''}`} key={rank} aria-label={t(rank === 1 ? 'Hired candidate' : rank === 2 ? 'Backup #2' : 'Backup #3')}>
-      <div className="recruit-hiring-card-label"><span aria-hidden="true">{rank === 1 ? '✓' : formatNumber(rank)}</span><span>{t(rank === 1 ? 'Hired' : rank === 2 ? 'Backup #2' : 'Backup #3')}</span></div>
-      <strong dir="auto">{candidateLabel(candidate)}</strong>
-      {resume ? <><p className="hint" dir="auto">{resume.fileName}</p><button className="recruit-text-button" type="button" disabled={disabled || open} onClick={() => onOpenResume(resume)}>{t('View CV')}</button></> : <p className="hint">{t('CV no longer in library')}</p>}
+      <div className="recruit-hiring-card-label"><span aria-hidden="true">{rank === 1 ? <CheckIcon size={12} /> : formatNumber(rank)}</span><span>{t(rank === 1 ? 'Hired' : rank === 2 ? 'Backup #2' : 'Backup #3')}</span></div>
+      <strong><bdi>{candidateLabel(candidate)}</bdi></strong>
+      {resume ? <><p className="hint"><bdi>{resume.fileName}</bdi></p><button className="recruit-text-button" type="button" disabled={disabled || open} onClick={() => onOpenResume(resume)}>{t('View CV')}</button></> : <p className="hint">{t('CV no longer in library')}</p>}
     </article>
   }
 

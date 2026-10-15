@@ -8,6 +8,7 @@ import { jobPostingTitle } from '../jobPosting.js'
 import { useI18n } from '../i18n.js'
 import '../companies.css'
 import HiringBudgets from '../components/companies/HiringBudgets.js'
+import LineBadge, { initialsFor, lineToneForKey } from '../components/LineBadge.js'
 
 interface Props {
   onChanged: () => void
@@ -172,7 +173,7 @@ export default function CompaniesView({ onChanged, onNavigationLockChange, onNew
 
   return <div className="companies">
     <header className="company-page-head">
-      <div><p className="company-eyebrow">{t('Your company directory')}</p><h2>{t('Companies')}</h2><p className="hint">{t('Keep company context, contacts, and hiring assignments together.')}</p></div>
+      <div><h2>{t('Companies')}</h2><p className="hint">{t('Keep company context, contacts, and hiring assignments together.')}</p></div>
       <button type="button" className="btn primary" disabled={locked || loading || loadFailed} onClick={beginCreate}>{t('+ New company')}</button>
     </header>
     {error && <div className="company-error" role="alert"><span>{recruitingError(error, t, language)}</span>{loadFailed && <button type="button" className="btn sm" onClick={() => setReloadRevision((revision) => revision + 1)}>{t('Retry')}</button>}</div>}
@@ -189,9 +190,12 @@ export default function CompaniesView({ onChanged, onNavigationLockChange, onNew
           : <div className="company-list">{filtered.map((company) => {
             const count = jobsByCompany.get(company.id)?.length ?? 0
             return <button type="button" key={company.id} className={`company-list-item ${selectedId === company.id && !draft ? 'selected' : ''}`} disabled={locked} aria-label={t('Open company {name}', { name: company.name })} aria-current={selectedId === company.id && !draft ? 'page' : undefined} onClick={() => { setSelectedId(company.id); setError(null) }}>
-              <span className="company-list-name" dir="auto">{company.name}</span>
-              {(company.industry.length > 0 || company.location.length > 0) && <span className="company-list-context" dir="auto">{[...company.industry, ...company.location].join(' · ')}</span>}
+              <LineBadge tone={lineToneForKey(company.id)}>{initialsFor(company.name)}</LineBadge>
+              <span className="company-list-body">
+              <span className="company-list-name"><bdi>{company.name}</bdi></span>
+              {(company.industry.length > 0 || company.location.length > 0) && <span className="company-list-context"><bdi>{[...company.industry, ...company.location].join(' · ')}</bdi></span>}
               <span className="company-list-meta">{t(count === 1 ? '{count} job' : '{count} jobs', { count })}</span>
+              </span>
             </button>
           })}</div>}
         <p className="company-local-note"><span aria-hidden="true">◉</span>{t('Saved locally on this device')}</p>
@@ -199,7 +203,7 @@ export default function CompaniesView({ onChanged, onNavigationLockChange, onNew
 
       <section className="company-workspace" aria-label={draft ? t(draft.id ? 'Edit company' : 'New company') : selected?.name || t('Company overview')} aria-busy={loading || saving}>
         {draft ? <form className="company-editor" onSubmit={(event) => { event.preventDefault(); void saveCompany() }}>
-          <div className="company-editor-head"><p className="company-eyebrow">{t('Company profile')}</p><h3 ref={formHeading} tabIndex={-1}>{t(draft.id ? 'Edit company' : 'New company')}</h3><p className="hint">{t('Only a company name is required. Add context as your relationship develops.')}</p><p className="hint">{t('Type a detail and select Add, or press Enter. Use × to remove an entry.')}</p></div>
+          <div className="company-editor-head"><h3 ref={formHeading} tabIndex={-1}>{t(draft.id ? 'Edit company' : 'New company')}</h3><p className="hint">{t('Only a company name is required. Add context as your relationship develops.')}</p><p className="hint">{t('Type a detail and select Add, or press Enter. Use × to remove an entry.')}</p></div>
           <fieldset className="company-form-fields" disabled={saving}>
             <legend className="sr-only">{t('Company details')}</legend>
             <label className="company-field company-field-wide">{t('Company name')}<input ref={nameInput} name="companyName" required maxLength={512} dir="auto" value={draft.name} onChange={(event) => changeField('name', event.target.value)} autoComplete="off" /></label>
@@ -214,7 +218,7 @@ export default function CompaniesView({ onChanged, onNavigationLockChange, onNew
           <div className="company-form-actions"><button type="submit" className="btn primary" disabled={saving || !draft.name.trim()}>{t(saving ? 'Saving company…' : draft.id ? 'Save company' : 'Create company')}</button><button type="button" className="btn" disabled={saving} onClick={cancelEdit}>{t('Cancel')}</button></div>
         </form> : loading ? <div className="company-empty" role="status"><p>{t('Loading companies…')}</p></div> : selected ? <>
           <header className="company-detail-head">
-            <div className="company-identity"><span className="company-symbol"><CompanySymbol /></span><div><p className="company-eyebrow">{t('Company profile')}</p><h3 dir="auto">{selected.name}</h3>{(selected.industry.length > 0 || selected.location.length > 0) && <p className="hint" dir="auto">{[...selected.industry, ...selected.location].join(' · ')}</p>}</div></div>
+            <div className="company-identity"><LineBadge size="lg" tone={lineToneForKey(selected.id)}>{initialsFor(selected.name)}</LineBadge><div><h3><bdi>{selected.name}</bdi></h3>{(selected.industry.length > 0 || selected.location.length > 0) && <p className="hint" dir="auto">{[...selected.industry, ...selected.location].join(' · ')}</p>}</div></div>
             <button type="button" className="btn sm" disabled={locked} onClick={beginEdit}>{t('Edit company')}</button>
           </header>
           <dl className="company-stats"><div><dt>{t('Active jobs')}</dt><dd>{formatNumber(activeJobs)}</dd></div><div><dt>{t('Filled jobs')}</dt><dd>{formatNumber(companyJobs.filter((job) => job.status === 'filled').length)}</dd></div><div><dt>{t('All jobs')}</dt><dd>{formatNumber(companyJobs.length)}</dd></div></dl>
@@ -235,7 +239,7 @@ export default function CompaniesView({ onChanged, onNavigationLockChange, onNew
             <header className="company-section-head"><div><h4 id="company-jobs-title">{t('Jobs at this company')}</h4><p className="hint">{t('Each job keeps its own budget, candidates, and hiring progress.')}</p></div><button type="button" className="btn primary sm" disabled={locked} onClick={() => onNewJob(selected.id)}>{t('+ New job for company')}</button></header>
             {companyJobs.length === 0 ? <div className="company-jobs-empty"><p>{t('No jobs at this company yet.')}</p><p className="hint">{t('Create the first assignment, or attach an existing job from its editor.')}</p></div>
               : <div className="company-job-list">{companyJobs.map((job) => <button type="button" key={job.id} className="company-job" disabled={locked} aria-label={t('Open job {title}', { title: jobPostingTitle(job.posting) })} onClick={() => onOpenJob(job.id)}>
-                <div><strong dir="auto">{jobPostingTitle(job.posting)}</strong>
+                <div><strong><bdi>{jobPostingTitle(job.posting)}</bdi></strong>
                   {job.budget && <span className="company-job-budget"><span>{t('Salary budget')}: </span><bdi>{budgetLabel(job.budget, formatNumber, t)}</bdi></span>}
                   {job.hiringBudget && <span className="company-job-budget"><span>{t('Total hiring budget')}: </span><bdi>{hiringBudgetLabel(job.hiringBudget, formatNumber, t)}</bdi></span>}
                   {!job.budget && !job.hiringBudget && <span className="company-job-budget">{t('Budget not set')}</span>}

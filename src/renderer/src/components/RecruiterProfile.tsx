@@ -306,7 +306,7 @@ export default function RecruiterProfile({ resume, onChanged }: Props): React.JS
             {versions.map((version) => (
               <li key={version.recordKey}>
                 <div>
-                  <span className="version-name" dir="auto">{version.fileName}</span>
+                  <span className="version-name"><bdi>{version.fileName}</bdi></span>
                   <span className="version-date">{t(version.recordKey === resume.recordKey ? 'Imported {date} · Current resume' : 'Imported {date}', { date: formatDate(version.importedAt) })}</span>
                 </div>
                 {version.recordKey !== resume.recordKey && (

@@ -17,7 +17,7 @@ export default function CandidateComparison({ workspace, matches, onOpenCandidat
     <div className="recruit-comparison-scroll" tabIndex={0} aria-label={t("Candidate comparison table")}>
       <table className="recruit-comparison">
         <thead><tr><th scope="col">{t("Criteria")}</th>{matches.map((match) => <th key={match.resume.recordKey} scope="col">
-          <button type="button" className="recruit-name" dir="auto" onClick={() => onOpenCandidate(match)}>{candidateName(match, matchProfile(workspace, match))}</button>
+          <button type="button" className="recruit-name" onClick={() => onOpenCandidate(match)}><bdi>{candidateName(match, matchProfile(workspace, match))}</bdi></button>
           <div className="recruit-comparison-actions"><span className="hint">{t('Match {score}', { score: Math.round(match.score * 100) })}</span><button className="recruit-text-button" type="button" onClick={() => onRemove(match.resume.recordKey)}>{t("Remove")}</button></div>
         </th>)}</tr></thead>
         <tbody>
@@ -30,9 +30,9 @@ export default function CandidateComparison({ workspace, matches, onOpenCandidat
             const profile = matchProfile(workspace, match)
             return <td key={match.resume.recordKey}><bdi>{profile?.availability || t('Not confirmed')}</bdi><br /><bdi className="muted">{profile?.noticePeriod || t('Notice not confirmed')}</bdi></td>
           })}</tr>
-          <tr><th scope="row">{t("Expected salary")}</th>{matches.map((match) => <td key={match.resume.recordKey} dir="auto">{matchProfile(workspace, match)?.expectedSalary || t('Not confirmed')}</td>)}</tr>
-          <tr><th scope="row">{t("Preferred location")}</th>{matches.map((match) => <td key={match.resume.recordKey} dir="auto">{matchProfile(workspace, match)?.preferredLocation || t('Not confirmed')}</td>)}</tr>
-          <tr><th scope="row">{t("Skills")}</th>{matches.map((match) => <td key={match.resume.recordKey} dir="auto">{candidateWithProfile(match.resume, matchProfile(workspace, match)).skills.join(', ') || t('Not stated')}</td>)}</tr>
+          <tr><th scope="row">{t("Expected salary")}</th>{matches.map((match) => <td key={match.resume.recordKey}><bdi>{matchProfile(workspace, match)?.expectedSalary || t('Not confirmed')}</bdi></td>)}</tr>
+          <tr><th scope="row">{t("Preferred location")}</th>{matches.map((match) => <td key={match.resume.recordKey}><bdi>{matchProfile(workspace, match)?.preferredLocation || t('Not confirmed')}</bdi></td>)}</tr>
+          <tr><th scope="row">{t("Skills")}</th>{matches.map((match) => <td key={match.resume.recordKey}><bdi>{candidateWithProfile(match.resume, matchProfile(workspace, match)).skills.join(', ') || t('Not stated')}</bdi></td>)}</tr>
           {workspace.job.criteria.map((criterion) => <tr key={criterion.id}>
             <th scope="row"><span className={`recruit-importance ${criterion.importance}`}>{t(criterionImportanceLabel(criterion.importance))}</span><div dir="auto">{criterion.text}</div></th>
             {matches.map((match) => {
