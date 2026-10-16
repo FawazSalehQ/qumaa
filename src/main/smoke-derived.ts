@@ -18,6 +18,7 @@ import { normalizeScores } from './search/scoring.js'
 type Check = (label: string, ok: boolean, detail?: string) => void
 
 export async function smokeDerived(check: Check): Promise<void> {
+  const previousParser = '2:arabic-sections-and-locations'
   console.log('\n11. Parser upgrades and Arabic lexical retrieval')
   await backfillResumeDerivedData()
   check('establishes parser and model provenance on an empty library', isResumeDerivationCurrent() && isIndexCommitted())
@@ -46,7 +47,7 @@ export async function smokeDerived(check: Check): Promise<void> {
   const savedManual = manual()
   getDb().prepare("UPDATE chunks SET section = 'other'").run()
   getDb().prepare("UPDATE resumes SET location = 'الخبر', years_experience = 99").run()
-  setSetting(RESUME_DERIVATION_KEY, 'legacy-parser')
+  setSetting(RESUME_DERIVATION_KEY, previousParser)
 
   const oldIndex = JSON.stringify(getDb().prepare('SELECT * FROM chunks ORDER BY id').all())
   const oldSnapshots = JSON.stringify(getDb().prepare("SELECT * FROM recruiting_records WHERE kind = 'snapshot' ORDER BY id").all())
@@ -59,7 +60,7 @@ export async function smokeDerived(check: Check): Promise<void> {
   check('failed parser preflight retains the complete old index and saved evidence', preflightRejected &&
     oldIndex === JSON.stringify(getDb().prepare('SELECT * FROM chunks ORDER BY id').all()) &&
     oldSnapshots === JSON.stringify(getDb().prepare("SELECT * FROM recruiting_records WHERE kind = 'snapshot' ORDER BY id").all()) &&
-    oldModel === getSetting('embeddingModel') && getSetting(RESUME_DERIVATION_KEY) === 'legacy-parser')
+    oldModel === getSetting('embeddingModel') && getSetting(RESUME_DERIVATION_KEY) === previousParser)
 
   const originalEmbed = embedder.embedPassages
   let calls = 0

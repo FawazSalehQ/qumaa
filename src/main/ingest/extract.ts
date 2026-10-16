@@ -133,8 +133,8 @@ async function extractPdf(buf: Buffer): Promise<string> {
 }
 
 async function extractDocx(buf: Buffer): Promise<string> {
-  await assertSafeDocxArchive(buf)
-  return extractInWorker(buf, 'extract-docx')
+  const verifiedArchive = await prepareSafeDocxArchive(buf)
+  return extractInWorker(verifiedArchive, 'extract-docx')
 }
 
 interface ZipEntry {
@@ -190,7 +190,11 @@ function findEndOfCentralDirectory(buffer: Buffer): number {
   throw archiveError('is missing its central directory.')
 }
 
-function readCentralDirectory(buffer: Buffer): { entries: ZipEntry[]; centralOffset: number } {
+function readCentralDirectory(buffer: Buffer): {
+  entries: ZipEntry[]
+  centralOffset: number
+  eocd: number
+} {
   const eocd = findEndOfCentralDirectory(buffer)
   const diskNumber = buffer.readUInt16LE(eocd + 4)
   const centralDisk = buffer.readUInt16LE(eocd + 6)
@@ -285,7 +289,7 @@ function readCentralDirectory(buffer: Buffer): { entries: ZipEntry[]; centralOff
   if (offset !== centralOffset + centralSize) {
     throw archiveError('central directory is malformed.')
   }
-  return { entries, centralOffset }
+  return { entries, centralOffset, eocd }
 }
 
 function readLocalEntries(buffer: Buffer, entries: ZipEntry[], centralOffset: number): void {
@@ -410,16 +414,22 @@ async function verifyEntryContents(
 
 /**
  * Validates ZIP metadata and bounded, actual decompression before Mammoth parses a DOCX.
- * No expanded entry content is retained in memory.
+ * No expanded entry content is retained in memory. The returned copy omits the
+ * archive comment so JSZip consumes the same central directory that was checked:
+ * JSZip otherwise selects the last EOCD signature, including one inside a comment.
  */
-async function assertSafeDocxArchive(buffer: Buffer): Promise<void> {
-  const { entries, centralOffset } = readCentralDirectory(buffer)
+async function prepareSafeDocxArchive(buffer: Buffer): Promise<Buffer> {
+  const { entries, centralOffset, eocd } = readCentralDirectory(buffer)
   readLocalEntries(buffer, entries, centralOffset)
 
   let expandedBytes = 0
   for (const entry of entries) {
     expandedBytes = await verifyEntryContents(buffer, entry, expandedBytes)
   }
+
+  const verifiedArchive = Buffer.from(buffer.subarray(0, eocd + 22))
+  verifiedArchive.writeUInt16LE(0, eocd + 20)
+  return verifiedArchive
 }
 
 async function extractFileUnqueued(

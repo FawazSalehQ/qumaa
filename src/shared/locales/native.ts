@@ -1,5 +1,8 @@
 /** Arabic copy for native dialogs, menus, and portable exports. */
 export const nativeAr: Record<string, string> = {
+  'Qumaa could not start.': 'تعذّر بدء تشغيل قُمع.',
+  'Your library has not been deleted or reset. You can show its data folder to make a copy for recovery.': 'لم تُحذف مكتبتك ولم تُعَد تهيئتها. يمكنك إظهار مجلد بياناتها لإنشاء نسخة لاستعادة البيانات.',
+  'Show data folder and quit': 'إظهار مجلد البيانات ثم الإنهاء',
   'Send to {provider}': 'إرسال إلى {provider}',
   'Send this search’s reviewed evidence to {provider} using {model}?': 'هل تريد إرسال أدلة هذا البحث التي راجعتها إلى {provider} باستخدام {model}؟',
   'This approves the displayed data policy for this provider and model. Standard matching remains on this device.': 'توافق بذلك على سياسة البيانات المعروضة لهذه الجهة وهذا النموذج. تبقى المطابقة العادية على هذا الجهاز.',

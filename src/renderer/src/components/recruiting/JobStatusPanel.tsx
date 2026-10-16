@@ -1,6 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { CandidateProfile, JobPlacementCandidate, JobStatus, JobStatusEvent, JobWorkspace } from '@shared/recruiting.js'
 import { candidateWithProfile } from '@shared/recruiting.js'
+import { toIsoDateTime } from '@shared/i18n.js'
 import type { ResumeRef, ResumeSummary } from '@shared/types.js'
 import { useI18n } from '../../i18n.js'
 import { errorMessage, isShortlisted, recruitingError } from './helpers.js'
@@ -194,7 +195,7 @@ export default function JobStatusPanel({ workspace, resumes, active, disabled, l
         const previous = history[history.length - reversedIndex - 2]
         const earlierPlacement = firstPlacementIndex >= 0 && firstPlacementIndex < history.length - reversedIndex - 1
         const label = event.kind === 'created' ? t('Created as {status}', { status: t(STATUS_LABELS[event.status]) }) : event.kind === 'placement-updated' ? t(earlierPlacement ? 'Hiring details updated' : 'Hiring details recorded') : previous ? t('{from} → {to}', { from: t(STATUS_LABELS[previous.status]), to: t(STATUS_LABELS[event.status]) }) : t('Changed to {status}', { status: t(STATUS_LABELS[event.status]) })
-        return <li key={event.id}><div className="recruit-history-event"><span>{label}</span><time dateTime={new Date(event.at).toISOString()}>{date(event.at)}</time></div>{event.placement && <p className="hint"><bdi>{t('Hired: {name}', { name: candidateLabel(event.placement.hired) })}</bdi>{event.placement.backup2 && <> · <bdi>{t('Backup #2: {name}', { name: candidateLabel(event.placement.backup2) })}</bdi></>}{event.placement.backup3 && <> · <bdi>{t('Backup #3: {name}', { name: candidateLabel(event.placement.backup3) })}</bdi></>}</p>}</li>
+        return <li key={event.id}><div className="recruit-history-event"><span>{label}</span><time dateTime={toIsoDateTime(event.at)}>{date(event.at)}</time></div>{event.placement && <p className="hint"><bdi>{t('Hired: {name}', { name: candidateLabel(event.placement.hired) })}</bdi>{event.placement.backup2 && <> · <bdi>{t('Backup #2: {name}', { name: candidateLabel(event.placement.backup2) })}</bdi></>}{event.placement.backup3 && <> · <bdi>{t('Backup #3: {name}', { name: candidateLabel(event.placement.backup3) })}</bdi></>}</p>}</li>
       })}</ol>
     </details>
     {open && <dialog ref={dialog} className="recruit-status-dialog" aria-labelledby={titleId} onCancel={(event) => { event.preventDefault(); close() }}>

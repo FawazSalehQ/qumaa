@@ -20,7 +20,10 @@ export interface ExtractedFields {
 
 /* ---------- contact ---------- */
 
-const EMAIL_RE = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/
+// Try only the beginning of each maximal local-part token. Retrying each
+// suffix of a long token with no @ is quadratic. The domain cannot cross @,
+// so each token is scanned a bounded number of times, even for malformed mail.
+const EMAIL_RE = /(?<![A-Za-z0-9._%+-])[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/
 // Deliberately permissive: international formats vary wildly. Requires 9+ digits
 // so it does not swallow years, postcodes, or "24/7".
 const PHONE_RE = /(?:\+\p{Nd}{1,3}[\s.-]?)?(?:\(\p{Nd}{1,4}\)[\s.-]?)?\p{Nd}[\p{Nd}\s.-]{7,}\p{Nd}/u
@@ -92,7 +95,45 @@ function extractName(text: string): string | null {
 /* ---------- location ---------- */
 
 // "Riyadh, Saudi Arabia" / "London, UK" / "Austin, TX"
-const LOCATION_RE = /\b([A-Z][a-zA-Z.'-]+(?:\s+[A-Z][a-zA-Z.'-]+)?),\s*([A-Z]{2,}|[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\b/
+const PLACE_WORD_CHARACTER = /[a-zA-Z.'-]/
+const PLACE_REGION = /(?:[A-Z]{2,}|[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\b/y
+
+/** Find the original heuristic's earliest word start in one disjoint token. */
+function placeWordStart(line: string, start: number, end: number): number | null {
+  for (let index = start; index + 1 < end; index++) {
+    if (/[A-Z]/.test(line[index]) && (index === 0 || !/\w/.test(line[index - 1]))) return index
+  }
+  return null
+}
+
+function wordBefore(line: string, end: number): number {
+  let start = end
+  while (start > 0 && PLACE_WORD_CHARACTER.test(line[start - 1])) start--
+  return start
+}
+
+/** Scan comma-delimited candidates once, rather than retrying every A in A-A-A. */
+function matchPlace(line: string): string | null {
+  for (let comma = line.indexOf(','); comma !== -1; comma = line.indexOf(',', comma + 1)) {
+    const lastWord = wordBefore(line, comma)
+    let start = placeWordStart(line, lastWord, comma)
+    // The original heuristic accepts one or two words before the comma. Its
+    // second word must begin immediately after whitespace with a capital.
+    if (comma - lastWord >= 2 && /[A-Z]/.test(line[lastWord])) {
+      let separator = lastWord
+      while (separator > 0 && /\s/.test(line[separator - 1])) separator--
+      if (separator < lastWord) {
+        start = placeWordStart(line, wordBefore(line, separator), separator) ?? start
+      }
+    }
+    if (start === null) continue
+    let regionStart = comma + 1
+    while (regionStart < line.length && /\s/.test(line[regionStart])) regionStart++
+    PLACE_REGION.lastIndex = regionStart
+    if (PLACE_REGION.test(line)) return line.slice(start, PLACE_REGION.lastIndex)
+  }
+  return null
+}
 const ARABIC_LOCATION_LABEL =
   /(?<![\p{L}\p{M}\p{N}_])(?:العنوان|الموقع|مكان\s+الإقامة|المدينة(?!\s+المنورة(?:[^\p{L}\p{M}\p{N}_]|$))|الدولة)(?![\p{L}\p{M}\p{N}_])\s*[:：-]?\s*([\p{Script=Arabic}\p{M}][\p{Script=Arabic}\p{M}\s،,-]{1,80})/u
 // JavaScript's \b is ASCII-based: it cannot distinguish الخبر from الخبرة.
@@ -114,9 +155,8 @@ function candidateLocation(line: string): string | null {
     const value = arabicLabelled[1].trim().split(/\s{2,}|[|•]/u)[0]
     if (value) return value
   }
-  const m = line.match(LOCATION_RE)
-  if (!m) return null
-  const value = m[0].trim()
+  const value = matchPlace(line)
+  if (!value) return null
   return NOT_A_PLACE.test(value) || value.length > DATABASE_LIMITS.labelChars ? null : value
 }
 

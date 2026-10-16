@@ -14,7 +14,10 @@ const LIGATURES: Array<[RegExp, string]> = [
 ]
 
 /** Bullet glyphs and other decorative leaders that carry no meaning. */
-const BULLETS = /^[\s]*[•▪◦‣·∙●○*–—\-]{1,2}\s+/gm
+// Never scan across another multiline start: an all-newline prefix otherwise
+// retries the entire remaining suffix at each line. Keep the existing trailing
+// whitespace behavior, including standalone decorative bullet lines.
+const BULLETS = /^[^\S\r\n\u2028\u2029]*[•▪◦‣·∙●○*–—\-]{1,2}\s+/gm
 
 export function normalizeText(input: string): string {
   let t = input.replace(/\r\n?/g, '\n')

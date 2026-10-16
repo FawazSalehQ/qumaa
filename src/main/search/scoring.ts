@@ -97,7 +97,9 @@ export function buildFtsQuery(jd: string): string | null {
   const seen = new Set<string>()
   const terms: string[] = []
   for (const match of jd.toLowerCase().matchAll(/\p{L}[\p{L}\p{M}\p{N}+#.]*/gu)) {
-    const term = match[0].replace(/\.+$/, '')
+    let end = match[0].length
+    while (end > 0 && match[0][end - 1] === '.') end--
+    const term = match[0].slice(0, end)
     const unmarked = term.replace(/\p{M}/gu, '')
     if (Array.from(unmarked).length < 3 || STOPWORDS.has(unmarked) || seen.has(term)) continue
     seen.add(term)

@@ -6,6 +6,7 @@ export const commonAr: Record<string, string> = {
   'Language saved.': 'تم حفظ اللغة.',
   'Cancel': 'إلغاء', 'Save': 'حفظ', 'Close': 'إغلاق', 'Delete': 'حذف', 'Remove': 'إزالة',
   'Loading…': 'جارٍ التحميل…', 'Failed': 'تعذّرت العملية',
+  'Unknown date': 'تاريخ غير معروف',
   'Drop resumes to import': 'أفلت السير الذاتية لاستيرادها',
   'PDF, DOCX or Markdown': 'ملفات PDF أو DOCX أو Markdown',
   'Importing {current} of {total}': 'جارٍ استيراد الملف {current} من {total}',

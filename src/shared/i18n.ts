@@ -35,6 +35,28 @@ export function directionFor(language: Language): 'ltr' | 'rtl' {
   return language === 'ar' ? 'rtl' : 'ltr'
 }
 
+function validDate(value: number | Date): Date | undefined {
+  const date = value instanceof Date ? value : typeof value === 'number' ? new Date(value) : undefined
+  return date && Number.isFinite(date.getTime()) ? date : undefined
+}
+
+/** Malformed stored dates must not make the rest of the workspace inaccessible. */
+export function formatLocalizedDate(
+  language: Language,
+  value: number | Date,
+  options?: Intl.DateTimeFormatOptions
+): string {
+  const date = validDate(value)
+  return date
+    ? new Intl.DateTimeFormat(localeFor(language), options).format(date)
+    : translate(language, 'Unknown date')
+}
+
+/** Omit invalid machine-readable dates instead of throwing during rendering. */
+export function toIsoDateTime(value: number | Date): string | undefined {
+  return validDate(value)?.toISOString()
+}
+
 export function translate(language: Language, message: string, values: TranslationValues = {}): string {
   const template = language === 'ar' ? (arabicMessages[message] ?? message) : message
   return template.replace(/\{(\w+)\}/g, (placeholder, key: string) => {

@@ -63,6 +63,7 @@ import { registerHiringBudgetHandlers } from './hiring-budget-ipc.js'
 import { ipcSchemas, parseIpc } from './ipc-validation.js'
 import { maintenance } from './maintenance.js'
 import { restoredBounds, trackWindow } from './windowState.js'
+import { showStartupRecovery } from './startup-recovery.js'
 import type {
   AppSettings,
   IngestOutcome,
@@ -871,10 +872,13 @@ if (!ownsInstanceLock) {
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
+  }).catch((error: unknown) => {
+    console.error('Qumaa failed to start:', error)
+    return showStartupRecovery()
   })
 
-  // Without this, a throw during startup rejects silently: no window is created,
-  // nothing is logged, and the process simply lingers with no UI.
+  // Startup itself has a recovery dialog above; retain diagnostics for later
+  // asynchronous failures that do not propagate through the startup promise.
   process.on('unhandledRejection', (reason) => {
     console.error('Unhandled rejection during startup:', reason)
   })

@@ -100,14 +100,18 @@ const ALLOWED_OBJECTS = new Set<string>([
   'resumes_fts_data',
   'resumes_fts_idx',
   'resumes_fts_docsize',
-  'resumes_fts_config'
+  'resumes_fts_config',
+  'sqlite_autoindex_resumes_1',
+  'sqlite_autoindex_settings_1'
 ])
 
 const EXPECTED_OBJECTS: Readonly<Record<string, { type: string; table: string }>> = {
   resumes: { type: 'table', table: 'resumes' },
+  sqlite_autoindex_resumes_1: { type: 'index', table: 'resumes' },
   chunks: { type: 'table', table: 'chunks' },
   idx_chunks_resume: { type: 'index', table: 'chunks' },
   settings: { type: 'table', table: 'settings' },
+  sqlite_autoindex_settings_1: { type: 'index', table: 'settings' },
   resumes_fts: { type: 'table', table: 'resumes_fts' },
   resumes_fts_data: { type: 'table', table: 'resumes_fts_data' },
   resumes_fts_idx: { type: 'table', table: 'resumes_fts_idx' },
@@ -181,9 +185,7 @@ const RECRUITING_METADATA: readonly ColumnMetadata[] = [
   { name: 'data', type: 'TEXT', notNull: 1, defaultValue: null, primaryKey: 0 }
 ]
 
-/** The exact base schema shipped in Qumaa v0.1.0. */
-export const PUBLISHED_SCHEMA_V1_SQL = `
-CREATE TABLE resumes (
+const RESUMES_V1_SQL = `CREATE TABLE resumes (
   id            INTEGER PRIMARY KEY,
   file_path     TEXT    NOT NULL,
   file_name     TEXT    NOT NULL,
@@ -199,22 +201,29 @@ CREATE TABLE resumes (
   education_level  TEXT,
   skills_json      TEXT NOT NULL DEFAULT '[]',
   likely_scanned   INTEGER NOT NULL DEFAULT 0
-);
+)`
 
-CREATE TABLE chunks (
+const CHUNKS_SQL = `CREATE TABLE chunks (
   id        INTEGER PRIMARY KEY,
   resume_id INTEGER NOT NULL REFERENCES resumes(id) ON DELETE CASCADE,
   section   TEXT    NOT NULL,
   ordinal   INTEGER NOT NULL,
   text      TEXT    NOT NULL,
   embedding BLOB    NOT NULL
-);
-CREATE INDEX idx_chunks_resume ON chunks(resume_id);
+)`
+const CHUNKS_INDEX_SQL = 'CREATE INDEX idx_chunks_resume ON chunks(resume_id)'
 
-CREATE TABLE settings (
+const SETTINGS_SQL = `CREATE TABLE settings (
   key   TEXT PRIMARY KEY,
   value TEXT
-);
+)`
+
+/** The exact base schema shipped in Qumaa v0.1.0. */
+export const PUBLISHED_SCHEMA_V1_SQL = `
+${RESUMES_V1_SQL};
+${CHUNKS_SQL};
+${CHUNKS_INDEX_SQL};
+${SETTINGS_SQL};
 
 CREATE VIRTUAL TABLE resumes_fts
   USING fts5(raw_text, content='resumes', content_rowid='id', tokenize='porter unicode61');
@@ -231,7 +240,21 @@ CREATE TRIGGER resumes_au AFTER UPDATE ON resumes BEGIN
 END;
 `
 
-const EXPECTED_SCHEMA_SQL: Readonly<Record<string, string>> = {
+/**
+ * Only our own DDL forms may reach integrity checking or migration writes.
+ * Column/index pragmas do not expose added CHECK expressions, including ones
+ * on FTS shadow tables that SQLite evaluates during quick_check.
+ */
+const EXPECTED_SCHEMA_SQL: Readonly<Record<string, string | null>> = {
+  chunks: CHUNKS_SQL,
+  idx_chunks_resume: CHUNKS_INDEX_SQL,
+  settings: SETTINGS_SQL,
+  sqlite_autoindex_resumes_1: null,
+  sqlite_autoindex_settings_1: null,
+  resumes_fts_data: "CREATE TABLE 'resumes_fts_data'(id INTEGER PRIMARY KEY, block BLOB)",
+  resumes_fts_idx: "CREATE TABLE 'resumes_fts_idx'(segid, term, pgno, PRIMARY KEY(segid, term)) WITHOUT ROWID",
+  resumes_fts_docsize: "CREATE TABLE 'resumes_fts_docsize'(id INTEGER PRIMARY KEY, sz BLOB)",
+  resumes_fts_config: "CREATE TABLE 'resumes_fts_config'(k PRIMARY KEY, v) WITHOUT ROWID",
   resumes_fts: `CREATE VIRTUAL TABLE resumes_fts
     USING fts5(raw_text, content='resumes', content_rowid='id', tokenize='porter unicode61')`,
   resumes_ai: `CREATE TRIGGER resumes_ai AFTER INSERT ON resumes BEGIN
@@ -244,6 +267,18 @@ const EXPECTED_SCHEMA_SQL: Readonly<Record<string, string>> = {
     INSERT INTO resumes_fts(resumes_fts, rowid, raw_text) VALUES ('delete', old.id, old.raw_text);
     INSERT INTO resumes_fts(rowid, raw_text) VALUES (new.id, new.raw_text);
   END`
+}
+
+function expectedResumeSql(version: number): readonly string[] {
+  if (version === 1) return [RESUMES_V1_SQL]
+  const v2 = RESUMES_V1_SQL.replace(/\)\s*$/, ', doc_vector BLOB)')
+  if (version === 2) return [v2]
+  return [
+    v2.replace(/\)\s*$/, ", skills_version TEXT NOT NULL DEFAULT '')"),
+    // Fresh published v3 libraries placed skills_version before likely_scanned
+    // and then added doc_vector. Preserve that genuine historical variant.
+    v2.replace('likely_scanned   INTEGER', "skills_version TEXT NOT NULL DEFAULT '', likely_scanned   INTEGER")
+  ]
 }
 
 /**
@@ -294,7 +329,7 @@ export function normalizeSchemaSql(sql: string): string {
 }
 
 export interface SchemaShape {
-  /** User-defined SQLite object names (tables, indexes, and triggers). */
+  /** Every SQLite object name, including the known implicit indexes. */
   objects: readonly string[]
   /** Columns for Qumaa's ordinary tables. */
   tables: Readonly<Record<string, readonly string[]>>
@@ -354,7 +389,7 @@ function assertSchemaMetadataBudget(database: Database.Database): void {
   // before schema names or DDL are returned to JavaScript.
   const metadata = database
     .prepare(
-      `SELECT COALESCE(SUM(CASE WHEN name NOT LIKE 'sqlite_%' THEN 1 ELSE 0 END), 0) AS count,
+      `SELECT COUNT(*) AS count,
               COALESCE(MAX(length(CAST(name AS BLOB))), 0) AS maxNameBytes,
               COALESCE(MAX(length(CAST(type AS BLOB))), 0) AS maxTypeBytes,
               COALESCE(MAX(length(CAST(tbl_name AS BLOB))), 0) AS maxTableNameBytes,
@@ -406,7 +441,7 @@ export function inspectSchema(database: Database.Database): SchemaShape {
   assertSchemaMetadataBudget(database)
   const rows =
     database
-      .prepare("SELECT name FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%'")
+      .prepare('SELECT name FROM sqlite_schema')
       .all() as Array<{ name: string }>
   const objects = rows.map(({ name }) => name)
 
@@ -497,11 +532,15 @@ function expectedResumeMetadata(version: number): readonly (readonly ColumnMetad
 function assertObjects(database: Database.Database, version: number): void {
   const rows = database
     .prepare(
-      "SELECT name, type, tbl_name, sql FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%' ORDER BY name"
+      'SELECT name, type, tbl_name, sql FROM sqlite_schema ORDER BY name'
     )
     .all() as SchemaObjectRow[]
   const expectedObjects = version >= 4
-    ? { ...EXPECTED_OBJECTS, recruiting_records: { type: 'table', table: 'recruiting_records' } }
+    ? {
+        ...EXPECTED_OBJECTS,
+        recruiting_records: { type: 'table', table: 'recruiting_records' },
+        sqlite_autoindex_recruiting_records_1: { type: 'index', table: 'recruiting_records' }
+      }
     : EXPECTED_OBJECTS
   const expectedNames = Object.keys(expectedObjects).sort()
   if (
@@ -517,11 +556,17 @@ function assertObjects(database: Database.Database, version: number): void {
       schemaMismatch(version, `object ${row.name} has the wrong type or owner`)
     }
 
-    const expectedSql = row.name === 'recruiting_records' ? RECRUITING_TABLE_SQL : EXPECTED_SCHEMA_SQL[row.name]
-    if (
-      expectedSql !== undefined &&
-      (row.sql === null || normalizeSchemaSql(row.sql) !== normalizeSchemaSql(expectedSql))
-    ) {
+    const expectedSql = row.name === 'resumes'
+      ? expectedResumeSql(version)
+      : row.name === 'recruiting_records'
+        ? [RECRUITING_TABLE_SQL]
+        : row.name === 'sqlite_autoindex_recruiting_records_1'
+          ? [null]
+          : [EXPECTED_SCHEMA_SQL[row.name]]
+    if (!expectedSql.some((sql) =>
+      sql === null ? row.sql === null :
+        sql !== undefined && row.sql !== null && normalizeSchemaSql(row.sql) === normalizeSchemaSql(sql)
+    )) {
       schemaMismatch(version, `object ${row.name} has altered SQL`)
     }
   }
@@ -1330,7 +1375,9 @@ export function assertSchemaVersion(database: Database.Database, version: number
   // Legacy adoption remains limited to the three schemas actually shipped
   // without a version header. Recruiting versions must carry the application identity.
   const inferred = inferPublishedSchemaVersion(version >= 4
-    ? { ...shape, objects: shape.objects.filter((name) => name !== 'recruiting_records') }
+    ? { ...shape, objects: shape.objects.filter((name) =>
+        name !== 'recruiting_records' && name !== 'sqlite_autoindex_recruiting_records_1'
+      ) }
     : shape)
   if (inferred !== (version >= 4 ? 3 : version)) {
     throw new Error(
