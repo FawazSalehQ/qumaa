@@ -19,3 +19,8 @@ resources/models/
 # Never commit these — the repo is public.
 eval/corpus/
 eval/results/
+
+# Local-only working files (see handover.md, section 11). The repo is public.
+cv_filter.code-workspace
+eval/posting.txt
+.impeccable/review/

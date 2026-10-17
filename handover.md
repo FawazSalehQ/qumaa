@@ -1,62 +1,142 @@
-# Qumaa handover for Claude
+# Qumaa session handover (Claude ⇄ ChatGPT)
 
-Updated **16 October 2026**, timezone **Asia/Riyadh**. This is the single current local, untracked handover for the user's transfer from Codex to Claude. Useful prior project context is consolidated here.
+Signed off **17 October 2026** (Asia/Riyadh, UTC+3) by **Claude** (Claude Code). Previous sign-off: **16 October 2026** by **ChatGPT** (Codex); its full text is preserved in Git history (`git log -- handover.md`).
 
-**Current state:** the Wayfinding UI and security fixes are committed and pushed on `ui-modernize`. The subsequent ChatGPT subscription integration is implemented, tested and included in the replaced **local** installers, but its source changes are **not committed or pushed**, and the new installers have **not been uploaded to GitHub**. Real ChatGPT subscriber access remains unverified.
+This is the shared sign-off record between the Claude and ChatGPT sessions that work on this repository. Each session reads it before starting and updates it before signing off, so that work in one session does not undo, repeat or contradict work in another. It records state and decisions; it is **not authorization**. Commits, pushes, merges, releases, tag moves and messages to other people happen only when the user asks for them in the current session.
 
-Read this file, [AGENTS.md](AGENTS.md), [README.md](README.md), and the live Git status first. Read [DESIGN.md](DESIGN.md) and [PRODUCT.md](PRODUCT.md) before renderer changes. Workflow contracts and dated evidence are linked below; use the current branch, release-artifact, validation, privacy and derivation-version statements in this handover when interpreting historical reports.
+## 0. How to use this document
 
-This document supplies context, not new authorization to commit, push, merge, publish, contact others or start another feature. The current user request was the handover update only. Earlier explicit commit/push requests were fulfilled for the UI and security changes; the newest integration was reported to the user as local and uncommitted.
+**Before starting work**
 
-## 1. Repository snapshot
+1. Read this file, then [AGENTS.md](AGENTS.md) and [README.md](README.md). Read [DESIGN.md](DESIGN.md) and [PRODUCT.md](PRODUCT.md) before any renderer change. Where this file and an older dated report disagree, the newer dated statement here wins; older reports are evidence of their own date only.
+2. Run `git status --short` and `git log --oneline origin/ui-modernize..HEAD`. If they disagree with section 1, trust Git and note the difference in your sign-off.
+3. Check section 2 (**In flight**). Do not start a change that overlaps an in-flight item without the user's say-so.
+4. Check section 4 (**Decisions in force**). Do not reverse or re-litigate them unless the user asks.
+
+**Before signing off**
+
+1. Update section 1 (snapshot) and section 2 (in flight).
+2. Add a dated entry at the top of section 3 (session log): agent, the user's request in their words, what changed with commit hashes (a commit cannot contain its own hash, so name the commit that carries this file by its subject), what you changed in another agent's work, verification with numbers and scope, and what remains unverified.
+3. Update section 9 (open items) and any reference section your work made stale.
+4. Commit this file together with the work when the user has authorized commits; otherwise leave it modified and tell the user.
+
+Agent-private notes (Claude's memory, Codex state directories) are invisible to the other agent. Anything the next session needs belongs here or in the tracked docs.
+
+Keep a single handover file, `handover.md` (an older `HANDOVER-CODEX.md` was removed at the user's request). It is tracked in a **public** repository: never write secrets, tokens, API keys, real candidate data, personal contact details or private client information into it.
+
+## 1. Snapshot
 
 | Item | State |
 | --- | --- |
-| Product | **قُمع (Qumaa)**, local-first Electron recruiting desktop app, English and Arabic |
-| Scope | Hiring across all domains and seniority levels; OCR remains out of scope |
-| Repository | [FawazSalehQ/qumaa](https://github.com/FawazSalehQ/qumaa) |
+| Product | **قُمع (Qumaa)**: local-first Electron recruiting desktop app, English and Arabic |
+| Scope | Hiring across all domains and seniority levels; OCR out of scope |
+| Repository | [FawazSalehQ/qumaa](https://github.com/FawazSalehQ/qumaa) (**public**) |
 | Checkout | `/Users/fawazalqahtani/Desktop/Directory/cv_filter` |
-| Branch | `ui-modernize` |
-| HEAD | `e28dce5e320b869d1a37e669a8356e1a65375086` |
-| Upstream | Cached `origin/ui-modernize` points to the same commit; the earlier push was completed. No fresh fetch was needed for this document. |
-| Current uncommitted work | ChatGPT subscription authentication, streaming reranking, settings/consent UI, tests and documentation |
+| Branch | `ui-modernize` (not merged to `main`) |
+| Pushed | `origin/ui-modernize` = `e28dce5e320b869d1a37e669a8356e1a65375086` |
+| Local, **not pushed** | `b3b2ffc`, `6327450`, `cc9df03`, `4ccc942` and the documentation commits that add this sign-off (see section 3); run the `git log` command above for the exact list |
+| Working tree | Clean except the gitignored local-only files in section 11 |
 | Application/package version | **`0.1.0-beta.5`**; package `name` must stay **`cv-filter`** |
-| Public release name/tag | Historically retained **`v0.1.0-beta.2`**, intentionally distinct from the package version |
-| Database schema | **12**, unchanged by the subscription integration |
-| Resume derivation version | **`3:bounded-text-parsing`**, advanced by the security fixes |
-| Embedding model | Bundled `multilingual-e5-small`, 384 dimensions; unchanged |
+| Public release | **`v0.1.0-beta.2`**, intentionally distinct from the package version; last recorded as updated 11 Oct at `1ac5b98`. Remote release state was not re-queried on 17 Oct. |
+| Local installers | `release/Qumaa-0.1.0-beta.5-arm64.dmg` and `release/Qumaa-0.1.0-beta.5-Setup-x64.exe`, built 16 Oct 19:48–19:51 from `e28dce5` plus the then-uncommitted ChatGPT code. They **do not contain** `b3b2ffc`, `6327450`, Claude's two Settings copy edits in `cc9df03` or `4ccc942`. Rebuild before distributing (see "Release artifacts" below). |
+| Database schema | **12** |
+| Resume derivation version | **`3:bounded-text-parsing`** |
+| Embedding model | Bundled `multilingual-e5-small`, 384 dimensions |
 | Electron | **43.7.11** |
-| New runtime dependency | **jose 6.2.12**, declared `^6.2.12`, for verified OAuth ID tokens |
-| Runtime tools | Node 22+; local binary directory `/Users/fawazalqahtani/.nvm/versions/node/v22.23.2/bin` |
+| Notable dependency | **jose** `^6.2.12` (verified OAuth ID tokens) |
+| Runtime tools | Node 22+, at `/Users/fawazalqahtani/.nvm/versions/node/v22.23.2/bin` on this machine |
 
-Do not treat the GitHub release, the pushed branch, and the local installers as the same artifact. The local installers contain the uncommitted subscription work on top of HEAD.
+The pushed branch, the local installers and the published GitHub release are three different artifacts. Do not describe one by another's state.
 
-## 2. Work completed in the Codex session
+**Release artifacts in `release/` (gitignored).** Installers built on 16 Oct by the ChatGPT session after the user asked to overwrite older builds; the version was not bumped.
 
-### Committed and pushed
+| File | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `Qumaa-0.1.0-beta.5-arm64.dmg` | 233947757 | `194f8f0adc6f3a6369ee3fdc0336c69f3d0efcff84fd93db1598e098c119dd20` |
+| `Qumaa-0.1.0-beta.5-Setup-x64.exe` | 219672752 | `e91d6800db26bd125b52291f8aad6ee64d74018eacdef0c76f9b9aa3b2c38048` |
 
-1. **`1f9db634caa51419f24b5e6c44107150570ab743` — Modernize Qumaa UI with bilingual wayfinding design.** The user explicitly requested committing the UI. The design direction is no longer an uncommitted proposal awaiting a keep/revert decision. `DESIGN.md`, `PRODUCT.md`, `.impeccable/design.json`, the surface brief and `scripts/capture-ui.mjs` are tracked. Screenshot/review folders remain local.
-2. **`e28dce5e320b869d1a37e669a8356e1a65375086` — Harden document parsing, backup validation, and date handling.** The four validated application findings were fixed: pathological text parsing, invalid restored timestamps/date rendering, DOCX verifier/consumer archive disagreement, and executable SQLite schema constraints in backups. Electron was updated from 43.4.1 to 43.7.11. The parser derivation bump reaches existing libraries and preserves identities and recruiter records. No embedding model or ranking weights changed.
+- `SHA256SUMS-v0.1.0-beta.5.txt` was generated outside the build scripts and lists ten files: both installers, their blockmaps, `latest.yml`, `latest-mac.yml` and the four recruiter-guide files (`Qumaa_Recruiter_Guide{,_AR}.{pdf,pptx}`). `build:mac` and `build:win` do not regenerate it, and `prune-releases` keeps it while the version is unchanged, so regenerate it after any rebuild.
+- `release/` also holds the guide files and `RELEASE-v0.1.0-beta.{2,3,4,5}.md` notes; keep them when rebuilding.
+- macOS builds are ad-hoc signed, not Developer ID signed or notarized. Windows builds have no Authenticode publisher certificate.
 
-The security fix report is at:
+## 2. In flight
 
-`/Users/fawazalqahtani/.codex/state/plugins/codex-security/scans/cv_filter/artifacts-9f7c6da30ddf6597252ac42e4b42db4989ab2c61f913168ea801519547aa0b76/artifacts/fix_report.md`
+Nothing is in flight at this sign-off. The user's next task is not yet known.
 
-That report describes its earlier validation stage; its statements that nothing was committed/packaged were subsequently superseded by the completed commits and builds. The original scan remains historical evidence, not a fresh audit of the ChatGPT integration. Its last dependency query reported 23 affected package entries (2 critical, 10 high, 11 moderate), with Electron no longer listed. This is neither a clean dependency audit nor 23 independently established exploitable Qumaa findings. Do not remove Sharp or blindly upgrade the stack to suppress counts.
+When a session leaves work half-done (an uncommitted change, a long-running build, a decision waiting on the user), list it here with the date, the agent, the files involved and what is needed to finish it.
 
-### Implemented locally after those commits
+## 3. Session log (newest first)
 
-The user's request was: **“I want someone to be able to use their ChatGPT subscription to use their paid subscription with Qumaa. They should have both API and non-API integration.”**
+### 16–17 October 2026, Claude
 
-The implementation adds subscription authentication to the existing optional AI reranking feature. It does not add a general chat interface, email intake, a ChatGPT plugin or browser automation. OpenAI API keys and Anthropic API keys remain supported. The subscription option avoids requiring an API key or separate API billing; technically it calls OpenAI's documented Responses endpoint using OAuth authorization.
+User requests, in order: read the 16 October handover; *"I don't like the overly descriptive and cluttery nature of the application. It contains too much descriptive text that looks 'AI'"*; *"change the design of the collapsing sections like 'view job description and criteria'"*; *"Commit the changes"* (the user chose to commit only Claude's UI work first); *"Commit the remaining changes"*; then: handover.md is the Claude/ChatGPT sign-off document, *"Commit all the changes that do not conflict with the build's logic and ensure that everything works as intended."*
 
-The user then requested the current handover update and transfer to Claude. There is no additional active feature request in this handover.
+| Commit | What it is |
+| --- | --- |
+| `b3b2ffcd8c24dcc693cab69f22a6c4687d5daa2a` | **Trim renderer copy to the facts controls cannot show.** Removed taglines, section intros and reassurance lines across Jobs, Companies, Recruiter desk, Library detail and Settings; helper text now carries one fact a control cannot show. The AI reranking send notice was kept in full; the card's intro line (provider and model choice, keys protected by the operating system) was removed, and that fact now appears only in the key-saved and key-migrated toasts. Rule recorded in DESIGN.md Do's/Don'ts and `.impeccable/design.json`. Removed the empty local-note strip CSS. 21 new Arabic entries. |
+| `6327450c8546aa7fd412f58865cf9ac41d3cfaf8` | **Redesign collapsible sections as rail stops.** One shared disclosure treatment for all 14 `<details>` sites (section 5). The user picked "Rail stop" from three designs ranked by a design panel. An adversarial code and screenshot review found six defects, all fixed before the commit. |
+| `cc9df036af5180b796054f9751a974c7bdfab423` | **Add ChatGPT subscription sign-in for AI reranking.** The ChatGPT session's integration from 16 October, committed unchanged apart from the two Settings copy edits below. A scan before committing found no keys, tokens or real account data. |
+| `4ccc94252de3b8a23e912db9dad62d485547465e` | **Correct the Settings backup description.** The backups sentence Claude wrote into `cc9df03` said backups hold "all local records and preferences". They hold only theme and language among settings and drop saved matches. Now: *"Backups hold resume text, recruiting records, theme and language. They leave out original files, API keys, ChatGPT connections, AI settings and watched folders. They are not encrypted. After a restore, refresh saved jobs to rebuild their matches."* The Arabic entry was replaced. Found by the 17 Oct review of this handover. |
+| Documentation commits after that | The ChatGPT session's 16 October handover as written; `docs/ui/` (baseline spec with its revert section rewritten for the current branch, before/after captures, after-sets re-captured from `4ccc942`); the design-decision records in `.impeccable/mocks/` and `.impeccable/questions/`; then this rewrite, `.gitignore` entries for the local-only files, a pointer to this file in AGENTS.md, the copy-rule exception and a stale tagline sentence in DESIGN.md (and its sidecar), and the network-contract wording in README.md, PRODUCT.md and FEATURE_IMPLEMENTATION.md. |
 
-## 3. ChatGPT integration: behavior and source map
+**Changes Claude made to ChatGPT-session work.** In `cc9df03`: the Settings paragraph *"Choose a provider and model. Use your own API key, or connect an eligible ChatGPT subscription…"* was removed (its Arabic entry is now unused), and the backups description was shortened; that wording was then corrected in `4ccc942`. In the documentation commit: README.md and PRODUCT.md no longer say AI reranking is the only outbound feature (ChatGPT sign-in, account switching, model and token refresh and sign-out send account credentials and a per-installation identifier, never candidate data), and FEATURE_IMPLEMENTATION.md gained a ChatGPT-mode bullet. No ChatGPT logic was changed.
+
+How the commits were made: the working tree mixed both sessions' edits in shared files (Settings, styles, locales), so `b3b2ffc` and `6327450` were rebuilt from `e28dce5` plus Claude's own edit specs and staged without touching the working tree. The ChatGPT code was then committed as `cc9df03`. Per-commit verification is in section 8.
+
+### 15–16 October 2026, ChatGPT (Codex)
+
+User requests: commit and push the Wayfinding UI; fix validated security findings; *"I want someone to be able to use their ChatGPT subscription to use their paid subscription with Qumaa. They should have both API and non-API integration."*; rebuild and overwrite the local installers; write the handover.
+
+| Commit | What it is |
+| --- | --- |
+| `1f9db634caa51419f24b5e6c44107150570ab743` (pushed) | **Modernize Qumaa UI with bilingual wayfinding design.** Claude's 11–12 October Wayfinding redesign, accepted by the user. |
+| `e28dce5e320b869d1a37e669a8356e1a65375086` (pushed) | **Harden document parsing, backup validation, and date handling.** Four validated findings fixed: pathological text parsing, invalid restored timestamps/date rendering, DOCX verifier/consumer archive disagreement, executable SQLite schema constraints in backups. Electron 43.4.1 → 43.7.11. Derivation version bump reaches existing libraries and keeps identities and recruiter records. No model or ranking-weight change. |
+| (uncommitted then, now `cc9df03`) | ChatGPT subscription integration (section 6). Local installers rebuilt with it. |
+
+The security report is machine-local at `~/.codex/state/plugins/codex-security/scans/cv_filter/artifacts-9f7c6da30ddf6597252ac42e4b42db4989ab2c61f913168ea801519547aa0b76/artifacts/fix_report.md`. Its statements that nothing was committed or packaged were superseded by the later commits and builds. Its last dependency query listed 23 affected package entries (2 critical, 10 high, 11 moderate), Electron no longer among them. That is neither a clean audit nor 23 exploitable Qumaa findings; do not remove Sharp or blindly upgrade the stack to suppress counts.
+
+### 11–12 October 2026, Claude
+
+Built the Wayfinding renderer redesign (Riyadh Metro/KAFD wayfinding: line badges, the hiring funnel as a line of stops, graphite chrome) after freezing the previous UI in `docs/ui/baseline-2026-10-11/`. The user chose Wayfinding over the assigned "Ruled Page" direction (seed key `9bd6e20f`); the choice records are in `.impeccable/mocks/decision/` and `.impeccable/questions/`. Committed by the ChatGPT session as `1f9db63`.
+
+## 4. Decisions in force
+
+- **Scope:** hiring across all domains, English and Arabic as equals. F&B and drilling are regression datasets, not the target market. OCR stays out of scope.
+- **UI:** Wayfinding is the house style; DESIGN.md and `.impeccable/design.json` are its contract. No revert is requested. Do not discard the renderer changes or delete `ui-modernize`; it also carries the security and ChatGPT work.
+- **Copy:** helper text appears only when it carries a fact the controls cannot show (a consequence, an exclusion, a format rule, the next action in an empty state), in one short sentence. No taglines, section intros or reassurance lines. The user rejected those as clutter that "looks AI". **Exception** (worded the same in DESIGN.md and its sidecar): consent, privacy and data-handling disclosures (the AI rerank send notice, the backup and wipe descriptions) keep every fact they carry, in their shortest form, even across several sentences. The ChatGPT welcome and the account, usage and billing lines (`ChatGptWelcome.tsx`, the ChatGPT block in `SettingsView.tsx`, `JobRerank.tsx`) follow OpenAI's Sign in with ChatGPT UI guidance (section 6) and were not part of the copy pass; do not trim them without rechecking it and asking the user.
+- **Collapsible sections:** every `<details>` uses the Rail stop disclosure (section 5). Never add a bare `<summary>`.
+- **ChatGPT plan use:** offered through the official Sign in with ChatGPT flow alongside Anthropic and OpenAI API keys. Connecting never enables reranking; every send needs evidence review and native confirmation; a failed plan request never falls back to API billing (section 6).
+- **Release naming:** keep the public release name `v0.1.0-beta.2` distinct from package version `0.1.0-beta.5` unless the user changes it.
+- **Model:** small/base/large benchmarks showed inconsistent gains; `multilingual-e5-small` stays bundled. Do not repeat the comparison without a new hypothesis.
+- **Data identity:** package `name` stays `cv-filter` (userData folder).
+
+## 5. UI system reference
+
+The **Wayfinding** direction draws on Riyadh Metro/KAFD signage while keeping conventional desktop controls. Preserve:
+
+- Brand: IBM Plex families, ink `#2b2733`, violet `#6d3fb0`, paper `#f4f1f8`, funnel mark and RTL lockup. Light, dark and Arabic are peers.
+- Identity line tones (`violet`, `blue`, `teal`, `orange`) versus state tones (`green`, `amber`, `red`, `neutral`), controlled by `src/renderer/src/components/LineBadge.tsx`.
+- Rounded-square identity/stop badges, dot pills for states, mono score boxes. Accessible text carries identity; decorative badges are hidden from assistive technology.
+- Labels, eyebrows and table heads: Plex Mono 10.5px/500/uppercase/0.24em. Arabic resets tracking and case and uses Plex Sans Arabic.
+- Inline `<bdi>` for short mixed-language identities; `dir="auto"` for prose and inputs; logical properties and start alignment.
+- Depth by tone and 1px rules, shadows only on overlays, hover gated by `(hover: hover)`, reduced-motion support, inline SVG icons from `Icons.tsx` (directional ones mirror in RTL), bundled fonts, no network assets.
+- Stable accessible names and class hooks used by Playwright. After renderer edits run `npm run build` and then `npm run test:ui:built` (or `npm run test:ui`, which builds first); `test:ui:built` tests whatever is in `out/` and passes against a stale build.
+- **Arabic copy.** Every `t('…')` string needs an Arabic entry keyed by the exact English text, with the same `{placeholders}`, in its area's catalog under `src/shared/locales/` (Settings and shell: `common.ts`; library and matching: `matching.ts`; native dialogs and menus: `native.ts`; Jobs: `recruiting.ts`; and so on). Nothing fails if one is missing: `translate()` falls back to English, and `test/i18n.test.ts` checks only placeholders and that a key repeated across catalogs has one translation. When you reword an English string, re-key or delete its old entry. Add every agent-written Arabic string to open item 5 for native review.
+
+**Disclosure (Rail stop), added in `6327450`.** Markup: `<details className="disclosure [inline|entry] <site-class>">` whose head is `<DisclosureSummary>label</DisclosureSummary>` (`src/renderer/src/components/DisclosureSummary.tsx`: chevron, then a label span that is the summary's only text). Body children need no wrapper. The CSS is one block in `src/renderer/src/styles.css` under the comment "disclosures: stops on the line".
+
+- Closed: 14px chevron in Text Faint pointing along the reading direction (left in Arabic), 13px 500 label in Text Dim, 34px row; `inline` is a fit-content 28px row at 12px for bars, notices and fields; `entry` fills a bordered list card (screening kits).
+- Open: chevron turns down in the accent, label to full ink, body hangs from a 1px Border Strong rail under the chevron with text level with the label, 200ms unfold through `::details-content` with `interpolate-size`; reduced motion snaps.
+- Status history keeps its own timeline instead of the rail and holds its full-width basis through the 200ms close (`recruiting.css`), then returns to the end of the status bar. When opened it moves to its own line; the panel chose that deliberately.
+- `ChevronDownIcon` must never get `directional-icon`, whose RTL `scaleX(-1)` would fight the rotation.
+
+**Captures.** `scripts/capture-ui.mjs` seeds fictional data in a throwaway library and captures 24 views (light, dark, Arabic). `docs/ui/baseline-2026-10-11/` freezes the pre-redesign UI. Its revert section was rewritten on 17 Oct: since `e28dce5` (date-safe rendering in `i18n.tsx` and `JobStatusPanel.tsx`), `cc9df03` (ChatGPT Settings and rerank UI) and `4ccc942` (backup description) changed renderer files, checking out `src/renderer` from `1ac5b98`, switching to `main` or deleting the branch would lose that work; a visual revert needs a per-file plan and the user's explicit request. `docs/ui/wayfinding-2026-10-11/` holds the after-sets, re-captured on 17 Oct from `4ccc942` (in a clean worktree) at 1440×1000 and 1180×820; each `manifest.json` records the commit. Re-capture them, with a label naming the commit, when a change visibly alters these views.
+
+## 6. ChatGPT integration reference (`cc9df03`)
 
 Open **Settings → AI reranking → OpenAI** and choose **API key** or **ChatGPT subscription**. **Continue with ChatGPT** opens the system browser. The user can reconnect a saved account, add another account, select an account, refresh available models, manage usage and sign out. English and Arabic controls, account disclosures, keyboard focus handling and a first-plan-connection welcome modal are implemented.
 
-Connecting a credential never enables reranking automatically. The user selects a model and enables it. Each send still requires a main-owned evidence preview capability and a native operating-system confirmation. Plan usage limits or failures retain local results; there is **no automatic fallback to separately billed API credentials**.
+Connecting a credential never enables reranking automatically. The user selects a model and enables it. Each send still requires a main-owned evidence preview capability and a native operating-system confirmation. Plan usage limits or failures retain local results; there is **no automatic fallback to separately billed API credentials**. The feature does not add a general chat interface, email intake, a ChatGPT plugin or browser automation.
 
 | Concern | Files |
 | --- | --- |
@@ -70,178 +150,149 @@ Connecting a credential never enables reranking automatically. The user selects 
 | Saved result compatibility | `src/main/recruiting/schema.ts` |
 | Settings, welcome, rerank/usage UI | `src/renderer/src/views/SettingsView.tsx`, `components/ChatGptWelcome.tsx`, `components/recruiting/JobRerank.tsx` |
 | Bilingual copy | `src/shared/locales/{common,matching,native}.ts` |
-| New auth tests | `test/chatgpt-oauth.test.ts`, `test/chatgpt-session.test.ts` |
+| Auth tests | `test/chatgpt-oauth.test.ts`, `test/chatgpt-session.test.ts` |
 | Other regression coverage | `test/rerank-{settings,consent,privacy,request}.test.ts`, `test/recruiting.test.ts`, `test/backup-policy.test.ts`, `test/e2e/app.spec.ts`, `src/main/smoke.ts` |
-| Dependency/notices/docs | `package.json`, `package-lock.json`, `scripts/make-notices.mjs`, `THIRD-PARTY-NOTICES.md`, `AGENTS.md`, `PRODUCT.md`, `README.md` |
+| Dependency, notices, docs | `package.json`, `package-lock.json`, `scripts/make-notices.mjs`, `THIRD-PARTY-NOTICES.md`, `AGENTS.md`, `PRODUCT.md`, `README.md` |
 
-The new auth directory, shared account file, welcome component and two auth test files are intentionally **untracked source awaiting a commit**. They must not be confused with disposable local screenshots or handover artifacts when staging a future authorized commit.
+**Supported protocol and eligibility.** Official OpenAI documentation was checked on 16 October 2026. Do not assume the old blanket statement that ChatGPT subscriptions cannot be used by third-party desktop apps still applies. The implementation uses the documented open-source **Sign in with ChatGPT** flow, targeting this repository's open-source local desktop distribution. OpenAI controls plan eligibility and allowance; a successful identity login without plan permission is not authorization to run inference. Paid or remotely hosted distributions require OpenAI approval under the guidance reviewed. References: [Quickstart](https://developers.openai.com/siwc/quickstart), [Registration and sign-in](https://developers.openai.com/siwc/token-sharing-open-source/sign-in), [Accounts and sessions](https://developers.openai.com/siwc/token-sharing-open-source/profiles-and-sessions), [Models and inference](https://developers.openai.com/siwc/token-sharing-open-source/models-and-inference), [Preview limitations](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations), [Errors and recovery](https://developers.openai.com/siwc/token-sharing-open-source/errors-and-recovery), [UI/UX guidance](https://developers.openai.com/siwc/ui-ux-guidelines), [Distribution eligibility](https://developers.openai.com/cookbook/articles/sign-in-with-chatgpt). Recheck them before changing protocol or eligibility behavior.
 
-### Supported protocol and current eligibility
+**Auth and privacy invariants.**
 
-Official OpenAI documentation was checked on October 16, 2026. Do not assume the old blanket statement that ChatGPT subscriptions cannot be used by third-party desktop apps still applies. This implementation uses the documented open-source **Sign in with ChatGPT** flow, targeting this repository's open-source local desktop distribution. OpenAI controls plan eligibility and allowance; a successful identity login without plan permission is not authorization to run inference. Paid or remotely hosted distributions require OpenAI approval under the guidance reviewed.
-
-Primary references:
-
-- [Quickstart](https://developers.openai.com/siwc/quickstart)
-- [Registration and sign-in](https://developers.openai.com/siwc/token-sharing-open-source/sign-in)
-- [Accounts and sessions](https://developers.openai.com/siwc/token-sharing-open-source/profiles-and-sessions)
-- [Models and inference](https://developers.openai.com/siwc/token-sharing-open-source/models-and-inference)
-- [Preview limitations](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)
-- [Errors and recovery](https://developers.openai.com/siwc/token-sharing-open-source/errors-and-recovery)
-- [UI/UX guidance](https://developers.openai.com/siwc/ui-ux-guidelines)
-- [Distribution eligibility](https://developers.openai.com/cookbook/articles/sign-in-with-chatgpt)
-
-These links record the implementation basis; recheck official docs if changing provider protocol or eligibility behavior.
-
-### Auth and privacy invariants
-
-- OAuth runs entirely in main. Initial registration uses `dynamic_agent_client`, `agent_name_hint=Qumaa`, and a stable local `urn:uuid:` host ID. The issued client ID is retained before exchange and reused; the bootstrap ID is not an exchange credential.
+- OAuth runs entirely in main. Initial registration uses `dynamic_agent_client`, `agent_name_hint=Qumaa` and a stable local `urn:uuid:` host ID. The issued client ID is retained before exchange and reused; the bootstrap ID is not an exchange credential.
 - The temporary callback listener binds only `127.0.0.1`, uses `/auth/callback`, and opens before the system browser. Fresh state, nonce and PKCE S256 bind each attempt. Invalid callbacks are ignored or rejected without leaking tokens or consuming an unrelated legitimate flow.
-- Token exchange uses `https://auth.openai.com/api/accounts/oauth/token`. ID tokens are verified with JOSE, trusted discovery/JWKS, issuer, audience/authorized party, expiry, issue time and the sign-in nonce. Returning-account identity must match the selected registration.
+- Token exchange uses `https://auth.openai.com/api/accounts/oauth/token`. ID tokens are verified with jose against trusted discovery/JWKS, issuer, audience/authorized party, expiry, issue time and the sign-in nonce. A returning account's identity must match the selected registration.
 - Scopes include `openid profile email offline_access resource.invoke chatgpt.tokens.use.direct`. Only returned granted scopes authorize plan use. Distinct registrations stay separate even when emails match.
-- OAuth token bundles use Electron `safeStorage` inside local SQLite settings. Status/model metadata is renderer-safe; tokens never cross IPC. Opening Settings/startup does not decrypt credentials, fetch models or refresh tokens.
-- Refresh is serialized per account. Rotated credentials are saved encrypted before a later JWKS fetch can fail; `identityPending` forces verification before use. A logical connection revision stays stable through ordinary rotation and app restart but changes on identity/permission/session changes.
-- Account switches cancel inference but allow a still-saved account's token rotation to complete safely. Sign-out cancels requests, attempts remote refresh-token revocation, and removes local tokens while retaining registration metadata. Failed remote revocation is disclosed.
-- Restore, wipe and quit invalidate outstanding auth operations. Database reads/writes occur under maintenance leases; browser waiting never holds a long library lease. Late callbacks/refreshes cannot repopulate credentials after library replacement.
-- Portable backups allow only theme/language settings; ChatGPT credentials, host ID, pending registration, accounts and sharing choices are excluded. Restore/wipe remove local connections. Account identifiers are not stored in saved match snapshots or outbound candidate evidence.
-- Legacy `{provider, model}` configs remain API-key configs. Plan configs add `authMode: 'chatgpt'` with provider `openai`. The API model preference and plan model preference are independent. An empty plan model is a pending Settings choice, never a valid send or saved AI result.
-- Plan models come from the authenticated `/v1/models` catalog (`visibility: 'list'`, slug/display name). Catalogs refresh on account changes; startup uses cached metadata without networking.
-- Plan inference uses fixed `https://api.openai.com/v1/responses`, `store: false`, `stream: true`, input arrays and instructions. Unsupported preview parameters, including `max_output_tokens`, are omitted. Only validated `response.completed` output counts as success. Partial/refused/failed/incomplete streams do not become rankings. Responses are capped at 1 MiB and 90 seconds.
-- The reviewed request is the actual sent body. Approval is bound to auth mode and logical credential revision, with rechecks after native confirmation, token refresh and inference. Never retry through another provider/account or fall back to API billing.
-- Ordinary matching, local storage and exports remain offline. Explicit sign-in, model refresh, credential refresh/revocation and approved AI sends are the optional network operations. The old “no networking unless an API key exists” wording is obsolete.
+- Token bundles use Electron `safeStorage` inside local SQLite settings. Status and model metadata are renderer-safe; tokens never cross IPC. Opening Settings or starting the app does not decrypt credentials, fetch models or refresh tokens.
+- Refresh is serialized per account. Rotated credentials are saved encrypted before a later JWKS fetch can fail; `identityPending` forces verification before use. A logical connection revision stays stable through ordinary rotation and restart but changes on identity, permission or session changes.
+- Account switches cancel inference but let a still-saved account's token rotation finish safely. Sign-out cancels requests, attempts remote refresh-token revocation and removes local tokens while keeping registration metadata. A failed remote revocation is disclosed.
+- Restore, wipe and quit invalidate outstanding auth operations. Database reads and writes happen under maintenance leases; waiting for the browser never holds a long library lease. Late callbacks or refreshes cannot repopulate credentials after library replacement.
+- Portable backups keep only theme/language settings; ChatGPT credentials, host ID, pending registration, accounts and sharing choices are excluded. Restore and wipe remove local connections. Account identifiers are not stored in saved match snapshots or outbound candidate evidence.
+- Legacy `{provider, model}` configs remain API-key configs. Plan configs add `authMode: 'chatgpt'` with provider `openai`. API and plan model preferences are independent. An empty plan model is a pending Settings choice, never a valid send or saved AI result.
+- Plan models come from the authenticated `/v1/models` catalog (`visibility: 'list'`). Catalogs refresh on account changes; startup uses cached metadata without networking.
+- Plan inference uses fixed `https://api.openai.com/v1/responses` with `store: false`, `stream: true`, input arrays and instructions. Unsupported preview parameters, including `max_output_tokens`, are omitted. Only validated `response.completed` output counts; partial, refused, failed or incomplete streams never become rankings. Responses are capped at 1 MiB and 90 seconds.
+- The reviewed request is the body actually sent. Approval is bound to auth mode and logical credential revision, rechecked after native confirmation, token refresh and inference. Never retry through another provider or account or fall back to API billing.
+- Ordinary matching, local storage and exports remain offline. Explicit sign-in, model refresh, credential refresh/revocation and approved AI sends are the optional network operations. The old "no networking unless an API key exists" wording is obsolete.
 
-## 4. Verification and its limits
+## 7. Product and quality context
 
-Results below were recorded during the October 16 implementation/build work, not rerun merely to update this document.
+Implemented recruiter workflows: local file/paste/watched-folder intake; companies with multi-entry details; structured saved jobs and Express search inside Jobs; company links, salary ranges and hiring budgets; target-company research; candidate reviews, comparisons and ordered shortlists; contacts, activities, follow-ups, talent pools, pipelines, screening kits and client packs; saved Hiring Budgets & Costs under Companies. These are working features, not a backlog. See [FEATURE_IMPLEMENTATION.md](FEATURE_IMPLEMENTATION.md).
 
-| Check | Result and scope |
-| --- | --- |
-| Production build | Both TypeScript projects and Electron/renderer bundles passed on the final tree |
-| Full unit suite | **676 tests in 61 files passed** |
-| Auth-focused suite | **51 tests** within that total, including real signed JWT checks and session/storage/refresh races |
-| Request/privacy-focused suite | **96 tests** within the total, including streaming bounds and cancellation |
-| Electron smoke | **328 checks passed**, including explicit ChatGPT backup exclusion |
-| Source UI suite on macOS | **31 workflows passed**; the two ChatGPT workflows passed again against the final built output |
-| Packaged macOS app | Both ChatGPT workflows passed (**2/2**) using the actual packaged main/preload and JOSE dependency |
-| UI inspection | English/Arabic settings, consent and usage-limit screenshots inspected for layout and RTL |
-| Both packaged payloads | 56 production files match final `out/`; 145 relative main imports resolve; packaged JOSE runtime matches installed/locked dependency |
-| Model/native checks | Five external model files match pinned tree/hashes; five macOS arm64 and nine Windows x64 native binaries verified; Sharp retained |
-| Archive size | Both `app.asar` files approximately **34.12 MiB**; no duplicate model, unused browser ONNX runtime or dev entry points |
-| Installer containers | DMG contents match 457 files/symlinks and strict ad-hoc signature passes; NSIS embedded payload matches 252 entries |
-| Release metadata | Installer size/version/SHA-512 fields and all ten entries in the local SHA-256 manifest verified |
+Workflow contracts to preserve:
 
-The end-to-end subscription test uses the **real loopback callback listener, signed ID token verification, catalog handling, main/preload, evidence consent, streaming, saved ordering, quota recovery and revocation**. Browser launch, provider responses and credential protection are simulated using fictional accounts/data. It does not open a real subscriber session or spend a real plan/API allowance.
-
-**Still unverified:** live ChatGPT account eligibility, actual provider acceptance and real plan usage; this new Windows build running on Windows; human installation/upgrade acceptance. Historical Windows CI passed at the older published commit, not this uncommitted feature tree. Do not claim a current Windows runtime/CI pass or universal subscription eligibility.
-
-No new ranking-quality evaluation, capacity benchmark or exhaustive security scan was run for the subscription feature. It does not establish improved hiring accuracy. The final documentation-only handover rename needs no application test rerun.
-
-Evidence locations (temporary files may be cleaned by the OS):
-
-- `/private/tmp/qumaa-chatgpt-release-knDQbi/`: staged builds, `unit-tests.txt`, `artifact-verification.txt`, container verification logs/scripts, `replacement-summary.json`, and `older-builds/` containing the replaced local builds.
-- `/private/tmp/qumaa-chatgpt-build.log`, `/private/tmp/qumaa-chatgpt-smoke.log`, `/private/tmp/qumaa-chatgpt-unit.log`.
-- `test-results/app-connects-ChatGPT-separ-e0711-ounts-in-English-and-Arabic/`: English/Arabic settings screenshots.
-- `test-results/app-signs-in-through-the-r-a0805--consent-and-usage-recovery/`: English/Arabic consent and usage-limit screenshots.
-- `/private/tmp/qumaa-installers-rhryu11j/`: earlier security/UI-only installer verification; superseded by the ChatGPT builds.
-
-## 5. Local installers versus published release
-
-The user asked to overwrite older builds. Both local installers, their blockmaps, `latest.yml`, `latest-mac.yml`, packaged application directories and `SHA256SUMS-v0.1.0-beta.5.txt` were replaced after verification. Existing recruiter guide assets were preserved. The version was not bumped.
-
-| Local installer | Bytes | SHA-256 |
-| --- | ---: | --- |
-| [macOS arm64](release/Qumaa-0.1.0-beta.5-arm64.dmg) | 233947757 | `194f8f0adc6f3a6369ee3fdc0336c69f3d0efcff84fd93db1598e098c119dd20` |
-| [Windows x64](release/Qumaa-0.1.0-beta.5-Setup-x64.exe) | 219672752 | `e91d6800db26bd125b52291f8aad6ee64d74018eacdef0c76f9b9aa3b2c38048` |
-
-The builds contain HEAD plus the uncommitted subscription integration and generated third-party notices. No new commit, push, merge, tag move, release publication or GitHub asset replacement was performed for this feature. The historical public release is [v0.1.0-beta.2](https://github.com/FawazSalehQ/qumaa/releases/tag/v0.1.0-beta.2), last recorded as updated October 11 at `1ac5b984297db9803456103a27897e2289e71d5f`; this handover does not newly query remote release state.
-
-macOS remains ad-hoc signed, not Developer ID signed/notarized. Windows has no Authenticode publisher certificate. Guides/decks predate the new interface and ChatGPT settings; updating them is separate work.
-
-## 6. Product, quality and UI context to preserve
-
-Implemented recruiter workflows include local file/paste/watched-folder intake; companies with multi-entry details; structured saved jobs and Express search inside Jobs; company links, salary ranges and hiring budgets; target-company research; candidate reviews, comparisons and ordered shortlists; contacts, activities, follow-ups, talent pools, pipelines, screening kits and client packs; and saved Hiring Budgets & Costs under Companies. These are working features, not a new backlog. See [FEATURE_IMPLEMENTATION.md](FEATURE_IMPLEMENTATION.md).
-
-Preserve these workflow contracts:
-
-- Intake accepts digital PDF, DOCX, `.md`/`.markdown`, pasted text and watched folders. Multi-column PDF extraction remains heuristic. OCR and dedicated email, job-board, browser-scraping or candidate-upload integrations are absent; a first online intake source has not been selected.
+- Intake accepts digital PDF, DOCX, `.md`/`.markdown`, pasted text and watched folders. Multi-column PDF extraction remains heuristic. OCR and dedicated email, job-board, scraping or candidate-upload integrations are absent; no online intake source has been chosen.
 - Saved vacancies have structured fields, statuses `open`, `on-hold`, `filled`, `archived`, dated placement history, a hire and up to two backups. Company assignment is optional; per-person salary ranges and total hiring budgets are independent.
-- Express search lives **inside Jobs**, in main-process memory until saved. Saving retains the posting, results and applicable AI ordering without another search. Requirement passages are read-only until saved. Job requirements retain source wording and required/preferred/unspecified importance; assessments distinguish confirmation, uncertainty and contradictory evidence.
-- Company details, budgets and target-company research do not silently rewrite postings, affect ranking, enter AI payloads or exclude candidates. Multi-entry industries, locations, contact names and emails use Add/Enter; legacy whole values are not split on commas/slashes. Contact-name and email lists are independent, not paired person records. Hiring companies cannot target themselves; an `excluded` research target does not reject its candidates.
-- Recruiter records support manual prospects without CVs, explicit CV linking/merging and preserved history. Logging emails/messages does not send them, and follow-ups are in-app reminders. Client PDF packs support up to ten people, main-owned canonical previews and one-use freshness tokens; internal notes are excluded, while blind mode does not guarantee that narrative evidence is anonymous.
-- Hiring Budgets & Costs belongs under **Companies**. Multiple saved plans may link to that company's jobs, but remain separate from job salary/budget fields; linking does not populate salary. Detach linked plans before reassigning a job to another company. The shared engines are `src/shared/hiring-costs.ts` and `hiring-money.ts`; rule changes require explicit compatibility/version decisions for `saudi-hiring-costs-2024-2028-v1` and `saudi-gosi-wage-limits-v1`.
+- Express search lives **inside Jobs**, in main-process memory until saved. Saving keeps the posting, results and applicable AI ordering without another search. Requirement passages are read-only until saved. Requirements keep source wording and required/preferred/unspecified importance; assessments distinguish confirmation, uncertainty and contradictory evidence.
+- Company details, budgets and target-company research never rewrite postings, affect ranking, enter AI payloads or exclude candidates. Multi-entry fields use Add/Enter; legacy whole values are not split on commas or slashes. Contact-name and email lists are independent, not paired person records. A hiring company cannot target itself; an `excluded` research target does not reject its candidates.
+- Recruiter records support manual prospects without CVs, explicit CV linking/merging and preserved history. Logging emails/messages does not send them; follow-ups are in-app reminders. Client PDF packs support up to ten people, main-owned canonical previews and one-use freshness tokens; internal notes are excluded, and blind mode does not guarantee anonymous narrative evidence.
+- Hiring Budgets & Costs lives under **Companies**. Saved plans may link to that company's jobs but stay separate from job salary/budget fields; linking does not populate salary. Detach linked plans before reassigning a job to another company. Engines: `src/shared/hiring-costs.ts`, `hiring-money.ts`; rule changes need explicit compatibility/version decisions for `saudi-hiring-costs-2024-2028-v1` and `saudi-gosi-wage-limits-v1`. It is the narrower Saudi monthly planning calculator in [docs/HIRING-BUDGETS.md](docs/HIRING-BUDGETS.md); its geography does not limit the app's scope, and its legal assumptions are dated.
 
-Hiring Budgets & Costs is the narrower, explicitly eligible Saudi monthly planning calculator described in [docs/HIRING-BUDGETS.md](docs/HIRING-BUDGETS.md). Do not infer that its geography/domain limits the recruitment app's scope. Its legal assumptions are dated; this handover is not a fresh legal review.
+Matching quality remains unfinished. The active plan is [pilot/CROSS-DOMAIN-QUALITY.md](pilot/CROSS-DOMAIN-QUALITY.md); the 27 September measurements are in [pilot/CROSS-DOMAIN-2026-09-27.md](pilot/CROSS-DOMAIN-2026-09-27.md). Relevant-CV recall@10 was 88.3% in the posting language versus 11.7% across languages in that synthetic development evaluation. The frozen suite has 96 fictional bilingual careers, 24 vacancies and 12 profession families (80 development, 16 reserved cases); translated exposures are not independent people or vacancies. No experimental language-group normalization was deployed. Labels, translations and human recruiter acceptance remain unreviewed; reserved families have been inspected, so future acceptance needs genuinely fresh held-out data. No human pilot sessions are recorded ([pilot/README.md](pilot/README.md)). Relevance scores are relative text matches, not probabilities or verified qualifications.
 
-Matching quality remains unfinished. The active plan is [pilot/CROSS-DOMAIN-QUALITY.md](pilot/CROSS-DOMAIN-QUALITY.md); the September 27 measurements are in [pilot/CROSS-DOMAIN-2026-09-27.md](pilot/CROSS-DOMAIN-2026-09-27.md). Relevant-CV recall@10 was 88.3% in the posting language versus 11.7% in the other language in that synthetic development evaluation. Labels/translations and human recruiter acceptance remain unreviewed. Reserved families have already been inspected; use genuinely fresh held-out data for future acceptance. Do not tune only to F&B/drilling or equate test-suite success with ranking quality.
+The English and Arabic recruiter guides (24-slide decks, PDFs, screenshots, builders) are in [presentations/README.md](presentations/README.md) and [presentations/arabic/README.md](presentations/arabic/README.md). They predate the newest Companies/budget workflows, the Wayfinding UI, the copy pass, the disclosure redesign and the ChatGPT settings. Arabic materials must keep the English template, use real Arabic app screenshots and contain no U+2014 em dash. `presentations/arabic/source/build_guide_ar.py` imports the English builder, so English builder changes may need translation-dictionary updates.
 
-The frozen synthetic suite contains 96 fictional bilingual careers, 24 vacancies and 12 profession families, with 80 development and 16 reserved evaluation cases; translated exposures are not independent people/vacancies. Small/base/large model benchmarks were completed with inconsistent gains, so the small model remains bundled. Do not repeat that comparison without a new hypothesis. No experimental language-group normalization was deployed. Human pilot materials exist in [pilot/README.md](pilot/README.md), but no human sessions or accepted judgments are recorded. Relevance scores are relative text matches, not probabilities or verified qualifications.
+Visible creator attribution stays **Fawaz Aljathnan** with `https://www.linkedin.com/in/fawazsalehq/`. Package author metadata is separately `Fawaz Alqahtani`.
 
-The accepted **Wayfinding** direction draws from Riyadh Metro/KAFD signage while keeping conventional desktop controls. Preserve:
+## 8. Verification
 
-- Brand: IBM Plex families, ink `#2b2733`, violet `#6d3fb0`, paper `#f4f1f8`, funnel mark and RTL lockup. Light, dark and Arabic are peers.
-- Identity line tones (`violet`, `blue`, `teal`, `orange`) versus state tones (`green`, `amber`, `red`, `neutral`), controlled by `LineBadge.tsx`.
-- Rounded-square identity/stop badges, dot pills for states, mono score boxes; accessible text carries identity, decorative badges are hidden from assistive technology.
-- Field labels/eyebrows/table headings: Plex Mono 10.5px/500/uppercase/0.24em. Arabic resets tracking/case and uses Plex Sans Arabic.
-- Inline `<bdi>` for short mixed-language identities; `dir="auto"` for prose and inputs; logical spacing and start alignment.
-- Depth by tone, restrained shadows, reduced-motion support, inline SVG icons, mirrored directional icons, bundled fonts.
-- Stable accessible names/class hooks used by Playwright. Run relevant UI workflows after renderer edits.
+**17 October 2026, Claude, on the code at `cc9df03`** (the documentation commits change no code). Parity with `.github/workflows/verify.yml` on macOS; packaging was written to a scratch folder so `release/` was not touched.
 
-Historical baseline and Wayfinding screenshots remain in `docs/ui/`; no revert is requested. Do not discard the renderer changes or delete this branch: it also contains security and subscription work. The historical 1440px pipeline wrapping/1180px density observations and native Arabic copy review remain design follow-up candidates, not authorization for another redesign.
+| Check (CI step) | Result |
+| --- | --- |
+| Model integrity (`npm run verify-model`) | Passed |
+| Generated icon and notices (`make-icon`, `make-notices`) | Regenerated with no change to tracked files |
+| Build (`npm run build`) | Passed |
+| Unit tests (`npm test`) | 676 passed in 61 files |
+| Electron smoke (`npm run smoke`) | 328 checks passed, including ChatGPT backup exclusion |
+| UI workflows on `out/` (`npm run test:ui:built`) | 31 passed |
+| macOS package (`electron-builder --mac --arm64 --dir`) | Built and ad-hoc signed; `app.asar` 35,782,326 bytes (34.12 MiB) |
+| UI workflows on the packaged macOS app (`QUMAA_E2E_EXECUTABLE`) | 31 passed |
+| Windows package (`electron-builder --win --x64 --dir`, cross-built) | Assembled; `app.asar` 35,782,806 bytes; Sharp's Windows binary unpacked; model outside the asar. **Not run on Windows.** |
+| Tracked files after the run | Unchanged |
 
-Visible creator attribution stays **Fawaz Aljathnan**, with `https://www.linkedin.com/in/fawazsalehq/`. Package author metadata is separately `Fawaz Alqahtani`.
+**Re-run on the final code, 17 October** (the working tree that became `4ccc942`, after the backup-copy fix): every step above passed again. 676 unit tests, 328 smoke checks, 31 UI workflows on `out/`, 31 on the packaged macOS app (`app.asar` 35,782,859 bytes), Windows package assembled (`app.asar` 35,783,339 bytes, Sharp's Windows binary unpacked); generated notices and icon unchanged; the run left the working tree unchanged.
 
-The English and Arabic recruiter guides are tracked and published, with 24-slide decks, PDFs, screenshots and builders; see [presentations/README.md](presentations/README.md) and [presentations/arabic/README.md](presentations/arabic/README.md). They predate the newest Companies/budget workflows as well as the UI/subscription work. Arabic materials must preserve the English template, use actual Arabic app screenshots and contain no U+2014 em dash in the deck or notes. `presentations/arabic/source/build_guide_ar.py` imports the English builder, so English changes may require translation-dictionary updates. No guide render was performed for this handover.
+Per-commit checks on 17 October, in isolated worktrees: the two UI commits were first verified in their pre-rewrite form (`2c0b110` and `29ec4ac`, which differ from `b3b2ffc` and `6327450` only by one Arabic entry later moved to `cc9df03`): both built and passed 573 unit tests (the ChatGPT tests were not yet present), and `29ec4ac` passed its 29 UI workflows. `6327450` itself then built and passed the 573 unit tests. The disclosure redesign went through two adversarial reviews (code: four lenses, two refuters per finding; screenshots: light, dark and Arabic, open and closed, hover, focus, reduced motion); six confirmed defects were fixed and re-verified with per-frame measurements of the status-history close.
 
-## 7. Environment and invariants
+**16 October 2026, ChatGPT (Codex), on `e28dce5` plus the then-uncommitted ChatGPT code:** production build passed; 676 unit tests (51 auth-focused, 96 request/privacy-focused); 328 Electron smoke checks including ChatGPT backup exclusion; 31 macOS UI workflows; both ChatGPT workflows 2/2 against the packaged macOS app; English/Arabic settings, consent and usage-limit screenshots inspected; packaged payloads matched `out/` (56 production files, 145 relative main imports resolved, packaged jose matched the lockfile); five model files matched pinned hashes; macOS arm64 and Windows x64 native binaries verified with Sharp retained; both `app.asar` files about 34.12 MiB; DMG contents and ad-hoc signature and the NSIS payload verified; installer metadata and the SHA-256 manifest verified.
+
+The end-to-end subscription tests use the real loopback callback listener, signed ID-token verification, catalog handling, main/preload, evidence consent, streaming, saved ordering, quota recovery and revocation. Browser launch, provider responses and credential protection are simulated with fictional accounts and data; no real subscriber session or allowance was used.
+
+**Still unverified:** live ChatGPT account eligibility, provider acceptance and real plan usage; this build running on Windows (CI last passed on Windows at an older published commit); human installation/upgrade acceptance. No ranking-quality evaluation, capacity benchmark or fresh security scan was run for the ChatGPT feature or the UI changes, and none is claimed.
+
+Machine-local evidence (may be cleaned by the OS): from 16 Oct, `/private/tmp/qumaa-chatgpt-release-knDQbi/` (staged builds, `unit-tests.txt`, `artifact-verification.txt`, container logs, `replacement-summary.json`, `older-builds/`) and `/private/tmp/qumaa-chatgpt-{build,smoke,unit}.log`; from 17 Oct, Claude's session scratchpad under `/private/tmp/claude-501/` (`verify-run/` for `cc9df03`, `verify-run-2/` for the final tree, `pkg/` and `pkg2/` scratch packages, `wt1-*`, `wt2-*` and `wt2b-*` per-commit logs). `test-results/` holds screenshots from the latest UI run (17 Oct), not the 16 Oct ChatGPT run.
+
+## 9. Open items
+
+Listed for continuity, not as authorization.
+
+1. **Live ChatGPT check.** A real eligible sign-in and one controlled request, done with the user. Do not spend their allowance or use real candidate data without their go-ahead.
+2. **Windows.** Run this build on Windows. Pushing the branch would run CI on macOS and Windows (`.github/workflows/verify.yml`), but pushing needs the user's request.
+3. **Push decision.** The local commits listed in section 1 are not on GitHub.
+4. **Stale installers.** The local installers predate `b3b2ffc`, `6327450` and the Settings copy fixes. Rebuild with `npm run build:mac` / `npm run build:win` before distributing, then regenerate `SHA256SUMS-v0.1.0-beta.5.txt` (section 1); the version has not been bumped.
+5. **Native Arabic review.** Agent-drafted Arabic that no native speaker has reviewed: the ChatGPT strings in `cc9df03` (`common.ts`, `matching.ts`, `native.ts`), 22 copy-pass strings (21 in `b3b2ffc`, plus the backups sentence, rewritten on 17 Oct), and three pipeline strings from the redesign (`Open in pipeline`, `Open pipeline for {name}`, `Review · Stage`).
+6. **Unused Arabic entries.** 69 catalog entries whose English keys no longer appear in code (mostly from the copy pass, a few from changed ChatGPT wording). Harmless; remove them in a dedicated cleanup and rerun `npm test`.
+7. **Missing Arabic entries (pre-existing, since `1ac5b98`).** `Not specified` (Jobs facts bar), `Unnamed person` and `Preparing…` (client pack) have no Arabic entry and show English in the Arabic UI.
+8. **Design follow-ups (not authorization for another redesign).** Pipeline stage strip wraps at 1440px; the 1180×820 first viewport shows two candidate rows; English screening questions right-align in the Arabic UI; numbered lists inside disclosure bodies keep the browser's 40px indent; Status history moving to its own line when opened may be revisited if the user prefers.
+9. **Guides and decks** predate the current UI and the ChatGPT settings.
+10. **Dependency advisories.** README's "Known advisories" lists 4 libvips CVEs; the 15 Oct audit query in the ChatGPT session's security report (run on the tree already carrying Electron 43.7.11, before `e28dce5` was committed) listed 23 affected entries (including mammoth, transformers and undici). Refresh with a current `npm audit`, triage reachability and update README; do not remove Sharp.
+11. **Matching quality** per `pilot/CROSS-DOMAIN-QUALITY.md`.
+
+## 10. Environment and invariants
 
 ```bash
 export PATH=/Users/fawazalqahtani/.nvm/versions/node/v22.23.2/bin:$PATH
 unset ELECTRON_RUN_AS_NODE
 
-npm run build
-npm test
-npm run smoke
-npm run test:ui:built
-npm run dev
-npm run build:mac
+npm run build            # tsc (node + web) and electron-vite
+npm test                 # vitest
+npm run smoke            # Electron integration checks in a throwaway userData
+npm run test:ui:built    # Playwright workflows against out/ (QUMAA_E2E_EXECUTABLE=<binary> for a packaged app)
+npm run dev              # opens the PERSONAL library
+npm run build:mac        # release/ installers (overwrites the local ones)
 npm run build:win
 ```
 
-- `ELECTRON_RUN_AS_NODE=1` is inherited by agent shells and must be unset for Electron GUI/smoke tests. A first smoke launch failed for this environment reason; the corrected run passed all 328 checks.
-- `npm run dev` normally opens the user's personal library. Tests/screenshots must use throwaway `QUMAA_E2E_USER_DATA` directories and fictional data. Never use real credentials or CVs for automated testing. Qumaa allows one process per data directory; do not assume old dev processes are absent/present without checking.
-- `better-sqlite3` uses Electron's ABI. Vitest tests must mock DB imports; real database behavior belongs in Electron smoke tests.
-- Keep `sharp`, `npmRebuild: false`, the platform-specific shared file lists and correct native architectures. Model weights remain external to the ASAR. `asar extract-file` writes into the current directory; use a temporary directory or in-memory API to avoid overwriting the source `package.json`.
-- Never rename package `name` from `cv-filter`. Existing data lives at `~/Library/Application Support/cv-filter` on macOS and `%APPDATA%\cv-filter` on Windows. Preserve schema/migration safeguards and original CV files during wipe/restore.
-- Portable backups contain candidate/recruiting data and are **not encrypted**. They exclude credentials, local resume paths, watched-folder configuration and window state. Restore discards saved search snapshots, rebuilds FTS and re-embeds retained text. Older incompatible builds cannot open upgraded schemas; do not advise downgrading an upgraded library.
-- `getJob()` creates a fresh search-session ID on each read. Normalize that ephemeral ID or compare persisted records in tests; a changed session ID alone is not a database mutation.
-- `src/main/embed/protocol.ts` owns model identity and **both** `query: ` / `passage: ` prefixes. A model change forces reindexing; vectors from different models cannot mix.
-- Runtime remote model loading is disabled; bundled model files are pinned and hash-verified. Main owns SQLite, ingestion and matching; inference runs in a utility process and PDF extraction uses a worker.
-- `scoring.ts` stays pure. Weights are semantic 0.55, lexical 0.20, skills 0.25; section weights experience/projects/other 1, skills/education 0.92, summary 0.88. Weight changes require both tests and ranking eval, with cross-domain/bilingual evaluation for broad claims.
-- Ranking must never use evaluation filenames as relevance evidence. The 162-entry skills dictionary has limited coverage; unknown terminology never proves a missing qualification.
-- Parser/cache changes must advance derivation version and reach existing libraries behind readiness while retaining identities/recruiter records. Current version is `3:bounded-text-parsing`.
-- API-key status checks and ChatGPT status reads must not decrypt secrets on startup. Renderer stays sandboxed, isolated and without Node/direct IPC access.
-- Arabic dates retain Gregorian behavior (`ar-SA-u-ca-gregory`). Accept Arabic/Persian digits and store canonical numbers; preserve bidi isolation and directional controls rather than stripping them indiscriminately. Export fonts remain bundled for offline use.
-- Rebuild installers after source changes before claiming artifact parity. NSIS script edits need a deliberate failing positive control; compressed-string searches prove nothing.
+- The agent shell defaults to Node 20 and inherits `ELECTRON_RUN_AS_NODE=1`. Agent tool calls do not keep shell state, so prefix **every** build, test or Electron command with the PATH export and `unset ELECTRON_RUN_AS_NODE` (or `env -u ELECTRON_RUN_AS_NODE`).
+- `test:ui:built` and `capture-ui.mjs` use whatever is in `out/`; run `npm run build` first.
+- To check packaging without overwriting the user's installers, package into a scratch folder:
 
-## 8. Working tree and local-only files
+  ```bash
+  npm run verify-model && npm run make-icon && npm run make-notices && npm run build
+  npx electron-builder --mac --arm64 --dir --config.directories.output=<scratch>/release
+  QUMAA_E2E_EXECUTABLE="<scratch>/release/mac-arm64/قُمع.app/Contents/MacOS/قُمع" npm run test:ui:built
+  node scripts/fetch-win-deps.mjs && npx electron-builder --win --x64 --dir --config.directories.output=<scratch>/release
+  ```
+- `npm run dev` and the packaged app open the user's personal library. Tests and captures must use throwaway `QUMAA_E2E_USER_DATA` directories and fictional data; never use real credentials or CVs. One process per data directory: a second instance quits silently and focuses the first, so check for a running dev or packaged instance before launching.
+- `better-sqlite3` uses Electron's ABI; vitest tests must not import it. Database behavior belongs in `src/main/smoke.ts`.
+- Keep `sharp`, `npmRebuild: false`, the platform-specific `files` lists and correct native architectures. Model weights stay outside the asar (`app.asar` about 34 MiB, not about 149 MiB). `asar extract-file` writes into the current directory; extract into a temporary directory.
+- Never rename package `name` from `cv-filter`. Data lives at `~/Library/Application Support/cv-filter` (macOS) and `%APPDATA%\cv-filter` (Windows). Preserve schema/migration safeguards and never touch the user's original CV files during wipe or restore.
+- Portable backups contain candidate and recruiting data and are **not encrypted**. They exclude credentials, ChatGPT connections, local resume paths, watched-folder configuration and window state. Restore discards saved search snapshots, rebuilds FTS and re-embeds retained text. Older builds cannot open upgraded schemas; do not advise downgrading an upgraded library.
+- `getJob()` creates a fresh search-session ID on each read; normalize it or compare persisted records in tests.
+- `src/main/embed/protocol.ts` owns model identity and **both** `query: ` / `passage: ` prefixes. A model change forces reindexing.
+- Remote model loading is disabled; bundled model files are pinned and hash-verified. Main owns SQLite, ingestion and matching; inference runs in a utility process; PDF extraction uses a worker.
+- `scoring.ts` stays pure. Weights: semantic 0.55, lexical 0.20, skills 0.25; section weights experience/projects/other 1, skills/education 0.92, summary 0.88. Weight changes need `npm test` **and** `npm run eval`, plus cross-domain/bilingual evaluation for broad claims.
+- Ranking never uses evaluation filenames. The 162-entry skills dictionary has limited coverage; unknown terminology never proves a missing qualification.
+- Parser/cache changes must advance the derivation version (now `3:bounded-text-parsing`) and reach existing libraries behind readiness, keeping identities and recruiter records.
+- API-key and ChatGPT status reads must not decrypt secrets at startup. The renderer stays sandboxed and isolated, without Node or direct IPC.
+- Arabic dates keep Gregorian behavior (`ar-SA-u-ca-gregory`). Accept Arabic/Persian digits and store canonical numbers. Preserve bidi isolation and directional controls rather than stripping them indiscriminately. Export fonts stay bundled.
+- Rebuild installers after source changes before claiming artifact parity. NSIS script edits need a deliberate failing positive control.
 
-At the handover, the uncommitted feature affects 33 tracked files plus the new source/test files listed above. Inspect `git status --short` and the actual diff; counts can change. `THIRD-PARTY-NOTICES.md` now includes both the previously generated Electron patch update and the newly bundled JOSE license. Its generated `License: MIT  ` line uses a Markdown hard break and is the sole noted `git diff --check` whitespace report; scoped source checks passed.
+## 11. Repository hygiene and local-only files
 
-Preserve these intentional local artifacts and do not blindly `git add .`:
+The repository is public. Stage files by name; never `git add .` or `git add -A`.
 
-- `handover.md` — the single current handover, including useful prior project context.
-- `cv_filter.code-workspace` and `eval/posting.txt` (the latter lacks confirmed synthetic provenance).
-- `.impeccable/mocks/`, `.impeccable/questions/`, `.impeccable/review/`, and `docs/ui/` screenshots/specs.
-- Ignored `out/`, `release/`, model weights, local corpora and generated test results.
+Committed on 17 October (they do not affect the build): this file, `docs/ui/` (baseline spec, revert instructions, before/after captures of fictional data), `.impeccable/mocks/` and `.impeccable/questions/` (the design-direction decision records).
 
-This handover consolidation does not alter application source, builds or Git history. The older handover document was removed at the user's request; retain only `handover.md`. No new application tests were needed for this documentation-only update.
+Local-only and gitignored since 17 October:
 
-## 9. Continuing in Claude
+- `cv_filter.code-workspace`: the user's VS Code workspace, which also opens the brand kit folder outside the repository.
+- `eval/posting.txt`: the `npm run eval` posting. It reads like a real job advert and its synthetic provenance is unconfirmed, so it must not enter the public repository.
+- `.impeccable/review/`: regenerable design-review captures, detector output and review packets.
 
-First establish the live branch/status and read the source relevant to the user's next request. The most immediate verification gap is a real eligible ChatGPT sign-in and a controlled real request with the user, plus execution of this new build on Windows. Do not spend their allowance, access real candidate data, publish artifacts or commit the integration merely because this document mentions those gaps. The user has not requested further work beyond this handover.
+Already ignored: `out/`, `release/`, `resources/models/`, `eval/corpus/`, `eval/results/`, `.local/`, `test-results/`, `*.log`, `*.tsbuildinfo`.
 
-If asked to commit later, stage only the feature source/tests/docs and required new files; keep the local artifacts separate. If asked to publish later, retain the deliberate beta.2 release-name decision unless the user changes it, and rebuild/verify the exact source being published. Historical CI and release hashes do not validate a new commit.
+`THIRD-PARTY-NOTICES.md` is generated by `npm run make-notices`; its `License: MIT  ` line uses a Markdown hard break and is the one expected `git diff --check` whitespace report.
 
-Suggested opening prompt:
+## 12. Suggested opening prompt
 
-> Continue work on Qumaa. Read handover.md, AGENTS.md and Git status first. We are on ui-modernize: UI commit 1f9db63 and security commit e28dce5 are pushed; the ChatGPT subscription/API integration is implemented but uncommitted. Local beta.5 installers include it and were replaced, but GitHub release assets were not updated. Final checks passed 676 unit tests, 328 Electron checks and 31 macOS UI workflows, plus two packaged ChatGPT workflows with simulated provider responses. Live subscriber access and this build on Windows remain unverified. Preserve the all-domain bilingual scope, Wayfinding UI, cv-filter data identity, protected credential/consent and ranking invariants, and local-only files. My next task is: [state the task].
+> Continue work on Qumaa. Read handover.md and AGENTS.md first, then check `git status` and `git log --oneline origin/ui-modernize..HEAD`. We are on `ui-modernize`; `e28dce5` is pushed and later commits are local only. Preserve the decisions in section 4 of the handover and update the handover before you sign off. My next task is: [state the task].

@@ -20,6 +20,13 @@ roles absent from the built-in skill vocabulary. The active quality plan is
 `pilot/CROSS-DOMAIN-QUALITY.md`; narrow historical results do not establish broad
 matching quality.
 
+## Session handover
+
+Claude and ChatGPT (Codex) sessions both work in this repository. `handover.md`
+is their shared sign-off record: read it before starting (state, in-flight work,
+decisions in force, open items) and update it before signing off. It records
+context, not authorization to commit, push or release.
+
 ## Commands
 
 ```bash
