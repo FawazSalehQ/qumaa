@@ -5,8 +5,12 @@ empirically — several items look like tidy-up opportunities and are not.
 
 **قُمع (Qumaa)** is an offline Electron desktop app: ingest resumes into local
 SQLite, paste a job description, get the best-matching candidates with evidence.
-Everything runs on-device. The one exception is optional AI reranking through
-Anthropic or OpenAI, inert unless the user supplies that provider's API key.
+Matching and storage run on-device. Optional AI reranking uses an Anthropic or
+OpenAI API key, or an eligible ChatGPT subscription connected through the
+official Sign in with ChatGPT flow. It stays off until explicitly enabled and
+each send requires evidence review and native confirmation. Sign-in, model
+discovery and token refresh are also opt-in network operations; startup settings
+must not decrypt credentials or contact a provider.
 
 **Product scope: hiring across all domains.** F&B and drilling are existing
 regression datasets, not the target market or a complete quality gate. Matching
@@ -144,3 +148,14 @@ logic deciding the top three is testable without booting an app. Keep it that wa
 Secrets go through `src/main/secrets.ts` (`safeStorage`). `hasApiKey()`
 deliberately does not decrypt, because it runs on the startup settings read and
 the first keychain call can block on an OS prompt.
+
+ChatGPT OAuth lives in `src/main/chatgpt/`; its tokens are protected by
+`safeStorage` in local SQLite settings and excluded from portable backups.
+Keep OAuth in main, with PKCE, state/nonce, verified ID tokens, and a temporary
+127.0.0.1 callback opened only during sign-in. Account changes invalidate pending
+rerank approvals; token rotation must preserve the logical connection revision.
+Restore, wipe and quit invalidate outstanding auth work before it can commit.
+Subscription requests use the authenticated model catalog and streamed Responses
+with `store: false`; accept only a completed response. Never fall back to paid
+API credentials when plan usage fails. Validate with synthetic accounts and
+mocked provider responses, not real credentials or candidate data.

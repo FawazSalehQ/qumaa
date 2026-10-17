@@ -74,6 +74,24 @@ function openaiResponse(entries = ranking) {
   ] }
 }
 
+function sseEvent(type: string, fields: Record<string, unknown> = {}): string {
+  return `event: ${type}\ndata: ${JSON.stringify({ type, ...fields })}\n\n`
+}
+
+function eventResponse(text: string, chunkSize = 4096, cancel = vi.fn(), close = true): Response {
+  const bytes = new TextEncoder().encode(text)
+  let offset = 0
+  return new Response(new ReadableStream({
+    pull(controller) {
+      if (offset < bytes.length) {
+        controller.enqueue(bytes.slice(offset, offset + chunkSize))
+        offset += chunkSize
+      } else if (close) controller.close()
+    },
+    cancel
+  }), { headers: { 'content-type': 'text/event-stream; charset=utf-8' } })
+}
+
 describe('Claude rerank request', () => {
   it('sends exactly the previewed body and maps opaque ids back to local ordering', async () => {
     const results = [candidate(1, 'Alice Private'), candidate(2, 'Bob Private')]
@@ -304,5 +322,193 @@ describe('provider failures never expose data or change the local list', () => {
     await expect(rerank({ apiKey: 'test', jobDescription: 'Engineer', results, config: { provider: 'openai', model: 'claude-opus-5' } })).rejects.toThrow('supported reranking provider and model')
     expect(mocks.fetch).not.toHaveBeenCalled()
     expect(mocks.create).not.toHaveBeenCalled()
+  })
+})
+
+describe('ChatGPT plan transport', () => {
+  const config: RerankConfig = { provider: 'openai', model: 'gpt-account-catalog-model', authMode: 'chatgpt' }
+  const results = [candidate(1, 'Alice Private'), candidate(2, 'Bob Private')]
+  const run = () => rerank({ apiKey: 'private-oauth-access-token', jobDescription: 'Private job', results, config })
+
+  it('does not send before an account model has been selected', async () => {
+    await expect(rerank({ apiKey: 'test', jobDescription: 'Private job', results, config: { ...config, model: '' } })).rejects.toThrow('Choose a supported reranking provider and model')
+    expect(mocks.fetch).not.toHaveBeenCalled()
+  })
+
+  it('sends the exact plan preview once, with an OAuth bearer and no API fallback', async () => {
+    const cancel = vi.fn()
+    mocks.fetch.mockResolvedValue(eventResponse(
+      sseEvent('response.created', { response: { status: 'in_progress' } }) +
+      sseEvent('response.output_text.delta', { delta: 'Untrusted partial text, never used.' }) +
+      sseEvent('response.completed', { response: openaiResponse() }),
+      71, cancel, false
+    ))
+    const ordered = await run()
+    const preview = buildRerankPreview('Private job', results, config)
+    expect(preview).toMatchObject({ provider: 'ChatGPT', authMode: 'chatgpt', model: config.model })
+    expect(mocks.fetch).toHaveBeenCalledOnce()
+    const [url, request] = mocks.fetch.mock.calls[0]
+    expect(url).toBe('https://api.openai.com/v1/responses')
+    expect(request.headers.Authorization).toBe('Bearer private-oauth-access-token')
+    expect(request.redirect).toBe('error')
+    expect(JSON.parse(request.body)).toEqual(preview.requestBody)
+    expect(preview.requestBody).toMatchObject({ store: false, stream: true, model: config.model })
+    expect(preview.requestBody).not.toHaveProperty('max_output_tokens')
+    expect(preview.requestBody).not.toHaveProperty('reasoning')
+    expect(JSON.stringify(preview)).not.toMatch(/Alice Private|Bob Private|private-oauth-access-token/)
+    expect(ordered.map((match) => match.resume.id)).toEqual([2, 1])
+    expect(ordered[0].score).toBe(results[1].score)
+    expect(mocks.create).not.toHaveBeenCalled()
+    expect(cancel).toHaveBeenCalledOnce()
+  })
+
+  it('decodes split UTF-8, CRLF boundaries, comments and multiline event data', async () => {
+    const entries = ranking.map((entry) => ({ ...entry, reason: 'قاد تطوير منصات موثوقة.' }))
+    const json = JSON.stringify({ type: 'response.completed', response: openaiResponse(entries) })
+    const split = json.indexOf(',') + 1
+    mocks.fetch.mockResolvedValue(eventResponse(
+      ': keep alive\r\n\r\nevent: response.completed\r\nid: ignored\r\n' +
+      `data: ${json.slice(0, split)}\r\ndata: ${json.slice(split)}\r\n\r\n`, 1
+    ))
+    const ordered = await run()
+    expect(ordered[0].llmReason).toBe('قاد تطوير منصات موثوقة.')
+  })
+
+  it.each([
+    ['subscription_sharing_usage_limit_exceeded', 'usage limit'],
+    ['subscription_sharing_usage_unavailable', 'currently unavailable'],
+    ['subscription_sharing_user_not_eligible', 'not eligible'],
+    ['subscription_sharing_unsupported_capability', 'not supported'],
+    ['subscription_sharing_route_not_supported', 'not supported'],
+    ['subscription_sharing_invalid_user', 'could not authorize'],
+    ['chatpass_v2_scope_not_authorized', 'could not authorize'],
+    ['chatpass_v2_invalid_authorization_context', 'could not authorize'],
+    ['subscription_sharing_user_unavailable', 'Try again later']
+  ])('rejects %s after valid-looking partial text and keeps local results', async (code, expected) => {
+    const before = structuredClone(results)
+    const cancel = vi.fn()
+    mocks.fetch.mockResolvedValue(eventResponse(
+      sseEvent('response.output_text.delta', { delta: JSON.stringify({ ranking }) }) +
+      sseEvent('response.failed', { response: { status: 'failed', error: { code, message: 'private-oauth-access-token Alice Private' }, output: openaiResponse().output } }),
+      61, cancel, false
+    ))
+    const failure = await run().catch((error: Error) => error)
+    expect(failure).toBeInstanceOf(Error)
+    expect((failure as Error).message).toContain(expected)
+    expect((failure as Error).message).not.toMatch(/private-oauth|Alice Private/)
+    expect(results).toEqual(before)
+    expect(mocks.fetch).toHaveBeenCalledOnce()
+    expect(mocks.create).not.toHaveBeenCalled()
+    expect(cancel).toHaveBeenCalledOnce()
+  })
+
+  it('handles documented errors in direct error events and HTTP errors without leaking messages', async () => {
+    const error = { code: 'subscription_sharing_usage_limit_exceeded', message: 'private-oauth-access-token Alice Private' }
+    for (const response of [
+      eventResponse(sseEvent('error', error)),
+      eventResponse(sseEvent('error', { error })),
+      Response.json({ error }, { status: 429 })
+    ]) {
+      mocks.fetch.mockResolvedValue(response)
+      const failure = await run().catch((value: Error) => value)
+      expect((failure as Error).message).toContain('usage limit')
+      expect((failure as Error).message).not.toMatch(/private-oauth|Alice Private/)
+    }
+  })
+
+  it.each([401, 403, 404, 429, 503])('sanitizes ChatGPT HTTP %s without claiming an API key was used', async (status) => {
+    mocks.fetch.mockResolvedValue(new Response('private-oauth-access-token Alice Private', { status }))
+    const failure = await run().catch((error: Error) => error)
+    expect((failure as Error).message).toContain('ChatGPT')
+    expect((failure as Error).message).not.toMatch(/private-oauth|Alice Private|API key|API credits/)
+    expect(mocks.fetch).toHaveBeenCalledOnce()
+  })
+
+  it.each([
+    sseEvent('response.output_text.delta', { delta: JSON.stringify({ ranking }) }),
+    'data: [DONE]\n\n',
+    sseEvent('response.incomplete', { response: openaiResponse() }),
+    sseEvent('response.completed', { response: { ...openaiResponse(), status: 'incomplete' } }),
+    sseEvent('response.completed', { response: openaiResponse() }).trimEnd(),
+    sseEvent('response.failed', { response: { error: { code: 'unknown', message: 'private-oauth-access-token' } } })
+  ])('requires a complete success event instead of partial or interrupted output %#', async (text) => {
+    mocks.fetch.mockResolvedValue(eventResponse(text, 29))
+    await expect(run()).rejects.toThrow('did not finish the ranking')
+  })
+
+  it('rejects refusals even when a completed event contains a valid ranking', async () => {
+    const response = openaiResponse()
+    mocks.fetch.mockResolvedValue(eventResponse(sseEvent('response.completed', {
+      response: { ...response, output: [...response.output, { type: 'message', content: [{ type: 'refusal', refusal: 'Private refusal text' }] }] }
+    })))
+    await expect(run()).rejects.toThrow('declined to rerank')
+  })
+
+  it.each([
+    'event: response.completed\ndata: private-oauth-access-token\n\n',
+    'event: response.completed\ndata: []\n\n',
+    'event: response.completed\ndata: {"type":"response.failed"}\n\n',
+    sseEvent('response.completed', { response: { status: 'completed', output: [] } })
+  ])('rejects malformed events and unusable completed responses safely %#', async (text) => {
+    mocks.fetch.mockResolvedValue(eventResponse(text))
+    await expect(run()).rejects.toThrow('did not return a usable ranking')
+  })
+
+  it('bounds cumulative stream bytes even when each event is small', async () => {
+    const cancel = vi.fn()
+    const text = sseEvent('response.output_text.delta', { delta: 'x'.repeat(1000) }).repeat(1100)
+    mocks.fetch.mockResolvedValue(eventResponse(text, 8192, cancel, false))
+    await expect(run()).rejects.toThrow('did not return a usable ranking')
+    expect(cancel).toHaveBeenCalledOnce()
+  })
+
+  it('rejects an oversized declared stream and a non-SSE response before accepting text', async () => {
+    for (const response of [
+      new Response('', { headers: { 'content-type': 'text/event-stream', 'content-length': String(1024 * 1024 + 1) } }),
+      Response.json(openaiResponse())
+    ]) {
+      mocks.fetch.mockResolvedValue(response)
+      await expect(run()).rejects.toThrow('did not return a usable ranking')
+    }
+  })
+
+  it('cancels a stalled reader when the request times out', async () => {
+    const controller = new AbortController()
+    vi.spyOn(AbortSignal, 'timeout').mockReturnValue(controller.signal)
+    const cancel = vi.fn()
+    mocks.fetch.mockResolvedValue(new Response(new ReadableStream({ cancel }), { headers: { 'content-type': 'text/event-stream' } }))
+    const pending = run()
+    await Promise.resolve()
+    await Promise.resolve()
+    controller.abort(new DOMException('private-oauth-access-token', 'TimeoutError'))
+    await expect(pending).rejects.toThrow('The ChatGPT rerank request timed out')
+    expect(cancel).toHaveBeenCalledOnce()
+    expect(mocks.fetch).toHaveBeenCalledOnce()
+  })
+
+  it('stops an in-flight plan stream when its account connection is cancelled', async () => {
+    const controller = new AbortController()
+    const cancel = vi.fn()
+    mocks.fetch.mockResolvedValue(eventResponse(
+      sseEvent('response.output_text.delta', { delta: JSON.stringify({ ranking }) }), 4096, cancel, false
+    ))
+    const before = structuredClone(results)
+    const pending = rerank({ apiKey: 'private-oauth-access-token', jobDescription: 'Private job', results, config, signal: controller.signal })
+    await Promise.resolve()
+    await Promise.resolve()
+    controller.abort(new DOMException('Private cancellation context', 'AbortError'))
+    await expect(pending).rejects.toThrow('The ChatGPT rerank request was cancelled. The local ranking is unchanged.')
+    expect(mocks.fetch.mock.calls[0][1].signal.aborted).toBe(true)
+    expect(cancel).toHaveBeenCalledOnce()
+    expect(results).toEqual(before)
+    expect(mocks.fetch).toHaveBeenCalledOnce()
+    expect(mocks.create).not.toHaveBeenCalled()
+  })
+
+  it('never sends a plan request that was already cancelled', async () => {
+    const controller = new AbortController()
+    controller.abort()
+    await expect(rerank({ apiKey: 'test', jobDescription: 'Private job', results, config, signal: controller.signal })).rejects.toThrow('was cancelled')
+    expect(mocks.fetch).not.toHaveBeenCalled()
   })
 })

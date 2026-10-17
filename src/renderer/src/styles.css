@@ -1609,6 +1609,15 @@ tbody tr.selected td {
   width: 100%;
 }
 
+.chatgpt-connection .setting-actions + .setting-actions,
+.chatgpt-signing-in {
+  margin-block-start: var(--s3);
+}
+
+.chatgpt-request-help {
+  flex-basis: 100%;
+}
+
 .segmented {
   display: inline-flex;
   gap: 2px;

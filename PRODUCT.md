@@ -41,8 +41,9 @@ visible evidence, never probabilities or verified qualifications, and missing
 text never auto-rejects anyone; the product supports recruiter judgment rather
 than replacing it. Arabic and English are peers: resumes in either language
 rank against postings in either, and the whole interface mirrors into Arabic
-RTL. Optional AI reranking (Anthropic or OpenAI, the user's own key, explicit
-per-send consent) is the only path off the machine. Neighbouring products are
+RTL. Optional AI reranking uses the user's Anthropic/OpenAI API key or eligible
+ChatGPT plan, with explicit per-send consent. Connecting a ChatGPT account and
+refreshing its models or credentials also contact OpenAI. Neighbouring products are
 cloud applicant-tracking systems with accounts, cloud pipelines and opaque
 scores.
 
@@ -69,7 +70,8 @@ scores.
 
 ## Capabilities and Constraints
 
-- Local-first by contract: no runtime network sockets without an API key; the
+- Local-first by contract: no background provider calls on startup. Network
+  access requires an explicit API rerank or ChatGPT connection action; the
   renderer is sandboxed with context isolation and a strict CSP; only the named
   preload operations exist.
 - Matching, extraction and ranking are outside the UI's remit. The UI presents

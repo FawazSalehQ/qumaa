@@ -712,6 +712,8 @@ Requirements:
   setSetting('language', 'ar')
   setSetting('anthropicApiKey', 'must-not-leave-this-machine')
   setSetting('openaiApiKey', 'openai-must-not-leave-this-machine')
+  const privateChatGptKeys = ['chatgpt:accounts:v1', 'chatgpt:host:v1', 'chatgpt:pending-client:v1', 'chatgpt:credentials:synthetic-account', 'rerankAuthMode:openai', 'rerankModel:chatgpt', 'rerankConsent:chatgpt:plan-model']
+  for (const key of privateChatGptKeys) setSetting(key, 'synthetic-must-not-leave-this-machine')
   setSetting('rerankProvider', 'openai')
   setSetting('rerankModel:openai', 'gpt-6-astra')
   setSetting('rerankConsent:openai:gpt-6-astra', 'ai-rerank-v2')
@@ -1292,6 +1294,7 @@ Requirements:
   check('restores portable preferences', getSetting('theme') === 'dark')
   check('restores the interface language', getSetting('language') === 'ar')
   check('does not restore an API key', getSetting('anthropicApiKey') === null)
+  check('does not restore ChatGPT credentials, registrations, host identity or sharing settings', privateChatGptKeys.every((key) => getSetting(key) === null))
   check('does not restore OpenAI credentials or provider sharing settings', getSetting('openaiApiKey') === null && getSetting('rerankProvider') === null && getSetting('rerankModel:openai') === null && getSetting('rerankConsent:openai:gpt-6-astra') === null)
   check('does not restore a watched folder', getSetting('watchedFolder') === null)
   check('does not restore machine window state', getSetting('windowState') === null)

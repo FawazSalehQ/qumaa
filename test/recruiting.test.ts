@@ -157,6 +157,9 @@ describe('recruiting trust boundary', () => {
     const snapshot = { jobId, libraryFingerprint: keyA, postingFingerprint: keyA, modelFingerprint: keyA, searchedAt: 1, libraryKeys: [keyA], requiredSkills: [], elapsedMs: 1, results: [result] }
     expect(snapshotRecordSchema.safeParse(snapshot).success).toBe(true)
     expect(snapshotRecordSchema.safeParse({ ...snapshot, rerankConfig: { provider: 'openai', model: 'gpt-6-astra' } }).success).toBe(true)
+    expect(snapshotRecordSchema.safeParse({ ...snapshot, rerankConfig: { provider: 'openai', model: 'retired-plan-model', authMode: 'chatgpt' } }).success).toBe(true)
+    expect(snapshotRecordSchema.safeParse({ ...snapshot, rerankConfig: { provider: 'openai', model: '', authMode: 'chatgpt' } }).success).toBe(false)
+    expect(snapshotRecordSchema.safeParse({ ...snapshot, rerankConfig: { provider: 'openai', model: 'plan-model', authMode: 'chatgpt', accountId: 'must-not-persist' } }).success).toBe(false)
     expect(snapshotRecordSchema.safeParse({ ...snapshot, rerankConfig: { provider: 'anthropic', model: 'gpt-6-astra' } }).success).toBe(false)
     expect(snapshotRecordSchema.safeParse({ ...snapshot, rerankConfig: { provider: 'openai', model: 'unapproved-model' } }).success).toBe(false)
     expect(snapshotRecordSchema.safeParse({ ...snapshot, results: [{ ...result, resume: { filePath: '/tmp/private' } }] }).success).toBe(false)

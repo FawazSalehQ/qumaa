@@ -4,6 +4,8 @@ import {
   DEFAULT_RERANK_MODELS,
   RERANK_MODELS,
   rerankConsentKey,
+  sameRerankConfig,
+  rerankModelLabel,
   type RerankConfig,
   type RerankProvider
 } from '../src/shared/rerank.js'
@@ -12,6 +14,8 @@ import { ipcSchemas, parseIpc } from '../src/main/ipc-validation.js'
 const state = vi.hoisted(() => ({
   settings: new Map<string, string>(),
   protectedProviders: new Set<string>(),
+  chatGptConnected: false,
+  chatGptModels: [] as { id: string; label: string }[],
   transactions: 0
 }))
 
@@ -29,6 +33,10 @@ vi.mock('../src/main/db/index.js', () => ({
 vi.mock('../src/main/secrets.js', () => ({
   hasApiKey: (provider: RerankProvider) => state.protectedProviders.has(provider)
 }))
+vi.mock('../src/main/chatgpt/index.js', () => ({
+  getChatGptStatus: () => ({ activeAccountId: 'account-1', accounts: [{ id: 'account-1', connected: state.chatGptConnected, planUsageEnabled: state.chatGptConnected }], models: state.chatGptModels }),
+  getChatGptCredentialRevision: () => 'connection-1'
+}))
 
 const {
   clearProviderRerankConsent,
@@ -42,9 +50,46 @@ beforeEach(() => {
   state.settings.clear()
   state.protectedProviders.clear()
   state.transactions = 0
+  state.chatGptConnected = false
+  state.chatGptModels = []
 })
 
 describe('AI reranking settings', () => {
+  it('keeps subscription and API model choices separate without enabling a new connection', () => {
+    state.protectedProviders.add('openai')
+    setRerankConfig({ provider: 'openai', model: 'gpt-4o-mini' })
+    state.settings.set(RERANK_ENABLED_KEY, 'true')
+    setRerankConfig({ provider: 'openai', model: '', authMode: 'chatgpt' })
+    expect(getRerankConfig()).toEqual({ provider: 'openai', model: '', authMode: 'chatgpt' })
+    expect(state.settings.get(RERANK_ENABLED_KEY)).toBe('false')
+    state.chatGptConnected = true
+    state.chatGptModels = [{ id: 'plan-model-v1', label: 'Plan model' }]
+    expect(getRerankConfig().model).toBe('plan-model-v1')
+    setRerankConfig({ provider: 'openai', model: 'plan-model-v1', authMode: 'chatgpt' })
+    expect(state.settings.get(RERANK_ENABLED_KEY)).toBe('false')
+    expect(getRerankModels().openai).toBe('gpt-4o-mini')
+    setRerankConfig({ provider: 'openai', model: 'gpt-4o-mini' })
+    expect(getRerankConfig()).toEqual({ provider: 'openai', model: 'gpt-4o-mini' })
+    expect(state.settings.get('rerankModel:chatgpt')).toBe('plan-model-v1')
+  })
+
+  it('requires selected account model availability even when an OpenAI API key exists', () => {
+    state.protectedProviders.add('openai')
+    state.chatGptConnected = true
+    state.chatGptModels = [{ id: 'plan-model', label: 'Plan model' }]
+    state.settings.set(RERANK_ENABLED_KEY, 'true')
+    setRerankConfig({ provider: 'openai', model: 'unavailable-plan-model', authMode: 'chatgpt' })
+    expect(state.settings.get(RERANK_ENABLED_KEY)).toBe('false')
+  })
+
+  it('keeps plan consent separate and renders historical dynamic model names safely', () => {
+    const api = { provider: 'openai', model: 'gpt-4o-mini' } as const
+    const plan = { ...api, authMode: 'chatgpt' } as const
+    expect(rerankConsentKey(api)).not.toBe(rerankConsentKey(plan))
+    expect(sameRerankConfig(api, { ...api, authMode: 'api-key' })).toBe(true)
+    expect(sameRerankConfig(api, plan)).toBe(false)
+    expect(rerankModelLabel('retired-plan-model')).toBe('retired-plan-model')
+  })
   it('preserves the Anthropic default for existing installations and rejects damaged model memories', () => {
     expect(getRerankConfig()).toEqual(DEFAULT_RERANK_CONFIG)
     expect(getRerankModels()).toEqual(DEFAULT_RERANK_MODELS)
@@ -117,6 +162,15 @@ describe('AI reranking settings', () => {
 })
 
 describe('provider/model IPC boundary', () => {
+  it('accepts bounded dynamic model identifiers only for ChatGPT connections', () => {
+    const config = { provider: 'openai', authMode: 'chatgpt', model: 'plan-model-2026' }
+    expect(parseIpc(ipcSchemas.rerankConfig, config, 'AI selection')).toEqual(config)
+    for (const invalid of [
+      { ...config, provider: 'anthropic' }, { ...config, authMode: 'cookies' },
+      { ...config, model: '\nAuthorization: secret' }, { ...config, model: 'x'.repeat(129) },
+      { ...config, accessToken: 'secret' }
+    ]) expect(() => parseIpc(ipcSchemas.rerankConfig, invalid, 'AI selection')).toThrow('Invalid AI selection')
+  })
   it('accepts every supported provider/model pair', () => {
     for (const provider of ['anthropic', 'openai'] as const) {
       for (const model of RERANK_MODELS[provider]) {

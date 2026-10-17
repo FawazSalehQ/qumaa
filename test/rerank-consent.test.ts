@@ -5,6 +5,7 @@ import { DEFAULT_RERANK_CONFIG, RERANK_CONSENT_VERSION, rerankConsentKey } from 
 
 const mocks = vi.hoisted(() => ({
   dialog: vi.fn(), getApiKey: vi.fn(), rerank: vi.fn(),
+  getChatGptAccessToken: vi.fn(), chatGptRevision: 'account-1:connection-1',
   settings: new Map<string, string>(), sourceChanged: false, credentialRevision: 'initial-key'
 }))
 vi.mock('electron', () => ({ dialog: { showMessageBox: mocks.dialog } }))
@@ -14,7 +15,15 @@ vi.mock('../src/main/db/index.js', () => ({
 }))
 vi.mock('../src/main/secrets.js', () => ({ hasApiKey: () => true, getApiKey: mocks.getApiKey, getApiKeyRevision: () => mocks.credentialRevision }))
 vi.mock('../src/main/search/rerank-settings.js', () => ({
-  getRerankConfig: () => ({ provider: mocks.settings.get('rerankProvider') ?? 'anthropic', model: mocks.settings.get('rerankModel') ?? 'claude-sonnet-5' })
+  getRerankConfig: () => ({ provider: mocks.settings.get('rerankProvider') ?? 'anthropic', model: mocks.settings.get('rerankModel') ?? 'claude-sonnet-5', ...(mocks.settings.get('authMode') === 'chatgpt' ? { authMode: 'chatgpt' } : {}) }),
+  hasRerankCredential: () => true,
+  rerankConsentValue: (config: { authMode?: string }) => config.authMode === 'chatgpt' ? `ai-rerank-v2:${mocks.chatGptRevision}` : 'ai-rerank-v2'
+}))
+vi.mock('../src/main/chatgpt/index.js', () => ({
+  beginChatGptRequest: () => ({ signal: new AbortController().signal, dispose: vi.fn() }),
+  getChatGptCredentialRevision: () => mocks.chatGptRevision,
+  getChatGptAccessToken: mocks.getChatGptAccessToken,
+  getChatGptStatus: () => ({ activeAccountId: 'account-1', accounts: [{ id: 'account-1', label: 'Test account' }] })
 }))
 vi.mock('../src/main/language.js', () => ({ nativeText: (text: string, values: Record<string, string> = {}) => text.replace(/\{(\w+)\}/g, (_, key: string) => values[key] ?? key) }))
 vi.mock('../src/main/search/rerank.js', () => ({ rerank: mocks.rerank }))
@@ -47,12 +56,62 @@ beforeEach(() => {
   mocks.settings.set('rerankEnabled', 'true')
   mocks.sourceChanged = false
   mocks.credentialRevision = 'initial-key'
+  mocks.chatGptRevision = 'account-1:connection-1'
   mocks.dialog.mockResolvedValue({ response: 1 })
   mocks.getApiKey.mockReturnValue('synthetic-key')
+  mocks.getChatGptAccessToken.mockResolvedValue('synthetic-oauth-token')
   mocks.rerank.mockResolvedValue([])
 })
 
 describe('native approval for job reranking', () => {
+  function useChatGpt() {
+    mocks.settings.set('rerankProvider', 'openai')
+    mocks.settings.set('rerankModel', 'plan-model')
+    mocks.settings.set('authMode', 'chatgpt')
+  }
+
+  it('uses the reviewed subscription account without reading an API key', async () => {
+    useChatGpt()
+    const { args, source } = request()
+    const review = previewRerankSession(source())
+    expect(review.preview.accountLabel).toBe('Test account')
+    await rerankWithConfirmation({ ...args, approvalToken: review.approvalToken }, getWindow, source, vi.fn())
+    expect(mocks.dialog).toHaveBeenCalledWith(getWindow(), expect.objectContaining({ detail: expect.stringContaining('Test account') }))
+    expect(mocks.getApiKey).not.toHaveBeenCalled()
+    expect(mocks.getChatGptAccessToken).toHaveBeenCalledTimes(1)
+    expect(mocks.rerank).toHaveBeenCalledWith(expect.objectContaining({ apiKey: 'synthetic-oauth-token', config: { provider: 'openai', model: 'plan-model', authMode: 'chatgpt' } }))
+  })
+
+  it('binds the preview to the connection even before native approval', async () => {
+    useChatGpt()
+    const { args, source } = request()
+    mocks.chatGptRevision = 'account-2:connection-2'
+    await expect(rerankWithConfirmation(args, getWindow, source, vi.fn())).rejects.toThrow('approval')
+    expect(mocks.dialog).not.toHaveBeenCalled()
+    expect(mocks.getChatGptAccessToken).not.toHaveBeenCalled()
+  })
+
+  it.each(['dialog', 'refresh', 'response'] as const)('rejects a subscription account change during %s', async (stage) => {
+    useChatGpt()
+    const { args, source } = request()
+    const save = vi.fn()
+    const change = () => { mocks.chatGptRevision = 'account-2:connection-2' }
+    if (stage === 'dialog') mocks.dialog.mockImplementation(async () => { change(); return { response: 1 } })
+    if (stage === 'refresh') mocks.getChatGptAccessToken.mockImplementation(async () => { change(); return 'other-account-token' })
+    if (stage === 'response') mocks.rerank.mockImplementation(async () => { change(); return [] })
+    await expect(rerankWithConfirmation(args, getWindow, source, save)).rejects.toThrow('settings changed')
+    if (stage !== 'response') expect(mocks.rerank).not.toHaveBeenCalled()
+    expect(save).not.toHaveBeenCalled()
+    expect(mocks.getApiKey).not.toHaveBeenCalled()
+  })
+
+  it('does not unlock subscription tokens after cancelled approval', async () => {
+    useChatGpt()
+    const { args, source } = request()
+    mocks.dialog.mockResolvedValue({ response: 0 })
+    await expect(rerankWithConfirmation(args, getWindow, source, vi.fn())).rejects.toThrow('cancelled')
+    expect(mocks.getChatGptAccessToken).not.toHaveBeenCalled()
+  })
   it('consumes approval once and never unlocks credentials or sends when cancelled', async () => {
     const { args, source } = request()
     const save = vi.fn()

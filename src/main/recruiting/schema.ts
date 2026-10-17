@@ -1,6 +1,6 @@
 /** Bounded, strict contracts shared by IPC, local records, and portable restore. */
 import { z } from 'zod'
-import { isRerankConfig, RERANK_MODELS, type RerankConfig } from '@shared/rerank.js'
+import { isRerankConfig, type RerankConfig } from '@shared/rerank.js'
 import { COMPANY_DETAIL_LIMIT, normalizeCompanyDetailKey, type JobTargetCompany } from '@shared/recruiting.js'
 import { talentRecordSchemas, TALENT_LIMITS } from './talent-schema.js'
 import { hiringBudgetRecordSchema } from './hiring-budget-schema.js'
@@ -214,7 +214,8 @@ export const reviewRecordSchema = z.strictObject({ jobId, candidateKey: recordKe
 const score = z.number().finite().min(0).max(1)
 const rerankConfig = z.strictObject({
   provider: z.enum(['anthropic', 'openai']),
-  model: z.enum([...RERANK_MODELS.anthropic, ...RERANK_MODELS.openai].map((model) => model.id))
+  model: z.string().min(1).max(128),
+  authMode: z.enum(['api-key', 'chatgpt']).optional()
 }).refine(isRerankConfig, 'The selected model must belong to its provider.')
   .transform((value): RerankConfig => value as RerankConfig)
 export const snapshotRecordSchema = z.strictObject({

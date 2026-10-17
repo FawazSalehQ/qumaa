@@ -14,10 +14,11 @@ keep their original language. Arabic and Persian digits are accepted in
 experience fields, and Arabic exports include bundled fonts for offline use.
 
 **Nothing leaves your machine by default.** Embeddings are computed locally by a
-bundled ONNX model, and with no API key configured the app opens no network
-sockets at runtime. The one exception is opt-in and off by default: an optional
-AI rerank of the shortlist through Anthropic or OpenAI, which only runs once you
-paste that provider's API key into Settings and switch it on.
+bundled ONNX model. Optional AI reranking is off by default: connect an
+Anthropic/OpenAI API key or an eligible ChatGPT subscription in Settings, then
+enable it. Each send requires reviewing the evidence and native confirmation.
+ChatGPT sign-in and model discovery contact OpenAI only when you connect or
+refresh; startup and ordinary matching do not contact an AI provider.
 
 ## Requirements
 
@@ -202,12 +203,15 @@ v12 require app build beta.5 or a newer compatible build, regardless of the
 retained GitHub release name. The earlier beta.3 query-composition change marks saved
 matches stale; refresh them while keeping recruiter reviews.
 
-Choose **Settings → AI reranking → AI provider**, then **AI model**:
+Choose **Settings → AI reranking → AI provider**. OpenAI offers two connection
+modes: **API key** for separate API billing, or **ChatGPT subscription** using
+**Continue with ChatGPT** in your system browser. Then choose **AI model**:
 
 | Provider | Models |
 |---|---|
 | Anthropic | Sonnet 5, Opus 5, Fable 5.1 |
 | OpenAI | GPT-4o mini, GPT-5.6, GPT-6 Astra |
+| ChatGPT subscription | Available models are discovered for the connected account |
 
 Each provider retains its own protected API key and selected model. Existing
 installations default to Sonnet 5. Jobs shows the selected model on its rerank
@@ -216,6 +220,20 @@ another rerank without refreshing local matches. Each provider/model requires
 its own initial data review, with **See exported data** collapsed by default,
 followed by native confirmation naming the destination and model. OpenAI requests
 use `store: false`. No request automatically retries or switches providers.
+
+ChatGPT plan usage draws from the connected account's existing allowance or
+credits, with eligibility and limits controlled by OpenAI. **Manage usage** opens
+ChatGPT's usage settings. Qumaa does not switch to API billing when a plan limit
+is reached. You can reconnect, switch saved accounts, refresh the model list,
+or sign out in Settings; connecting alone never enables reranking. The first
+plan-enabled connection shows a welcome notice. Saved AI results retain their
+connection mode and model without storing account identities in result snapshots.
+
+This uses OpenAI's supported [open-source Sign in with ChatGPT flow](https://developers.openai.com/siwc/token-sharing-open-source/sign-in),
+with OS-protected local credentials, PKCE and a temporary loopback callback.
+OpenAI's [eligibility guidance](https://developers.openai.com/cookbook/articles/sign-in-with-chatgpt)
+requires approval before offering this flow in paid or remotely hosted apps.
+The implementation targets this repository's open-source desktop distribution.
 
 Model IDs were verified against the [Anthropic model catalog](https://platform.claude.com/docs/en/models/overview)
 and [OpenAI model catalog](https://developers.openai.com/api/docs/models).
@@ -341,7 +359,7 @@ startup, any required reindex, and derived-data backfills to finish.
   version. When aliases or domains improve, stored resumes are re-extracted from
   their retained text before search opens, so existing libraries receive the
   same skill coverage as new imports.
-- **Optional AI rerank in Jobs.** Off unless you add an API key and enable it
+- **Optional AI rerank in Jobs.** Off unless you connect an API key or ChatGPT plan and enable it
   in Settings. The first use shows a plain-language data summary; **See exported
   data** reveals the exact request when needed. Approval is remembered, and
   every send requires native confirmation. It reorders the top 15 local results
@@ -439,16 +457,25 @@ operations in `src/preload/index.ts`; `ipcRenderer` is never exposed. A CSP
 restricts the page to its own origin, navigation away from the local page is
 blocked, and attempts to open additional windows are denied.
 
-With no API key configured the app opens no network sockets at runtime.
+Startup and ordinary local matching make no AI-provider network requests.
 `env.allowRemoteModels = false` stops transformers.js reaching the Hugging Face
 hub on a cache miss, and the model is vendored at build time. Matching itself is
 entirely local: no resume text is transmitted anywhere.
 
-The optional AI rerank is the only code path that leaves the machine, and it
-is inert until the user supplies a key and enables it. When it does run it sends
+Optional AI reranking stays inert until the user connects a credential and
+enables it. When it does run it sends
 the structured posting and the top 15 candidates' redacted evidence to the
-selected Anthropic or OpenAI API. New keys are stored separately through Electron's `safeStorage`; an older
+selected Anthropic or OpenAI service. ChatGPT sign-in, model discovery, token
+refresh and sign-out also contact OpenAI; these requests contain account
+credentials, not candidate evidence. API keys and ChatGPT tokens are stored
+separately through Electron's `safeStorage`; an older
 plaintext key cannot be used until the user protects or removes it.
+The renderer receives connection status only. API keys, ChatGPT tokens, account
+registrations and host identifiers are excluded from portable backups and
+removed by restore or full wipe. Sign-out also attempts to revoke the ChatGPT
+refresh token; if OpenAI cannot confirm revocation, Settings directs the user
+to their ChatGPT account controls. Late login or refresh work cannot restore
+credentials after a library replacement.
 
 ### Known advisories
 

@@ -11,6 +11,13 @@ describe('portable backup policy', () => {
   it.each([
     'anthropicApiKey',
     'openaiApiKey',
+    'chatgpt:accounts:v1',
+    'chatgpt:host:v1',
+    'chatgpt:pending-client:v1',
+    'chatgpt:credentials:synthetic-account',
+    'rerankAuthMode:openai',
+    'rerankModel:chatgpt',
+    'rerankConsent:chatgpt:plan-model',
     'credentialCleanupPending',
     'embeddingModel',
     'watchedFolder',

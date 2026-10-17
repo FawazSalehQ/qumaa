@@ -29,8 +29,8 @@ const APPROVAL_TTL_MS = 10 * 60 * 1000
 const MAX_SESSIONS = 12
 export const MAX_PENDING_APPROVALS = 8
 
-function requestDigest(requestBody: JsonObject): string {
-  return createHash('sha256').update(JSON.stringify(requestBody)).digest('hex')
+function requestDigest(requestBody: JsonObject, authContext = ''): string {
+  return createHash('sha256').update(JSON.stringify([requestBody, authContext])).digest('hex')
 }
 
 /**
@@ -64,7 +64,7 @@ export class SearchSessionStore {
     return session
   }
 
-  issueApproval(sessionId: string, requestBody: JsonObject): string {
+  issueApproval(sessionId: string, requestBody: JsonObject, authContext = ''): string {
     this.get(sessionId)
 
     // A new preview supersedes the previous one for this search. Keeping both
@@ -82,14 +82,14 @@ export class SearchSessionStore {
     const token = randomUUID()
     this.approvals.set(token, {
       sessionId,
-      requestDigest: requestDigest(requestBody),
+      requestDigest: requestDigest(requestBody, authContext),
       expiresAt: Date.now() + APPROVAL_TTL_MS
     })
     this.approvalBySession.set(sessionId, token)
     return token
   }
 
-  consumeApproval(token: string | undefined, sessionId: string, requestBody: JsonObject): void {
+  consumeApproval(token: string | undefined, sessionId: string, requestBody: JsonObject, authContext = ''): void {
     if (!token) throw new Error('Review the exact AI request before approving it.')
     const approval = this.approvals.get(token)
     this.deleteApproval(token)
@@ -97,7 +97,7 @@ export class SearchSessionStore {
       !approval ||
       approval.expiresAt < Date.now() ||
       approval.sessionId !== sessionId ||
-      approval.requestDigest !== requestDigest(requestBody)
+      approval.requestDigest !== requestDigest(requestBody, authContext)
     ) {
       throw new Error('The AI approval is missing, expired, or does not match this request.')
     }
