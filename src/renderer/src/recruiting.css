@@ -57,17 +57,17 @@
 .recruit-notice { background: var(--accent-soft); color: var(--text-dim); border-top: 1px solid var(--accent-border); border-bottom: 1px solid var(--accent-border); }
 .recruit-notice + .recruit-notice { border-top: 0; }
 .recruit-notice strong { color: var(--text); }
+.recruit-notice .disclosure { --disclosure-inset: 0px; }
 .recruit-error { margin-bottom: 16px; border: 1px solid var(--bad); background: var(--bad-soft); color: var(--bad); border-radius: var(--radius-sm); }
 .recruit-error > span { flex: 1; }
-.recruit-posting-summary { padding: 0 24px 10px; font-size: var(--fs-sm); color: var(--text-dim); }
+.recruit-posting-summary { padding: 0 24px 10px; font-size: var(--fs-md); color: var(--text-dim); }
 .recruit-notice + .recruit-posting-summary { padding-top: 16px; }
-.recruit-posting-summary summary { cursor: pointer; color: var(--text-dim); font-weight: 500; }
-.recruit-posting-summary > div { padding: 16px 0 0; }
 .recruit-posting-summary h4 { margin-top: 16px; }
 .recruit-posting-summary h4:first-child { margin-top: 0; }
 .recruit-posting-summary p { line-height: 1.7; }
 .recruit-posting-summary ul { padding-inline-start: 18px; }
 .recruit-posting-summary li { padding: 4px 0; }
+.recruit-posting-summary > div > :last-child { margin-block-end: 0; }
 
 /* The hiring funnel as a line of stops. Each stop is a numbered badge; the
    rule between stops lights up once a stop has anyone on it. */
@@ -210,11 +210,14 @@
 .recruit-status-overview > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 16px; }
 .recruit-status-overview h4 { margin: 0; font-size: var(--fs-md); }
 .recruit-status-dates { display: flex; gap: 6px 16px; flex-wrap: wrap; color: var(--text-faint); font-size: var(--fs-sm); line-height: 1.6; }
-.recruit-status-history { flex: 0 0 auto; margin: 0; padding: 0; border: 0; }
-.recruit-status-history[open] { flex-basis: 100%; }
+/* The full-width basis outlives the open attribute by the 200ms fold, so the row does not jump while the timeline is still closing. */
+.recruit-status-history { flex: 0 0 auto; margin: 0; padding: 0; border: 0; transition: flex-basis 0s 0.2s allow-discrete; }
+.recruit-status-history[open] { flex-basis: 100%; transition: none; }
+@media (prefers-reduced-motion: reduce) { .recruit-status-history { transition: none; } }
 .recruit-hiring-evidence { flex-basis: 100%; }
-.recruit-status-history > summary { cursor: pointer; color: var(--text-dim); font-size: var(--fs-sm); font-weight: 500; }
-.recruit-status-history ol { margin: 16px 0 0; padding: 0; list-style: none; }
+.recruit-status-history ol { margin: 0; padding: 0; list-style: none; }
+/* The timeline is the rail: with no indent its dots and connector centre at 7px, under the chevron. */
+.disclosure.recruit-status-history::details-content { margin-inline-start: 0; border-inline-start: 0; padding-inline-start: 0; }
 .recruit-status-history li { position: relative; padding: 0 0 16px 0; padding-inline-start: 22px; font-size: var(--fs-sm); }
 .recruit-status-history li::before { content: ''; position: absolute; inset-inline-start: 3px; top: 5px; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
 .recruit-status-history li::after { content: ''; position: absolute; inset-inline-start: 6px; top: 15px; bottom: -2px; width: 2px; background: var(--border-strong); }
@@ -264,8 +267,6 @@
 .recruit-job-context strong { font-size: var(--fs-md); font-weight: 500; overflow-wrap: anywhere; }
 .recruit-job-context > details { flex-basis: 100%; }
 .recruit-company-context { font-size: var(--fs-sm); color: var(--text-dim); line-height: 1.7; }
-.recruit-company-context summary { cursor: pointer; font-weight: 500; }
-.recruit-company-context p { margin: 10px 0 0; }
 .recruit-target-companies { padding: 24px; }
 .recruit-target-companies h4 { margin-bottom: 5px; }
 .recruit-target-companies .hint { margin-bottom: 0; }
@@ -279,8 +280,7 @@
 .recruit-target-card.excluded .recruit-review-state { --tone: var(--line-red); }
 .recruit-target-card p { overflow-wrap: anywhere; line-height: 1.7; }
 .recruit-criterion-source { margin: 0.35rem 0 0.75rem; margin-inline-start: 1.5rem; color: var(--text-dim); font-size: var(--fs-sm); }
-.recruit-criterion-source summary { cursor: pointer; }
-.recruit-criterion-source blockquote { margin: 0.5rem 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.recruit-criterion-source blockquote { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 /* Arabic has connected letterforms; tracking and case transforms are Latin-only. */
 :lang(ar) .recruiting h2, :lang(ar) .recruit-eyebrow, :lang(ar) .recruit-candidate-table th { letter-spacing: normal; text-transform: none; }

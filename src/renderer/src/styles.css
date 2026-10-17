@@ -599,6 +599,214 @@ a {
   transform: scale(0.94);
 }
 
+/* ---------- disclosures: stops on the line ---------- */
+
+/* A <details> is a stop on the line. Closed, the summary is a quiet row: a
+   14px chevron marker pointing along the reading direction and a 500 label in
+   Text Dim. Open, the chevron turns to the body and takes the accent, the
+   label steps to full ink, and the body hangs from a 1px Border Strong rail
+   under the chevron, like a quoted passage. The browser triangle never shows.
+
+   Markup (DisclosureSummary.tsx renders the head; body children need no wrapper):
+     <details class="disclosure [inline|entry] <site-class>">
+       <summary><svg class="disclosure-chevron"/><span class="disclosure-label">…</span></summary>
+       …
+     </details>
+   Base: a full-width row at control height. inline: a fit-content row at
+   small-control height for a bar, a notice or a field. entry: a list entry
+   that is itself a card. --disclosure-inset is the hover-wash overhang.
+   ::details-content and interpolate-size need Chromium 131+; Electron 43
+   ships 150. */
+
+.disclosure {
+  --disclosure-inset: 8px;
+  --disclosure-turn: -90deg;
+  min-inline-size: 0;
+  interpolate-size: allow-keywords;
+}
+
+:root[dir='rtl'] .disclosure {
+  --disclosure-turn: 90deg;
+}
+
+/* Keyword interpolation stays on the fold itself; a body descendant that later
+   transitions to an auto size must not animate it. */
+.disclosure > :not(summary) {
+  interpolate-size: numeric;
+}
+
+.disclosure > summary:first-of-type {
+  --disclosure-ink: var(--text-dim);
+  --disclosure-mark: var(--text-faint);
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  min-block-size: var(--control-h);
+  margin-inline: calc(-1 * var(--disclosure-inset));
+  padding: 4px var(--disclosure-inset);
+  border-radius: var(--radius-sm);
+  list-style: none;
+  color: var(--disclosure-ink);
+  font-size: var(--fs-md);
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.disclosure > summary:first-of-type::marker {
+  content: '';
+}
+
+/* ChevronDownIcon is symmetric and never carries directional-icon, whose
+   scaleX(-1) would fight the turn. */
+.disclosure-chevron {
+  flex: none;
+  inline-size: 14px;
+  block-size: 14px;
+  color: var(--disclosure-mark);
+  transform: rotate(var(--disclosure-turn));
+  transition: transform 0.2s var(--ease-out), color 0.12s ease;
+}
+
+.disclosure-label {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  transition: transform 0.16s var(--ease-out);
+}
+
+.disclosure[open] > summary:first-of-type {
+  --disclosure-ink: var(--text);
+  --disclosure-mark: var(--accent);
+}
+
+.disclosure[open] > summary:first-of-type > .disclosure-chevron {
+  transform: rotate(0deg);
+}
+
+@media (hover: hover) {
+  .disclosure > summary:first-of-type:hover {
+    --disclosure-ink: var(--text);
+    --disclosure-mark: var(--text);
+    background: var(--bg-hover);
+  }
+
+  .disclosure[open] > summary:first-of-type:hover {
+    --disclosure-mark: var(--accent);
+  }
+}
+
+/* The label presses, not the row: a full-width row at 0.97 would pull its far
+   edge in by 20px or more. */
+.disclosure > summary:first-of-type:active > .disclosure-label {
+  transform: scale(0.97);
+}
+
+/* The body. Content-box so block-size: 0 closes it; the paddings and a short
+   fade animate with the size, and content-visibility transitions discretely so
+   the content stays painted to the last frame of the close. Nothing here keys
+   on details[open], which is removed as the close begins. The rail sits at
+   7px, under the centre of the 14px chevron; text starts at 22px, level with
+   the label. The 4px end paddings keep input halos and checkbox focus rings
+   inside the clip and stop the last child's margin collapsing through the box. */
+.disclosure::details-content {
+  box-sizing: content-box;
+  block-size: 0;
+  overflow: clip;
+  margin-inline-start: 7px;
+  border-inline-start: 1px solid var(--border-strong);
+  padding-block: 0;
+  padding-inline: 14px 4px;
+  opacity: 0;
+  transition:
+    block-size 0.2s var(--ease-out),
+    padding-block 0.2s var(--ease-out),
+    opacity 0.16s ease,
+    content-visibility 0.2s allow-discrete;
+}
+
+.disclosure[open]::details-content {
+  block-size: auto;
+  padding-block: 12px 4px;
+  opacity: 1;
+}
+
+/* The rail box's padding is the body's gap: the first and last children drop
+   their outer margins, whatever a site stylesheet gives them. */
+.disclosure > summary:first-of-type + * {
+  margin-block-start: 0;
+}
+
+.disclosure > :not(summary):last-child {
+  margin-block-end: 0;
+}
+
+/* inline: a fit-content row inside a facts bar, a status bar, a notice or
+   under a field. */
+.disclosure.inline > summary:first-of-type {
+  inline-size: fit-content;
+  max-inline-size: calc(100% + 2 * var(--disclosure-inset));
+  min-block-size: var(--control-h-sm);
+  padding-block: 2px;
+  font-size: var(--fs-sm);
+}
+
+.disclosure.inline[open]::details-content {
+  padding-block: 8px 4px;
+}
+
+/* entry: a list entry that is itself the card. The host card keeps its border,
+   radius, ground and margin; the details drops the card padding so the head
+   fills the closed card, the wash runs edge to edge and a hairline parts head
+   from body when open. The label is a name: full ink, and copyable. */
+.disclosure.entry {
+  --disclosure-inset: 13px;
+  padding: 0;
+}
+
+.disclosure.entry > summary:first-of-type {
+  --disclosure-ink: var(--text);
+  margin-inline: 0;
+  padding: var(--disclosure-inset);
+  border-block-end: 1px solid transparent;
+  border-radius: calc(var(--radius) - 1px);
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.disclosure.entry[open] > summary:first-of-type {
+  border-block-end-color: var(--border);
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.disclosure.entry .disclosure-label {
+  user-select: text;
+}
+
+.disclosure.entry::details-content {
+  margin-inline: calc(var(--disclosure-inset) + 7px) 0;
+  padding-inline: 14px var(--disclosure-inset);
+}
+
+.disclosure.entry[open]::details-content {
+  padding-block: 12px var(--disclosure-inset);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The global shortcut above matches elements and ::before/::after, never
+     ::details-content, so the fold is collapsed here explicitly. */
+  .disclosure > summary:first-of-type,
+  .disclosure-chevron,
+  .disclosure-label,
+  .disclosure::details-content {
+    transition: none;
+  }
+
+  .disclosure > summary:first-of-type:active > .disclosure-label {
+    transform: none;
+  }
+}
+
 .row {
   display: flex;
   align-items: center;

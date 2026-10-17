@@ -116,6 +116,14 @@
       "description": "A match score in a sunken box with tabular mono figures; grey and dimmed when the row is not proceeding.",
       "html": "<span class='ds-score'>98</span> <span class='ds-score'>37</span> <span class='ds-score ds-score-muted'>21</span>",
       "css": ".ds-score{display:inline-grid;place-items:center;min-width:44px;height:30px;padding:0 8px;border-radius:6px;background:var(--bg-sunken,#ebe7f1);color:var(--text,#2b2733);font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}.ds-score-muted{filter:grayscale(1);opacity:.7}"
+    },
+    {
+      "name": "Disclosure",
+      "kind": "custom",
+      "refersTo": "disclosure",
+      "description": "A collapsible section is a stop on the line: a chevron and a quiet 500 label when closed; open, the chevron turns to the accent, the label steps to full ink and the body hangs from a 1px rail under the chevron.",
+      "html": "<details class='ds-disclosure' open><summary><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='m6 9 6 6 6-6'/></svg><span>View job description and criteria</span></summary><p>Lead the month-end close and IFRS reporting for a hospitality group with twelve branches. Coordinate the external audit and own the fixed-asset register.</p></details><details class='ds-disclosure'><summary><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='m6 9 6 6 6-6'/></svg><span>Status history</span></summary><p>Created as Open</p></details>",
+      "css": ".ds-disclosure{max-width:520px;font-family:'IBM Plex Sans Variable','IBM Plex Sans',system-ui,sans-serif;font-size:13px;color:var(--text-dim,#59526a)}.ds-disclosure>summary{display:flex;align-items:center;gap:8px;min-height:34px;margin:0 -8px;padding:4px 8px;border-radius:5px;list-style:none;color:var(--text-dim,#59526a);font-weight:500;cursor:pointer;user-select:none;transition:background .12s ease,color .12s ease}.ds-disclosure>summary::marker{content:''}.ds-disclosure>summary:hover{background:var(--bg-hover,#efebf5);color:var(--text,#2b2733)}.ds-disclosure svg{flex:none;width:14px;height:14px;color:var(--text-faint,#716a81);transform:rotate(-90deg);transition:transform .2s cubic-bezier(.23,1,.32,1)}.ds-disclosure[open]>summary{color:var(--text,#2b2733)}.ds-disclosure[open] svg{transform:none;color:var(--accent,#6d3fb0)}.ds-disclosure>:not(summary){margin:0 0 0 7px;border-left:1px solid var(--border-strong,#c5bdd3);padding:12px 4px 4px 14px;line-height:1.7}"
     }
   ],
   "narrative": {

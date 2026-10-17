@@ -7,6 +7,7 @@ import { useI18n } from '../../i18n.js'
 import { errorMessage, isShortlisted, recruitingError } from './helpers.js'
 import HiringCandidatePicker, { type HiringCandidateOption } from './HiringCandidatePicker.js'
 import { CheckIcon } from '../Icons.js'
+import DisclosureSummary from '../DisclosureSummary.js'
 
 interface Props {
   workspace: JobWorkspace
@@ -189,7 +190,7 @@ export default function JobStatusPanel({ workspace, resumes, active, disabled, l
       <div className="recruit-hiring-cards">{placementCard(job.placement.hired, 1)}{job.placement.backup2 && placementCard(job.placement.backup2, 2)}{job.placement.backup3 && placementCard(job.placement.backup3, 3)}</div>
       {job.status === 'filled' && <button className="recruit-text-button" type="button" disabled={disabled || open} onClick={start}>{t('Edit hiring details')}</button>}
     </div> : job.status === 'filled' && <div className="recruit-hiring-evidence"><p className="hint">{t('Hiring details have not been recorded for this job.')}</p><button className="recruit-text-button" type="button" disabled={disabled || open} onClick={start}>{t('Add hiring details')}</button></div>}
-    <details className="recruit-status-history"><summary>{t('Status history')}</summary>
+    <details className="disclosure inline recruit-status-history"><DisclosureSummary>{t('Status history')}</DisclosureSummary>
       {!history.some((event) => event.kind === 'created') && <p className="hint">{t('Earlier status changes were not recorded.')}</p>}
       <ol>{[...history].reverse().map((event, reversedIndex) => {
         const previous = history[history.length - reversedIndex - 2]

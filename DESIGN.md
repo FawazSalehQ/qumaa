@@ -335,6 +335,12 @@ Corners are small and consistent: 5px on controls and inputs, 8px on panels and 
 ### Chips (tags)
 - **Style:** small rounded chips on a sunken tone with Text Dim text for recruiter tags and skills; a chip never carries a line tone.
 
+### Disclosure (rail stop)
+- **Head:** a `<details>` summary as a quiet row: a 14px chevron in Text Faint pointing along the reading direction (left in RTL), an 8px gap, and a 13px 500 label in Text Dim; 34px tall, no browser marker. The inline variant is a fit-content row at 28px and 12px for a bar, a notice or a field; the entry variant fills a bordered list card at 13px padding and takes a 1px hairline under the head when open.
+- **Hover / Focus / Press:** the Hover Wash with 5px corners overhanging the content edge by 8px (gated by `(hover: hover)`; no overhang inside a notice), label and chevron step to Text; focus-visible is the global outline; `:active` scales the label, not the row, to 0.97.
+- **Open:** the chevron turns to point down in Accent, the label steps to full ink at the same weight, and the body hangs from a 1px Border Strong rail 7px in (under the chevron) with text 22px in, 12px above and 4px below; the body unfolds over 200ms on the strong ease-out with a 160ms fade through `::details-content`; reduced motion snaps. The rail is never an identity tone; the status timeline draws its own line and drops the rail.
+- **Markup:** `DisclosureSummary` renders the head (the chevron, then the label span as the summary's only text); body children need no wrapper.
+
 ## Do's and Don'ts
 
 ### Do:

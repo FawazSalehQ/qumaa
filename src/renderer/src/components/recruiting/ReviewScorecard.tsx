@@ -1,4 +1,5 @@
 import { CriterionSource } from './JobCriteriaEditor.js'
+import DisclosureSummary from '../DisclosureSummary.js'
 import { criterionImportanceLabel } from '@shared/job-requirements.js'
 import { useI18n } from '../../i18n.js'
 import { useLayoutEffect, useRef, useState } from 'react'
@@ -99,8 +100,8 @@ export default function ReviewScorecard({ workspace, match, busy, onSave, onClos
             <div>
               <strong>{t("This candidate’s saved review changed.")}</strong>
               <p>{t("Your unsaved draft is still below. Load the saved review, or check the saved details before choosing to replace them with this draft.")}</p>
-              <details>
-                <summary>{t("View the saved review")}</summary>
+              <details className="disclosure inline">
+                <DisclosureSummary>{t("View the saved review")}</DisclosureSummary>
                 <p>{t('Review state: {status}', { status: t(REVIEW_LABELS[review?.status ?? 'unreviewed']) })}</p>
                 <p className="recruit-prewrap" dir="auto">{review?.note || t('No saved notes.')}</p>
                 {review?.assessments.map((assessment) => (

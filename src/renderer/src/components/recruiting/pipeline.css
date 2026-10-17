@@ -26,9 +26,9 @@
 .pipeline-facts dt { color: var(--text-faint); }
 .pipeline-facts dd { margin: 0; overflow-wrap: anywhere; }
 .pipeline-history, .pipeline-submissions, .pipeline-screenings { margin-block-start: 22px; border-block-start: 1px solid var(--border); padding-block-start: 18px; }
-.pipeline-history summary, .pipeline-entry summary { cursor: pointer; font-weight: 500; }
 .pipeline-entry { border: 1px solid var(--border); border-radius: var(--radius); padding: 13px; margin-block: 12px; background: var(--bg-strip); }
 .pipeline-question { border-block-end: 1px solid var(--border); padding-block: 14px; }
+.pipeline-entry > ol > .pipeline-question:first-child { padding-block-start: 0; }
 .pipeline-detail .recruit-field { margin-block: 12px; }
 .pipeline-detail .recruit-section-head { flex-wrap: wrap; }
 @media (max-width: 1000px) { .pipeline-layout { grid-template-columns: 1fr; } .pipeline-people { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); } }

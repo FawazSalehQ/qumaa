@@ -2,12 +2,13 @@ import { useState } from 'react'
 import type { JobCriterion, JobPosting } from '@shared/recruiting.js'
 import { criterionImportanceLabel, extractJobRequirements } from '@shared/job-requirements.js'
 import { useI18n } from '../../i18n.js'
+import DisclosureSummary from '../DisclosureSummary.js'
 
 export function CriterionSource({ criterion }: { criterion: JobCriterion }): React.JSX.Element | null {
   const { t } = useI18n()
   if (!criterion.source) return null
   const field = { jobDescription: 'Job description', requirements: 'Requirements', educationAndCertifications: 'Education and certifications' }[criterion.source.field]
-  return <details className="recruit-criterion-source"><summary>{t('Original wording · {field}', { field: t(field) })}</summary><blockquote dir="auto">{criterion.source.text}</blockquote></details>
+  return <details className="disclosure inline recruit-criterion-source"><DisclosureSummary>{t('Original wording · {field}', { field: t(field) })}</DisclosureSummary><blockquote dir="auto">{criterion.source.text}</blockquote></details>
 }
 
 export default function JobCriteriaEditor({ posting, criteria, onChange }: { posting: JobPosting; criteria: JobCriterion[]; onChange: (criteria: JobCriterion[]) => void }): React.JSX.Element {

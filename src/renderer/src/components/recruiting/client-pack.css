@@ -12,7 +12,6 @@
 .client-pack-selection h4 { display: flex; align-items: center; gap: 10px; margin: 0; }
 .client-pack-position { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 6px; border-radius: var(--radius-badge); background: var(--line-violet); color: var(--badge-ink); font-family: var(--font-mono); font-size: 11px; font-weight: 600; }
 .client-pack-choices { margin-block-start: 14px; }
-.client-pack-choices summary { cursor: pointer; font-size: var(--fs-md); font-weight: 600; padding-block: 7px; }
 .client-pack-choice { display: flex; align-items: flex-start; gap: 10px; border-top: 1px solid var(--border); padding-block: 12px; }
 .client-pack-choice > input { flex: 0 0 auto; margin-block-start: 3px; }
 .client-pack-choice > span { min-width: 0; display: grid; gap: 6px; font-size: var(--fs-md); }
