@@ -248,6 +248,12 @@ have not been rerun for this rebuild. See the local
   selected models remain independent. Existing installations default to Sonnet 5;
   choosing a provider without its own key disables reranking. Saving a key never
   automatically enables it. Keys and sharing preferences are excluded from backups.
+- OpenAI also offers a **ChatGPT subscription** mode (Sign in with ChatGPT). Plan
+  models come from the connected account's catalog; OpenAI is usable with either an
+  API key or a connected, plan-enabled account and a listed model. Plan requests
+  stream from the fixed Responses endpoint with `store: false`, and a failed plan
+  request never falls back to API billing. ChatGPT connections are excluded from
+  backups and removed by restore or wipe. See `handover.md`, section 6.
 - The rerank button names the selected model. Saved results identify the model
   that actually produced their order, and a different model can rerank the same
   candidates without refreshing matches. Native confirmation names both provider

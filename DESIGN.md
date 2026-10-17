@@ -264,7 +264,7 @@ A 56px chrome band holds the lockup and five underline tabs; the view below scro
 
 Density: table rows pad 13px vertically and 14px horizontally with a 1px rule between rows and a tonal strip behind the column heads; controls are 34px tall (28px small); the spacing steps are 4, 8, 12, 16, 24 and 32px. Overlays: the detail slide-over is min(580px, 92vw) from the inline end; toasts stack at the bottom inline-end corner.
 
-Responsive: at or below 1200px the tagline hides and the workspace head tightens; 1080, 1050 and 1000px collapse two-column grids (pipeline, hiring costs) to one column; 920, 800, 760, 640 and 520px progressively stack the shell, settings and forms. RTL mirrors every inline-start and inline-end rule, flips the directional arrow icon and enters the slide-over from the left.
+Responsive: at or below 1200px the Jobs layout, workspace head and candidate table tighten; 1080, 1050 and 1000px collapse two-column grids (pipeline, hiring costs) to one column; 920, 800, 760, 640 and 520px progressively stack the shell, settings and forms. RTL mirrors every inline-start and inline-end rule, flips the directional arrow icon and enters the slide-over from the left.
 
 ## Elevation & Depth
 
@@ -349,7 +349,7 @@ Corners are small and consistent: 5px on controls and inputs, 8px on panels and 
 - **Do** set every label and column head in Plex Mono 10.5px, 500, uppercase, 0.24em, and every compared number in tabular Plex Mono.
 - **Do** isolate short identity strings (names, titles, file names, locations, client context) with an inline `<bdi>` inside start-aligned blocks, and let prose blocks (notes, passages, quotes, raw text) take their own direction with `dir="auto"`.
 - **Do** gate hover styles behind `(hover: hover)`, press buttons to scale(0.97) over 160ms, enter overlays with `@starting-style`, and collapse all motion under `prefers-reduced-motion`.
-- **Do** keep helper text to facts the controls cannot show: a consequence, an exclusion, a format rule, or the next action in an empty state, in one short sentence.
+- **Do** keep helper text to facts the controls cannot show: a consequence, an exclusion, a format rule, or the next action in an empty state, in one short sentence. Consent, privacy and data-handling disclosures (the AI rerank send notice, the backup and wipe descriptions) keep every fact they carry, in their shortest form, even across several sentences. The ChatGPT welcome and the account, usage and billing lines follow OpenAI's Sign in with ChatGPT UI guidance; do not trim them without rechecking it and asking the user.
 - **Do** theme the surfaces nobody draws: scrollbars in Border Strong, selection in Violet Wash, the caret in violet.
 
 ### Don't:

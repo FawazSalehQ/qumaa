@@ -513,8 +513,10 @@ Both follow from the no-LLM constraint:
 2. **Matching finds similarity, not judgement.** It reliably surfaces resumes
    about the same kind of work as the posting. On its own it cannot infer
    seniority from accomplishments. That is what the optional AI rerank over
-   the top 15 is for, and it is the only feature that sends anything off the
-   machine.
+   the top 15 is for, and it is the only feature that sends candidate data off
+   the machine. ChatGPT sign-in, account switching, model and token refresh,
+   and sign-out send account credentials and a per-installation identifier,
+   never candidate data, and only as part of a user action.
 
 ## Packaging notes
 

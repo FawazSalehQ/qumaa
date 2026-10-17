@@ -130,8 +130,10 @@ scores.
 ## Product Principles
 
 1. The recruiter decides; the interface shows evidence, never verdicts.
-2. Nothing leaves the machine, and the one exception (AI reranking) is made
-   explicit every time.
+2. No candidate data leaves the machine except an AI rerank the user confirms
+   each time; ChatGPT sign-in, account switching, model and token refresh and
+   sign-out send account credentials and a per-installation identifier, never
+   candidate data, and only as part of a user action.
 3. Arabic and English are peers, in content and in chrome.
 4. Screening is a table scan; the candidate table is the product.
 5. Trust reads as restraint: state, selection and evidence earn colour,
