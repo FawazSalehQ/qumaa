@@ -1,4 +1,5 @@
 export const pipelineAr: Record<string, string> = {
+  'Logged only; nothing is sent from Qumaa.': 'للتسجيل فقط؛ لا يُرسل شيء من قُمع.',
   'Sourced': 'تم العثور عليه',
   'Interested': 'مهتم',
   'Screened': 'تم إجراء الفرز',

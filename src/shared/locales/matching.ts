@@ -1,5 +1,6 @@
 /** Arabic copy for the library, quick matching, and source-CV details. */
 export const matchingAr: Record<string, string> = {
+  'Parsed automatically; may be wrong. Never used for ranking.': 'مستخرجة آليًا وقد تكون غير دقيقة. لا تُستخدم في الترتيب أبدًا.',
   'CV text similarity is high relative to this candidate pool.': 'تشابه نص السيرة الذاتية مرتفع مقارنةً بهذه المجموعة من المرشحين.',
   'CV text similarity is moderate relative to this candidate pool.': 'تشابه نص السيرة الذاتية متوسط مقارنةً بهذه المجموعة من المرشحين.',
   'CV text similarity is low relative to this candidate pool.': 'تشابه نص السيرة الذاتية منخفض مقارنةً بهذه المجموعة من المرشحين.',

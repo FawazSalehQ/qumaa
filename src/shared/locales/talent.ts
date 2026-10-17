@@ -1,5 +1,8 @@
 /** Local relationship management, reminders, and reusable talent pools. */
 export const talentAr: Record<string, string> = {
+  'No CV linked.': 'لا توجد سيرة ذاتية مرتبطة.',
+  'Select a person.': 'اختر شخصًا.',
+  'No talent pools yet.': 'لا توجد مجموعات مواهب بعد.',
   'Recruiter desk': 'مكتب التوظيف',
   'Relationships that move hiring forward': 'علاقات تدفع التوظيف إلى الأمام',
   'Plan conversations, remember prospects, and keep your talent pools current.': 'خطّط للتواصل، وتابع المرشحين المحتملين، وحدّث مجموعات المواهب باستمرار.',

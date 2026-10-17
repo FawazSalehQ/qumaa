@@ -133,7 +133,6 @@ export default function ReviewScorecard({ workspace, match, busy, onSave, onClos
           <div className="recruit-section-head">
             <div>
               <h4>{t("Requirements scorecard")}</h4>
-              <p className="hint">{t("Nearest passages need review. Similar wording does not establish experience, ownership, qualifications, or eligibility.")}</p>
             </div>
             <button className="btn sm" type="button" onClick={() => onOpenCandidate(match)}>{t("Open candidate profile")}</button>
           </div>

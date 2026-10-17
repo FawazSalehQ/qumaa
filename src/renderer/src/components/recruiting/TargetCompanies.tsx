@@ -33,11 +33,10 @@ export default function TargetCompanies({ job, companies, disabled, onDirtyChang
     finally { setSaving(false) }
   }
   return <section className="recruit-target-companies" aria-label={t('Target-company map')}>
-    <div className="recruit-section-head"><div><h4>{t('Target companies')} <span className="muted">{formatNumber(rows.length)}</span></h4><p className="hint">{t('Plan which companies to research for this vacancy, the roles to look for, and any outreach exclusions.')}</p></div>{draft === null && <button className="btn sm" disabled={disabled} onClick={edit}>{t('Edit company map')}</button>}</div>
+    <div className="recruit-section-head"><div><h4>{t('Target companies')} <span className="muted">{formatNumber(rows.length)}</span></h4></div>{draft === null && <button className="btn sm" disabled={disabled} onClick={edit}>{t('Edit company map')}</button>}</div>
     {draft !== null && <div className="recruit-target-add">
       <label className="recruit-field">{t('Company to research')}<select aria-label={t('Company to research')} value={selected} disabled={disabled || saving || rows.length >= 100} onChange={(event) => setSelected(event.target.value)}><option value="">{t('Choose a company')}</option>{available.map((company) => <option key={company.id} value={company.id}>{company.name}</option>)}</select></label>
       <button className="btn sm" disabled={disabled || saving || !available.some((company) => company.id === selected) || rows.length >= 100} onClick={() => { setDraft([...draft, { companyId: selected, status: 'to-research', focusRoles: '', note: '' }]); setSelected('') }}>{t('Add target company')}</button>
-      <p className="hint">{t('Create companies in the Companies workspace, then add them here. The hiring company is excluded from this list.')}</p>
     </div>}
     {rows.length === 0 ? <div className="recruit-empty-inline"><p>{t('No target companies mapped yet.')}</p>{draft === null && <button className="recruit-text-button" disabled={disabled} onClick={onOpenCompanies}>{t('Manage companies')}</button>}</div> : <div className="recruit-target-list">{rows.map((row) => {
       const company = companies.find((item) => item.id === row.companyId)

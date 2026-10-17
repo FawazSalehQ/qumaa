@@ -173,7 +173,7 @@ export default function CompaniesView({ onChanged, onNavigationLockChange, onNew
 
   return <div className="companies">
     <header className="company-page-head">
-      <div><h2>{t('Companies')}</h2><p className="hint">{t('Keep company context, contacts, and hiring assignments together.')}</p></div>
+      <div><h2>{t('Companies')}</h2></div>
       <button type="button" className="btn primary" disabled={locked || loading || loadFailed} onClick={beginCreate}>{t('+ New company')}</button>
     </header>
     {error && <div className="company-error" role="alert"><span>{recruitingError(error, t, language)}</span>{loadFailed && <button type="button" className="btn sm" onClick={() => setReloadRevision((revision) => revision + 1)}>{t('Retry')}</button>}</div>}
@@ -186,7 +186,7 @@ export default function CompaniesView({ onChanged, onNavigationLockChange, onNew
         </div>
         {loading ? <p className="company-inline-empty" role="status">{t('Loading companies…')}</p>
           : loadFailed ? <p className="company-inline-empty">{t('Your company directory could not be loaded.')}</p>
-          : filtered.length === 0 ? <p className="company-inline-empty">{companies.length ? t('No companies match your search.') : t('Your saved companies will appear here.')}</p>
+          : filtered.length === 0 ? <p className="company-inline-empty">{companies.length ? t('No companies match your search.') : t('No companies yet.')}</p>
           : <div className="company-list">{filtered.map((company) => {
             const count = jobsByCompany.get(company.id)?.length ?? 0
             return <button type="button" key={company.id} className={`company-list-item ${selectedId === company.id && !draft ? 'selected' : ''}`} disabled={locked} aria-label={t('Open company {name}', { name: company.name })} aria-current={selectedId === company.id && !draft ? 'page' : undefined} onClick={() => { setSelectedId(company.id); setError(null) }}>
@@ -198,12 +198,11 @@ export default function CompaniesView({ onChanged, onNavigationLockChange, onNew
               </span>
             </button>
           })}</div>}
-        <p className="company-local-note"><span aria-hidden="true">◉</span>{t('Saved locally on this device')}</p>
       </aside>
 
       <section className="company-workspace" aria-label={draft ? t(draft.id ? 'Edit company' : 'New company') : selected?.name || t('Company overview')} aria-busy={loading || saving}>
         {draft ? <form className="company-editor" onSubmit={(event) => { event.preventDefault(); void saveCompany() }}>
-          <div className="company-editor-head"><h3 ref={formHeading} tabIndex={-1}>{t(draft.id ? 'Edit company' : 'New company')}</h3><p className="hint">{t('Only a company name is required. Add context as your relationship develops.')}</p><p className="hint">{t('Type a detail and select Add, or press Enter. Use × to remove an entry.')}</p></div>
+          <div className="company-editor-head"><h3 ref={formHeading} tabIndex={-1}>{t(draft.id ? 'Edit company' : 'New company')}</h3></div>
           <fieldset className="company-form-fields" disabled={saving}>
             <legend className="sr-only">{t('Company details')}</legend>
             <label className="company-field company-field-wide">{t('Company name')}<input ref={nameInput} name="companyName" required maxLength={512} dir="auto" value={draft.name} onChange={(event) => changeField('name', event.target.value)} autoComplete="off" /></label>
@@ -236,8 +235,8 @@ export default function CompaniesView({ onChanged, onNavigationLockChange, onNew
           </section>
           <HiringBudgets key={selected.id} companyId={selected.id} jobs={companyJobs} onLockChange={setBudgetEditing} />
           <section className="company-jobs" aria-labelledby="company-jobs-title">
-            <header className="company-section-head"><div><h4 id="company-jobs-title">{t('Jobs at this company')}</h4><p className="hint">{t('Each job keeps its own budget, candidates, and hiring progress.')}</p></div><button type="button" className="btn primary sm" disabled={locked} onClick={() => onNewJob(selected.id)}>{t('+ New job for company')}</button></header>
-            {companyJobs.length === 0 ? <div className="company-jobs-empty"><p>{t('No jobs at this company yet.')}</p><p className="hint">{t('Create the first assignment, or attach an existing job from its editor.')}</p></div>
+            <header className="company-section-head"><div><h4 id="company-jobs-title">{t('Jobs at this company')}</h4></div><button type="button" className="btn primary sm" disabled={locked} onClick={() => onNewJob(selected.id)}>{t('+ New job for company')}</button></header>
+            {companyJobs.length === 0 ? <div className="company-jobs-empty"><p>{t('No jobs at this company yet.')}</p></div>
               : <div className="company-job-list">{companyJobs.map((job) => <button type="button" key={job.id} className="company-job" disabled={locked} aria-label={t('Open job {title}', { title: jobPostingTitle(job.posting) })} onClick={() => onOpenJob(job.id)}>
                 <div><strong><bdi>{jobPostingTitle(job.posting)}</bdi></strong>
                   {job.budget && <span className="company-job-budget"><span>{t('Salary budget')}: </span><bdi>{budgetLabel(job.budget, formatNumber, t)}</bdi></span>}

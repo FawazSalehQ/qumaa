@@ -1,5 +1,6 @@
 /** Arabic shell and settings copy. Keys preserve the existing English interface. */
 export const commonAr: Record<string, string> = {
+  'Files added here are imported automatically, including while Qumaa is closed.': 'تُستورد الملفات المضافة هنا تلقائيًا، حتى أثناء إغلاق قُمع.',
   'Jobs': 'الوظائف', 'Match': 'المطابقة', 'Library': 'المكتبة', 'Settings': 'الإعدادات',
   'Language': 'اللغة', 'Choose your interface language. Your CVs and saved work keep their original text.': 'اختر لغة الواجهة. تبقى السير الذاتية وبياناتك المحفوظة بلغتها الأصلية.',
   'Could not change the language.': 'تعذّر تغيير اللغة.',

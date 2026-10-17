@@ -1,5 +1,13 @@
 /** Recruiter workflow copy. Stored jobs, CVs and notes are never translated. */
 export const recruitingAr: Record<string, string> = {
+  'No saved jobs yet.': 'لا توجد وظائف محفوظة بعد.',
+  'Choose Shortlist on any candidate.': 'اختر «القائمة المختصرة» لأي مرشح.',
+  'Save as a job first.': 'احفظ كوظيفة أولًا.',
+  'Match this job against {count} CV in your library.': 'طابق هذه الوظيفة مع {count} سيرة ذاتية في مكتبتك.',
+  'Match this job against {count} CVs in your library.': 'طابق هذه الوظيفة مع {count} سيرة ذاتية في مكتبتك.',
+  'Exports include the full shortlist.': 'تشمل الصادرات القائمة المختصرة كاملة.',
+  'Exports include the full shortlist, including candidates hidden by filters.': 'تشمل الصادرات القائمة المختصرة كاملة، بما فيها المرشحون المخفيون بالتصفية.',
+  'Blank fields fall back to the CV extraction below.': 'تعتمد الحقول الفارغة على البيانات المستخرجة من السيرة الذاتية أدناه.',
   'Enter a number.': 'أدخل رقمًا.',
   'Enter a valid number.': 'أدخل رقمًا صالحًا.',
   'Enter a number greater than or equal to {min}.': 'أدخل رقمًا أكبر من أو يساوي {min}.',

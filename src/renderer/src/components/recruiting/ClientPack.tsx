@@ -127,7 +127,7 @@ export default function ClientPack({ jobId, active = true, sourceRevision = 0, d
   }
 
   return <section className="client-pack" aria-label={t('Client presentation builder')}>
-    <div className="recruit-section-head"><div><h3>{t('Client presentation')}</h3><p className="hint">{t('Choose up to ten assigned people, write your recommendation, and select exactly what the client will see.')}</p></div><button className="btn sm" disabled={disabled || busy} onClick={() => setRevision((value) => value + 1)}>{t('Reset presentation')}</button></div>
+    <div className="recruit-section-head"><div><h3>{t('Client presentation')}</h3></div><button className="btn sm" disabled={disabled || busy} onClick={() => setRevision((value) => value + 1)}>{t('Reset presentation')}</button></div>
     <p className="client-pack-private-note">{t('Internal reviews, activity notes, CRM notes, and client feedback are never copied into this pack.')}</p>
     {error && <p className="client-pack-error" role="alert">{error}</p>}
     {notice && <p className="hint" role="status">{notice}</p>}
@@ -150,7 +150,6 @@ export default function ClientPack({ jobId, active = true, sourceRevision = 0, d
             {!assigned && <p className="client-pack-error" role="alert">{t('This person is no longer assigned to the job. Your recommendation is kept here; remove this selection before previewing.')}</p>}
             {!loadingDetails && (missingEvidence.length > 0 || missingAnswers.length > 0) && <div className="client-pack-error" role="alert"><p>{t('Some selected evidence or screening answers are no longer available. Remove those selections before previewing.')}</p><button type="button" className="btn sm" onClick={() => updatePerson(candidate.personId, { evidenceIds: candidate.evidenceIds.filter((id) => !missingEvidence.includes(id)), answerIds: candidate.answerIds.filter((id) => !missingAnswers.includes(id)) })}>{t('Remove unavailable evidence and answers')}</button></div>}
             <label className="recruit-field">{t('Client-facing recommendation')}<textarea aria-label={t('Client-facing recommendation')} dir="auto" rows={3} maxLength={3000} value={candidate.recommendation} onChange={(event) => updatePerson(candidate.personId, { recommendation: event.target.value })} /></label>
-            <p className="hint">{t('Write the recommendation to share. Internal notes are not imported.')}</p>
             <div className="client-pack-toggles"><label><input type="checkbox" checked={candidate.includeContact} disabled={config.blind} onChange={(event) => updatePerson(candidate.personId, { includeContact: event.target.checked })} />{t('Include email and phone')}</label><label><input type="checkbox" checked={candidate.includeCompensation} onChange={(event) => updatePerson(candidate.personId, { includeCompensation: event.target.checked })} />{t('Include expected compensation')}</label><label><input type="checkbox" checked={candidate.includeAvailability} onChange={(event) => updatePerson(candidate.personId, { includeAvailability: event.target.checked })} />{t('Include availability and notice period')}</label></div>
             {loadingDetails ? <p className="hint" role="status">{t('Loading evidence and screening answers…')}</p> : person && <>
               <details className="client-pack-choices"><summary>{t('Choose CV evidence (up to 3)')}</summary>{!person.evidence.length && <p className="hint">{t('No matching CV passages are available. Refresh job matches to find supporting evidence.')}</p>}{person.evidence.map((evidence) => <label className="client-pack-choice" key={evidence.id}><input type="checkbox" checked={candidate.evidenceIds.includes(evidence.id)} disabled={!candidate.evidenceIds.includes(evidence.id) && candidate.evidenceIds.length >= 3} onChange={(event) => updatePerson(candidate.personId, { evidenceIds: event.target.checked ? [...candidate.evidenceIds, evidence.id] : candidate.evidenceIds.filter((id) => id !== evidence.id) })} /><span><small>{t(evidence.section)} · {t('Candidate CV; not independently verified')}</small><span dir="auto" className="client-pack-text">{evidence.text}</span></span></label>)}</details>
@@ -160,7 +159,7 @@ export default function ClientPack({ jobId, active = true, sourceRevision = 0, d
         })}
       </fieldset>
       <div className="recruit-actions client-pack-preview-actions"><button className="btn primary" disabled={locked || loadingDetails || invalidSelection || !config.candidates.length} onClick={() => { void makePreview() }}>{busy ? t('Preparing…') : t('Preview client presentation')}</button>{preview && <button className="btn primary" disabled={locked} onClick={() => { void exportPdf() }}>{t('Export reviewed PDF')}</button>}</div>
-      {preview && <><p className="hint">{t('Review every field below. This is the content that will be written to the PDF.')}</p><DocumentPreview document={preview.document} /></>}
+      {preview && <DocumentPreview document={preview.document} />}
     </>}
   </section>
 }

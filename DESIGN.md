@@ -343,6 +343,7 @@ Corners are small and consistent: 5px on controls and inputs, 8px on panels and 
 - **Do** set every label and column head in Plex Mono 10.5px, 500, uppercase, 0.24em, and every compared number in tabular Plex Mono.
 - **Do** isolate short identity strings (names, titles, file names, locations, client context) with an inline `<bdi>` inside start-aligned blocks, and let prose blocks (notes, passages, quotes, raw text) take their own direction with `dir="auto"`.
 - **Do** gate hover styles behind `(hover: hover)`, press buttons to scale(0.97) over 160ms, enter overlays with `@starting-style`, and collapse all motion under `prefers-reduced-motion`.
+- **Do** keep helper text to facts the controls cannot show: a consequence, an exclusion, a format rule, or the next action in an empty state, in one short sentence.
 - **Do** theme the surfaces nobody draws: scrollbars in Border Strong, selection in Violet Wash, the caret in violet.
 
 ### Don't:
@@ -351,4 +352,5 @@ Corners are small and consistent: 5px on controls and inputs, 8px on panels and 
 - **Don't** nest a card inside a card or add a coloured side border thicker than 1px; a quoted passage is a tinted block with a 1px start rule.
 - **Don't** use Unicode glyphs or icon fonts for icons; icons are inline SVG that mirror in RTL when directional.
 - **Don't** rebuild the generic SaaS arrangement (grey sidebar, white cards, kanban) or soften the system toward consumer apps; the station board, the funnel line and the graphite chrome are the identity.
+- **Don't** write taglines under view titles, section intros that restate the heading, or reassurance lines ("saved locally", "will appear here"); the control, the label and the data are the explanation.
 - **Don't** add fonts or any network asset; the three Plex families ship with the app.

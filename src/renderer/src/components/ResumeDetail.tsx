@@ -139,7 +139,6 @@ export default function ResumeDetail({ resume, match, onClose, onDeleted, onProf
                   ))}
                 </div>
               )}
-              <p className="hint">{t('Text matches suggest passages to review; they do not verify qualifications or professional responsibility.')}</p>
             </section>
           )}
 
@@ -172,7 +171,7 @@ export default function ResumeDetail({ resume, match, onClose, onDeleted, onProf
               <Field label={t('Source')} value={resume.fileName} />
             </dl>
             <p className="hint">
-              {t('These fields are parsed heuristically and can be wrong on unusually formatted resumes. Ranking never uses them.')}
+              {t('Parsed automatically; may be wrong. Never used for ranking.')}
             </p>
             {resume.skills.length > 0 && (
               <div className="chips">

@@ -51,7 +51,7 @@ export default function TalentPools({ data, busy, run, update, onLock, onOpenPer
         const people = poolStats.get(pool.id)?.members ?? []
         const fresh = poolStats.get(pool.id)?.fresh.length ?? 0
         return <button type="button" className={`talent-list-item ${pool.id === selectedId ? 'selected' : ''}`} key={pool.id} disabled={locked} aria-label={t('Open talent pool {name}', { name: pool.name })} onClick={() => { setSelectedId(pool.id); setMemberId(''); setMemberQuery(''); setLimit(100); setOnlyNew(false) }}><strong><bdi>{pool.name}</bdi></strong><span>{t(pool.mode === 'manual' ? 'Manual talent pool' : 'Saved search')}</span><span className="talent-list-meta"><span>{t('{count} people', { count: people.length })}</span>{fresh > 0 && <span className="talent-new">{t('{count} new', { count: fresh })}</span>}</span></button>
-      })}</div> : <p className="talent-inline-empty">{t('Your talent pools and saved searches will appear here.')}</p>}
+      })}</div> : <p className="talent-inline-empty">{t('No talent pools yet.')}</p>}
     </aside>
     <section className="talent-panel" aria-label={t('Talent pool workspace')}>
       {editor ? <PoolEditor key={editor.pool?.id ?? 'new'} pool={editor.pool} data={data} busy={busy} onCancel={() => setEditor(null)} onSave={(input) => run(() => window.api.talent.savePool(input), (pool) => { savePool(pool); setSelectedId(pool.id); setEditor(null); setOnlyNew(false); setQuery('') })} /> : selected ? <>
@@ -65,7 +65,7 @@ export default function TalentPools({ data, busy, run, update, onLock, onOpenPer
           {visible.length > limit && <button type="button" className="talent-text-button talent-form-actions" onClick={() => setLimit((value) => value + 100)}>{t('Show more people')}</button>}
           <div className="talent-danger-zone"><button type="button" className="talent-text-button" disabled={busy} onClick={() => setDeleting(selected)}>{t('Delete talent pool')}</button></div>
         </section>
-      </> : <div className="talent-empty"><h3>{t('Keep a warm talent pool')}</h3><p>{t('Group people across assignments or save a search to spot new contacts who fit your market.')}</p><button type="button" className="btn primary" disabled={busy} onClick={() => setEditor({})}>{t('Create your first talent pool')}</button></div>}
+      </> : <div className="talent-empty"><h3>{t('Keep a warm talent pool')}</h3><button type="button" className="btn primary" disabled={busy} onClick={() => setEditor({})}>{t('Create your first talent pool')}</button></div>}
     </section>
     {deleting && <TalentConfirm title={t('Delete this talent pool?')} confirmLabel={t('Delete talent pool')} destructive busy={busy} onCancel={() => setDeleting(null)} onConfirm={() => { const pool = deleting; void run(() => window.api.talent.deletePool({ id: pool.id, expectedUpdatedAt: pool.updatedAt }), () => { update((current) => ({ ...current, pools: current.pools.filter((item) => item.id !== pool.id) })); setDeleting(null); setSelectedId(null) }) }}><p>{t('Only the pool is removed. Its people, CVs, and recruiting history are retained.')}</p><p dir="auto"><strong>{deleting.name}</strong></p></TalentConfirm>}
   </div>

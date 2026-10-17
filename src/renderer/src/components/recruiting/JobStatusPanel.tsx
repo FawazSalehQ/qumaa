@@ -200,7 +200,7 @@ export default function JobStatusPanel({ workspace, resumes, active, disabled, l
     </details>
     {open && <dialog ref={dialog} className="recruit-status-dialog" aria-labelledby={titleId} onCancel={(event) => { event.preventDefault(); close() }}>
       <form onSubmit={(event) => { event.preventDefault(); void save() }}>
-        <h3 id={titleId}>{t('Change status')}</h3><p className="hint">{t('Each status change is saved with its date and time.')}</p>
+        <h3 id={titleId}>{t('Change status')}</h3>
         <fieldset className="recruit-fieldset" disabled={saving}>
           <label className="recruit-field">{t('Job status')}<select autoFocus value={status} onChange={(event) => { setStatus(event.target.value as JobStatus); setError(null) }}>{Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{t(label)}</option>)}</select></label>
           {status === 'filled' && <div className="recruit-status-choices">

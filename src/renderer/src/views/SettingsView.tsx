@@ -187,13 +187,11 @@ export default function SettingsView({
     <>
       <header className="view-head">
         <h2>{t("Settings")}</h2>
-        <p className="sub">{t("Manage your workspace, appearance, and local data.")}</p>
       </header>
 
       <div className="settings-grid">
         <section className="card setting setting-wide" aria-labelledby="language-heading">
           <h3 id="language-heading">{t('Language')}</h3>
-          <p className="desc">{t('Choose your interface language. Your CVs and saved work keep their original text.')}</p>
           <div className="row segmented" role="group" aria-label={t('Language')}>
             {(['en', 'ar'] as const).map((choice) => <button key={choice} className={`btn sm ${language === choice ? 'primary' : ''}`} lang={choice} dir={choice === 'ar' ? 'rtl' : 'ltr'} aria-pressed={language === choice} disabled={changingLanguage} onClick={async () => {
               setChangingLanguage(true)
@@ -205,7 +203,7 @@ export default function SettingsView({
         </section>
         <section className="card setting setting-wide" aria-labelledby="watched-folder-heading">
           <h3 id="watched-folder-heading">{t("Watched folder")}</h3>
-          <div className="desc">{t("New resumes dropped into this folder are imported automatically. Files added while the app was closed are picked up on the next launch.")}</div>
+          <div className="desc">{t('Files added here are imported automatically, including while Qumaa is closed.')}</div>
           {watched ? (
             <div className="row setting-actions">
               <code className="setting-path" dir="ltr">{watched}</code>
@@ -220,7 +218,6 @@ export default function SettingsView({
 
         <section className="card setting" aria-labelledby="appearance-heading">
           <h3 id="appearance-heading">{t("Appearance")}</h3>
-          <div className="desc">{t("Choose a theme, or follow your device’s appearance automatically.")}</div>
           <div className="row segmented" role="group" aria-label={t("Appearance")}>
             {(['system', 'light', 'dark'] as ThemeChoice[]).map((choice) => (
               <button
@@ -237,7 +234,6 @@ export default function SettingsView({
 
         <section className="card setting" aria-labelledby="matching-heading">
           <h3 id="matching-heading">{t("Local matching")}</h3>
-          <div className="desc">{t("Your resumes and standard matching stay on this device.")}</div>
           {/* The model's identity is an implementation detail. Its *state* is not:
               a failure has to stay visible, or a broken search looks like a
               ranking problem rather than a model that never loaded. */}
@@ -257,7 +253,6 @@ export default function SettingsView({
             <h3 id="rerank-heading">{t('AI reranking')}</h3>
             <span className="setting-badge">{t('Optional')}</span>
           </div>
-          <p className="desc">{t('Choose a provider and model. Each provider uses its own API key, protected by your operating system.')}</p>
           <fieldset className="ai-settings" disabled={aiDisabled} aria-busy={aiBusy}>
             <legend className="sr-only">{t('AI reranking')}</legend>
             <div className="ai-model-selectors">

@@ -36,9 +36,6 @@
 .recruit-job-state.temporary { --tone: var(--line-violet); }
 .recruit-new-cvs { color: var(--accent); font-size: var(--fs-xs); font-weight: 500; text-align: start; }
 .recruit-job-date { color: var(--text-faint); font-size: var(--fs-xs); line-height: 1.5; }
-.recruit-local-note, .company-local-note, .talent-local-note { display: flex; align-items: center; gap: 8px; padding: 12px 16px; margin: 0; border-top: 1px solid var(--border); color: var(--text-faint); font-size: var(--fs-xs); }
-.recruit-local-note > span, .company-local-note > span, .talent-local-note > span { display: none; }
-.recruit-local-note::before, .company-local-note::before, .talent-local-note::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--good); flex: none; }
 .recruit-company-filter { display: grid; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
 .recruit-company-filter .recruit-text-button { justify-self: start; }
 .recruit-temporary-entry { background: var(--accent-soft); border-bottom: 1px solid var(--accent-border); }
@@ -294,7 +291,6 @@
 @media (max-width: 1200px) {
   .recruit-layout { grid-template-columns: 220px minmax(0, 1fr); gap: 14px; }
   .recruit-workspace-head, .recruit-job-editor, .recruit-review { padding: 18px; }
-  .recruit-page-head .hint { display: none; }
   .recruit-candidate-table th, .recruit-candidate-table td { padding-inline-start: 10px; padding-inline-end: 10px; }
   .recruit-candidate-table .recruit-check-cell { width: 48px; padding-inline-start: 10px; }
   .recruit-shortlist-toolbar { align-items: flex-start; flex-direction: column; }
@@ -309,7 +305,6 @@
   .recruit-job-list-head { flex-direction: row; align-items: center; }
   .recruit-job-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 185px; }
   .recruit-job-button { padding: 12px; border-bottom: 1px solid var(--border); }
-  .recruit-local-note { display: none; }
 
   .recruit-profile-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .recruit-funnel { flex-wrap: wrap; gap: 10px 0; }
