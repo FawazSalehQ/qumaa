@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Qumaa · The ATS standard</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{width:1440px;height:900px;overflow:hidden;background:#f3f4f6;color:#111827;font:14px/1.5 "IBM Plex Sans","IBM Plex Sans Arabic",sans-serif}
+:root{--bg:#f3f4f6;--card:#fff;--line:#e5e7eb;--dim:#4b5563;--faint:#9ca3af;--violet:#6d3fb0;--vsoft:#efe9f8;--green:#16a34a;--amber:#d97706;--red:#dc2626}
+.ar{font-family:"IBM Plex Sans Arabic",sans-serif}
+.side{position:absolute;left:0;top:0;bottom:0;width:232px;background:#fff;border-right:1px solid var(--line);padding:18px 12px}
+.brand{display:flex;align-items:center;gap:8px;direction:rtl;justify-content:flex-end;padding:0 10px 18px}.brand b{font:600 20px "IBM Plex Sans Arabic";color:#2b2733}
+.item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;color:var(--dim);font-weight:500}.item.on{background:var(--vsoft);color:var(--violet)}
+.item i{width:18px;height:18px;border-radius:4px;border:2px solid currentColor;display:inline-block;opacity:.8}.item .n{margin-left:auto;font-size:12px;background:var(--bg);padding:1px 7px;border-radius:999px;color:var(--faint)}
+.top{position:absolute;left:232px;right:0;top:0;height:60px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 28px;gap:16px}
+.top .in{flex:1;max-width:420px;height:36px;border:1px solid var(--line);border-radius:8px;padding:0 12px;display:flex;align-items:center;color:var(--faint);background:var(--bg)}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--violet);margin-left:auto}
+main{position:absolute;left:232px;right:0;top:60px;bottom:0;padding:24px 28px;overflow:hidden}
+.crumb{color:var(--faint);font-size:13px}.crumb b{color:var(--dim);font-weight:500}
+.head{display:flex;justify-content:space-between;align-items:center;margin:6px 0 18px}
+h1{font-size:22px;font-weight:600}
+.btn{display:inline-flex;align-items:center;height:36px;padding:0 14px;border:1px solid var(--line);border-radius:8px;color:#111827;font-weight:500;background:#fff;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.btn.p{background:var(--violet);border-color:var(--violet);color:#fff}.actions{display:flex;gap:8px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.card em{display:block;font-style:normal;color:var(--faint);font-size:12px;margin-bottom:6px}.card .num{font-size:26px;font-weight:600}.card span{color:var(--faint);font-size:12px}
+.pill{display:inline-block;font-size:12px;font-weight:500;padding:2px 10px;border-radius:999px}.pill.g{background:#dcfce7;color:#166534}.pill.a{background:#fef3c7;color:#92400e}.pill.v{background:var(--vsoft);color:var(--violet)}.pill.r{background:#fee2e2;color:#991b1b}.pill.n{background:var(--bg);color:var(--dim)}
+.tabs{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px;width:max-content;margin-bottom:16px}.tabs a{padding:6px 12px;border-radius:7px;color:var(--dim);font-weight:500}.tabs a.on{background:var(--vsoft);color:var(--violet)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.04);overflow:hidden}
+.tools{display:flex;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}.tools .in{flex:1;height:36px;border:1px solid var(--line);border-radius:8px;padding:0 12px;display:flex;align-items:center;color:var(--faint)}
+table{width:100%;border-collapse:collapse}th{text-align:left;font-size:12px;color:var(--faint);font-weight:500;padding:10px 16px;background:#f9fafb;border-bottom:1px solid var(--line)}
+td{padding:14px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+.who{display:flex;align-items:center;gap:12px}.av{width:34px;height:34px;border-radius:50%;background:var(--vsoft);color:var(--violet);display:grid;place-items:center;font-weight:600;font-size:12px}
+.name{font-weight:600}.sub{color:var(--faint);font-size:12px}
+.bar{width:120px;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:8px}.bar i{display:block;height:100%;background:var(--violet)}
+.row-actions a{display:inline-block;margin-right:12px;color:var(--violet);font-weight:500;font-size:13px}
+</style></head><body>
+<div class="side"><div class="brand"><svg width="26" height="26" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#2b2733"/><rect x="28" y="10" width="52" height="14" rx="5" fill="#8f5fd6"/><rect x="22" y="21" width="60" height="14" rx="5" fill="#c0a3ea"/><polygon points="14,34 86,34 57,70 57,90 43,90 43,70" fill="#fff"/></svg><b>قُمع</b></div>
+<div class="item on"><i></i>Jobs</div><div class="item"><i></i>Companies</div><div class="item"><i></i>Recruiter desk</div><div class="item"><i></i>Library<span class="n">8</span></div><div class="item"><i></i>Settings</div></div>
+<div class="top"><div class="in">Search jobs, candidates, companies…</div><div class="avatar"></div></div>
+<main>
+<div class="crumb">Jobs / <b>Senior Accountant</b></div>
+<div class="head"><h1>Senior Accountant <span class="pill g">Open</span></h1><div class="actions"><span class="btn">Edit job</span><span class="btn">Rerank with Sonnet 5</span><span class="btn p">Refresh matches</span></div></div>
+<div class="cards"><div class="card"><em>Hiring company</em><div style="font-weight:600">Dunes Hospitality Group</div><span>Hospitality · Riyadh</span></div><div class="card"><em>Salary budget</em><div class="num" style="font-size:18px">14,000–18,000 SAR</div><span>per month</span></div><div class="card"><em>Matched candidates</em><div class="num">8</div><span>3 reviewed</span></div><div class="card"><em>Shortlisted</em><div class="num">2</div><span>last matched Oct 11</span></div></div>
+<div class="tabs"><a class="on">Candidates</a><a>Shortlist</a><a>Compare</a><a>Target companies</a><a>Pipeline</a><a>Client pack</a></div>
+<div class="panel"><div class="tools"><div class="in">Search name, contact, skills, or tags…</div><span class="btn">All review states ▾</span><span class="btn">Filters</span></div>
+<table><tr><th>Candidate</th><th>Match</th><th>Stage</th><th>Review</th><th></th></tr>
+<tr><td><div class="who"><div class="av">LH</div><div><div class="name">Layla Haddad</div><div class="sub">Riyadh · 9 years · IFRS, Audit, VAT, SAP</div></div></div></td><td><span class="bar"><i style="width:92%"></i></span>92</td><td><span class="pill v">Contacted</span></td><td><span class="pill g">Shortlisted</span></td><td class="row-actions"><a>Review</a><a>Remove</a><a>Add to pipeline</a></td></tr>
+<tr><td><div class="who"><div class="av">فع</div><div><div class="name ar">فيصل العتيبي</div><div class="sub">الرياض · 8 years · IFRS, Audit, Oracle</div></div></div></td><td><span class="bar"><i style="width:88%"></i></span>88</td><td><span class="pill n">Sourced</span></td><td><span class="pill g">Shortlisted</span></td><td class="row-actions"><a>Review</a><a>Remove</a><a>Add to pipeline</a></td></tr>
+<tr><td><div class="who"><div class="av">OA</div><div><div class="name">Omar Al-Rashid</div><div class="sub">Jeddah · 6 years · Budgeting, Forecasting, Oracle</div></div></div></td><td><span class="bar"><i style="width:71%"></i></span>71</td><td><span class="pill n">Sourced</span></td><td><span class="pill a">Maybe</span></td><td class="row-actions"><a>Review</a><a>Shortlist</a><a>Add to pipeline</a></td></tr>
+<tr><td><div class="who"><div class="av">NQ</div><div><div class="name">Nadia Qureshi</div><div class="sub">Riyadh · 8 years · Workforce planning, SAP SuccessFactors</div></div></div></td><td><span class="bar"><i style="width:40%"></i></span>40</td><td><span class="pill n">—</span></td><td><span class="pill n">Unreviewed</span></td><td class="row-actions"><a>Review</a><a>Shortlist</a><a>Add to pipeline</a></td></tr>
+<tr><td><div class="who"><div class="av">TM</div><div><div class="name">Tariq Mansour</div><div class="sub">Dammam · 7 years · Go, TypeScript, PostgreSQL</div></div></div></td><td><span class="bar"><i style="width:18%"></i></span>18</td><td><span class="pill n">—</span></td><td><span class="pill r">Not proceeding</span></td><td class="row-actions"><a>Review</a><a>Shortlist</a></td></tr>
+</table></div>
+</main></body></html>

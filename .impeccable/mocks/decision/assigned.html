@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Qumaa · The Ruled Page</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;450;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{width:1440px;height:900px;overflow:hidden;background:#1c1830;color:#efe9f8;font:13px/1.5 "IBM Plex Sans","IBM Plex Sans Arabic",sans-serif}
+:root{--ink:#1c1830;--deep:#15122a;--rule:rgba(192,163,234,.22);--rule2:rgba(192,163,234,.45);--dim:#b8aecd;--faint:#8a7fa3;--violet:#8f5fd6;--violet-fill:#6d3fb0;--brass:#c9a24a;--rubric:#e36a62;--good:#6cc79b}
+.ar{font-family:"IBM Plex Sans Arabic",sans-serif}
+header{height:56px;background:var(--deep);border-bottom:1px solid var(--rule2);display:flex;align-items:center;gap:36px;padding:0 24px 0 92px}
+.brand{display:flex;align-items:center;gap:8px;direction:rtl}.brand b{font:600 20px "IBM Plex Sans Arabic";color:#fff}
+nav{display:flex;gap:4px;align-self:stretch}nav a{display:flex;align-items:center;padding:0 14px;color:var(--dim);font-weight:500;border-bottom:2px solid transparent}nav a.on{color:#fff;border-color:var(--violet)}
+nav a .n{margin-left:6px;font:500 11px "IBM Plex Mono";color:var(--faint);background:rgba(255,255,255,.06);padding:1px 6px;border-radius:3px}
+main{display:grid;grid-template-columns:240px 1fr;gap:0;height:844px}
+aside{border-right:1px solid var(--rule);padding:22px 0}
+.lbl{font:500 10.5px/1 "IBM Plex Mono";letter-spacing:.2em;text-transform:uppercase;color:var(--faint);padding:0 22px;margin-bottom:12px;display:flex;justify-content:space-between}
+.job{padding:12px 22px 12px 19px;border-left:3px solid transparent;border-top:1px solid var(--rule)}.job:last-of-type{border-bottom:1px solid var(--rule)}
+.job.on{border-left-color:var(--brass);background:rgba(201,162,74,.07)}.job strong{display:block;font-weight:600;color:#fff}.job span{color:var(--faint);font-size:12px}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--good);margin-right:6px;vertical-align:middle}
+.filter{margin:0 22px 18px;padding:9px 10px;border:1px solid var(--rule2);border-radius:3px;color:var(--dim);display:flex;justify-content:space-between}
+.local{padding:16px 22px;color:var(--faint);font-size:11px}
+section{padding:26px 32px 0;min-width:0}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px}
+h1{font-size:24px;font-weight:600;letter-spacing:-.01em;color:#fff;line-height:1.2}
+.meta{color:var(--dim);margin-top:4px}.meta b{color:var(--good);font-weight:500}
+.btn{display:inline-flex;align-items:center;height:34px;padding:0 14px;border:1px solid var(--rule2);border-radius:3px;color:#fff;font-weight:500;white-space:nowrap}
+.btn.p{background:var(--violet-fill);border-color:var(--violet-fill)}.btn.q{color:var(--faint)}
+.actions{display:flex;gap:8px}
+.crit{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}.crit i{font-style:normal;font-size:12px;padding:2px 9px;border-radius:3px;border:1px solid var(--rule2);color:var(--dim)}
+.crit i.req{color:var(--rubric);border-color:rgba(227,106,98,.55)}.crit i.pref{color:#d9c6f5}
+.ctx{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:24px;margin-top:20px;padding:14px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.ctx em{display:block;font:500 10.5px "IBM Plex Mono";letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+.ctx strong{font-weight:500;color:#fff}.ctx span{color:var(--faint);font-size:12px;display:block}
+.ctx .num{font-size:22px;font-weight:450;color:#fff;font-variant-numeric:tabular-nums}
+.tabs{display:flex;gap:26px;margin-top:18px;border-bottom:1px solid var(--rule2)}.tabs a{padding:0 0 10px;color:var(--faint);border-bottom:2px solid transparent;margin-bottom:-1px}.tabs a.on{color:#fff;font-weight:600;border-color:var(--violet)}
+.tools{display:flex;gap:10px;margin:16px 0 12px}.tools .in{flex:1;height:34px;border:1px solid var(--rule2);border-radius:3px;padding:0 12px;display:flex;align-items:center;color:var(--faint)}
+table{width:100%;border-collapse:collapse;border-top:1px double var(--rule2);border-bottom:1px double var(--rule2)}
+th{font:500 10.5px "IBM Plex Mono";letter-spacing:.18em;text-transform:uppercase;color:var(--faint);text-align:left;padding:10px 12px;border-bottom:1px solid var(--rule)}
+td{padding:12px;vertical-align:top;border-bottom:1px solid var(--rule)}
+tr.on td{background:rgba(201,162,74,.08)}tr.on td:first-child{box-shadow:inset 3px 0 var(--brass)}
+tr.out td{color:var(--faint);filter:grayscale(1)}tr.out .name{color:var(--dim)}
+.name{font-weight:600;color:#fff;font-size:13.5px}.sub{color:var(--faint);font-size:12px;margin-top:2px}
+.score{font:500 15px "IBM Plex Mono";font-variant-numeric:tabular-nums;color:#fff}.score small{display:block;font:400 11px "IBM Plex Sans";color:var(--faint)}
+.state{font-size:11.5px;padding:2px 8px;border:1px solid var(--rule2);border-radius:3px;color:var(--dim);white-space:nowrap}.state.sl{color:var(--good);border-color:rgba(108,199,155,.5)}.state.mb{color:#d9c6f5;border-color:rgba(192,163,234,.5)}
+.gloss{width:330px;border-left:1px solid var(--rule2);color:var(--dim);font-size:12.5px;line-height:1.5;position:relative}
+.gloss em{display:block;font:500 10px "IBM Plex Mono";letter-spacing:.16em;text-transform:uppercase;color:var(--brass);margin-bottom:3px;font-style:normal}
+.gloss q{quotes:"“" "”"}
+.row-actions{white-space:nowrap}.row-actions a{display:inline-block;margin-right:10px;color:#d9c6f5;font-size:12px;font-weight:500}
+.foot{display:flex;justify-content:space-between;color:var(--faint);font-size:11.5px;padding:12px 0}
+</style></head><body>
+<header><div class="brand"><svg width="26" height="26" viewBox="0 0 100 100"><rect x="28" y="10" width="52" height="14" rx="5" fill="#fff" opacity=".4"/><rect x="22" y="21" width="60" height="14" rx="5" fill="#fff" opacity=".68"/><polygon points="14,34 86,34 57,70 57,90 43,90 43,70" fill="#fff"/></svg><b>قُمع</b></div>
+<nav><a class="on">Jobs</a><a>Companies</a><a>Recruiter desk</a><a>Library<span class="n">8</span></a><a>Settings</a></nav></header>
+<main><aside>
+<div class="lbl">Contents <span>2</span></div><div class="filter">All companies <span>▾</span></div>
+<div class="job"><strong>HR Business Partner</strong><span><i class="dot"></i>Open · 0 shortlisted</span></div>
+<div class="job on"><strong>Senior Accountant</strong><span>Dunes Hospitality Group</span><br><span><i class="dot"></i>Open · 2 shortlisted</span></div>
+<div class="local">◉ Saved locally on this device</div></aside>
+<section>
+<div class="head"><div><h1>Senior Accountant</h1><div class="meta"><b>Open</b> · Dunes Hospitality Group · 4 criteria · last matched Oct 11, 12:00</div>
+<div class="crit"><i class="req">Required · 5+ years multi-branch accounting</i><i class="req">Required · IFRS financial reporting</i><i class="pref">Preferred · SOCPA or CPA</i><i>SAP or Oracle ERP</i></div></div>
+<div class="actions"><span class="btn">Edit job</span><span class="btn p">Refresh matches</span><span class="btn q">Rerank with Sonnet 5</span></div></div>
+<div class="ctx"><div><em>Hiring company</em><strong>Dunes Hospitality Group</strong><span>Hospitality · Food &amp; Beverage · Riyadh</span></div><div><em>Salary budget</em><strong>14,000–18,000 SAR</strong><span>per month</span></div><div><em>Matched</em><div class="num">8</div></div><div><em>Shortlisted</em><div class="num">2 <span style="display:inline;font-size:12px">of 3 reviewed</span></div></div></div>
+<div class="tabs"><a class="on">Candidates 8</a><a>Shortlist 2</a><a>Compare 0/4</a><a>Target companies</a><a>Pipeline</a><a>Client pack</a></div>
+<div class="tools"><div class="in">Search name, contact, skills, or tags…</div><span class="btn q">All review states ▾</span><span class="btn q">Filters</span></div>
+<table><tr><th>Candidate</th><th>Match</th><th>Review</th><th></th><th class="gloss" style="color:var(--brass)">Evidence in the margin</th></tr>
+<tr class="on"><td><div class="name">Layla Haddad</div><div class="sub">Riyadh · 9 years · IFRS, Audit, VAT, SAP +4</div></td><td><div class="score">92<small>relative</small></div></td><td><span class="state sl">Shortlisted</span></td><td class="row-actions"><a>Review</a><a>Remove</a><a>Add to pipeline</a></td><td class="gloss"><em>Experience · 91% match</em><q>Prepared monthly IFRS financial statements for twelve restaurant branches. Led the external audit cycle and reduced the closing calendar from fourteen to six days.</q></td></tr>
+<tr><td><div class="name ar">فيصل العتيبي</div><div class="sub">الرياض · 8 years · IFRS, Audit, Oracle +3</div></td><td><div class="score">88<small>relative</small></div></td><td><span class="state sl">Shortlisted</span></td><td class="row-actions"><a>Review</a><a>Remove</a><a>Add to pipeline</a></td><td class="gloss ar" dir="rtl"><em dir="ltr">Experience · 87% match</em><q>أعددت القوائم المالية الشهرية لعشرة فروع وفق المعايير الدولية للتقرير المالي ونسّقت أعمال المراجعة الخارجية.</q></td></tr>
+<tr><td><div class="name">Omar Al-Rashid</div><div class="sub">Jeddah · 6 years · Budgeting, Forecasting, Oracle +4</div></td><td><div class="score">71<small>relative</small></div></td><td><span class="state mb">Maybe</span></td><td class="row-actions"><a>Review</a><a style="color:#fff">Shortlist</a><a>Add to pipeline</a></td><td class="gloss"><em>Experience · 74% match</em><q>Built the annual budget model for nine distribution centres and tracked variances monthly.</q></td></tr>
+<tr><td><div class="name">Nadia Qureshi</div><div class="sub">Riyadh · 8 years · Workforce planning, SAP SuccessFactors +4</div></td><td><div class="score">40<small>relative</small></div></td><td><span class="state">Unreviewed</span></td><td class="row-actions"><a>Review</a><a style="color:#fff">Shortlist</a><a>Add to pipeline</a></td><td class="gloss"><em>Experience · 52% match</em><q>Partnered with four plant managers on headcount planning for 600 employees.</q></td></tr>
+<tr class="out"><td><div class="name">Tariq Mansour</div><div class="sub">Dammam · 7 years · Go, TypeScript, PostgreSQL +5</div></td><td><div class="score">18<small>relative</small></div></td><td><span class="state">Not proceeding</span></td><td class="row-actions"><a>Review</a><a>Shortlist</a></td><td class="gloss"><em>Experience · 31% match</em><q>Designed settlement services in Go and PostgreSQL processing two million transactions a day.</q></td></tr>
+</table>
+<div class="foot"><span>1–8 of 8 candidates · Scores are relative, not eligibility decisions.</span><span>Previous · 1 / 1 · Next</span></div>
+</section></main></body></html>
