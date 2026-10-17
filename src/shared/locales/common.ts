@@ -1,7 +1,7 @@
 /** Arabic shell and settings copy. Keys preserve the existing English interface. */
 export const commonAr: Record<string, string> = {
   'Files added here are imported automatically, including while Qumaa is closed.': 'تُستورد الملفات المضافة هنا تلقائيًا، حتى أثناء إغلاق قُمع.',
-  'Backups contain all local records and preferences but no API keys, ChatGPT connections, watched folders or file paths. They are not encrypted. Restoring rebuilds the search index.': 'تتضمن النسخ الاحتياطية جميع السجلات والتفضيلات المحلية، دون مفاتيح API أو اتصالات ChatGPT أو المجلدات المراقبة أو مسارات الملفات. النسخ غير مشفّرة. تعيد الاستعادة بناء فهرس البحث.',
+  'Backups hold resume text, recruiting records, theme and language. They leave out original files, API keys, ChatGPT connections, AI settings and watched folders. They are not encrypted. After a restore, refresh saved jobs to rebuild their matches.': 'تحتوي النسخ الاحتياطية على نصوص السير الذاتية وسجلات التوظيف والمظهر واللغة، ولا تشمل الملفات الأصلية ولا مفاتيح API ولا اتصالات ChatGPT ولا إعدادات الذكاء الاصطناعي ولا المجلدات المُراقَبة. النسخ غير مشفّرة. بعد الاستعادة، حدّث الوظائف المحفوظة لإعادة بناء مطابقاتها.',
   'Jobs': 'الوظائف', 'Match': 'المطابقة', 'Library': 'المكتبة', 'Settings': 'الإعدادات',
   'Language': 'اللغة', 'Choose your interface language. Your CVs and saved work keep their original text.': 'اختر لغة الواجهة. تبقى السير الذاتية وبياناتك المحفوظة بلغتها الأصلية.',
   'Could not change the language.': 'تعذّر تغيير اللغة.',

@@ -441,7 +441,7 @@ export default function SettingsView({
           {/* Uninstalling leaves this folder in place on both platforms, so the
               app has to be the thing that can remove it. */}
           <div className="desc">{t("Uninstalling the app does not remove this data.")}</div>
-          <div className="desc">{t('Backups contain all local records and preferences but no API keys, ChatGPT connections, watched folders or file paths. They are not encrypted. Restoring rebuilds the search index.')}</div>
+          <div className="desc">{t('Backups hold resume text, recruiting records, theme and language. They leave out original files, API keys, ChatGPT connections, AI settings and watched folders. They are not encrypted. After a restore, refresh saved jobs to rebuild their matches.')}</div>
           <div className="row">
             <button className="btn sm" disabled={dataAction !== null || aiBusy} onClick={() => void backUp()}>
               {t(dataAction === 'backup' ? 'Backing up…' : 'Back up…')}
