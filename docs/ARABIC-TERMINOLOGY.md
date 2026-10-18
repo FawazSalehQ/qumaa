@@ -54,3 +54,4 @@ When you add or change Arabic, use the term in the middle column and never reint
 | count phrasing with a runtime {count} | Short labels and badges: 'Label: {count}'. Sentences: '(العدد: {count})'. Plural-only resume keys: '{count} من السير الذاتية' | bare '{count} + plural noun' in keys shown for any count; singular noun in plural keys |
 | label: value lines | Noun label + colon + value; verb + في {date} for event timestamps | 'الموعد {date}' without colon; verb phrase 'تم تعيين: {name}' |
 | return here | عُد (with damma) | عد |
+| returned (data from a service or file) | أرجع / يُرجع (أرجع ChatGPT …، لم يُرجع النموذج …) | أعاد, which clashes with أعد in the same sentence |
