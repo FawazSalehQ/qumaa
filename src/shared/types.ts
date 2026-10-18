@@ -104,8 +104,11 @@ export type JsonValue =
 /** Renderer-safe description of the exact request body sent for optional reranking. */
 export interface ClaudeRerankPreview {
   consentVersion: string
-  provider: 'Anthropic' | 'OpenAI'
+  provider: 'Anthropic' | 'OpenAI' | 'ChatGPT'
   model: import('./rerank.js').RerankModel
+  authMode?: import('./rerank.js').RerankAuthMode
+  /** Display context only, excluded from the outbound evidence body. */
+  accountLabel?: string
   candidateCount: number
   totalResultCount: number
   /** The API key is constructor state and is deliberately absent from this body. */
@@ -130,7 +133,11 @@ export interface AppSettings {
   rerankEnabled: boolean
   rerankProvider: import('./rerank.js').RerankProvider
   rerankModel: import('./rerank.js').RerankModel
+  rerankAuthMode: import('./rerank.js').RerankAuthMode
   rerankModels: Record<import('./rerank.js').RerankProvider, import('./rerank.js').RerankModel>
+  chatGptModel: string
+  chatGpt: import('./chatgpt.js').ChatGptStatus
+  hasRerankCredential: boolean
   /** True when a key is stored. The key itself never reaches the renderer. */
   hasApiKey: boolean
   /** Detectable without decrypting or prompting the operating-system keychain. */

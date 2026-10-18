@@ -1,4 +1,6 @@
 export const clientPackAr: Record<string, string> = {
+  'Unnamed person': 'شخص بلا اسم',
+  'Preparing…': 'جارٍ الإعداد…',
   'Client presentation': 'عرض المرشحين للعميل',
   'client presentation': 'عرض المرشحين',
   'Client presentation builder': 'إعداد عرض المرشحين للعميل',

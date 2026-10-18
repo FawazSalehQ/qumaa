@@ -196,7 +196,6 @@ export default function RecruiterProfile({ resume, onChanged }: Props): React.JS
           </button>
         )}
       </div>
-      <p className="recruiter-help">{t("Confirmed details and screening notes follow this candidate across jobs.")}</p>
       {error && (
         <div className="recruiter-message error" role="alert">
           {recruitingError(error, t, language)}
@@ -210,7 +209,7 @@ export default function RecruiterProfile({ resume, onChanged }: Props): React.JS
         <form className="recruiter-form" onSubmit={(event) => { event.preventDefault(); void save() }}>
           <fieldset disabled={busy}>
             <legend>{t("Correct or confirm CV details")}</legend>
-            <p className="recruiter-help">{t("Leave a field blank to use the CV extraction shown below. The original CV stays available.")}</p>
+            <p className="recruiter-help">{t('Blank fields fall back to the CV extraction below.')}</p>
             <div className="recruiter-fields">
               {([
                 ['name', t('Name'), resume.name], ['email', t('Email'), resume.email],
@@ -306,7 +305,7 @@ export default function RecruiterProfile({ resume, onChanged }: Props): React.JS
             {versions.map((version) => (
               <li key={version.recordKey}>
                 <div>
-                  <span className="version-name" dir="auto">{version.fileName}</span>
+                  <span className="version-name"><bdi>{version.fileName}</bdi></span>
                   <span className="version-date">{t(version.recordKey === resume.recordKey ? 'Imported {date} · Current resume' : 'Imported {date}', { date: formatDate(version.importedAt) })}</span>
                 </div>
                 {version.recordKey !== resume.recordKey && (

@@ -1,36 +1,37 @@
-.client-pack { display: grid; gap: 16px; min-width: 0; }
+/* Client pack: the editor follows the app theme; the preview is the printed
+   document and stays on white in both themes, as the exported PDF will. */
+.client-pack { display: grid; gap: 16px; min-width: 0; padding: 18px 24px 24px; }
 .client-pack h3, .client-pack h4, .client-pack p { margin-block-start: 0; }
-.client-pack-private-note { padding: 12px 14px; border-inline-start: 3px solid var(--violet, #6d3fb0); background: var(--surface, #f4f1f8); font-size: 13px; }
-.client-pack-error { color: var(--danger, #b33535); }
+.client-pack-private-note { padding: 12px 14px; border-radius: var(--radius-sm); background: var(--accent-soft); color: var(--text-dim); font-size: var(--fs-md); }
+.client-pack-error { color: var(--bad); }
 .client-pack-toggles { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-block: 14px; }
-.client-pack-toggles label { display: inline-flex; align-items: flex-start; gap: 8px; font-size: 13px; }
+.client-pack-toggles label { display: inline-flex; align-items: flex-start; gap: 8px; font-size: var(--fs-md); }
 .client-pack-toggles input { margin-block-start: 3px; }
-.client-pack-selection { border: 1px solid var(--border, #e4dff0); border-radius: 10px; padding: 16px; margin-block-start: 18px; }
+.client-pack-selection { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-block-start: 18px; background: var(--bg-panel); }
 .client-pack-selection > header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-block-end: 14px; }
 .client-pack-selection h4 { display: flex; align-items: center; gap: 10px; margin: 0; }
-.client-pack-position { width: 25px; height: 25px; border-radius: 50%; background: var(--violet, #6d3fb0); color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
+.client-pack-position { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 6px; border-radius: var(--radius-badge); background: var(--line-violet); color: var(--badge-ink); font-family: var(--font-mono); font-size: 11px; font-weight: 600; }
 .client-pack-choices { margin-block-start: 14px; }
-.client-pack-choices summary { cursor: pointer; font-size: 13px; font-weight: 600; padding-block: 7px; }
-.client-pack-choice { display: flex; align-items: flex-start; gap: 10px; border-top: 1px solid var(--border, #e4dff0); padding-block: 12px; }
-.client-pack-choice > input { flex: 0 0 auto; margin-block-start: 5px; }
-.client-pack-choice > span { min-width: 0; display: grid; gap: 6px; font-size: 13px; }
-.client-pack-choice small { color: var(--muted, #6b6577); }
+.client-pack-choice { display: flex; align-items: flex-start; gap: 10px; border-top: 1px solid var(--border); padding-block: 12px; }
+.client-pack-choice > input { flex: 0 0 auto; margin-block-start: 3px; }
+.client-pack-choice > span { min-width: 0; display: grid; gap: 6px; font-size: var(--fs-md); }
+.client-pack-choice small { color: var(--text-faint); }
 .client-pack-text { white-space: pre-wrap; overflow-wrap: anywhere; }
 .client-pack-preview-actions { margin-block: 8px; }
-.client-pack-preview { padding: clamp(18px, 4vw, 40px); color: #2b2733; background: #fff; border: 1px solid #e4dff0; border-radius: 12px; line-height: 1.6; }
+.client-pack-preview { padding: clamp(18px, 4vw, 40px); color: #2b2733; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); line-height: 1.6; box-shadow: var(--shadow-pop); }
 .client-pack-preview .hint { color: #6b6577; }
 .client-pack-preview-brand { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding-block-end: 14px; border-bottom: 2px solid #6d3fb0; margin-block-end: 20px; }
 .client-pack-preview-brand > strong { font-size: 24px; }
 .client-pack-preview-brand > span { margin-inline-start: auto; color: #6b6577; font-size: 12px; }
 .client-pack-eyebrow { color: #6d3fb0; font-size: 12px; }
-.client-pack-preview h3 { font-size: 22px; line-height: 1.35; margin-block: 5px 12px; }
+.client-pack-preview h3 { font-size: 22px; line-height: 1.35; margin-block: 5px 12px; color: #2b2733; }
 .client-pack-preview h4 { font-size: 14px; color: #6d3fb0; margin-block: 18px 7px; }
 .client-pack-preview-person { border-top: 1px solid #e4dff0; padding-block-start: 22px; margin-block-start: 25px; }
-.client-pack-preview-facts { display: flex; flex-wrap: wrap; gap: 14px 24px; background: #f4f1f8; padding: 14px; }
+.client-pack-preview-facts { display: flex; flex-wrap: wrap; gap: 14px 24px; background: #f4f1f8; padding: 14px; border-radius: 6px; }
 .client-pack-preview-facts > div { flex: 1 1 180px; }
 .client-pack-preview-facts dt { color: #6b6577; font-size: 12px; }
 .client-pack-preview-facts dd { margin: 3px 0 0; }
-.client-pack-preview blockquote { border-inline-start: 3px solid #c0a3ea; padding-inline-start: 12px; margin-inline: 0; }
+.client-pack-preview blockquote { border-inline-start: 1px solid #c0a3ea; background: #f8f5fc; padding: 8px 12px; margin-inline: 0; border-radius: 0 6px 6px 0; color: #3d3949; }
 .client-pack-preview-answer { padding-block: 10px; border-bottom: 1px solid #e4dff0; }
 .client-pack-preview footer { border-top: 1px solid #e4dff0; padding-block-start: 14px; margin-block-start: 22px; }
 .client-pack-preview p, .client-pack-preview h3, .client-pack-preview h4, .client-pack-preview dd, .client-pack-preview bdi { overflow-wrap: anywhere; }

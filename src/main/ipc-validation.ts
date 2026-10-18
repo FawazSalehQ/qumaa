@@ -45,8 +45,10 @@ export const ipcSchemas = {
   rerankProvider: z.enum(['anthropic', 'openai']),
   rerankConfig: z.object({
     provider: z.enum(['anthropic', 'openai']),
-    model: boundedString(128).min(1)
+    model: boundedString(128),
+    authMode: z.enum(['api-key', 'chatgpt']).optional()
   }).strict().refine(isRerankConfig, 'must choose a supported model for the provider'),
+  chatGptAccountId: z.string().min(1).max(256).regex(/^[A-Za-z0-9._:-]+$/),
   enabled: z.boolean(),
   theme: z.enum(['system', 'light', 'dark']),
   language: z.enum(['en', 'ar']),

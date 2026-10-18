@@ -1,4 +1,5 @@
 import { CriterionSource } from './JobCriteriaEditor.js'
+import DisclosureSummary from '../DisclosureSummary.js'
 import { criterionImportanceLabel } from '@shared/job-requirements.js'
 import { useI18n } from '../../i18n.js'
 import { useLayoutEffect, useRef, useState } from 'react'
@@ -71,8 +72,7 @@ export default function ReviewScorecard({ workspace, match, busy, onSave, onClos
     <section className="recruit-review" aria-labelledby="review-title">
       <div className="recruit-section-head">
         <div>
-          <p className="recruit-eyebrow">{t("Job-specific review")}</p>
-          <h3 id="review-title" dir="auto">{candidateName(match, profile)}</h3>
+          <h3 id="review-title"><bdi>{candidateName(match, profile)}</bdi></h3>
           <p className="hint">{t('Reviewing CV: {name}', { name: bidiValue(match.resume.fileName, language) })}</p>
         </div>
         <button className="btn sm" type="button" disabled={busy} onClick={() => {
@@ -100,8 +100,8 @@ export default function ReviewScorecard({ workspace, match, busy, onSave, onClos
             <div>
               <strong>{t("This candidate’s saved review changed.")}</strong>
               <p>{t("Your unsaved draft is still below. Load the saved review, or check the saved details before choosing to replace them with this draft.")}</p>
-              <details>
-                <summary>{t("View the saved review")}</summary>
+              <details className="disclosure inline">
+                <DisclosureSummary>{t("View the saved review")}</DisclosureSummary>
                 <p>{t('Review state: {status}', { status: t(REVIEW_LABELS[review?.status ?? 'unreviewed']) })}</p>
                 <p className="recruit-prewrap" dir="auto">{review?.note || t('No saved notes.')}</p>
                 {review?.assessments.map((assessment) => (
@@ -134,7 +134,6 @@ export default function ReviewScorecard({ workspace, match, busy, onSave, onClos
           <div className="recruit-section-head">
             <div>
               <h4>{t("Requirements scorecard")}</h4>
-              <p className="hint">{t("Nearest passages need review. Similar wording does not establish experience, ownership, qualifications, or eligibility.")}</p>
             </div>
             <button className="btn sm" type="button" onClick={() => onOpenCandidate(match)}>{t("Open candidate profile")}</button>
           </div>

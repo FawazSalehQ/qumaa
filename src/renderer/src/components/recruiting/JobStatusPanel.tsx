@@ -1,10 +1,13 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { CandidateProfile, JobPlacementCandidate, JobStatus, JobStatusEvent, JobWorkspace } from '@shared/recruiting.js'
 import { candidateWithProfile } from '@shared/recruiting.js'
+import { toIsoDateTime } from '@shared/i18n.js'
 import type { ResumeRef, ResumeSummary } from '@shared/types.js'
 import { useI18n } from '../../i18n.js'
 import { errorMessage, isShortlisted, recruitingError } from './helpers.js'
 import HiringCandidatePicker, { type HiringCandidateOption } from './HiringCandidatePicker.js'
+import { CheckIcon } from '../Icons.js'
+import DisclosureSummary from '../DisclosureSummary.js'
 
 interface Props {
   workspace: JobWorkspace
@@ -167,9 +170,9 @@ export default function JobStatusPanel({ workspace, resumes, active, disabled, l
   const placementCard = (candidate: JobPlacementCandidate, rank: number): React.JSX.Element => {
     const resume = resumes.find((item) => item.recordKey === candidate.recordKey)
     return <article className={`recruit-hiring-card ${rank === 1 ? 'hired' : ''}`} key={rank} aria-label={t(rank === 1 ? 'Hired candidate' : rank === 2 ? 'Backup #2' : 'Backup #3')}>
-      <div className="recruit-hiring-card-label"><span aria-hidden="true">{rank === 1 ? '✓' : formatNumber(rank)}</span><span>{t(rank === 1 ? 'Hired' : rank === 2 ? 'Backup #2' : 'Backup #3')}</span></div>
-      <strong dir="auto">{candidateLabel(candidate)}</strong>
-      {resume ? <><p className="hint" dir="auto">{resume.fileName}</p><button className="recruit-text-button" type="button" disabled={disabled || open} onClick={() => onOpenResume(resume)}>{t('View CV')}</button></> : <p className="hint">{t('CV no longer in library')}</p>}
+      <div className="recruit-hiring-card-label"><span aria-hidden="true">{rank === 1 ? <CheckIcon size={12} /> : formatNumber(rank)}</span><span>{t(rank === 1 ? 'Hired' : rank === 2 ? 'Backup #2' : 'Backup #3')}</span></div>
+      <strong><bdi>{candidateLabel(candidate)}</bdi></strong>
+      {resume ? <><p className="hint"><bdi>{resume.fileName}</bdi></p><button className="recruit-text-button" type="button" disabled={disabled || open} onClick={() => onOpenResume(resume)}>{t('View CV')}</button></> : <p className="hint">{t('CV no longer in library')}</p>}
     </article>
   }
 
@@ -187,18 +190,18 @@ export default function JobStatusPanel({ workspace, resumes, active, disabled, l
       <div className="recruit-hiring-cards">{placementCard(job.placement.hired, 1)}{job.placement.backup2 && placementCard(job.placement.backup2, 2)}{job.placement.backup3 && placementCard(job.placement.backup3, 3)}</div>
       {job.status === 'filled' && <button className="recruit-text-button" type="button" disabled={disabled || open} onClick={start}>{t('Edit hiring details')}</button>}
     </div> : job.status === 'filled' && <div className="recruit-hiring-evidence"><p className="hint">{t('Hiring details have not been recorded for this job.')}</p><button className="recruit-text-button" type="button" disabled={disabled || open} onClick={start}>{t('Add hiring details')}</button></div>}
-    <details className="recruit-status-history"><summary>{t('Status history')}</summary>
+    <details className="disclosure inline recruit-status-history"><DisclosureSummary>{t('Status history')}</DisclosureSummary>
       {!history.some((event) => event.kind === 'created') && <p className="hint">{t('Earlier status changes were not recorded.')}</p>}
       <ol>{[...history].reverse().map((event, reversedIndex) => {
         const previous = history[history.length - reversedIndex - 2]
         const earlierPlacement = firstPlacementIndex >= 0 && firstPlacementIndex < history.length - reversedIndex - 1
         const label = event.kind === 'created' ? t('Created as {status}', { status: t(STATUS_LABELS[event.status]) }) : event.kind === 'placement-updated' ? t(earlierPlacement ? 'Hiring details updated' : 'Hiring details recorded') : previous ? t('{from} → {to}', { from: t(STATUS_LABELS[previous.status]), to: t(STATUS_LABELS[event.status]) }) : t('Changed to {status}', { status: t(STATUS_LABELS[event.status]) })
-        return <li key={event.id}><div className="recruit-history-event"><span>{label}</span><time dateTime={new Date(event.at).toISOString()}>{date(event.at)}</time></div>{event.placement && <p className="hint"><bdi>{t('Hired: {name}', { name: candidateLabel(event.placement.hired) })}</bdi>{event.placement.backup2 && <> · <bdi>{t('Backup #2: {name}', { name: candidateLabel(event.placement.backup2) })}</bdi></>}{event.placement.backup3 && <> · <bdi>{t('Backup #3: {name}', { name: candidateLabel(event.placement.backup3) })}</bdi></>}</p>}</li>
+        return <li key={event.id}><div className="recruit-history-event"><span>{label}</span><time dateTime={toIsoDateTime(event.at)}>{date(event.at)}</time></div>{event.placement && <p className="hint"><bdi>{t('Hired: {name}', { name: candidateLabel(event.placement.hired) })}</bdi>{event.placement.backup2 && <> · <bdi>{t('Backup #2: {name}', { name: candidateLabel(event.placement.backup2) })}</bdi></>}{event.placement.backup3 && <> · <bdi>{t('Backup #3: {name}', { name: candidateLabel(event.placement.backup3) })}</bdi></>}</p>}</li>
       })}</ol>
     </details>
     {open && <dialog ref={dialog} className="recruit-status-dialog" aria-labelledby={titleId} onCancel={(event) => { event.preventDefault(); close() }}>
       <form onSubmit={(event) => { event.preventDefault(); void save() }}>
-        <h3 id={titleId}>{t('Change status')}</h3><p className="hint">{t('Each status change is saved with its date and time.')}</p>
+        <h3 id={titleId}>{t('Change status')}</h3>
         <fieldset className="recruit-fieldset" disabled={saving}>
           <label className="recruit-field">{t('Job status')}<select autoFocus value={status} onChange={(event) => { setStatus(event.target.value as JobStatus); setError(null) }}>{Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{t(label)}</option>)}</select></label>
           {status === 'filled' && <div className="recruit-status-choices">

@@ -22,6 +22,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const BUNDLED = [
   '@anthropic-ai/sdk',
   'zod',
+  'jose',
   '@huggingface/transformers',
   'onnxruntime-node',
   'better-sqlite3',

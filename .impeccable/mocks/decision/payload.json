@@ -1,0 +1,119 @@
+{
+  "title": "Choose Qumaa's new visual world",
+  "question": "The roll assigned The Ruled Page. Keep it, take an alternate, re-roll, or take the category standard.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "The Ruled Page",
+      "kicker": "THE ROLL",
+      "lineage": "the ruled Arabic manuscript page: a framed text block with commentary in the margin",
+      "thesis": "Evidence sits in the margin beside the claim it supports, the way a gloss sits beside the text; the candidate table becomes a ruled page and the score never stands alone.",
+      "palette": ["#1c1830", "#f4f1f8", "#6d3fb0", "#c9a24a", "#b3403f"],
+      "materials": ["ruled text block", "gloss margin", "rubrication"],
+      "viewport": "A deep indigo-ink header carries the lockup and the five tabs in both themes. Below, a contents column of saved jobs and the job workspace: the candidate table set as a ruled text block, with a gloss margin on the end side holding each row's best passage; required criteria rubricated in red; the selected row illuminated in brass; dark leads, light is paper.",
+      "risk": "Fine rules on indigo can drift toward heritage-luxury if they thicken; the gloss margin must carry real passages and earn its width on a laptop screen.",
+      "raised": [
+        { "from": "challenger-monochrome", "raise": "Proof pairing: no match number appears without its passage beside it, in the table, the scorecard and the compare grid." },
+        { "from": "challenger-folio", "raise": "Registered comparison: every candidate keeps identical column registration and scale, so differences read down the page at a glance." },
+        { "from": "challenger-sleeve", "raise": "Nothing labelled twice: the eyebrow, title and hint stacks collapse to one statement and one figure owns each field." },
+        { "from": "challenger-mascots", "raise": "State by desaturation: candidates marked not proceeding print in grayscale instead of disappearing." },
+        { "from": "challenger-specimen", "raise": "Weight as hierarchy: a fixed four-step weight ladder on the bundled Plex Sans Variable carries rank; no ad-hoc sizes." }
+      ],
+      "html": ".impeccable/mocks/decision/assigned.html"
+    },
+    {
+      "id": "model-pick",
+      "label": "Wayfinding",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "Riyadh Metro and KAFD bilingual wayfinding",
+      "thesis": "Jobs, stages and statuses carry numbered line badges in line colours; the pipeline is a line of stops and the candidate table reads like a station board.",
+      "palette": ["#1f2124", "#ffffff", "#6d3fb0", "#1d6fd1", "#e4572e", "#2a9d5c"],
+      "materials": ["station board", "line badge", "arrow strip"],
+      "viewport": "A graphite shell with white type; the saved-jobs column shows each job with a line badge; the candidate table is a station board with status badges and arrow strips; the pipeline tab is a horizontal line with stops.",
+      "risk": "Familiar: colour-coded status chips and a stage track are what most recruiting products already ship, and six line colours become a rainbow without discipline.",
+      "html": ".impeccable/mocks/decision/model-pick.html"
+    },
+    {
+      "id": "challenger-timetable",
+      "label": "The Timetable",
+      "verdict": "competitive",
+      "lineage": "a 1971 pocket airline timetable read as a rack of tinted slides",
+      "thesis": "One type size everywhere; rank is carried by weight, case, reversal and rule, and every state is a mark in a fixed cell.",
+      "palette": ["#f4f1f8", "#2b2733", "#6d3fb0", "#b3403f", "#1f7a54"],
+      "materials": ["one type size", "fixed-cell marks", "rule hierarchy"],
+      "viewport": "Paper ground, flat containers (the rake is dropped as costume); the scorecard and the compare grid are timetable cells with filled, hollow, vermilion-strike and green-confirm marks; headings differ from body only by weight and case.",
+      "case": "Fuses cleanly for scorecards and the compare grid; loses on audience identification, since a 1971 acetate rack is nobody's Gulf memory.",
+      "risk": "A single size makes long Arabic labels and section titles depend on weight alone.",
+      "hero": "https://impeccable.style/worlds/cards/rw-timetable-slide-rack-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/rw-timetable-slide-rack.webp",
+      "html": ".impeccable/mocks/decision/challenger-timetable.html"
+    },
+    {
+      "id": "challenger-monochrome",
+      "label": "Monochrome product marketing",
+      "verdict": "declined",
+      "lineage": "near-black on near-white software marketing with one accent",
+      "palette": ["#111111", "#fafafa", "#6d3fb0"],
+      "materials": ["neutral scale", "ghost buttons"],
+      "case": "A grey screen with one accent is the category default this redesign exists to leave; identification with a Gulf recruiter is nil.",
+      "kept": "Every claim paired with the detail that proves it.",
+      "hero": "https://impeccable.style/worlds/cards/digital-design-canon-monochrome-product-marketing-hero.webp"
+    },
+    {
+      "id": "challenger-folio",
+      "label": "Botanical folio",
+      "verdict": "declined",
+      "lineage": "one plant through five seasons on cream plates",
+      "palette": ["#f1e9d6", "#3b5d3a", "#8c1d18"],
+      "materials": ["cream plate", "engraved italic"],
+      "case": "Cream engraving reads as a museum, not a recruiting desk, and the user rejected warm-cream template looks.",
+      "kept": "Fixed scale and shared baseline make change comparable.",
+      "hero": "https://impeccable.style/worlds/cards/editorial-sequence-montage-botanical-folio-season-hero.webp"
+    },
+    {
+      "id": "challenger-sleeve",
+      "label": "Factory catalog sleeve",
+      "verdict": "declined",
+      "lineage": "matte black sleeve, white pulse plot, colour-coded title strip",
+      "palette": ["#0b0b0b", "#ffffff", "#e4572e"],
+      "materials": ["pulse plot", "colour code"],
+      "case": "Replacing names with codes is the opposite of clarity for a recruiter who lives by names.",
+      "kept": "Nothing is labelled twice; one figure owns the field.",
+      "hero": "https://impeccable.style/worlds/cards/brand-identity-canon-saville-catalog-sleeve-hero.webp"
+    },
+    {
+      "id": "challenger-mascots",
+      "label": "Character goods catalog",
+      "verdict": "declined",
+      "lineage": "ranked pastel roster of rounded mascots",
+      "palette": ["#fde2e4", "#cde7f0", "#ffffff"],
+      "materials": ["pastel grid", "bubble type"],
+      "case": "Consumer-app softness, explicitly rejected; a roster of mascots has nothing to say about CV evidence.",
+      "kept": "Retired entries print in grayscale rather than vanishing.",
+      "hero": "https://impeccable.style/worlds/cards/pop-culture-shelf-character-goods-catalog-hero.webp"
+    },
+    {
+      "id": "challenger-specimen",
+      "label": "Variable font specimen",
+      "verdict": "declined",
+      "lineage": "an interactive type specimen with live axis sliders",
+      "palette": ["#fbfbfb", "#111111", "#6d3fb0"],
+      "materials": ["giant glyph", "monospace readout"],
+      "case": "A type foundry's demonstration surface; the audience does not identify with it and the giant glyph has no job here.",
+      "kept": "A single weight axis as the hierarchy instrument, one token no component overrides.",
+      "hero": "https://impeccable.style/worlds/cards/variable-font-specimen-hero.webp"
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "canon": true,
+  "canonCard": {
+    "label": "The ATS standard",
+    "thesis": "What applicant-tracking products ship, executed impeccably: sidebar, cards, kanban.",
+    "palette": ["#ffffff", "#f3f4f6", "#111827", "#6d3fb0"],
+    "materials": ["left sidebar", "white cards", "kanban board"],
+    "viewport": "A grey left sidebar with icons, white cards on a light grey ground, a kanban pipeline, violet primary buttons, at full craft.",
+    "risk": "Indistinguishable from the competition by design, and the look you said would feel wrong.",
+    "html": ".impeccable/mocks/decision/canon.html"
+  },
+  "steer": true
+}

@@ -1,8 +1,11 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { mkdir, mkdtemp, rm, symlink, truncate, writeFile } from 'node:fs/promises'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { mkdir, mkdtemp, readFile, rm, symlink, truncate, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { crc32, deflateRawSync } from 'node:zlib'
+import JSZip from 'jszip'
+import mammoth from 'mammoth'
+import type { ToExtractionWorker } from '../src/main/ingest/extraction-protocol.js'
 import {
   extractFile,
   isSupported,
@@ -11,15 +14,73 @@ import {
   SUPPORTED_EXTENSIONS
 } from '../src/main/ingest/extract.js'
 
+const { workerInputs } = vi.hoisted(() => ({ workerInputs: [] as Buffer[] }))
+
+// Keep the production main-to-worker boundary and use Mammoth's actual ZIP
+// consumer, without needing an Electron app for these archive regressions.
+vi.mock('electron', async () => {
+  const { EventEmitter } = await import('node:events')
+  const { default: workerMammoth } = await import('mammoth')
+  return {
+    utilityProcess: {
+      fork: () => {
+        const child = Object.assign(new EventEmitter(), {
+          kill: vi.fn(),
+          postMessage: (request: ToExtractionWorker) => {
+            const buffer = Buffer.from(request.data)
+            workerInputs.push(buffer)
+            workerMammoth.extractRawText({ buffer }).then(
+              ({ value }) => child.emit('message', { type: 'result', text: value }),
+              () => child.emit('message', {
+                type: 'error', message: 'Could not safely extract document text.'
+              })
+            )
+          }
+        })
+        setImmediate(() => child.emit('spawn'))
+        return child
+      }
+    }
+  }
+})
+vi.mock('../src/main/embed/client.js', () => ({ getEntryDir: () => '/unused-test-worker' }))
+
 const temporaryDirectories: string[] = []
 
 afterEach(async () => {
+  workerInputs.splice(0)
   await Promise.all(
     temporaryDirectories.splice(0).map((directory) =>
       rm(directory, { recursive: true, force: true })
     )
   )
 })
+
+async function fixtureDocx(): Promise<Buffer> {
+  return readFile(new URL('./fixtures/files/aisha-rahman.docx', import.meta.url))
+}
+
+function withArchiveComment(archive: Buffer, comment: Buffer): Buffer {
+  const result = Buffer.concat([archive, comment])
+  result.writeUInt16LE(comment.length, archive.length - 2)
+  return result
+}
+
+function withHiddenDirectory(archive: Buffer): Buffer {
+  const eocd = archive.length - 22
+  const emptyDirectoryEnd = Buffer.alloc(22)
+  emptyDirectoryEnd.writeUInt32LE(0x06054b50, 0)
+  emptyDirectoryEnd.writeUInt32LE(eocd, 16)
+  emptyDirectoryEnd.writeUInt16LE(23, 20)
+
+  // Qumaa checks the empty directory; JSZip used to read the later EOCD inside
+  // its comment. Its inflated central-size value suppresses JSZip's offset fix.
+  const hiddenDirectoryEnd = Buffer.from(archive.subarray(eocd))
+  hiddenDirectoryEnd.writeUInt32LE(hiddenDirectoryEnd.readUInt32LE(12) + 22, 12)
+  return Buffer.concat([
+    archive.subarray(0, eocd), emptyDirectoryEnd, hiddenDirectoryEnd, Buffer.alloc(1)
+  ])
+}
 
 async function temporaryFile(name: string): Promise<string> {
   const directory = await mkdtemp(join(tmpdir(), 'qumaa-extract-'))
@@ -114,5 +175,58 @@ describe('supported resume formats', () => {
     await writeFile(path, archive)
 
     await expect(extractFile(path)).rejects.toThrow(/declared size|size or checksum metadata/)
+    expect(workerInputs).toHaveLength(0)
+  })
+
+  it.each(['STORE', 'DEFLATE'] as const)(
+    'preserves %s DOCX contents with and without data descriptors',
+    async (compression) => {
+      const original = await fixtureDocx()
+      const expected = (await mammoth.extractRawText({ buffer: original })).value
+      const zip = await JSZip.loadAsync(original)
+      for (const streamFiles of [false, true]) {
+        const archive = await zip.generateAsync({ type: 'nodebuffer', compression, streamFiles })
+        const path = await temporaryFile('candidate.docx')
+        await writeFile(path, archive)
+
+        await expect(extractFile(path)).resolves.toMatchObject({ text: expected, fileType: 'docx' })
+        expect(workerInputs.at(-1)).toEqual(archive)
+      }
+    }
+  )
+
+  it.each([
+    Buffer.from('A normal archive comment'),
+    Buffer.from('An ordinary comment containing PK\x05\x06 and trailing text')
+  ])('strips archive comments before the downstream parser sees them (%s)', async (comment) => {
+    const original = await fixtureDocx()
+    const expected = (await mammoth.extractRawText({ buffer: original })).value
+    const archive = withArchiveComment(original, comment)
+    const path = await temporaryFile('commented.docx')
+    await writeFile(path, archive)
+
+    await expect(extractFile(path)).resolves.toMatchObject({ text: expected, fileType: 'docx' })
+    expect(workerInputs).toEqual([original])
+    expect(await readFile(path)).toEqual(archive)
+  })
+
+  it('does not let a second EOCD in a comment reveal an unchecked directory to Mammoth', async () => {
+    const original = await fixtureDocx()
+    const archive = withHiddenDirectory(original)
+    const hiddenEntries = Object.keys((await JSZip.loadAsync(archive)).files)
+    expect(hiddenEntries).toContain('word/document.xml')
+    await expect(mammoth.extractRawText({ buffer: archive })).resolves.toMatchObject({
+      value: (await mammoth.extractRawText({ buffer: original })).value
+    })
+    const path = await temporaryFile('ambiguous.docx')
+    await writeFile(path, archive)
+
+    await expect(extractFile(path)).rejects.toThrow('Could not safely extract document text.')
+    expect(workerInputs).toHaveLength(1)
+    const forwarded = workerInputs[0]
+    expect(forwarded.length).toBe(original.length)
+    expect(forwarded.readUInt16LE(forwarded.length - 2)).toBe(0)
+    expect(Object.keys((await JSZip.loadAsync(forwarded)).files)).toEqual([])
+    expect(await readFile(path)).toEqual(archive)
   })
 })

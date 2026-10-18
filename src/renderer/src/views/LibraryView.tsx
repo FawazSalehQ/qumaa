@@ -7,6 +7,7 @@ import type { Toast } from '../components/Toasts.js'
 import { QumaaMark } from '../components/Brand.js'
 import LocalizedNumberInput from '../components/LocalizedNumberInput.js'
 import { compareResumes, type LibrarySortKey } from '../librarySort.js'
+import { ChevronDownIcon, ChevronUpIcon, SortIcon } from '../components/Icons.js'
 import '../components/recruiter-profile.css'
 
 function SortHeader({
@@ -30,7 +31,7 @@ function SortHeader({
       aria-sort={active ? (asc ? 'ascending' : 'descending') : 'none'}
     >
       {label}
-      <span className="sort-arrow">{active ? (asc ? '\u2191' : '\u2193') : ''}</span>
+      <span className="sort-arrow">{active ? (asc ? <ChevronUpIcon size={12} /> : <ChevronDownIcon size={12} />) : <SortIcon size={12} />}</span>
     </button>
   )
 }
@@ -334,7 +335,7 @@ export default function LibraryView({
               <th>
                 <SortHeader label={t('Candidate')} k="name" sort={sort} asc={asc} onSort={toggleSort} />
               </th>
-              <th style={{ width: 150 }}>{t('Contact')}</th>
+              <th style={{ width: 240 }}>{t('Contact')}</th>
               <th className="num" style={{ width: 74 }}>
                 <SortHeader label={t('Years')} k="years" sort={sort} asc={asc} onSort={toggleSort} />
               </th>
@@ -362,11 +363,11 @@ export default function LibraryView({
                   />
                 </td>
                 <td>
-                  <div className="cell-title" dir="auto">
-                    {r.name ?? <span className="muted">{t('Unknown name')}</span>}
+                  <div className="cell-title">
+                    {r.name ? <bdi>{r.name}</bdi> : <span className="muted">{t('Unknown name')}</span>}
                   </div>
-                  <div className="cell-sub" dir="auto">
-                    {r.fileName}
+                  <div className="cell-sub">
+                    <bdi>{r.fileName}</bdi>
                   </div>
                   {profilesByRecord.has(r.recordKey) && <span className="library-profile-badge">{t('Recruiter profile')}</span>}
                   {(profilesByRecord.get(r.recordKey)?.recordKeys.length ?? 0) > 1 && (
@@ -376,13 +377,13 @@ export default function LibraryView({
                 <td className="cell-sub">
                   {r.email && <div><bdi dir="ltr">{r.email}</bdi></div>}
                   {r.phone && <div><bdi dir="ltr">{r.phone}</bdi></div>}
-                  {r.location && <div dir="auto">{r.location}</div>}
+                  {r.location && <div><bdi>{r.location}</bdi></div>}
                   {!r.email && !r.phone && !r.location && <span className="muted">{t('n/a')}</span>}
                 </td>
                 <td className="num">{r.yearsExperience !== null ? formatNumber(r.yearsExperience) : <span className="muted">{t('n/a')}</span>}</td>
                 <td className="muted">{t(r.educationLevel ?? 'n/a')}</td>
                 <td className="cell-sub">
-                  {r.skills.length ? r.skills.slice(0, 8).map((skill, index) => <span key={skill}>{index > 0 && ', '}<bdi>{skill}</bdi></span>) : <span className="muted">{t('none detected')}</span>}
+                  {r.skills.length ? <span dir="auto">{r.skills.slice(0, 8).map((skill, index) => <span key={skill}>{index > 0 && ', '}<bdi>{skill}</bdi></span>)}</span> : <span className="muted">{t('none detected')}</span>}
                   {r.skills.length > 8 && ` +${formatNumber(r.skills.length - 8)}`}
                 </td>
                 {/* Row actions must not also trigger the row's open handler. */}

@@ -189,4 +189,20 @@ describe('provider-neutral preview privacy and schema', () => {
     expect(anthropic.messages[0].content).toBe(openai.input[0].content)
     expect(JSON.parse(openai.input[0].content).candidates[0].passages.reduce((size: number, passage: { text: string }) => size + passage.text.length, 0)).toBe(2500)
   })
+
+  it('keeps ChatGPT plan previews redacted and compatible with plan-backed Responses', () => {
+    const result = candidate()
+    const api = buildRerankPreview('Job text', [result], { provider: 'openai', model: 'gpt-5.6' })
+    const plan = buildRerankPreview('Job text', [result], { provider: 'openai', model: 'gpt-plan-catalog-model', authMode: 'chatgpt' })
+    expect(plan).toMatchObject({ provider: 'ChatGPT', authMode: 'chatgpt', model: 'gpt-plan-catalog-model', candidateCount: 1 })
+    const request = plan.requestBody as Record<string, any>
+    expect(request.input).toEqual(api.requestBody.input)
+    expect(request.instructions).toBe(api.requestBody.instructions)
+    expect(request.text).toEqual(api.requestBody.text)
+    expect(request.store).toBe(false)
+    expect(request.stream).toBe(true)
+    expect(Object.keys(request).sort()).toEqual(['input', 'instructions', 'model', 'store', 'stream', 'text'])
+    expect(JSON.stringify(plan)).not.toMatch(/Noura Al-Qahtani|noura@example.com|987654|\/Users\/noura/)
+    expect(() => structuredClone(plan)).not.toThrow()
+  })
 })

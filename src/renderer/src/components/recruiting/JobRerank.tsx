@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import type { JobWorkspace } from '@shared/recruiting.js'
 import type { ClaudeRerankReview } from '@shared/types.js'
-import { DEFAULT_RERANK_CONFIG, PROVIDER_LABELS, rerankModelLabel, type RerankConfig } from '@shared/rerank.js'
+import { DEFAULT_RERANK_CONFIG, isChatGptConfig, sameRerankConfig, rerankProviderLabel, rerankModelLabel, type RerankConfig } from '@shared/rerank.js'
 import { useI18n } from '../../i18n.js'
 import { errorMessage } from './helpers.js'
 
@@ -27,6 +27,8 @@ interface PendingConsent extends ClaudeRerankReview {
 export default function JobRerank({ workspace, active, disabled, libraryRevision, onBusyChange, onError, onReranked, onSavedAfterInvalidation }: Props): React.JSX.Element {
   const { t, formatNumber } = useI18n()
   const [available, setAvailable] = useState(false)
+  const [chatGptAccountLabel, setChatGptAccountLabel] = useState('')
+  const [chatGptFailure, setChatGptFailure] = useState(false)
   const [config, setConfig] = useState<RerankConfig>(DEFAULT_RERANK_CONFIG)
   const [phase, setPhase] = useState<Phase>('idle')
   const [pendingConsent, setPendingConsent] = useState<PendingConsent | null>(null)
@@ -42,9 +44,9 @@ export default function JobRerank({ workspace, active, disabled, libraryRevision
   const sessionId = workspace.response?.sessionId
   const reranked = workspace.response?.reranked === true
   const appliedConfig = workspace.response?.rerankConfig ?? DEFAULT_RERANK_CONFIG
-  const rerankedWithSelectedModel = reranked && appliedConfig.provider === config.provider && appliedConfig.model === config.model
-  const selectedModelLabel = rerankModelLabel(config.model)
-  const selectedProviderLabel = PROVIDER_LABELS[config.provider]
+  const rerankedWithSelectedModel = reranked && sameRerankConfig(appliedConfig, config)
+  const selectedProviderLabel = rerankProviderLabel(config)
+  const selectedModelLabel = rerankModelLabel(config.model) || selectedProviderLabel
 
   const updatePhase = useCallback((next: Phase): void => {
     phaseRef.current = next
@@ -57,6 +59,7 @@ export default function JobRerank({ workspace, active, disabled, libraryRevision
     inFlight.current = null
     setPendingConsent(null)
     setShowExportedData(false)
+    setChatGptFailure(false)
     updatePhase('idle')
   }, [updatePhase])
 
@@ -69,7 +72,7 @@ export default function JobRerank({ workspace, active, disabled, libraryRevision
       inFlight.current = null
       onBusyChange(false)
     }
-  }, [jobId, sessionId, libraryRevision, workspace.job.stale, disabled, config.provider, config.model, invalidate, onBusyChange])
+  }, [jobId, sessionId, libraryRevision, workspace.job.stale, disabled, config.provider, config.model, config.authMode, invalidate, onBusyChange])
 
   useLayoutEffect(() => {
     // A send already approved through the native dialog may finish while Jobs is
@@ -83,8 +86,9 @@ export default function JobRerank({ workspace, active, disabled, libraryRevision
     if (active) {
       void window.api.settings.get().then((settings) => {
         if (!cancelled) {
-          setConfig({ provider: settings.rerankProvider, model: settings.rerankModel })
-          setAvailable(settings.hasApiKey && settings.rerankEnabled)
+          setConfig({ provider: settings.rerankProvider, model: settings.rerankModel, ...(settings.rerankAuthMode === 'chatgpt' ? { authMode: 'chatgpt' as const } : {}) })
+          setAvailable(settings.hasRerankCredential && settings.rerankEnabled)
+          setChatGptAccountLabel(settings.chatGpt.accounts.find((account) => account.id === settings.chatGpt.activeAccountId)?.label ?? '')
         }
       }).catch(() => { /* Keep remote actions disabled if settings cannot be read. */ })
     }
@@ -110,7 +114,10 @@ export default function JobRerank({ workspace, active, disabled, libraryRevision
       updatePhase('idle')
       onReranked(result, request.sessionId)
     } catch (failure) {
-      if (current(request.request)) onError(errorMessage(failure))
+      if (current(request.request)) {
+        onError(errorMessage(failure))
+        setChatGptFailure(isChatGptConfig(config))
+      }
     } finally {
       if (current(request.request)) {
         inFlight.current = null
@@ -124,6 +131,7 @@ export default function JobRerank({ workspace, active, disabled, libraryRevision
     const request = ++requestEpoch.current
     inFlight.current = request
     onError(null)
+    setChatGptFailure(false)
     updatePhase('preview')
     try {
       const review = await window.api.recruiting.previewRerank({ jobId, sessionId })
@@ -141,6 +149,7 @@ export default function JobRerank({ workspace, active, disabled, libraryRevision
         inFlight.current = null
         updatePhase('idle')
         onError(errorMessage(failure))
+        setChatGptFailure(isChatGptConfig(config))
       }
     }
   }
@@ -181,7 +190,7 @@ export default function JobRerank({ workspace, active, disabled, libraryRevision
   }, [pendingConsent, invalidate])
 
   return <>
-    {reranked && <span className="hint" role="status">{t('Reordered by {model}', { model: rerankModelLabel(appliedConfig.model) })}</span>}
+    {reranked && <span className="hint" role="status">{t(isChatGptConfig(appliedConfig) ? 'Reordered by {model} · ChatGPT plan' : 'Reordered by {model}', { model: rerankModelLabel(appliedConfig.model) })}</span>}
     {!rerankedWithSelectedModel && <button
       ref={rerankButtonRef}
       className="btn sm"
@@ -190,6 +199,12 @@ export default function JobRerank({ workspace, active, disabled, libraryRevision
       title={!available ? `${t('Reranking is not enabled.')} ${t('Settings')} · ${t('AI reranking')}` : workspace.job.stale ? t('Refresh matches') : t("Sends the posting fields and the top candidates' matching passages to {provider}", { provider: selectedProviderLabel })}
       onClick={() => { void run() }}
     >{phase === 'rerank' ? t('Reranking…') : phase === 'preview' ? t('Preparing preview…') : t('Rerank with {model}', { model: selectedModelLabel })}</button>}
+    {chatGptFailure && <div className="row chatgpt-request-help" role="status">
+      {chatGptAccountLabel && <span className="hint">{t('ChatGPT account')}: <bdi>{chatGptAccountLabel}</bdi></span>}
+      <button className="btn sm primary" type="button" onClick={() => {
+        void window.api.settings.chatGptManageUsage().catch((failure: unknown) => onError(errorMessage(failure)))
+      }}>{t('Manage usage')}</button>
+    </div>}
     {pendingConsent && active && <div className="consent-backdrop">
       <section ref={consentDialogRef} className="consent-dialog card" role="dialog" tabIndex={-1} aria-modal="true" aria-labelledby="rerank-consent-title">
         <h3 id="rerank-consent-title">{t('Review data sent to {provider}', { provider: pendingConsent.preview.provider })}</h3>
@@ -197,7 +212,10 @@ export default function JobRerank({ workspace, active, disabled, libraryRevision
         <dl className="consent-summary">
           <div><dt>{t('Sent')}</dt><dd>{t('The job posting, selected CV passages, years of experience, education, and matched or missing skills.')}</dd></div>
           <div><dt>{t('Redacted')}</dt><dd>{t('Detected names, contact details, locations, filenames, and local paths.')}</dd></div>
-          <div><dt>{t('API key')}</dt><dd>{t('Used separately to authenticate the request. It is not included in the data preview.')}</dd></div>
+          {pendingConsent.preview.authMode === 'chatgpt' ? <>
+            <div><dt>{t('ChatGPT account')}</dt><dd><bdi>{pendingConsent.preview.accountLabel}</bdi></dd></div>
+            <div><dt>{t('ChatGPT plan')}</dt><dd>{t('This request uses your ChatGPT allowance or credits. Sign-in credentials are never included in the data preview.')}</dd></div>
+          </> : <div><dt>{t('API key')}</dt><dd>{t('Used separately to authenticate the request. It is not included in the data preview.')}</dd></div>}
         </dl>
         <button className="btn sm consent-data-toggle" type="button" aria-expanded={showExportedData} aria-controls={exportedDataId} onClick={() => setShowExportedData((show) => !show)}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">

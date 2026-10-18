@@ -38,11 +38,20 @@ import {
   withWatcherLifecycle
 } from './ingest/watcher.js'
 import { searchSessions } from './search/sessions.js'
-import { RERANK_CONSENT_VERSION, rerankConsentKey } from '@shared/rerank.js'
+import { isChatGptConfig, rerankConsentKey } from '@shared/rerank.js'
+import { CHATGPT_USAGE_URL } from '@shared/chatgpt.js'
+import {
+  acknowledgeChatGptWelcome, cancelChatGptSignIn, getChatGptStatus,
+  invalidateChatGptOperations, refreshChatGptModels, selectChatGptAccount,
+  setChatGptChangeHandler, signInChatGpt, signOutChatGpt
+} from './chatgpt/index.js'
 import {
   clearProviderRerankConsent,
   getRerankConfig,
   getRerankModels,
+  getChatGptModel,
+  hasRerankCredential,
+  rerankConsentValue,
   RERANK_ENABLED_KEY,
   setRerankConfig
 } from './search/rerank-settings.js'
@@ -63,6 +72,7 @@ import { registerHiringBudgetHandlers } from './hiring-budget-ipc.js'
 import { ipcSchemas, parseIpc } from './ipc-validation.js'
 import { maintenance } from './maintenance.js'
 import { restoredBounds, trackWindow } from './windowState.js'
+import { showStartupRecovery } from './startup-recovery.js'
 import type {
   AppSettings,
   IngestOutcome,
@@ -416,6 +426,12 @@ async function ingestPathsWithoutGate(paths: string[]): Promise<IngestOutcome[]>
 }
 
 function registerHandlers(): void {
+  setChatGptChangeHandler(() => {
+    searchSessions.clearApprovals()
+    // A new account or permission grant never enables outbound matching itself.
+    if (isChatGptConfig(getRerankConfig())) setSetting(RERANK_ENABLED_KEY, 'false')
+    // Plan consent values include the connection revision, invalidating prior notices.
+  })
   registerRecruitingHandlers(() => mainWindow!)
   registerTalentHandlers()
   registerClientPackHandlers(() => mainWindow!)
@@ -557,23 +573,40 @@ function registerHandlers(): void {
       const storedTheme = ipcSchemas.theme.safeParse(getSetting(THEME_KEY))
       const config = getRerankConfig()
       const apiKeyStatus = getApiKeyStatus(config.provider)
+      const credentialAvailable = hasRerankCredential(config)
       return {
         language: currentLanguage(),
         watchedFolder: getSetting(WATCHED_FOLDER_KEY),
         theme: storedTheme.success ? storedTheme.data : 'system',
-        rerankEnabled: getSetting(RERANK_ENABLED_KEY) === 'true' && apiKeyStatus === 'protected',
+        rerankEnabled: getSetting(RERANK_ENABLED_KEY) === 'true' && credentialAvailable,
         rerankProvider: config.provider,
         rerankModel: config.model,
+        rerankAuthMode: config.authMode ?? 'api-key',
         rerankModels: getRerankModels(),
+        chatGpt: getChatGptStatus(),
+        chatGptModel: getChatGptModel(),
+        hasRerankCredential: credentialAvailable,
         // The key itself is deliberately not returned: the renderer only needs to
         // know whether one exists.
         hasApiKey: apiKeyStatus === 'protected',
         apiKeyStatus,
         rerankConsentGranted:
-          getSetting(rerankConsentKey(config)) === RERANK_CONSENT_VERSION
+          getSetting(rerankConsentKey(config)) === rerankConsentValue(config)
       }
     })
   )
+
+  ipcMain.handle(CH.chatGptSignIn, (_e, rawId: unknown) => signInChatGpt(
+    rawId === undefined ? undefined : parseIpc(ipcSchemas.chatGptAccountId, rawId, 'ChatGPT account')
+  ))
+  ipcMain.handle(CH.chatGptCancelSignIn, () => cancelChatGptSignIn())
+  ipcMain.handle(CH.chatGptSelectAccount, (_e, rawId: unknown) =>
+    selectChatGptAccount(parseIpc(ipcSchemas.chatGptAccountId, rawId, 'ChatGPT account')))
+  ipcMain.handle(CH.chatGptSignOut, (_e, rawId: unknown) =>
+    signOutChatGpt(parseIpc(ipcSchemas.chatGptAccountId, rawId, 'ChatGPT account')))
+  ipcMain.handle(CH.chatGptRefreshModels, () => refreshChatGptModels())
+  ipcMain.handle(CH.chatGptAcknowledgeWelcome, () => acknowledgeChatGptWelcome())
+  ipcMain.handle(CH.chatGptManageUsage, () => shell.openExternal(CHATGPT_USAGE_URL))
 
   ipcMain.handle(CH.settingsSetApiKey, (_e, rawKey: unknown, rawProvider: unknown) => {
     const key = parseIpc(ipcSchemas.apiKey, rawKey, 'API key')
@@ -581,7 +614,7 @@ function registerHandlers(): void {
     return maintenance.runMaintenance(() => {
       const previouslyUsable = hasApiKey(provider)
       const cleanupNeeded = setApiKey(key, provider)
-      if ((!key || !previouslyUsable) && provider === getRerankConfig().provider) {
+      if ((!key || !previouslyUsable) && provider === getRerankConfig().provider && !isChatGptConfig(getRerankConfig())) {
         setSetting(RERANK_ENABLED_KEY, 'false')
       }
       searchSessions.clearApprovals()
@@ -595,7 +628,7 @@ function registerHandlers(): void {
     return maintenance.runMaintenance(() => {
       const migrated = protectLegacyApiKey(provider)
       if (migrated) {
-        if (provider === getRerankConfig().provider) setSetting(RERANK_ENABLED_KEY, 'false')
+        if (provider === getRerankConfig().provider && !isChatGptConfig(getRerankConfig())) setSetting(RERANK_ENABLED_KEY, 'false')
         searchSessions.clearApprovals()
         clearProviderRerankConsent(provider)
       }
@@ -615,8 +648,10 @@ function registerHandlers(): void {
   ipcMain.handle(CH.settingsSetRerank, (_e, rawEnabled: unknown) => {
     const enabled = parseIpc(ipcSchemas.enabled, rawEnabled, 'rerank setting')
     return maintenance.runOperation(() => {
-      // Cannot enable without a key; silently refusing would look like a bug.
-      if (enabled && !hasApiKey(getRerankConfig().provider)) throw new Error('Add an API key for the selected provider first.')
+      if (enabled && !hasRerankCredential(getRerankConfig())) throw new Error(
+        isChatGptConfig(getRerankConfig())
+          ? 'Connect a ChatGPT account with plan access and choose an available model in Settings.'
+          : 'Add an API key for the selected provider first.')
       setSetting(RERANK_ENABLED_KEY, String(enabled))
       searchSessions.clearApprovals()
     })
@@ -720,7 +755,7 @@ function registerHandlers(): void {
       cancelId: 0,
       message: t(staged.resumeCount === 1 ? 'Replace this library with {count} backed-up resume?' : 'Replace this library with {count} backed-up resumes?', { count: staged.resumeCount }),
       detail:
-        t("The current library is kept only while Qumaa validates the restored search index, then removed automatically. Restoring removes this device's API keys, watched folder, original-file paths, and window state.")
+        t("The current library is kept only while Qumaa validates the restored search index, then removed automatically. Restoring removes this device's API keys, connected ChatGPT accounts, watched folder, original-file paths, and window state.")
     })
     if (response !== 1) {
       discardStagedRestore(staged)
@@ -735,6 +770,7 @@ function registerHandlers(): void {
       // concurrent folder change from restarting it before replacement begins.
       await stopWatching()
       try {
+        invalidateChatGptOperations()
         const restored = await maintenance.runLibraryChange(async () => {
           const result = await installStagedPortableRestore(staged)
           try {
@@ -786,7 +822,7 @@ function registerHandlers(): void {
       cancelId: 0,
       message: t("Delete all data?"),
       detail:
-        t(resumeCount === 1 ? 'This removes all {count} resume from the library, along with all companies, jobs, contacts, recruiting records, settings, watched folder, and saved API keys. The original resume files on disk are not touched. This cannot be undone.' : 'This removes all {count} resumes from the library, along with all companies, jobs, contacts, recruiting records, settings, watched folder, and saved API keys. The original resume files on disk are not touched. This cannot be undone.', { count: resumeCount })
+        t(resumeCount === 1 ? 'This removes all {count} resume from the library, along with all companies, jobs, contacts, recruiting records, settings, watched folder, saved API keys, and connected ChatGPT accounts. The original resume files on disk are not touched. This cannot be undone.' : 'This removes all {count} resumes from the library, along with all companies, jobs, contacts, recruiting records, settings, watched folder, saved API keys, and connected ChatGPT accounts. The original resume files on disk are not touched. This cannot be undone.', { count: resumeCount })
     })
     if (response !== 1) return false
 
@@ -795,6 +831,7 @@ function registerHandlers(): void {
     // that queue from inside the exclusive section would deadlock it behind us.
     return withWatcherLifecycle(async () => {
       await stopWatching()
+      invalidateChatGptOperations()
       return maintenance.runLibraryChange(async () => {
         // Existing manual imports finish before exclusive access is granted, and
         // later imports are rejected until deletion and marker repair complete.
@@ -871,10 +908,13 @@ if (!ownsInstanceLock) {
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
+  }).catch((error: unknown) => {
+    console.error('Qumaa failed to start:', error)
+    return showStartupRecovery()
   })
 
-  // Without this, a throw during startup rejects silently: no window is created,
-  // nothing is logged, and the process simply lingers with no UI.
+  // Startup itself has a recovery dialog above; retain diagnostics for later
+  // asynchronous failures that do not propagate through the startup promise.
   process.on('unhandledRejection', (reason) => {
     console.error('Unhandled rejection during startup:', reason)
   })
@@ -884,6 +924,7 @@ if (!ownsInstanceLock) {
   })
 
   app.on('before-quit', () => {
+    invalidateChatGptOperations()
     stopWatching()
     embedder.stop()
   })

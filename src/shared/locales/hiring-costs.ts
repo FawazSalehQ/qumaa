@@ -1,5 +1,11 @@
 /** Company employment-cost planning. Existing shared messages live in their original catalogs. */
 export const hiringCostsAr: Record<string, string> = {
+  'All amounts in SAR.': 'جميع المبالغ بالريال السعودي.',
+  'No budget plans yet.': 'لا توجد خطط ميزانية بعد.',
+  'Medical insurance is not included.': 'التأمين الطبي غير مشمول.',
+  'Full months only. Enter service already completed before the start month.': 'أشهر كاملة فقط. أدخل مدة الخدمة المكتملة قبل شهر البداية.',
+  'Separate from job salary ranges and hiring budgets.': 'منفصلة عن نطاقات الرواتب وميزانيات التوظيف في الوظائف.',
+  'EOS provision: eligible wage / 24 for the first five years, then / 12.': 'مخصص مكافأة نهاية الخدمة: الأجر المستحق ÷ 24 في السنوات الخمس الأولى، ثم ÷ 12.',
   'Estimated end-of-service provision': 'مخصص نهاية الخدمة التقديري',
   'The registered-wage deduction exceeds the entered gross salary. Review the salary and verified wage inputs.': 'يتجاوز خصم أجر الاشتراك المسجل الراتب الإجمالي المدخل. راجع الراتب وأجر الاشتراك المتحقق منه.',
   'Hiring Budgets & Costs': 'ميزانيات التوظيف وتكاليفه',

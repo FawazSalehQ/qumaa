@@ -1,4 +1,5 @@
 export const pipelineAr: Record<string, string> = {
+  'Logged only; nothing is sent from Qumaa.': 'للتسجيل فقط؛ لا يُرسل شيء من قُمع.',
   'Sourced': 'تم العثور عليه',
   'Interested': 'مهتم',
   'Screened': 'تم إجراء الفرز',
@@ -20,6 +21,9 @@ export const pipelineAr: Record<string, string> = {
   'Choose a person': 'اختر شخصًا',
   'Add to pipeline': 'إضافة إلى المسار',
   'Add {name} to pipeline': 'إضافة {name} إلى المسار',
+  'Open in pipeline': 'فتح في المسار',
+  'Review · Stage': 'التقييم · المرحلة',
+  'Open pipeline for {name}': 'فتح المسار لـ {name}',
   'Create prospects and manage contact details in Recruiter desk.': 'أنشئ مرشحين محتملين وأدر تفاصيل التواصل في مكتب التوظيف.',
   'Pipeline stages': 'مراحل المسار',
   'All stages': 'جميع المراحل',

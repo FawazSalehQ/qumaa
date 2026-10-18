@@ -8,7 +8,10 @@ import type { AddressInfo } from 'node:net'
 import { tmpdir } from 'node:os'
 import { isAbsolute, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { exportJWK, generateKeyPair, SignJWT } from 'jose'
 import { translate } from '../../src/shared/i18n.js'
+import type { AppSettings } from '../../src/shared/types.js'
+import type { RerankConfig } from '../../src/shared/rerank.js'
 
 const ROOT = resolve(__dirname, '../..')
 
@@ -148,6 +151,297 @@ async function installOpenAIProvider(): Promise<void> {
     }
   })
 }
+
+/** Exercise the renderer through its real preload without opening an account or
+ * allowing network traffic. OAuth/token protocol tests live in the main suite. */
+async function installChatGptSettings(connected = false): Promise<void> {
+  const settings = await page.evaluate(() => window.api.settings.get())
+  await application.evaluate(({ ipcMain }, { settings, connected }) => {
+    globalThis.fetch = async () => { throw new Error('The ChatGPT UI fixture must not contact a provider') }
+    const state: AppSettings = settings
+    const models = [{ id: 'gpt-4o-mini', label: 'GPT-4o mini' }, { id: 'plan-model-2', label: 'Plan model two' }]
+    const account = (number: number) => ({ id: `synthetic-account-${number}`, label: `recruiter${number}@example.test`, connected: true, planUsageEnabled: true })
+    state.chatGpt = { accounts: connected ? [account(1)] : [], activeAccountId: connected ? account(1).id : null, signingIn: false, models: connected ? models : [], welcomePending: false }
+    state.chatGptModel = connected ? models[0].id : ''
+    state.rerankAuthMode = connected ? 'chatgpt' : 'api-key'
+    state.rerankProvider = connected ? 'openai' : state.rerankProvider
+    state.rerankModel = connected ? models[0].id : state.rerankModel
+    state.rerankEnabled = connected
+    state.hasRerankCredential = connected || state.hasApiKey
+    const fixture = { state, usageOpens: 0, cancelled: 0, refreshes: 0, requestedAccount: null as string | null, nextAccount: connected ? 2 : 1, finishSignIn: (_complete: boolean) => {} }
+    ;(globalThis as any).chatGptUi = fixture
+    const handle = (channel: string, callback: (...args: any[]) => unknown) => { ipcMain.removeHandler(channel); ipcMain.handle(channel, callback) }
+    const updateCredential = () => {
+      const active = state.chatGpt.accounts.find((item) => item.id === state.chatGpt.activeAccountId)
+      state.hasRerankCredential = state.rerankAuthMode === 'chatgpt' ? Boolean(active?.connected && active.planUsageEnabled && state.chatGpt.models.some((item) => item.id === state.rerankModel)) : state.hasApiKey
+    }
+    handle('settings:get', () => state)
+    handle('settings:setRerankConfig', (_event, config: RerankConfig) => {
+      state.rerankProvider = config.provider
+      state.rerankAuthMode = config.authMode === 'chatgpt' ? 'chatgpt' : 'api-key'
+      state.rerankModel = config.model
+      if (state.rerankAuthMode === 'chatgpt') state.chatGptModel = config.model
+      else state.rerankModels[config.provider] = config.model
+      state.rerankEnabled = false
+      updateCredential()
+    })
+    handle('settings:setRerank', (_event, enabled: boolean) => { state.rerankEnabled = enabled })
+    handle('settings:chatGptSignIn', (_event, accountId?: string) => {
+      fixture.requestedAccount = accountId ?? null
+      state.chatGpt.signingIn = true
+      return new Promise((resolveSignIn) => {
+        fixture.finishSignIn = (complete: boolean) => {
+          state.chatGpt.signingIn = false
+          if (complete) {
+            const previous = state.chatGpt.accounts.find((item) => item.id === accountId)
+            const added = previous ?? account(fixture.nextAccount++)
+            added.connected = true
+            added.planUsageEnabled = true
+            if (!previous) state.chatGpt.accounts.push(added)
+            state.chatGpt.activeAccountId = added.id
+            state.chatGpt.models = models
+            state.chatGpt.welcomePending = state.chatGpt.accounts.length === 1
+            state.chatGptModel = models[0].id
+            state.rerankModel = state.chatGptModel
+            state.rerankEnabled = false
+            updateCredential()
+          }
+          resolveSignIn(state.chatGpt)
+        }
+      })
+    })
+    handle('settings:chatGptCancelSignIn', () => { fixture.cancelled++; fixture.finishSignIn(false) })
+    handle('settings:chatGptAcknowledgeWelcome', () => { state.chatGpt.welcomePending = false })
+    handle('settings:chatGptManageUsage', () => { fixture.usageOpens++ })
+    handle('settings:chatGptRefreshModels', () => { fixture.refreshes++; return state.chatGpt })
+    handle('settings:chatGptSelectAccount', (_event, id: string) => {
+      state.chatGpt.activeAccountId = id
+      state.rerankEnabled = false
+      updateCredential()
+    })
+    handle('settings:chatGptSignOut', (_event, id: string) => {
+      const selected = state.chatGpt.accounts.find((item) => item.id === id)
+      if (selected) { selected.connected = false; selected.planUsageEnabled = false }
+      if (state.chatGpt.activeAccountId === id) state.chatGpt.models = []
+      state.rerankEnabled = false
+      updateCredential()
+      return { remoteRevocationConfirmed: true }
+    })
+  }, { settings, connected })
+}
+
+test('connects ChatGPT separately from API keys, cancels sign-in, and manages accounts in English and Arabic', async ({}, testInfo) => {
+  await installChatGptSettings()
+  await page.getByRole('button', { name: 'Settings', exact: true }).click()
+  await page.getByRole('combobox', { name: 'AI provider', exact: true }).selectOption('openai')
+  const mode = page.getByRole('combobox', { name: 'OpenAI connection', exact: true })
+  await page.getByLabel('OpenAI API key', { exact: true }).fill('draft-that-must-not-cross-auth-mode')
+  await mode.selectOption('chatgpt')
+  await expect(page.getByLabel('OpenAI API key', { exact: true })).toHaveCount(0)
+  const model = page.getByRole('combobox', { name: 'AI model', exact: true })
+  await expect(model).toBeDisabled()
+  const signIn = page.getByRole('button', { name: 'Continue with ChatGPT', exact: true })
+  await signIn.click()
+  await expect(page.getByText('Complete sign-in in your browser.', { exact: true })).toBeVisible()
+  await expect(mode).toBeDisabled()
+  await page.getByRole('button', { name: 'Cancel sign-in', exact: true }).click()
+  await expect(signIn).toBeEnabled()
+  expect(await application.evaluate(() => (globalThis as any).chatGptUi.cancelled)).toBe(1)
+  await signIn.click()
+  await application.evaluate(() => (globalThis as any).chatGptUi.finishSignIn(true))
+  const welcome = page.getByRole('dialog', { name: 'You’re using your ChatGPT plan', exact: true })
+  await expect(welcome).toBeVisible()
+  const gotIt = welcome.getByRole('button', { name: 'Got it', exact: true })
+  await expect(gotIt).toBeFocused()
+  await page.keyboard.press('Tab')
+  await expect(welcome.getByRole('button', { name: 'Manage usage', exact: true })).toBeFocused()
+  await page.keyboard.press('Shift+Tab')
+  await expect(gotIt).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(welcome).toHaveCount(0)
+  expect((await page.evaluate(() => window.api.settings.get())).chatGpt.welcomePending).toBe(false)
+  const enabled = page.getByRole('checkbox', { name: 'Enable reranking', exact: true })
+  await expect(enabled).not.toBeChecked()
+  await expect(model.locator('option')).toHaveText(['GPT-4o mini', 'Plan model two'])
+  await model.selectOption('plan-model-2')
+  await expect(model).toHaveValue('plan-model-2')
+  await expect(enabled).toBeEnabled()
+  await enabled.click()
+  await expect(enabled).toBeChecked()
+  await page.getByRole('button', { name: 'Refresh models', exact: true }).click()
+  await page.getByRole('button', { name: 'Manage usage', exact: true }).click()
+  expect(await application.evaluate(() => (globalThis as any).chatGptUi.usageOpens)).toBe(1)
+  await page.getByRole('button', { name: 'Add another account', exact: true }).click()
+  await application.evaluate(() => (globalThis as any).chatGptUi.finishSignIn(true))
+  await expect(page.getByRole('combobox', { name: 'ChatGPT account', exact: true })).toHaveValue('synthetic-account-2')
+  await expect(welcome).toHaveCount(0)
+  await page.getByRole('combobox', { name: 'ChatGPT account', exact: true }).selectOption('synthetic-account-1')
+  await expect(enabled).not.toBeChecked()
+  await mode.selectOption('api-key')
+  await expect(page.getByLabel('OpenAI API key', { exact: true })).toHaveValue('')
+  await mode.selectOption('chatgpt')
+  await page.locator('section[aria-labelledby="rerank-heading"]').screenshot({ path: testInfo.outputPath('chatgpt-settings-english.png'), animations: 'disabled' })
+  await page.getByRole('button', { name: 'العربية', exact: true }).click()
+  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
+  await expect(page.getByRole('button', { name: translate('ar', 'Continue with ChatGPT'), exact: true })).toBeVisible()
+  await expect(page.getByRole('combobox', { name: translate('ar', 'OpenAI connection'), exact: true })).toHaveValue('chatgpt')
+  await page.locator('section[aria-labelledby="rerank-heading"]').screenshot({ path: testInfo.outputPath('chatgpt-settings-arabic.png'), animations: 'disabled' })
+  await page.getByRole('button', { name: translate('ar', 'Sign out'), exact: true }).click()
+  await expect(page.getByRole('combobox', { name: translate('ar', 'ChatGPT account'), exact: true })).toHaveValue('synthetic-account-1')
+  await expect(page.getByText(translate('ar', 'Reconnect to continue'), { exact: false })).toBeVisible()
+  await page.getByRole('button', { name: translate('ar', 'Continue with ChatGPT'), exact: true }).click()
+  expect(await application.evaluate(() => (globalThis as any).chatGptUi.requestedAccount)).toBe('synthetic-account-1')
+  await page.getByRole('button', { name: translate('ar', 'Cancel sign-in'), exact: true }).click()
+  await expect(page.getByRole('button', { name: translate('ar', 'Continue with ChatGPT'), exact: true })).toBeEnabled()
+})
+
+test('signs in through the real OAuth callback and reranks with ChatGPT plan consent and usage recovery', async ({}, testInfo) => {
+  await prepareClaudeFixtures()
+  const { publicKey, privateKey } = await generateKeyPair('RS256', { extractable: true })
+  const jwk = { ...await exportJWK(publicKey), kid: 'qumaa-synthetic-ui', alg: 'RS256', use: 'sig' }
+  await application.evaluate(({ safeStorage, shell, dialog }, jwk) => {
+    safeStorage.isEncryptionAvailable = () => true
+    safeStorage.encryptString = (value: string) => Buffer.from(`synthetic-ui-encryption:${value}`)
+    safeStorage.decryptString = (value: Buffer) => {
+      const text = value.toString()
+      if (!text.startsWith('synthetic-ui-encryption:')) throw new Error('Unexpected protected fixture')
+      return text.slice('synthetic-ui-encryption:'.length)
+    }
+    const fixture = { authorizationUrl: '', idToken: '', usageOpens: 0, quotaExceeded: true, requests: [] as unknown[], confirmations: [] as unknown[], revoked: false }
+    ;(globalThis as any).chatGptFlow = fixture
+    shell.openExternal = async (url: string) => {
+      if (url === 'https://chatgpt.com/settings/usage') { fixture.usageOpens++; return }
+      const authorization = new URL(url)
+      if (authorization.origin !== 'https://auth.openai.com' || authorization.pathname !== '/api/accounts/authorize') throw new Error('Unexpected browser destination')
+      fixture.authorizationUrl = url
+    }
+    ;(dialog as any).showMessageBox = async (_window: unknown, options: unknown) => {
+      fixture.confirmations.push(options)
+      return { response: 1, checkboxChecked: false }
+    }
+    globalThis.fetch = async (input, init) => {
+      const url = input instanceof Request ? input.url : String(input)
+      if (init?.redirect !== 'error') throw new Error('Provider redirects must be rejected')
+      const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
+      if (url === 'https://auth.openai.com/.well-known/openid-configuration') return json({
+        issuer: 'https://auth.openai.com', jwks_uri: 'https://auth.openai.com/e2e-jwks', revocation_endpoint: 'https://auth.openai.com/e2e-revoke',
+        authorization_endpoint: 'https://auth.openai.com/api/accounts/authorize', token_endpoint: 'https://auth.openai.com/api/accounts/oauth/token'
+      })
+      if (url === 'https://auth.openai.com/e2e-jwks') return json({ keys: [jwk] })
+      if (url === 'https://auth.openai.com/api/accounts/oauth/token') {
+        const body = new URLSearchParams(String(init?.body))
+        if (body.get('client_id') !== 'qumaa_synthetic_ui_client' || body.get('code') !== 'synthetic-single-use-code' || !body.get('code_verifier')) throw new Error('Unexpected token exchange')
+        return json({ access_token: 'synthetic-chatgpt-access-token', refresh_token: 'synthetic-chatgpt-refresh-token', id_token: fixture.idToken, token_type: 'Bearer', expires_in: 3600, scope: 'openid profile email offline_access resource.invoke chatgpt.tokens.use.direct' })
+      }
+      if (url === 'https://auth.openai.com/e2e-revoke') {
+        fixture.revoked = true
+        return new Response(null, { status: 200 })
+      }
+      if (new Headers(init?.headers).get('authorization') !== 'Bearer synthetic-chatgpt-access-token') throw new Error('Wrong ChatGPT credential')
+      if (url === 'https://api.openai.com/v1/models') return json({ models: [
+        { slug: 'hidden-model', display_name: 'Hidden model', visibility: 'hide' },
+        { slug: 'gpt-4o-mini', display_name: 'GPT-4o mini', visibility: 'list' }
+      ] })
+      if (url !== 'https://api.openai.com/v1/responses' || init?.method !== 'POST') throw new Error('Unexpected provider endpoint')
+      const body = JSON.parse(String(init.body))
+      fixture.requests.push(body)
+      if (fixture.quotaExceeded) return json({ error: { code: 'subscription_sharing_usage_limit_exceeded', message: 'Do not expose this provider payload' } }, 429)
+      const response = { id: 'synthetic-plan-response', object: 'response', status: 'completed', output: [{ type: 'message', status: 'completed', content: [{
+        type: 'output_text', text: JSON.stringify({ ranking: [
+          { id: 'candidate-02', rank: 1, reason: 'Supported reliable TypeScript services in production.' },
+          { id: 'candidate-01', rank: 2, reason: 'Led a TypeScript platform migration and coached developers.' }
+        ] })
+      }] }] }
+      return new Response(`event: response.completed\ndata: ${JSON.stringify({ type: 'response.completed', response })}\n\n`, { status: 200, headers: { 'Content-Type': 'text/event-stream' } })
+    }
+  }, jwk)
+
+  await page.getByRole('button', { name: 'Settings', exact: true }).click()
+  await page.getByRole('combobox', { name: 'AI provider', exact: true }).selectOption('openai')
+  await page.getByRole('combobox', { name: 'OpenAI connection', exact: true }).selectOption('chatgpt')
+  await page.getByRole('button', { name: 'Continue with ChatGPT', exact: true }).click()
+  await expect.poll(() => application.evaluate(() => (globalThis as any).chatGptFlow.authorizationUrl)).not.toBe('')
+  const authorization = new URL(await application.evaluate(() => (globalThis as any).chatGptFlow.authorizationUrl))
+  expect(authorization.searchParams.get('client_id')).toBe('dynamic_agent_client')
+  expect(authorization.searchParams.get('scope')).toContain('chatgpt.tokens.use.direct')
+  const idToken = await new SignJWT({ nonce: authorization.searchParams.get('nonce'), email: 'plan-recruiter@example.test' })
+    .setProtectedHeader({ alg: 'RS256', kid: jwk.kid }).setIssuer('https://auth.openai.com')
+    .setAudience('qumaa_synthetic_ui_client').setSubject('synthetic-qumaa-recruiter').setIssuedAt().setExpirationTime('5m').sign(privateKey)
+  await application.evaluate((_electron, token) => { (globalThis as any).chatGptFlow.idToken = token }, idToken)
+  const callback = new URL(authorization.searchParams.get('redirect_uri')!)
+  expect(callback.hostname).toBe('127.0.0.1')
+  callback.searchParams.set('state', authorization.searchParams.get('state')!)
+  callback.searchParams.set('code', 'synthetic-single-use-code')
+  callback.searchParams.set('client_id', 'qumaa_synthetic_ui_client')
+  // Only this actual local callback is fetched; all provider/browser traffic is mocked.
+  expect((await fetch(callback)).status).toBe(200)
+  const welcome = page.getByRole('dialog', { name: 'You’re using your ChatGPT plan', exact: true })
+  await expect(welcome).toBeVisible()
+  await welcome.getByRole('button', { name: 'Got it', exact: true }).click()
+  await expect(welcome).toHaveCount(0)
+  const enabled = page.getByRole('checkbox', { name: 'Enable reranking', exact: true })
+  await expect(enabled).not.toBeChecked()
+  await expect(page.getByRole('combobox', { name: 'AI model', exact: true }).locator('option')).toHaveText(['GPT-4o mini'])
+  const connectedSettings = await page.evaluate(() => window.api.settings.get())
+  expect(connectedSettings.hasApiKey).toBe(false)
+  expect(connectedSettings.hasRerankCredential).toBe(true)
+  expect(JSON.stringify(connectedSettings)).not.toContain('synthetic-chatgpt-access-token')
+  expect(JSON.stringify(connectedSettings)).not.toContain('synthetic-chatgpt-refresh-token')
+  await enabled.click()
+  await expect(enabled).toBeChecked()
+  await page.getByRole('button', { name: 'Jobs', exact: true }).click()
+  await page.getByRole('button', { name: '+ New job', exact: true }).click()
+  await page.getByLabel('Position').fill('TypeScript platform engineer')
+  await page.getByLabel('Job description', { exact: true }).fill('Build reliable TypeScript cloud services.')
+  await page.getByRole('button', { name: 'Save job', exact: true }).click()
+  await page.getByRole('button', { name: 'Find matches', exact: true }).click()
+  const names = page.locator('.recruit-candidate-table tbody .recruit-name')
+  await expect(names).toHaveCount(2)
+  const localNames = await names.allTextContents()
+  const [job] = await page.evaluate(() => window.api.recruiting.listJobs())
+  await page.getByRole('button', { name: 'Rerank with GPT-4o mini', exact: true }).click()
+  const review = page.getByRole('dialog', { name: 'Review data sent to ChatGPT', exact: true })
+  await expect(review).toBeVisible()
+  await expect(review.getByText(connectedSettings.chatGpt.accounts[0].label, { exact: true })).toBeVisible()
+  await review.getByRole('button', { name: 'See exported data', exact: true }).click()
+  const approvedBody = JSON.parse(await review.locator('.consent-payload').innerText())
+  expect(approvedBody.stream).toBe(true)
+  expect(approvedBody.store).toBe(false)
+  expect(JSON.stringify(approvedBody)).not.toMatch(/synthetic-chatgpt|plan-recruiter@example|Private Candidate|one@example\.com/)
+  await page.screenshot({ path: testInfo.outputPath('chatgpt-consent-english.png'), fullPage: true, animations: 'disabled' })
+  await review.getByRole('button', { name: 'Approve and send', exact: true }).click()
+  const quotaMessage = 'Your ChatGPT plan has reached its usage limit. Manage usage in ChatGPT, then try again. The local ranking is unchanged.'
+  await expect(page.getByText(quotaMessage, { exact: true })).toBeVisible()
+  await expect(names).toHaveText(localNames)
+  await expect(page.getByText(connectedSettings.chatGpt.accounts[0].label, { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Manage usage', exact: true }).click()
+  expect(await application.evaluate(() => (globalThis as any).chatGptFlow.usageOpens)).toBe(1)
+  expect((await page.evaluate((id) => window.api.recruiting.getJob(id), job.id)).response?.reranked).not.toBe(true)
+  await page.screenshot({ path: testInfo.outputPath('chatgpt-usage-limit.png'), fullPage: true, animations: 'disabled' })
+  await application.evaluate(() => { (globalThis as any).chatGptFlow.quotaExceeded = false })
+  await page.getByRole('button', { name: 'Settings', exact: true }).click()
+  await page.getByRole('button', { name: 'Review sharing again', exact: true }).click()
+  await page.getByRole('button', { name: 'العربية', exact: true }).click()
+  await page.getByRole('button', { name: translate('ar', 'Jobs'), exact: true }).click()
+  await page.getByRole('button', { name: translate('ar', 'Rerank with {model}', { model: 'GPT-4o mini' }), exact: true }).click()
+  const arabicReview = page.getByRole('dialog', { name: translate('ar', 'Review data sent to {provider}', { provider: 'ChatGPT' }), exact: true })
+  await expect(arabicReview).toBeVisible()
+  await expect(arabicReview.getByText(translate('ar', 'ChatGPT account'), { exact: true })).toBeVisible()
+  await page.screenshot({ path: testInfo.outputPath('chatgpt-consent-arabic.png'), fullPage: true, animations: 'disabled' })
+  await arabicReview.getByRole('button', { name: translate('ar', 'Approve and send'), exact: true }).click()
+  await expect(page.getByText(translate('ar', 'Reordered by {model} · ChatGPT plan', { model: 'GPT-4o mini' }), { exact: true })).toBeVisible()
+  await expect(names).toHaveText([...localNames].reverse())
+  expect((await page.evaluate((id) => window.api.recruiting.getJob(id), job.id)).response?.rerankConfig).toEqual({ provider: 'openai', model: 'gpt-4o-mini', authMode: 'chatgpt' })
+  expect(await application.evaluate(() => (globalThis as any).chatGptFlow.requests)).toEqual([approvedBody, approvedBody])
+  expect(await application.evaluate(() => (globalThis as any).chatGptFlow.confirmations)).toHaveLength(2)
+  await page.getByRole('button', { name: translate('ar', 'Settings'), exact: true }).click()
+  await page.getByRole('button', { name: translate('ar', 'Sign out'), exact: true }).click()
+  await expect(page.getByText(translate('ar', 'Reconnect to continue'), { exact: false })).toBeVisible()
+  const disconnected = await page.evaluate(() => window.api.settings.get())
+  expect(disconnected.hasRerankCredential).toBe(false)
+  expect(disconnected.rerankEnabled).toBe(false)
+  expect(await application.evaluate(() => (globalThis as any).chatGptFlow.revoked)).toBe(true)
+})
 
 test('imports, runs Express search across tabs, saves it deliberately, and removes deleted candidates', async ({}, testInfo) => {
   const navigation = page.getByRole('navigation')

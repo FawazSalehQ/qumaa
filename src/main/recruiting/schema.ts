@@ -1,6 +1,6 @@
 /** Bounded, strict contracts shared by IPC, local records, and portable restore. */
 import { z } from 'zod'
-import { isRerankConfig, RERANK_MODELS, type RerankConfig } from '@shared/rerank.js'
+import { isRerankConfig, type RerankConfig } from '@shared/rerank.js'
 import { COMPANY_DETAIL_LIMIT, normalizeCompanyDetailKey, type JobTargetCompany } from '@shared/recruiting.js'
 import { talentRecordSchemas, TALENT_LIMITS } from './talent-schema.js'
 import { hiringBudgetRecordSchema } from './hiring-budget-schema.js'
@@ -22,7 +22,7 @@ const text = (max: number) => z.string().max(max).refine((value) => !value.inclu
 const label = (max: number) => text(max).refine((value) => !/[\u0000-\u001f\u007f]/.test(value), 'must not contain control characters')
 const recordKey = z.string().regex(/^[a-f0-9]{64}$/)
 const jobId = z.string().uuid()
-const timestamp = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER)
+const timestamp = z.number().int().nonnegative().max(8.64e15)
 const resume = z.strictObject({ id: z.number().int().positive().max(Number.MAX_SAFE_INTEGER), recordKey })
 const unique = <T>(values: T[]) => new Set(values).size === values.length
 const status = z.enum(['unreviewed', 'maybe', 'shortlisted', 'contacted', 'not-proceeding'])
@@ -214,7 +214,8 @@ export const reviewRecordSchema = z.strictObject({ jobId, candidateKey: recordKe
 const score = z.number().finite().min(0).max(1)
 const rerankConfig = z.strictObject({
   provider: z.enum(['anthropic', 'openai']),
-  model: z.enum([...RERANK_MODELS.anthropic, ...RERANK_MODELS.openai].map((model) => model.id))
+  model: z.string().min(1).max(128),
+  authMode: z.enum(['api-key', 'chatgpt']).optional()
 }).refine(isRerankConfig, 'The selected model must belong to its provider.')
   .transform((value): RerankConfig => value as RerankConfig)
 export const snapshotRecordSchema = z.strictObject({

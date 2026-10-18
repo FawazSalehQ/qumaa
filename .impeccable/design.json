@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-16T17:26:39.988Z",
+  "title": "Design System: Qumaa",
+  "extensions": {
+    "colorMeta": {
+      "violet": { "role": "primary", "displayName": "Brand Violet", "canonical": "#6d3fb0", "tonalRamp": ["oklch(18% 0.08 300)", "oklch(28% 0.12 300)", "oklch(38% 0.15 300)", "oklch(48% 0.16 300)", "oklch(60% 0.15 300)", "oklch(72% 0.11 300)", "oklch(84% 0.07 300)", "oklch(95% 0.03 300)"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#2b2733", "tonalRamp": ["oklch(15% 0.02 300)", "oklch(26% 0.02 300)", "oklch(38% 0.02 300)", "oklch(49% 0.02 300)", "oklch(60% 0.02 300)", "oklch(72% 0.015 300)", "oklch(84% 0.01 300)", "oklch(95% 0.008 300)"] },
+      "paper": { "role": "neutral", "displayName": "Paper", "canonical": "#f4f1f8", "tonalRamp": ["oklch(15% 0.015 300)", "oklch(26% 0.015 300)", "oklch(38% 0.015 300)", "oklch(49% 0.015 300)", "oklch(60% 0.015 300)", "oklch(72% 0.012 300)", "oklch(84% 0.01 300)", "oklch(96% 0.008 300)"] },
+      "chrome-graphite": { "role": "neutral", "displayName": "Chrome Graphite", "canonical": "#1f1b27", "tonalRamp": ["oklch(14% 0.02 300)", "oklch(22% 0.02 300)", "oklch(32% 0.02 300)", "oklch(44% 0.02 300)", "oklch(56% 0.02 300)", "oklch(68% 0.02 300)", "oklch(82% 0.012 300)", "oklch(95% 0.008 300)"] },
+      "line-blue": { "role": "secondary", "displayName": "Line Blue", "canonical": "#1d6fd1", "tonalRamp": ["oklch(18% 0.08 258)", "oklch(28% 0.12 258)", "oklch(38% 0.15 258)", "oklch(50% 0.17 258)", "oklch(62% 0.15 258)", "oklch(74% 0.11 258)", "oklch(85% 0.07 258)", "oklch(95% 0.03 258)"] },
+      "line-teal": { "role": "secondary", "displayName": "Line Teal", "canonical": "#0f8b8d", "tonalRamp": ["oklch(18% 0.04 194)", "oklch(28% 0.06 194)", "oklch(38% 0.08 194)", "oklch(50% 0.09 194)", "oklch(62% 0.09 194)", "oklch(74% 0.08 194)", "oklch(85% 0.05 194)", "oklch(95% 0.02 194)"] },
+      "line-orange": { "role": "secondary", "displayName": "Line Orange", "canonical": "#c84d1c", "tonalRamp": ["oklch(18% 0.07 40)", "oklch(28% 0.11 40)", "oklch(40% 0.15 40)", "oklch(52% 0.17 40)", "oklch(64% 0.15 40)", "oklch(75% 0.11 40)", "oklch(86% 0.07 40)", "oklch(95% 0.03 40)"] },
+      "line-green": { "role": "secondary", "displayName": "Line Green", "canonical": "#1a7f52", "tonalRamp": ["oklch(18% 0.05 158)", "oklch(28% 0.08 158)", "oklch(40% 0.1 158)", "oklch(52% 0.11 158)", "oklch(64% 0.11 158)", "oklch(75% 0.09 158)", "oklch(86% 0.06 158)", "oklch(95% 0.03 158)"] },
+      "line-amber": { "role": "secondary", "displayName": "Line Amber", "canonical": "#9a6207", "tonalRamp": ["oklch(18% 0.05 75)", "oklch(28% 0.08 75)", "oklch(40% 0.1 75)", "oklch(52% 0.11 75)", "oklch(64% 0.12 75)", "oklch(76% 0.11 75)", "oklch(87% 0.08 75)", "oklch(95% 0.04 75)"] },
+      "line-red": { "role": "secondary", "displayName": "Line Red", "canonical": "#c0392b", "tonalRamp": ["oklch(18% 0.07 28)", "oklch(28% 0.11 28)", "oklch(40% 0.15 28)", "oklch(52% 0.17 28)", "oklch(64% 0.15 28)", "oklch(75% 0.11 28)", "oklch(86% 0.07 28)", "oklch(95% 0.03 28)"] },
+      "line-neutral": { "role": "secondary", "displayName": "Line Neutral", "canonical": "#716a81", "tonalRamp": ["oklch(15% 0.02 300)", "oklch(26% 0.03 300)", "oklch(38% 0.03 300)", "oklch(50% 0.03 300)", "oklch(62% 0.03 300)", "oklch(73% 0.025 300)", "oklch(85% 0.015 300)", "oklch(95% 0.008 300)"] },
+      "dark-ground": { "role": "neutral", "displayName": "Dark Ground", "canonical": "#181620", "tonalRamp": ["oklch(14% 0.02 300)", "oklch(19% 0.02 300)", "oklch(23% 0.02 300)", "oklch(27% 0.02 300)", "oklch(40% 0.02 300)", "oklch(56% 0.02 300)", "oklch(72% 0.015 300)", "oklch(95% 0.008 300)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "View titles and the slide-over heading." },
+      "headline": { "displayName": "Headline", "purpose": "Section and workspace titles, with a line badge beside job and client names." },
+      "title": { "displayName": "Title", "purpose": "Panel sub-headings and names inside lists and rows." },
+      "body": { "displayName": "Body", "purpose": "Running text; meta lines drop to 12px in Text Dim. Arabic opens the line height to 1.7." },
+      "label": { "displayName": "Label", "purpose": "Tracked uppercase mono over fields, directories, facts and every column head. Arabic removes the tracking and the transform." },
+      "numeral": { "displayName": "Numeral", "purpose": "Badge contents, counts, scores and years in tabular Plex Mono; 12px in funnel stops, 13px in score boxes." }
+    },
+    "shadows": [
+      { "name": "shadow-panel", "value": "0 24px 56px -16px rgba(31, 27, 39, 0.38), 0 2px 8px -2px rgba(31, 27, 39, 0.18)", "purpose": "The detail slide-over. Dark: 0 24px 56px -16px rgba(0,0,0,0.7), 0 2px 8px -2px rgba(0,0,0,0.4)." },
+      { "name": "shadow-pop", "value": "0 14px 36px -10px rgba(31, 27, 39, 0.3), 0 1px 3px rgba(31, 27, 39, 0.1)", "purpose": "Toasts and popovers. Dark: 0 14px 36px -10px rgba(0,0,0,0.6), 0 1px 3px rgba(0,0,0,0.3)." },
+      { "name": "scrim", "value": "rgba(23, 19, 31, 0.42)", "purpose": "Behind the slide-over. Dark: rgba(0, 0, 0, 0.55)." },
+      { "name": "ring-current-stop", "value": "0 0 0 3px color-mix(in srgb, var(--tone) 28%, transparent)", "purpose": "The current funnel stop's badge." },
+      { "name": "ring-focus", "value": "0 0 0 3px var(--accent-soft)", "purpose": "Input, select and textarea focus halo, with the border turning violet." }
+    ],
+    "motion": [
+      { "name": "ease-out", "value": "cubic-bezier(0.23, 1, 0.32, 1)", "purpose": "Entries and presses: overlay entry at 240ms, button press at 160ms." },
+      { "name": "ease-in-out", "value": "cubic-bezier(0.77, 0, 0.175, 1)", "purpose": "On-screen movement." },
+      { "name": "duration-hover", "value": "120ms ease", "purpose": "Colour, background and border changes on hover." },
+      { "name": "duration-press", "value": "160ms", "purpose": "transform: scale(0.97) on :active (0.94 for icon buttons)." },
+      { "name": "duration-overlay", "value": "240ms transform, 200ms opacity", "purpose": "Slide-over and toast entry via @starting-style, translate 24px from the inline end (-24px in RTL)." },
+      { "name": "reduced-motion", "value": "opacity 120ms ease", "purpose": "Under prefers-reduced-motion every transition collapses to 0.01ms except a 120ms fade for overlays; the entry translate is removed." }
+    ],
+    "breakpoints": [
+      { "name": "workspace-compact", "value": "1200px" },
+      { "name": "grid-collapse-lg", "value": "1080px" },
+      { "name": "grid-collapse-md", "value": "1050px" },
+      { "name": "grid-collapse", "value": "1000px" },
+      { "name": "shell-md", "value": "920px" },
+      { "name": "shell-sm", "value": "800px" },
+      { "name": "forms", "value": "760px" },
+      { "name": "narrow", "value": "640px" },
+      { "name": "narrowest", "value": "520px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one violet action in a view: Refresh matches, New job, Shortlist.",
+      "html": "<button class='ds-btn-primary'>Refresh matches</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:34px;padding:0 14px;border-radius:5px;background:var(--accent,#6d3fb0);border:1px solid var(--accent,#6d3fb0);color:var(--accent-ink,#fff);font-family:'IBM Plex Sans Variable','IBM Plex Sans',system-ui,sans-serif;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;transition:background .12s ease,border-color .12s ease,transform .16s cubic-bezier(.23,1,.32,1)}@media(hover:hover){.ds-btn-primary:hover{background:var(--accent-hover,#5a3395);border-color:var(--accent-hover,#5a3395)}}.ds-btn-primary:focus-visible{outline:2px solid var(--accent,#6d3fb0);outline-offset:2px}.ds-btn-primary:active{transform:scale(.97)}.ds-btn-primary:disabled{opacity:.45;cursor:not-allowed}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Every other button: raised white with a strong border, hover wash, press scale.",
+      "html": "<button class='ds-btn-secondary'>Edit job</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:34px;padding:0 14px;border-radius:5px;background:var(--bg-raised,#fff);border:1px solid var(--border-strong,#c5bdd3);color:var(--text,#2b2733);font-family:'IBM Plex Sans Variable','IBM Plex Sans',system-ui,sans-serif;font-size:13px;font-weight:500;white-space:nowrap;cursor:pointer;transition:background .12s ease,border-color .12s ease,color .12s ease,transform .16s cubic-bezier(.23,1,.32,1)}@media(hover:hover){.ds-btn-secondary:hover{background:var(--bg-hover,#efebf5);border-color:var(--text-faint,#716a81)}}.ds-btn-secondary:focus-visible{outline:2px solid var(--accent,#6d3fb0);outline-offset:2px}.ds-btn-secondary:active{transform:scale(.97)}.ds-btn-secondary:disabled{opacity:.45;cursor:not-allowed}"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Text, search and select controls share one 34px shape with a violet focus halo.",
+      "html": "<input class='ds-input' type='search' placeholder='Search name, contact, skills, or tags…'>",
+      "css": ".ds-input{box-sizing:border-box;width:100%;max-width:420px;min-height:34px;padding:0 10px;background:var(--bg-input,#fff);border:1px solid var(--border-strong,#c5bdd3);border-radius:5px;color:var(--text,#2b2733);font-family:'IBM Plex Sans Variable','IBM Plex Sans',system-ui,sans-serif;font-size:13px;transition:border-color .12s ease,box-shadow .12s ease}.ds-input::placeholder{color:var(--text-faint,#716a81);opacity:1}.ds-input:focus{outline:none;border-color:var(--accent,#6d3fb0);box-shadow:0 0 0 3px var(--accent-soft,#efe9f8)}.ds-input:disabled{opacity:.6;cursor:not-allowed}"
+    },
+    {
+      "name": "Chrome Tabs",
+      "kind": "nav",
+      "refersTo": "chrome-bar",
+      "description": "The 56px graphite band with the lockup and five underline tabs; the same ink in light and dark.",
+      "html": "<nav class='ds-chrome'><span class='ds-lockup' lang='ar' dir='rtl'>قُمع</span><a class='ds-tab ds-tab-active' href='#'>Jobs</a><a class='ds-tab' href='#'>Companies</a><a class='ds-tab' href='#'>Recruiter desk</a><a class='ds-tab' href='#'>Library <span class='ds-tab-count'>8</span></a><a class='ds-tab' href='#'>Settings</a></nav>",
+      "css": ".ds-chrome{display:flex;align-items:stretch;gap:24px;min-height:56px;padding:0 24px;background:var(--chrome,#1f1b27);color:var(--chrome-text,#f7f4fb);border-bottom:1px solid var(--chrome-line,#3b3447);font-family:'IBM Plex Sans Variable','IBM Plex Sans',system-ui,sans-serif}.ds-lockup{align-self:center;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;font-size:22px;font-weight:600;line-height:1}.ds-tab{display:inline-flex;align-items:center;gap:8px;padding:0 16px;border-top:3px solid transparent;border-bottom:3px solid transparent;color:var(--chrome-dim,#b9b1c9);font-size:14px;font-weight:500;text-decoration:none;transition:color .12s ease,background .12s ease}@media(hover:hover){.ds-tab:hover{color:var(--chrome-text,#f7f4fb);background:var(--chrome-hover,#2b2635)}}.ds-tab:focus-visible{outline:2px solid var(--accent-chrome,#a982e0);outline-offset:-2px}.ds-tab-active{color:var(--chrome-text,#f7f4fb);font-weight:600;border-bottom-color:var(--accent-chrome,#a982e0)}.ds-tab-count{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 5px;border-radius:6px;background:var(--chrome-line,#3b3447);color:var(--chrome-text,#f7f4fb);font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Line Badge",
+      "kind": "chip",
+      "refersTo": "line-badge",
+      "description": "The signature: a rounded square in a line colour carrying initials, a stop number or a count. Identity tones are violet, blue, teal, orange; state tones are green, amber, red, neutral.",
+      "html": "<span class='ds-lb ds-lb-violet'>SA</span> <span class='ds-lb ds-lb-blue'>HB</span> <span class='ds-lb ds-lb-teal'>3</span> <span class='ds-lb ds-lb-orange'>6</span> <span class='ds-lb ds-lb-green'>7</span> <span class='ds-lb ds-lb-amber'>4</span> <span class='ds-lb ds-lb-red'>9</span> <span class='ds-lb ds-lb-neutral'>1</span>",
+      "css": ".ds-lb{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 5px;border-radius:6px;background:var(--tone,#716a81);color:var(--badge-ink,#fff);font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:600;line-height:1;letter-spacing:.02em;font-variant-numeric:tabular-nums;white-space:nowrap}.ds-lb-violet{--tone:var(--line-violet,#6d3fb0)}.ds-lb-blue{--tone:var(--line-blue,#1d6fd1)}.ds-lb-teal{--tone:var(--line-teal,#0f8b8d)}.ds-lb-orange{--tone:var(--line-orange,#c84d1c)}.ds-lb-green{--tone:var(--line-green,#1a7f52)}.ds-lb-amber{--tone:var(--line-amber,#9a6207)}.ds-lb-red{--tone:var(--line-red,#c0392b)}.ds-lb-neutral{--tone:var(--line-neutral,#716a81)}"
+    },
+    {
+      "name": "State Pill",
+      "kind": "chip",
+      "refersTo": "state-pill",
+      "description": "A state is a pill with a dot: the tone as text over the same tone mixed at 13% into transparency.",
+      "html": "<span class='ds-pill ds-pill-green'>Shortlisted</span> <span class='ds-pill ds-pill-blue'>Contacted</span> <span class='ds-pill ds-pill-amber'>Maybe</span> <span class='ds-pill ds-pill-red'>Overdue</span> <span class='ds-pill ds-pill-neutral'>Unreviewed</span>",
+      "css": ".ds-pill{display:inline-flex;align-items:center;gap:6px;min-height:22px;padding:0 9px;border-radius:999px;font-family:'IBM Plex Sans Variable','IBM Plex Sans',system-ui,sans-serif;font-size:11px;font-weight:500;line-height:1;white-space:nowrap;color:var(--tone,#59526a);background:color-mix(in srgb,var(--tone,#716a81) 13%,transparent)}.ds-pill::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--tone,#716a81);flex:none}.ds-pill-green{--tone:var(--line-green,#1a7f52)}.ds-pill-blue{--tone:var(--line-blue,#1d6fd1)}.ds-pill-amber{--tone:var(--line-amber,#9a6207)}.ds-pill-red{--tone:var(--line-red,#c0392b)}.ds-pill-neutral{--tone:var(--line-neutral,#716a81)}"
+    },
+    {
+      "name": "Funnel Line of Stops",
+      "kind": "custom",
+      "refersTo": "line-badge",
+      "description": "The hiring funnel as a transit line: five stops, violet segments up to the furthest reached stop, a 3px ring on the current one.",
+      "html": "<div class='ds-funnel'><div class='ds-stop ds-stop-reached'><span class='ds-stop-lb' style='--tone:#6d3fb0'>8</span><span class='ds-stop-label'>Matched candidates</span></div><div class='ds-stop ds-stop-reached'><span class='ds-stop-lb' style='--tone:#6d3fb0'>3</span><span class='ds-stop-label'>Reviewed</span></div><div class='ds-stop ds-stop-reached'><span class='ds-stop-lb' style='--tone:#1a7f52'>2</span><span class='ds-stop-label'>Shortlisted</span></div><div class='ds-stop ds-stop-reached ds-stop-current'><span class='ds-stop-lb' style='--tone:#1d6fd1'>1</span><span class='ds-stop-label'>Contacted</span></div><div class='ds-stop'><span class='ds-stop-lb' style='--tone:#716a81'>0</span><span class='ds-stop-label'>Hired</span></div></div>",
+      "css": ".ds-funnel{display:flex;align-items:center;padding:10px 24px;background:var(--bg-strip,#f9f7fc);border-top:1px solid var(--border,#e0dbe9);border-bottom:1px solid var(--border,#e0dbe9);font-family:'IBM Plex Sans Variable','IBM Plex Sans',system-ui,sans-serif}.ds-stop{display:flex;align-items:center;gap:10px;flex:1 1 0;min-width:0}.ds-stop::after{content:'';flex:1 1 24px;min-width:16px;height:3px;border-radius:2px;background:var(--border-strong,#c5bdd3);margin-inline:14px}.ds-stop:last-child{flex:0 0 auto}.ds-stop:last-child::after{display:none}.ds-stop-reached::after{background:var(--line-violet,#6d3fb0)}.ds-stop-lb{display:inline-grid;place-items:center;min-width:28px;height:28px;padding:0 5px;border-radius:7px;background:var(--tone,#716a81);color:var(--badge-ink,#fff);font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}.ds-stop-current .ds-stop-lb{box-shadow:0 0 0 3px color-mix(in srgb,var(--tone,#716a81) 28%,transparent)}.ds-stop-label{font-size:12px;color:var(--text-dim,#59526a);white-space:nowrap}.ds-stop-reached .ds-stop-label{color:var(--text,#2b2733);font-weight:500}.ds-stop-current .ds-stop-label{font-weight:600}"
+    },
+    {
+      "name": "Score Box",
+      "kind": "custom",
+      "refersTo": "score-box",
+      "description": "A match score in a sunken box with tabular mono figures; grey and dimmed when the row is not proceeding.",
+      "html": "<span class='ds-score'>98</span> <span class='ds-score'>37</span> <span class='ds-score ds-score-muted'>21</span>",
+      "css": ".ds-score{display:inline-grid;place-items:center;min-width:44px;height:30px;padding:0 8px;border-radius:6px;background:var(--bg-sunken,#ebe7f1);color:var(--text,#2b2733);font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}.ds-score-muted{filter:grayscale(1);opacity:.7}"
+    },
+    {
+      "name": "Disclosure",
+      "kind": "custom",
+      "refersTo": "disclosure",
+      "description": "A collapsible section is a stop on the line: a chevron and a quiet 500 label when closed; open, the chevron turns to the accent, the label steps to full ink and the body hangs from a 1px rail under the chevron.",
+      "html": "<details class='ds-disclosure' open><summary><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='m6 9 6 6 6-6'/></svg><span>View job description and criteria</span></summary><p>Lead the month-end close and IFRS reporting for a hospitality group with twelve branches. Coordinate the external audit and own the fixed-asset register.</p></details><details class='ds-disclosure'><summary><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='m6 9 6 6 6-6'/></svg><span>Status history</span></summary><p>Created as Open</p></details>",
+      "css": ".ds-disclosure{max-width:520px;font-family:'IBM Plex Sans Variable','IBM Plex Sans',system-ui,sans-serif;font-size:13px;color:var(--text-dim,#59526a)}.ds-disclosure>summary{display:flex;align-items:center;gap:8px;min-height:34px;margin:0 -8px;padding:4px 8px;border-radius:5px;list-style:none;color:var(--text-dim,#59526a);font-weight:500;cursor:pointer;user-select:none;transition:background .12s ease,color .12s ease}.ds-disclosure>summary::marker{content:''}.ds-disclosure>summary:hover{background:var(--bg-hover,#efebf5);color:var(--text,#2b2733)}.ds-disclosure svg{flex:none;width:14px;height:14px;color:var(--text-faint,#716a81);transform:rotate(-90deg);transition:transform .2s cubic-bezier(.23,1,.32,1)}.ds-disclosure[open]>summary{color:var(--text,#2b2733)}.ds-disclosure[open] svg{transform:none;color:var(--accent,#6d3fb0)}.ds-disclosure>:not(summary){margin:0 0 0 7px;border-left:1px solid var(--border-strong,#c5bdd3);padding:12px 4px 4px 14px;line-height:1.7}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Station Board",
+    "overview": "Qumaa is an offline recruiting desk for agency headhunters, and its interface borrows from Riyadh's bilingual transit wayfinding: a graphite header band in both themes, line badges that give every job, client, pipeline stage and review state a colour that means something, and a hiring funnel drawn as a line of stops with a ringed 'you are here'. The world lends exactly four things (type, palette, density and that one signature move); navigation, layout and controls remain standard desktop web, because the recruiter is completing tasks on a laptop in the evening or on the move, often in Arabic.\n\nDensity follows a station board: generous rows with strong one-pixel separation, tabular numerals in boxes, and small tracked mono labels over everything that is a field. Surfaces are flat and layered by tone, not shadow; shadows appear only on things that float (the slide-over, toasts). Light, dark and Arabic RTL are equals: the same tokens, the same shapes, with the mono labels losing their tracking in Arabic because connected script cannot be spaced.\n\nConfirmed rejections: the generic SaaS dashboard arrangement of grey sidebar, white cards and kanban; anything that looks AI-generated; consumer-app softness.",
+    "keyCharacteristics": [
+      "Graphite chrome derived from brand ink, in light and dark alike",
+      "Eight line colours that each do a job; identity lines and state lines never swap roles",
+      "Rounded-square badges for identity and stops, pills with a dot for states, one shape each",
+      "IBM Plex Sans at signage weights, Plex Mono for every number and label",
+      "Flat surfaces separated by 1px rules and tonal strips; shadows only on overlays",
+      "Bilingual by construction: RTL mirrors the layout, identity strings stay isolated inline"
+    ],
+    "rules": [
+      { "name": "The Line Does a Job Rule", "body": "A line colour appears only when it names an identity or a state. Green, amber and red are never identities; violet, blue, teal and orange are the only identity lines, assigned by hash, never by hand.", "section": "colors" },
+      { "name": "The Chrome Is Ink Rule", "body": "The header band is graphite derived from brand ink in both themes; the light theme's identity comes from that contrast, so the band never turns white or paper.", "section": "colors" },
+      { "name": "The Connected Script Rule", "body": "Arabic is never tracked, never uppercased and never set in the mono face; `:root[lang='ar']` resets letter-spacing and text-transform on every label, heading and badge and swaps the mono stack for Plex Sans Arabic.", "section": "typography" },
+      { "name": "The Tabular Numeral Rule", "body": "Any number a recruiter compares (score, count, years, salary) is set in Plex Mono with tabular figures so columns line up.", "section": "typography" },
+      { "name": "The Overlay-Only Shadow Rule", "body": "A shadow means the element floats above the work; a card, table, badge or button at rest never carries one.", "section": "elevation" },
+      { "name": "The One Shape Each Rule", "body": "Identity and stops are rounded squares; states are pills with a 7px dot; scores are boxes. The shapes are never swapped, so a recruiter reads the kind of thing before the words.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do give every job, client, stage and state its line badge or pill before its words; the colour is read first.",
+      "Do keep identity lines to violet, blue, teal and orange assigned by hash, and reserve green, amber and red for states.",
+      "Do set every label and column head in Plex Mono 10.5px, 500, uppercase, 0.24em, and every compared number in tabular Plex Mono.",
+      "Do isolate short identity strings (names, titles, file names, locations, client context) with an inline `<bdi>` inside start-aligned blocks, and let prose blocks (notes, passages, quotes, raw text) take their own direction with `dir=\"auto\"`.",
+      "Do gate hover styles behind `(hover: hover)`, press buttons to scale(0.97) over 160ms, enter overlays with `@starting-style`, and collapse all motion under `prefers-reduced-motion`.",
+      "Do keep helper text to facts the controls cannot show: a consequence, an exclusion, a format rule, or the next action in an empty state, in one short sentence. Consent, privacy and data-handling disclosures (the AI rerank send notice, the backup and wipe descriptions) keep every fact they carry, in their shortest form, even across several sentences. The ChatGPT welcome and the account, usage and billing lines follow OpenAI's Sign in with ChatGPT UI guidance; do not trim them without rechecking it and asking the user.",
+      "Do theme the surfaces nobody draws: scrollbars in Border Strong, selection in Violet Wash, the caret in violet."
+    ],
+    "donts": [
+      "Don't put a shadow on a card, table, badge or button at rest; depth is tone and 1px rules.",
+      "Don't track, uppercase or mono-set Arabic text; the connected script keeps its natural spacing and a 1.7 line height.",
+      "Don't nest a card inside a card or add a coloured side border thicker than 1px; a quoted passage is a tinted block with a 1px start rule.",
+      "Don't use Unicode glyphs or icon fonts for icons; icons are inline SVG that mirror in RTL when directional.",
+      "Don't rebuild the generic SaaS arrangement (grey sidebar, white cards, kanban) or soften the system toward consumer apps; the station board, the funnel line and the graphite chrome are the identity.",
+      "Don't write taglines under view titles, section intros that restate the heading, or reassurance lines (\"saved locally\", \"will appear here\"); the control, the label and the data are the explanation.",
+      "Don't add fonts or any network asset; the three Plex families ship with the app."
+    ]
+  }
+}

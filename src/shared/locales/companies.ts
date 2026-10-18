@@ -1,5 +1,6 @@
 /** Company directory and company-specific hiring workflows. */
 export const companiesAr: Record<string, string> = {
+  'No companies yet.': 'لا توجد شركات بعد.',
   'Company': 'الشركة',
   'Companies': 'الشركات',
   'Your company directory': 'دليل شركاتك',

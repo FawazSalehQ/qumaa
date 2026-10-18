@@ -10,6 +10,7 @@ import type { HiringBudgetsApi } from '../shared/hiring-budget.js'
 import type { TalentApi } from '../shared/talent.js'
 import type { ClientPackApi } from '../shared/client-pack.js'
 import type { RerankConfig, RerankProvider } from '../shared/rerank.js'
+import type { ChatGptStatus } from '../shared/chatgpt.js'
 import type {
   AppSettings,
   BackupSummary,
@@ -155,6 +156,13 @@ const api = {
       ipcRenderer.invoke(CH.settingsSetApiKey, key, provider),
     protectLegacyApiKey: (provider: RerankProvider = 'anthropic'): Promise<boolean> =>
       ipcRenderer.invoke(CH.settingsProtectLegacyApiKey, provider),
+    chatGptSignIn: (accountId?: string): Promise<ChatGptStatus> => ipcRenderer.invoke(CH.chatGptSignIn, accountId),
+    chatGptCancelSignIn: (): Promise<void> => ipcRenderer.invoke(CH.chatGptCancelSignIn),
+    chatGptSelectAccount: (accountId: string): Promise<void> => ipcRenderer.invoke(CH.chatGptSelectAccount, accountId),
+    chatGptSignOut: (accountId: string): Promise<{ remoteRevocationConfirmed: boolean }> => ipcRenderer.invoke(CH.chatGptSignOut, accountId),
+    chatGptRefreshModels: (): Promise<ChatGptStatus> => ipcRenderer.invoke(CH.chatGptRefreshModels),
+    chatGptAcknowledgeWelcome: (): Promise<void> => ipcRenderer.invoke(CH.chatGptAcknowledgeWelcome),
+    chatGptManageUsage: (): Promise<void> => ipcRenderer.invoke(CH.chatGptManageUsage),
     setRerank: (enabled: boolean): Promise<void> =>
       ipcRenderer.invoke(CH.settingsSetRerank, enabled),
     setRerankConfig: (config: RerankConfig): Promise<void> =>

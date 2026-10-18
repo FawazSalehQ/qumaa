@@ -29,7 +29,7 @@ export default function ActivityEditor({ personId, activity, jobs, busy, onCance
       summary: draft.summary.trim(), outcome: draft.outcome.trim(), nextAction: draft.nextAction.trim(), dueAt: inputTimestamp(draft.dueAt),
       completedAt: activity?.completedAt ?? null, jobId: draft.jobId || null })
   }}>
-    <p className="talent-eyebrow">{t('Relationship history')}</p><h3>{t(activity ? 'Edit activity' : 'Log activity')}</h3><p className="hint">{t('Record a conversation, its outcome, and the next step.')}</p>
+    <h3>{t(activity ? 'Edit activity' : 'Log activity')}</h3>
     <fieldset className="talent-form-grid" disabled={busy}>
       <label className="talent-field">{t('Activity type')}<select aria-label={t('Activity type')} value={draft.kind} onChange={(event) => setDraft({ ...draft, kind: event.target.value as ActivityKind })}>{Object.entries(ACTIVITY_LABELS).map(([value, label]) => <option value={value} key={value}>{t(label)}</option>)}</select></label>
       <label className="talent-field">{t('Activity date')}<input aria-label={t('Activity date')} type="datetime-local" required value={draft.occurredAt} onChange={(event) => setDraft({ ...draft, occurredAt: event.target.value })} /></label>

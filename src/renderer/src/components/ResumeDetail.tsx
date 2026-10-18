@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useI18n } from '../i18n.js'
 import type { Translator } from '@shared/i18n.js'
 import type { MatchResult, ResumeDetail as Detail, ResumeSummary } from '@shared/types.js'
-import ScoreRing from './ScoreRing.js'
+import { CloseIcon } from './Icons.js'
 import RecruiterProfile from './RecruiterProfile.js'
 
 /**
@@ -105,12 +105,12 @@ export default function ResumeDetail({ resume, match, onClose, onDeleted, onProf
       <aside className="detail" role="dialog" aria-label={t('Details for {name}', { name: resume.name ?? resume.fileName })}>
         <header className="detail-head">
           <div>
-            <h2 dir="auto">{resume.name ?? resume.fileName}</h2>
+            <h2><bdi>{resume.name ?? resume.fileName}</bdi></h2>
             <div className="detail-sub">{contact.length ? contact.map((item, index) => <span key={index}>{index > 0 && '  ·  '}<bdi dir={item.direction}>{item.value}</bdi></span>) : <bdi>{resume.fileName}</bdi>}</div>
           </div>
-          {match && <ScoreRing value={match.score} size={56} />}
+          {match && <div className="detail-score" role="img" aria-label={t('{score}% match', { score: formatNumber(Math.round(match.score * 100)) })}><strong>{formatNumber(Math.round(match.score * 100))}</strong><span>{t('Match')}</span></div>}
           <button className="icon-btn" onClick={onClose} aria-label={t('Close')}>
-            ×
+            <CloseIcon size={18} />
           </button>
         </header>
 
@@ -139,7 +139,6 @@ export default function ResumeDetail({ resume, match, onClose, onDeleted, onProf
                   ))}
                 </div>
               )}
-              <p className="hint">{t('Text matches suggest passages to review; they do not verify qualifications or professional responsibility.')}</p>
             </section>
           )}
 
@@ -172,7 +171,7 @@ export default function ResumeDetail({ resume, match, onClose, onDeleted, onProf
               <Field label={t('Source')} value={resume.fileName} />
             </dl>
             <p className="hint">
-              {t('These fields are parsed heuristically and can be wrong on unusually formatted resumes. Ranking never uses them.')}
+              {t('Parsed automatically; may be wrong. Never used for ranking.')}
             </p>
             {resume.skills.length > 0 && (
               <div className="chips">

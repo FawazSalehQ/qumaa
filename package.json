@@ -38,6 +38,7 @@
     "@huggingface/transformers": "^4.2.0",
     "better-sqlite3": "^13.0.3",
     "chokidar": "^4.0.3",
+    "jose": "^6.2.12",
     "mammoth": "^1.12.1",
     "unpdf": "^1.8.1",
     "zod": "^4.4.3"
@@ -52,7 +53,7 @@
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^5.0.4",
-    "electron": "^43.4.1",
+    "electron": "^43.7.11",
     "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
     "react": "^19.2.0",

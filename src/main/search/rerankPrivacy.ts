@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import type { ClaudeRerankPreview, JsonValue, MatchResult, ResumeSummary } from '@shared/types.js'
-import { DEFAULT_RERANK_CONFIG, isRerankConfig, PROVIDER_LABELS, RERANK_CONSENT_VERSION, RERANK_MODELS, type RerankConfig } from '@shared/rerank.js'
+import { DEFAULT_RERANK_CONFIG, isChatGptConfig, isRerankConfig, rerankProviderLabel, RERANK_CONSENT_VERSION, RERANK_MODELS, type RerankConfig } from '@shared/rerank.js'
 
 export type { ClaudeRerankPreview } from '@shared/types.js'
 
@@ -225,7 +225,8 @@ function evidencePayload(jobDescription: string, results: MatchResult[]): string
 function preview(config: RerankConfig, results: MatchResult[], request: unknown): ClaudeRerankPreview {
   return {
     consentVersion: RERANK_CONSENT_VERSION,
-    provider: PROVIDER_LABELS[config.provider],
+    provider: rerankProviderLabel(config),
+    ...(isChatGptConfig(config) ? { authMode: 'chatgpt' as const } : {}),
     model: config.model,
     candidateCount: Math.min(results.length, RERANK_LIMIT),
     totalResultCount: results.length,
@@ -258,20 +259,26 @@ export function prepareClaudeRerank(jobDescription: string, results: MatchResult
 
 /** Build both the review and the transport from one canonical payload. */
 export function prepareRerank(jobDescription: string, results: MatchResult[], config: RerankConfig = DEFAULT_RERANK_CONFIG) {
-  if (!isRerankConfig(config)) throw new Error('Choose a supported reranking provider and model in Settings.')
+  if (!config.model || !isRerankConfig(config)) throw new Error('Choose a supported reranking provider and model in Settings.')
   if (config.provider === 'anthropic') return prepareClaudeRerank(jobDescription, results, config.model as AnthropicRerankModel)
 
   // No optional fields or composition keywords: every object explicitly rejects
   // additional keys, as required by OpenAI strict structured outputs.
   const { $schema: _dialect, ...schema } = z.toJSONSchema(RankingSchema, { target: 'draft-7' })
+  const chatgpt = isChatGptConfig(config)
   const requestBody = serializableRequestBody({
     model: config.model,
     store: false,
-    stream: false,
+    stream: chatgpt,
     instructions: SYSTEM,
     input: [{ role: 'user', content: evidencePayload(jobDescription, results) }],
-    max_output_tokens: config.model === 'gpt-4o-mini' ? 4096 : 8192,
-    ...(config.model === 'gpt-4o-mini' ? {} : { reasoning: { effort: 'low' } }),
+    // Plan-backed Responses currently requires streaming and rejects output
+    // limits. Do not assume every model in its account-specific catalog accepts
+    // the API models' reasoning controls.
+    ...(chatgpt ? {} : {
+      max_output_tokens: config.model === 'gpt-4o-mini' ? 4096 : 8192,
+      ...(config.model === 'gpt-4o-mini' ? {} : { reasoning: { effort: 'low' } })
+    }),
     text: { format: { type: 'json_schema', name: 'candidate_ranking', strict: true, schema } }
   })
   return { provider: 'openai' as const, preview: preview(config, results, requestBody), requestBody }
