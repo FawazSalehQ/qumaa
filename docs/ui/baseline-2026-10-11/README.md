@@ -24,14 +24,14 @@ of the old one-step reverts is safe any more:
 - `cc9df03` (ChatGPT subscription sign-in) added
   `src/renderer/src/components/ChatGptWelcome.tsx` and changed `SettingsView.tsx`,
   `components/recruiting/JobRerank.tsx` and `styles.css`.
-- `4ccc942` (backup-description correction) changed `SettingsView.tsx` and
-  `src/shared/locales/common.ts` again after `cc9df03`.
+- `4ccc942` and `26d286b` (backup and watched-folder descriptions) changed
+  `SettingsView.tsx` and `src/shared/locales/common.ts` again after `cc9df03`.
 - `main` is still at the baseline commit, so `git switch main` or deleting
   `ui-modernize` would also drop the security and ChatGPT work.
 
 A visual revert now needs a per-file plan: restore the stylesheets and
 presentational components from `1ac5b984297db9803456103a27897e2289e71d5f`, then
-re-apply the renderer changes of `e28dce5`, `cc9df03` and `4ccc942` listed above, in that order, and keep
+re-apply the renderer changes of `e28dce5`, `cc9df03`, `4ccc942` and `26d286b` listed above, in that order, and keep
 everything outside `src/renderer`. Do it only on the user's explicit request,
 and confirm the file list with `git log 1ac5b98..HEAD -- src/renderer` first.
 

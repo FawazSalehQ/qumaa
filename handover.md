@@ -1,6 +1,6 @@
 # Qumaa session handover (Claude ⇄ ChatGPT)
 
-Signed off **17 October 2026** (Asia/Riyadh, UTC+3) by **Claude** (Claude Code). Previous sign-off: **16 October 2026** by **ChatGPT** (Codex); its full text is preserved in Git history (`git log -- handover.md`).
+Signed off **18 October 2026** (Asia/Riyadh, UTC+3) by **Claude** (Claude Code). Earlier sign-offs: 17 October by Claude, 16 October by **ChatGPT** (Codex); their full texts are in Git history (`git log -- handover.md`).
 
 This is the shared sign-off record between the Claude and ChatGPT sessions that work on this repository. Each session reads it before starting and updates it before signing off, so that work in one session does not undo, repeat or contradict work in another. It records state and decisions; it is **not authorization**. Commits, pushes, merges, releases, tag moves and messages to other people happen only when the user asks for them in the current session.
 
@@ -32,13 +32,13 @@ Keep a single handover file, `handover.md` (an older `HANDOVER-CODEX.md` was rem
 | Scope | Hiring across all domains and seniority levels; OCR out of scope |
 | Repository | [FawazSalehQ/qumaa](https://github.com/FawazSalehQ/qumaa) (**public**) |
 | Checkout | `/Users/fawazalqahtani/Desktop/Directory/cv_filter` |
-| Branch | `ui-modernize` (not merged to `main`) |
-| Pushed | `origin/ui-modernize` = `e28dce5e320b869d1a37e669a8356e1a65375086` |
-| Local, **not pushed** | `b3b2ffc`, `6327450`, `cc9df03`, `4ccc942` and the documentation commits that add this sign-off (see section 3); run the `git log` command above for the exact list |
+| Branch | `ui-modernize`. `main` is still at `1ac5b98`; [pull request #1](https://github.com/FawazSalehQ/qumaa/pull/1) merges the branch into it and awaits the user. |
+| Pushed | Everything. `origin/ui-modernize` holds the commit that carries this sign-off. |
+| CI | `.github/workflows/verify.yml` passed on macOS arm64 and Windows x64 for `1c19871` ([run 39080572186](https://github.com/FawazSalehQ/qumaa/actions/runs/39080572186)); later pushes re-run it (`gh run list --branch ui-modernize`). |
 | Working tree | Clean except the gitignored local-only files in section 11 |
 | Application/package version | **`0.1.0-beta.5`**; package `name` must stay **`cv-filter`** |
 | Public release | **`v0.1.0-beta.2`**, intentionally distinct from the package version; last recorded as updated 11 Oct at `1ac5b98`. Remote release state was not re-queried on 17 Oct. |
-| Local installers | `release/Qumaa-0.1.0-beta.5-arm64.dmg` and `release/Qumaa-0.1.0-beta.5-Setup-x64.exe`, built 16 Oct 19:48–19:51 from `e28dce5` plus the then-uncommitted ChatGPT code. They **do not contain** `b3b2ffc`, `6327450`, Claude's two Settings copy edits in `cc9df03` or `4ccc942`. Rebuild before distributing (see "Release artifacts" below). |
+| Local installers | `release/Qumaa-0.1.0-beta.5-arm64.dmg` and `release/Qumaa-0.1.0-beta.5-Setup-x64.exe`, built 16 Oct 19:48–19:51 from `e28dce5` plus the then-uncommitted ChatGPT code. They **do not contain** `b3b2ffc`, `6327450`, Claude's two Settings copy edits in `cc9df03`, or anything from `4ccc942` on. Rebuild before distributing (see "Release artifacts" below). |
 | Database schema | **12** |
 | Resume derivation version | **`3:bounded-text-parsing`** |
 | Embedding model | Bundled `multilingual-e5-small`, 384 dimensions |
@@ -61,11 +61,24 @@ The pushed branch, the local installers and the published GitHub release are thr
 
 ## 2. In flight
 
-Nothing is in flight at this sign-off. The user's next task is not yet known.
+- **Pull request #1** (`ui-modernize` → `main`), opened 18 Oct by Claude. A direct push to `main` was blocked by Claude Code's auto-mode safety check as a merge without review, so the user merges it. Use **Create a merge commit** so the hashes cited here stay valid. Later pushes to `ui-modernize` update the pull request.
+- **Native Arabic review**, started 18 Oct by Claude. The review page is a private claude.ai artifact owned by the user: https://claude.ai/artifact/AjzUW6dV7pLDt376gWo6wv. It lists the 114 agent-written Arabic strings added since `1ac5b98` that the app uses, with the agent pre-review flags. The reviewer marks each one Approved or Needs change and can type corrected Arabic. Decisions are stored in the page's database, collection `reviews`, documents `s001`…`s114`, fields `status` (`approved` or `change`), `arabic` and `note`. A Claude session reads them with the ArtifactData tool; anyone can use **Export CSV** on the page and hand the file to a ChatGPT session. To finish: apply each `change` to `src/shared/locales/`, run `npm test` and `npm run test:ui:built`, then rebuild the installers (open item 4).
 
 When a session leaves work half-done (an uncommitted change, a long-running build, a decision waiting on the user), list it here with the date, the agent, the files involved and what is needed to finish it.
 
 ## 3. Session log (newest first)
+
+### 18 October 2026, Claude
+
+User requests: *"What do you recommend I do"*, then *"Other than testing chatgpt sign in, do your recommendations."*
+
+- Pushed `ui-modernize` (`1c19871`). CI passed on both platforms: 676 unit tests, smoke, 31 UI workflows on the build and 31 on the packaged app, each on macOS arm64 and Windows x64. This is the first Windows run of this code.
+- Opened pull request #1 to merge into `main` (section 2).
+- `0725362` **Add missing Arabic entries and test Arabic coverage.** Added `Not specified`, `Unnamed person` and `Preparing…`. New `test/i18n-coverage.test.ts` fails when a literal `t('…')` or `translate(language, '…')` string has no Arabic entry, naming the file and line. A positive control (one entry removed) failed as expected.
+- `26d286b` **Correct the watched-folder description.** The copy pass's *"including while Qumaa is closed"* implied imports run while the app is closed; the watcher catches up at the next launch.
+- Arabic pre-review: an agent pass built a 44-term glossary of the app's established Arabic, checked all 114 strings and had a second agent challenge each flag. 15 flags survived; the watched-folder fix resolved one, and 14 are shown on the review page as hints, not verdicts.
+- Verification: build, 678 unit tests and 31 UI workflows passed locally after each change. The review page's database was checked with one write, read and delete.
+- Not done, by design: the ChatGPT sign-in test (the user's choice); installer rebuild (after the Arabic review).
 
 ### 16–17 October 2026, Claude
 
@@ -121,7 +134,7 @@ The **Wayfinding** direction draws on Riyadh Metro/KAFD signage while keeping co
 - Inline `<bdi>` for short mixed-language identities; `dir="auto"` for prose and inputs; logical properties and start alignment.
 - Depth by tone and 1px rules, shadows only on overlays, hover gated by `(hover: hover)`, reduced-motion support, inline SVG icons from `Icons.tsx` (directional ones mirror in RTL), bundled fonts, no network assets.
 - Stable accessible names and class hooks used by Playwright. After renderer edits run `npm run build` and then `npm run test:ui:built` (or `npm run test:ui`, which builds first); `test:ui:built` tests whatever is in `out/` and passes against a stale build.
-- **Arabic copy.** Every `t('…')` string needs an Arabic entry keyed by the exact English text, with the same `{placeholders}`, in its area's catalog under `src/shared/locales/` (Settings and shell: `common.ts`; library and matching: `matching.ts`; native dialogs and menus: `native.ts`; Jobs: `recruiting.ts`; and so on). Nothing fails if one is missing: `translate()` falls back to English, and `test/i18n.test.ts` checks only placeholders and that a key repeated across catalogs has one translation. When you reword an English string, re-key or delete its old entry. Add every agent-written Arabic string to open item 5 for native review.
+- **Arabic copy.** Every `t('…')` string needs an Arabic entry keyed by the exact English text, with the same `{placeholders}`, in its area's catalog under `src/shared/locales/` (Settings and shell: `common.ts`; library and matching: `matching.ts`; native dialogs and menus: `native.ts`; Jobs: `recruiting.ts`; and so on). `translate()` falls back to English silently. `test/i18n-coverage.test.ts` fails when a literal `t('…')` or `translate(language, '…')` string has no entry; strings passed through a variable (`t(LABELS[x])`) are not covered, so check those by hand. `test/i18n.test.ts` checks placeholders and that a key repeated across catalogs has one translation. When you reword an English string, re-key or delete its old entry. Add every agent-written Arabic string to open item 5 for native review.
 
 **Disclosure (Rail stop), added in `6327450`.** Markup: `<details className="disclosure [inline|entry] <site-class>">` whose head is `<DisclosureSummary>label</DisclosureSummary>` (`src/renderer/src/components/DisclosureSummary.tsx`: chevron, then a label span that is the summary's only text). Body children need no wrapper. The CSS is one block in `src/renderer/src/styles.css` under the comment "disclosures: stops on the line".
 
@@ -130,7 +143,7 @@ The **Wayfinding** direction draws on Riyadh Metro/KAFD signage while keeping co
 - Status history keeps its own timeline instead of the rail and holds its full-width basis through the 200ms close (`recruiting.css`), then returns to the end of the status bar. When opened it moves to its own line; the panel chose that deliberately.
 - `ChevronDownIcon` must never get `directional-icon`, whose RTL `scaleX(-1)` would fight the rotation.
 
-**Captures.** `scripts/capture-ui.mjs` seeds fictional data in a throwaway library and captures 24 views (light, dark, Arabic). `docs/ui/baseline-2026-10-11/` freezes the pre-redesign UI. Its revert section was rewritten on 17 Oct: since `e28dce5` (date-safe rendering in `i18n.tsx` and `JobStatusPanel.tsx`), `cc9df03` (ChatGPT Settings and rerank UI) and `4ccc942` (backup description) changed renderer files, checking out `src/renderer` from `1ac5b98`, switching to `main` or deleting the branch would lose that work; a visual revert needs a per-file plan and the user's explicit request. `docs/ui/wayfinding-2026-10-11/` holds the after-sets, re-captured on 17 Oct from `4ccc942` (in a clean worktree) at 1440×1000 and 1180×820; each `manifest.json` records the commit. Re-capture them, with a label naming the commit, when a change visibly alters these views.
+**Captures.** `scripts/capture-ui.mjs` seeds fictional data in a throwaway library and captures 24 views (light, dark, Arabic). `docs/ui/baseline-2026-10-11/` freezes the pre-redesign UI. Its revert section was rewritten on 17 Oct: since `e28dce5` (date-safe rendering in `i18n.tsx` and `JobStatusPanel.tsx`), `cc9df03` (ChatGPT Settings and rerank UI), `4ccc942` (backup description) and `26d286b` (watched-folder description) changed renderer files, checking out `src/renderer` from `1ac5b98`, switching to `main` or deleting the branch would lose that work; a visual revert needs a per-file plan and the user's explicit request. `docs/ui/wayfinding-2026-10-11/` holds the after-sets, re-captured on 17 Oct from `4ccc942` (in a clean worktree) at 1440×1000 and 1180×820; each `manifest.json` records the commit. Re-capture them, with a label naming the commit, when a change visibly alters these views.
 
 ## 6. ChatGPT integration reference (`cc9df03`)
 
@@ -194,6 +207,8 @@ Visible creator attribution stays **Fawaz Aljathnan** with `https://www.linkedin
 
 ## 8. Verification
 
+**18 October 2026, GitHub Actions on `1c19871`** ([run 39080572186](https://github.com/FawazSalehQ/qumaa/actions/runs/39080572186)): on both macOS arm64 and Windows x64, `npm ci`, the model fetch, 676 unit tests, the Electron smoke suite, 31 UI workflows on `out/`, the unpacked package and 31 UI workflows on the packaged app all passed. Later commits were checked locally (build, 678 unit tests, 31 UI workflows) and re-run in CI on push.
+
 **17 October 2026, Claude, on the code at `cc9df03`** (the documentation commits change no code). Parity with `.github/workflows/verify.yml` on macOS; packaging was written to a scratch folder so `release/` was not touched.
 
 | Check (CI step) | Result |
@@ -217,7 +232,7 @@ Per-commit checks on 17 October, in isolated worktrees: the two UI commits were 
 
 The end-to-end subscription tests use the real loopback callback listener, signed ID-token verification, catalog handling, main/preload, evidence consent, streaming, saved ordering, quota recovery and revocation. Browser launch, provider responses and credential protection are simulated with fictional accounts and data; no real subscriber session or allowance was used.
 
-**Still unverified:** live ChatGPT account eligibility, provider acceptance and real plan usage; this build running on Windows (CI last passed on Windows at an older published commit); human installation/upgrade acceptance. No ranking-quality evaluation, capacity benchmark or fresh security scan was run for the ChatGPT feature or the UI changes, and none is claimed.
+**Still unverified:** live ChatGPT account eligibility, provider acceptance and real plan usage; a human install of the Windows NSIS installer on a real machine (CI on GitHub's Windows runner tests the unpacked app); human installation/upgrade acceptance. No ranking-quality evaluation, capacity benchmark or fresh security scan was run for the ChatGPT feature or the UI changes, and none is claimed.
 
 Machine-local evidence (may be cleaned by the OS): from 16 Oct, `/private/tmp/qumaa-chatgpt-release-knDQbi/` (staged builds, `unit-tests.txt`, `artifact-verification.txt`, container logs, `replacement-summary.json`, `older-builds/`) and `/private/tmp/qumaa-chatgpt-{build,smoke,unit}.log`; from 17 Oct, Claude's session scratchpad under `/private/tmp/claude-501/` (`verify-run/` for `cc9df03`, `verify-run-2/` for the final tree, `pkg/` and `pkg2/` scratch packages, `wt1-*`, `wt2-*` and `wt2b-*` per-commit logs). `test-results/` holds screenshots from the latest UI run (17 Oct), not the 16 Oct ChatGPT run.
 
@@ -226,12 +241,12 @@ Machine-local evidence (may be cleaned by the OS): from 16 Oct, `/private/tmp/qu
 Listed for continuity, not as authorization.
 
 1. **Live ChatGPT check.** A real eligible sign-in and one controlled request, done with the user. Do not spend their allowance or use real candidate data without their go-ahead.
-2. **Windows.** Run this build on Windows. Pushing the branch would run CI on macOS and Windows (`.github/workflows/verify.yml`), but pushing needs the user's request.
-3. **Push decision.** The local commits listed in section 1 are not on GitHub.
-4. **Stale installers.** The local installers predate `b3b2ffc`, `6327450` and the Settings copy fixes. Rebuild with `npm run build:mac` / `npm run build:win` before distributing, then regenerate `SHA256SUMS-v0.1.0-beta.5.txt` (section 1); the version has not been bumped.
-5. **Native Arabic review.** Agent-drafted Arabic that no native speaker has reviewed: the ChatGPT strings in `cc9df03` (`common.ts`, `matching.ts`, `native.ts`), 22 copy-pass strings (21 in `b3b2ffc`, plus the backups sentence, rewritten on 17 Oct), and three pipeline strings from the redesign (`Open in pipeline`, `Open pipeline for {name}`, `Review · Stage`).
+2. **Windows installer.** CI now runs the full suite, including the packaged app, on Windows. Still untested: installing the NSIS `.exe` on a real Windows machine.
+3. **Merge pull request #1** into `main` (section 2).
+4. **Stale installers.** The local installers predate `b3b2ffc`, `6327450` and every later commit. Rebuild after the Arabic review, with the version bumped to `0.1.0-beta.6` (there is no auto-updater; the bump is for clarity). Use `npm run build:mac` / `npm run build:win`, then write a new SHA-256 manifest (section 1).
+5. **Native Arabic review**, in progress through the review page (section 2). Its scope is agent-drafted Arabic that no native speaker has reviewed: the ChatGPT strings in `cc9df03` (`common.ts`, `matching.ts`, `native.ts`), 22 copy-pass strings (21 in `b3b2ffc`, plus the backups sentence, rewritten on 17 Oct), and three pipeline strings from the redesign (`Open in pipeline`, `Open pipeline for {name}`, `Review · Stage`). The glossary pass also found inconsistencies in the older Arabic, outside the page's scope: provider is `مزوّد` in Settings but `جهة` in `native.ts`; the Pipeline view is `مسار المرشحين` but `مسار التوظيف` in the client pack; `نموذج` means both an AI model and a screening kit; vacancy is sometimes `الوظيفة الشاغرة`.
 6. **Unused Arabic entries.** 69 catalog entries whose English keys no longer appear in code (mostly from the copy pass, a few from changed ChatGPT wording). Harmless; remove them in a dedicated cleanup and rerun `npm test`.
-7. **Missing Arabic entries (pre-existing, since `1ac5b98`).** `Not specified` (Jobs facts bar), `Unnamed person` and `Preparing…` (client pack) have no Arabic entry and show English in the Arabic UI.
+7. **Missing Arabic entries:** fixed in `0725362`; `test/i18n-coverage.test.ts` now guards literal strings.
 8. **Design follow-ups (not authorization for another redesign).** Pipeline stage strip wraps at 1440px; the 1180×820 first viewport shows two candidate rows; English screening questions right-align in the Arabic UI; numbered lists inside disclosure bodies keep the browser's 40px indent; Status history moving to its own line when opened may be revisited if the user prefers.
 9. **Guides and decks** predate the current UI and the ChatGPT settings.
 10. **Dependency advisories.** README's "Known advisories" lists 4 libvips CVEs; the 15 Oct audit query in the ChatGPT session's security report (run on the tree already carrying Electron 43.7.11, before `e28dce5` was committed) listed 23 affected entries (including mammoth, transformers and undici). Refresh with a current `npm audit`, triage reachability and update README; do not remove Sharp.
@@ -295,4 +310,4 @@ Already ignored: `out/`, `release/`, `resources/models/`, `eval/corpus/`, `eval/
 
 ## 12. Suggested opening prompt
 
-> Continue work on Qumaa. Read handover.md and AGENTS.md first, then check `git status` and `git log --oneline origin/ui-modernize..HEAD`. We are on `ui-modernize`; `e28dce5` is pushed and later commits are local only. Preserve the decisions in section 4 of the handover and update the handover before you sign off. My next task is: [state the task].
+> Continue work on Qumaa. Read handover.md and AGENTS.md first, then check `git status` and `git log --oneline origin/ui-modernize..HEAD`. We are on `ui-modernize`, fully pushed; pull request #1 merges it into `main`. Preserve the decisions in section 4 of the handover and update the handover before you sign off. My next task is: [state the task].
