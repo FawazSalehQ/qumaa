@@ -1,5 +1,6 @@
 /** Company-linked jobs, salary budgets and sourcing plans. */
 export const jobsCompanyAr: Record<string, string> = {
+  'Not specified': 'غير محدد',
   'Set salary budget': 'تحديد ميزانية الراتب',
   'Minimum salary': 'الحد الأدنى للراتب',
   'Maximum salary': 'الحد الأعلى للراتب',
