@@ -257,7 +257,7 @@ export default function SettingsView({
         </section>
         <section className="card setting setting-wide" aria-labelledby="watched-folder-heading">
           <h3 id="watched-folder-heading">{t("Watched folder")}</h3>
-          <div className="desc">{t('Files added here are imported automatically, including while Qumaa is closed.')}</div>
+          <div className="desc">{t('Files added here are imported automatically, or at the next launch if Qumaa is closed.')}</div>
           {watched ? (
             <div className="row setting-actions">
               <code className="setting-path" dir="ltr">{watched}</code>
