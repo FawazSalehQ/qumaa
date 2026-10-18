@@ -49,7 +49,7 @@ export const jobsCompanyAr: Record<string, string> = {
   'Research status': 'حالة البحث',
   'Target roles': 'الأدوار المستهدفة',
   'Research notes': 'ملاحظات البحث',
-  'e.g. Senior drilling engineers': 'مثل: كبار مهندسي الحفر',
+  'e.g. Senior drilling engineers': 'مثال: كبار مهندسي الحفر',
   'Excluded from this sourcing plan. Candidate matching is unchanged.': 'مستبعدة من خطة البحث هذه. لا يؤثر ذلك في مطابقة المرشحين.',
   'Save company map': 'حفظ خريطة الشركات',
   'Company map saved': 'تم حفظ خريطة الشركات',

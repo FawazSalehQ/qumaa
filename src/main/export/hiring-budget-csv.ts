@@ -16,7 +16,7 @@ const labels: Record<string, [string, string]> = {
   scheme: ['GOSI scheme', 'نظام التأمينات'], selectedMonth: ['Selected planning month', 'شهر التخطيط المختار'], periodStart: ['Budget period start', 'بداية فترة الميزانية'], periodEnd: ['Budget period end', 'نهاية فترة الميزانية'],
   employmentStartMonth: ['Expected employment start month', 'شهر بدء العمل المتوقع'], serviceMonthsAtStart: ['Elapsed service months at employment start', 'أشهر الخدمة المنقضية عند بدء العمل'], headcount: ['Headcount', 'عدد الموظفين'], approvedBudgetHalala: ['Approved budget for headcount and period', 'الميزانية المعتمدة لعدد الموظفين والفترة'],
   gosi: ['GOSI', 'التأمينات الاجتماعية'], minimumWageHalala: ['Minimum contribution wage', 'الحد الأدنى لأجر الاشتراك'], maximumWageHalala: ['Maximum contribution wage', 'الحد الأعلى لأجر الاشتراك'], limitNote: ['Basis for configured wage limits', 'أساس حدود أجر الاشتراك المحددة'],
-  registeredWageHalala: ['Verified registered wage override', 'أجر الاشتراك المسجل المتحقق منه'], registeredWageNote: ['Basis for registered wage override', 'أساس تجاوز أجر الاشتراك المسجل'],
+  registeredWageHalala: ['Verified registered wage override', 'أجر الاشتراك المسجل المتحقق منه'], registeredWageNote: ['Basis for registered wage override', 'أساس التحقق من أجر الاشتراك المسجل'],
   eos: ['End-of-service provision', 'مخصص نهاية الخدمة'], includeBasic: ['Include basic in eligible EOS wage', 'تضمين الأساسي في أجر نهاية الخدمة'], includeHousing: ['Include housing in eligible EOS wage', 'تضمين السكن في أجر نهاية الخدمة'], includeTransport: ['Include transport in eligible EOS wage', 'تضمين النقل في أجر نهاية الخدمة'], notes: ['Notes', 'ملاحظات'],
   grossHalala: ['Gross salary', 'الراتب الإجمالي'], gosiBaseHalala: ['Basic plus housing before wage ceiling', 'الأساسي والسكن قبل سقف أجر الاشتراك'], gosiWageHalala: ['GOSI contribution wage', 'أجر الاشتراك في التأمينات'], eosWageHalala: ['Eligible EOS wage', 'الأجر المؤهل لنهاية الخدمة'], gosiWageSource: ['GOSI wage source', 'مصدر أجر الاشتراك'], gosiCeilingApplied: ['Contribution ceiling applied', 'تطبيق سقف أجر الاشتراك'],
   scenarios: ['Scenarios', 'السيناريوهات'], month: ['Month', 'الشهر'], rates: ['Contribution rates', 'نسب الاشتراك'], effectiveDate: ['Rate effective date', 'تاريخ سريان النسبة'],
@@ -66,7 +66,7 @@ export function hiringBudgetCsv(plan: SavedHiringBudget, companyName: string, jo
   walk(['plan'], { id: plan.id, companyId: plan.companyId, company: companyName, jobId: plan.jobId, job: jobTitle, name: plan.name, calculationVersion: plan.calculationVersion, createdAt: new Date(plan.createdAt).toISOString(), updatedAt: new Date(plan.updatedAt).toISOString() })
   const assumptions = language !== 'ar' ? result.assumptions : result.assumptions.map((assumption) => {
     if (hiringCostAssumptionTranslations[assumption]) return hiringCostAssumptionTranslations[assumption]
-    return assumption.replace(/^Verified registered GOSI wage override: /, 'تجاوز أجر الاشتراك المسجل المتحقق منه: ').replace(/^Configured contribution-wage limits: /, 'حدود أجر الاشتراك المحددة: ')
+    return assumption.replace(/^Verified registered GOSI wage override: /, 'أجر الاشتراك المسجل المتحقق منه بدلًا من الأجر المحسوب: ').replace(/^Configured contribution-wage limits: /, 'حدود أجر الاشتراك المحددة: ')
   })
   walk([], { ...result, assumptions })
   return `\ufeff${rows.map((cells) => cells.map(csvCell).join(',')).join('\r\n')}\r\n`
