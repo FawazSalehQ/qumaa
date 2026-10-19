@@ -26,17 +26,12 @@ refresh; startup and ordinary matching do not contact an AI provider.
 
 | | macOS | Windows |
 |---|---|---|
-| Operating system | macOS 12 Monterey or later | Windows 10 or 11, 64-bit |
-| Processor | Apple Silicon (M1 or later). The DMG is arm64-only, so Intel Macs are not supported. | x64 (64-bit Intel or AMD). Windows on ARM is untested. |
-| Memory | 4 GB minimum, 8 GB recommended. Measured on macOS, all app processes together peaked at about 1.2 GB resident during the automated workflows; a 3,000-CV library sits at about 257 MB. | 4 GB minimum, 8 GB recommended |
-| Disk | 234 MB download, about 550 MB installed, plus the library (about 39 MB per 3,000 one-page CVs) | 220 MB download, about 680 MB installed, plus the library |
-| Additional runtime | None | Microsoft Visual C++ 2015–2022 Redistributable (x64). The matching engine's `onnxruntime.dll` links `MSVCP140.dll` and `VCRUNTIME140.dll`, which the installer does not ship. Most machines already have it; if import or matching never becomes ready, install it from Microsoft. |
-| Display | A window of at least 940 × 620 points | A window of at least 940 × 620 pixels at 100% scaling |
-| Network | None to install or use. Optional AI reranking needs internet access and an Anthropic or OpenAI API key, or an eligible ChatGPT subscription. | Same as macOS |
-| First launch | Right-click → Open once; the app is ad-hoc signed, not notarized | SmartScreen: "More info", then "Run anyway". The installer is per-user and needs no administrator rights. |
-
-The installer sizes and the memory figures are from the 19 October 2026 build;
-see [the release document](docs/releases/RELEASE-v0.1.0-beta.5-2026-10-19.md).
+| Operating system | macOS 12 or later | Windows 10 or 11, 64-bit |
+| Processor | Apple Silicon (M1 or later) | x64 |
+| Memory | 4 GB (8 GB recommended) | 4 GB (8 GB recommended) |
+| Disk | 550 MB plus the library | 680 MB plus the library |
+| Display | 940 × 620 or larger | 940 × 620 or larger |
+| Network | None (optional AI reranking needs internet access) | None (optional AI reranking needs internet access) |
 
 ### Building from source
 
