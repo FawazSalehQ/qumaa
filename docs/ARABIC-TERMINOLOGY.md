@@ -14,7 +14,7 @@ When you add or change Arabic, use the term in the middle column and never reint
 | hire / placement | تعيين for a specific hire (تم تعيينه، التعيينات، بيانات التعيين); التوظيف for hiring in general | 'تم التوظيف' for the Placed stage; التوظيف for 'placements' |
 | prospect | المرشح المحتمل | bare المرشح in 'Delete prospect and history' |
 | contact (Recruiter desk person record) | الشخص / الأشخاص; بيانات الشخص | جهات الاتصال in wipe and backup lists; بيانات التواصل |
-| contact information (email, phone) | بيانات الاتصال; حقول الاتصال | بيانات التواصل (unused تفاصيل التواصل left alone) |
+| contact information (email, phone) | بيانات الاتصال; حقول الاتصال | بيانات التواصل |
 | job assignment | مهمة توظيف / مهام التوظيف (possessive مهام توظيفه); participle مرتبط بالوظيفة | مهمة وظيفة; مهام الوظائف; مهام وظائفه |
 | activity | النشاط / الأنشطة | التواصل / سجل التواصل for activity |
 | talent pool | مجموعة المواهب (pl. مجموعات المواهب); bare المجموعة only inside the pool workspace | قاعدة المواهب; bare عضويات المجموعات outside the pool workspace |

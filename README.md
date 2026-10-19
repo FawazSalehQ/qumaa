@@ -40,7 +40,8 @@ gitignored. It downloads from the immutable revision in
 including an existing CI cache. Packaging also runs `verify-model` and fails
 before producing an installer if a model file is missing or has changed.
 
-Qumaa accepts digital PDF, DOCX, and Markdown (`.md` or `.markdown`) resumes.
+Qumaa accepts digital PDF, DOCX, and Markdown (`.md` or `.markdown`) resumes,
+by drag and drop, a file picker, a watched folder, or pasted text.
 PDFs must contain a usable text layer. Image-only scans and other file types are
 outside the supported scope. OCR is outside the product scope and is not planned.
 
@@ -247,13 +248,16 @@ and [OpenAI model catalog](https://developers.openai.com/api/docs/models).
 | `npm run verify-model` | Verify the complete local model without using the network |
 | `npm test` | Unit tests + the ranking sanity suite |
 | `npm run smoke` | Integration check inside Electron: DB, embedder, real PDF/DOCX, search, PDF export, and wipe |
-| `npm run test:ui` | Playwright flow through the real Electron UI and hardened preload boundary |
+| `npm run test:ui` | Build, then run the Playwright workflows through the real Electron UI |
+| `npm run test:ui:built` | The same workflows against whatever is in `out/`, or a packaged app with `QUMAA_E2E_EXECUTABLE=<binary>` |
 | `npm run verify` | Unit, Electron smoke, and UI suites together |
 | `npm run seed` | Dev only: fill the library with the ten-person test corpus |
 | `npm run bench` | Capacity benchmark: ingest, duplicate scan, and search at 500/1500/3000 resumes |
+| `npm run eval` | Ranking quality against a labelled local corpus; see [the evaluation README](eval/README.md) |
 | `npm run eval:domains` | Frozen cross-profession quality checks in a disposable library; see [evaluation instructions](eval/cross-domain/README.md) |
 | `npm run build:mac` | Produce `release/Qumaa-<version>-arm64.dmg` (Apple Silicon) |
 | `npm run build:win` | Produce `release/Qumaa-<version>-Setup-x64.exe` (Windows 10/11 x64) |
+| `npm run package:dir:mac` / `package:dir:win` | Unpacked app folders for inspection or UI tests, without installers |
 
 Each successful `build:mac` or `build:win` removes superseded local installers for
 that platform. Cleanup can also be run with `node scripts/prune-releases.mjs mac`
@@ -306,8 +310,8 @@ whether to remove the folder, defaulting to keeping it.
 That step is not optional. `sharp` ships one binary package per platform, and npm
 refuses to install a package whose `os` field does not match the host, so a plain
 `npm install` on macOS never fetches the Windows one. Without it the build still
-succeeds and the app then dies on launch, because `transformers.node.cjs` requires
-sharp at module load. The script fails loudly rather than letting that ship.
+succeeds and the app then dies on launch (see [Packaging notes](#packaging-notes)
+for why sharp must ship). The script fails loudly rather than letting that ship.
 
 `better-sqlite3` and `onnxruntime-node` need no equivalent: each ships every
 platform's prebuilt binaries in a single package.
@@ -408,15 +412,20 @@ booting an app.
 ## Layout
 
 ```
-src/main/ingest/    extract → normalize → sections → chunk → fields → pipeline
-                    plus duplicates.ts (near-duplicate scan)
-src/main/search/    scoring.ts (pure math) + rank.ts (orchestration) + rerank.ts
-src/main/embed/     utility-process client, worker, shared protocol, reindex
-src/main/export/    branded shortlist PDF
-src/main/db/        schema, migrations, vector (de)serialisation, queries
-src/main/recruiting/ saved jobs, candidate profiles, reviews, and version history
-src/renderer/       React UI (Jobs / Library / Settings)
-test/               vitest suites + Electron Playwright flows + PDF/DOCX fixtures
+src/main/ingest/      extract → normalize → sections → chunk → fields → pipeline,
+                      plus duplicates.ts (near-duplicate scan), watcher.ts, source-file.ts
+src/main/search/      scoring.ts (pure math), rank.ts (orchestration), sessions.ts,
+                      rerank*.ts (AI reranking: privacy, consent, settings, ordering)
+src/main/embed/       utility-process client, worker, shared protocol, reindex
+src/main/chatgpt/     Sign in with ChatGPT (OAuth in main, safeStorage tokens)
+src/main/export/      shortlist PDF and CSV, client presentation PDF, hiring-budget CSV
+src/main/db/          schema, migrations, stored-data limits, backup and restore
+src/main/recruiting/  companies, saved jobs, reviews, recruiter desk, pipelines, budgets
+src/main/smoke*.ts, seed.ts, bench.ts, eval*.ts   development-only entry points
+src/preload/          the contextBridge surface
+src/shared/           types, i18n and the Arabic catalogs, pure domain helpers
+src/renderer/         React UI: Jobs, Companies, Recruiter desk, Library, Settings
+test/                 vitest suites, Electron Playwright flows, PDF/DOCX fixtures
 ```
 
 ## Brand
@@ -479,10 +488,14 @@ credentials after a library replacement.
 
 ### Known advisories
 
-`npm audit` reports **4 high-severity CVEs in libvips**, reachable through
-`sharp`. They are image-decoding bugs, and there is no fixed release.
+`npm audit` on 19 October 2026 lists 23 advisories. The 2 critical and most of
+the 11 moderate ones sit in development tooling that never ships (vitest and its
+pool, electron-builder and its downloaders). Of the 10 high ones, the only
+runtime-reachable packages are **libvips** (through `sharp`) and `undici`;
+the libvips advisories are image-decoding bugs with no fixed release, and the
+`mammoth` entry is its unused command-line parser.
 
-They are not reachable in this app. `sharp` is present only because
+The libvips advisories are not reachable in this app. `sharp` is present only because
 `transformers.node.cjs` requires it at module load; no code path passes an image
 to it, and the app never decodes images at all. The one place sharp is genuinely
 called is `scripts/make-icon.mjs`, at build time, on an SVG string this repo

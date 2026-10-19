@@ -180,5 +180,5 @@ extraction work for macOS arm64 and Windows x64. New requirement workflows are
 also checked in the packaged Mac app. Development-only evaluation and smoke
 entry points and their private helper chunks are excluded from both installers.
 The model remains bundled once as an external resource, with pinned file hashes.
-See [release notes](../release/RELEASE-v0.1.0-beta.3.md) for artifact verification.
+See [release notes](../docs/releases/RELEASE-v0.1.0-beta.3.md) for artifact verification.
 No release was published or tagged.

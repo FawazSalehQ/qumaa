@@ -66,3 +66,6 @@ It renders temporary single-slide copies without notes to avoid Office preview
 importer limitations. The original PowerPoint retains its notes, editable shapes,
 and links. Rendering reports check document structure, page counts, links, and
 layout. Storyboards list the page copy and speaker notes in each language.
+
+`SHA256SUMS.txt` records the checksums of the six guide files. Regenerate it
+whenever the guides are rebuilt so the manifest matches what is distributed.

@@ -1,7 +1,7 @@
 # Qumaa · قُمع — brand assets
 
 Mark: a stack of résumés narrowing into a funnel. Two tinted sheets sit above a solid funnel;
-at 16px the top sheet drops away so the mark stays legible.
+below 20px the top sheet drops away so the mark stays legible.
 
 ## Colours
 | Token | Hex | Use |

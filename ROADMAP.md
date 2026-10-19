@@ -1,9 +1,16 @@
 # Qumaa roadmap
 
-Updated 4 October 2026. Companies, company-linked jobs, salary and total
+Updated 19 October 2026. Companies, company-linked jobs, salary and total
 hiring budgets, target-company maps, recruiter contacts, follow-ups, talent
 pools, pipelines, submissions, screening kits and client packs are implemented.
 OCR is outside scope.
+
+Since 11 October: the Wayfinding UI redesign was accepted; document parsing,
+backup validation and date handling were hardened; Sign in with ChatGPT lets an
+eligible subscription rerank candidates alongside API keys; CI runs the full
+suite, including the packaged app, on macOS arm64 and Windows x64; and a full
+code review on 19 October removed dead code, merged duplicated logic and fixed
+nine ingest, backup and export defects.
 
 Company industries, locations, contact names and contact emails now support
 multiple entries with Add/Enter and individual remove controls. Existing details
@@ -28,7 +35,7 @@ suggestions, explicit recruiter assessments, and a frozen evaluation covering
 | --- | --- | --- | --- |
 | 1 | Matching and extraction quality across domains | Requirements/evidence workflows verified; 96 synthetic evaluation cases expose substantial cross-language recall gaps. | Independent review of requirements, translations and candidate relevance; better cross-language retrieval without regressions by profession; fresh held-out examples. |
 | 2 | Recruiter pilot | Blind relevance protocol and expanded workflow packet prepared; no human sessions recorded. | Recruiter judgments, observed task outcomes, platform/format coverage, fixes and retests. |
-| 3 | Release readiness | Beta.5 installers built for macOS arm64 and Windows x64; seven company/budget workflows pass in the packaged Mac app. | Windows runtime verification and closure of relevant quality/pilot findings. |
+| 3 | Release readiness | Beta.5 installers (16 October) predate the UI redesign, ChatGPT sign-in and the 19 October fixes; CI runs all 31 UI workflows on the packaged app on macOS arm64 and Windows x64. | A human install of the Windows installer, the native Arabic review, rebuilt installers, and closure of relevant quality/pilot findings. |
 | 4 | Online resume intake | Source choice pending: email attachments, candidate upload form or recruitment-platform exports. | Choose one first source; define explicit import, source tracking, duplicate handling and review before implementing its adapter. |
 
 ## Current milestone: quality
@@ -40,8 +47,8 @@ derived fields and passages from retained text. Interrupted rebuilds retry;
 CV identities, recruiter corrections and histories remain intact. Saved match
 evidence is invalidated and must be refreshed.
 
-The latest production build, **547 unit tests**, **289 Electron integration
-checks** and **29 macOS source UI workflows** passed. Job requirements now accept
+The latest build passes **680 unit tests**, **330 Electron integration
+checks** and **31 UI workflows**, on macOS arm64 and Windows x64 in CI. Job requirements now accept
 arbitrary terminology, retain their source, and distinguish required, preferred
 and unspecified importance. Nearest passages require human review; the system
 does not automatically verify qualifications or reject missing CV text.
@@ -80,8 +87,8 @@ Use the existing [blind relevance protocol](pilot/README.md) and the separate
 [recruiter workflow exercise](pilot/RECRUITER-WORKFLOW-2026-09-23.md). Record actual
 outcomes and keep real CVs and participant details out of this repository.
 The packets support self-guided preparation until reviewers are available.
-No invitations or messages have been sent. Human acceptance, Windows execution
-and representative drilling PDF/DOCX coverage remain pending.
+No invitations or messages have been sent. Human acceptance, a human Windows
+installation and representative drilling PDF/DOCX coverage remain pending.
 
 Release preparation may proceed locally, but product acceptance depends on
 recorded quality and pilot results. Historical installer checks certify only

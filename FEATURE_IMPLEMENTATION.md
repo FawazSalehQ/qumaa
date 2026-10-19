@@ -138,31 +138,14 @@ historical evidence for beta.2.
   and legacy-job compatibility. Smoke and UI workflows cover company jobs,
   budget entry, research maps, persistence, backup/restore, and Arabic entry.
 
-Verified on 2026-09-22 against the local macOS development build:
-
-- TypeScript and production build passed; all 434 unit/IPC tests passed.
-- All 234 Electron integration checks passed, including older-schema migrations,
-  contact linking/merging, exact backup/restore, deletion and wipe. New regression
-  checks cover fresh screening kits, saved-search review snapshots, and merging
-  5,001 activity records with complete rollback on a failed merge.
-- All 22 UI workflows passed in one full run, including English/Arabic recruiter
-  workflows, screening cancellation/deletion, client-pack refresh across views,
-  current Express search, company budgets, and selected PDF content.
-- English and Arabic search layouts were visually checked after removing obsolete
-  styles. The actual Electron PDF writer exported both English and Arabic client
-  presentations; selected-content and private-note exclusion checks passed.
-  Source changes invalidate an approved preview before export.
-
-The audit fixed stale client-pack data, screening lifecycle issues, missed new
-saved-search matches, and inefficient history merges. Obsolete APIs, styles and
-helpers were removed. See [CODE_AUDIT.md](CODE_AUDIT.md) for findings and scope.
-
-Verification used disposable libraries. Both installers were subsequently rebuilt
-on 2026-09-22. All 22 UI workflows also passed against the packaged macOS app.
-The DMG and extracted Windows payload match the verified packages; bundled model
-hashes, native architectures and release checksums passed. Windows runtime tests
-have not been rerun for this rebuild. See the local
-[release notes](docs/releases/RELEASE-v0.1.0-beta.2.md).
+Verified on 2026-09-22 against the local macOS development build and again
+against the rebuilt installers; the test counts, the packaged-app rerun and the
+artifact checks are recorded once, in the
+[beta.2 release notes](docs/releases/RELEASE-v0.1.0-beta.2.md). The audit fixed
+stale client-pack data, screening lifecycle issues, missed new saved-search
+matches, and inefficient history merges; obsolete APIs, styles and helpers were
+removed. See [the audit report](docs/CODE-AUDIT-2026-09-22.md) for findings and
+scope.
 
 ## Integration order
 
