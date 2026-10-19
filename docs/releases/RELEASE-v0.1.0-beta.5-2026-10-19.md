@@ -101,8 +101,9 @@ backups.
   and `@img/sharp-win32-x64` with its libvips DLLs. No 7-Zip on the build
   machine, so the NSIS payload itself was not extracted; CI's Windows job tests
   the unpacked app from the same commit.
-- GitHub Actions runs 39299500509 and 39299493843 for `2e2a35f` were in progress
-  at sign-off.
+- GitHub Actions runs 39299500509 and 39299493843 for `2e2a35f` (this build's
+  code plus docs) passed on macOS arm64 and Windows x64, including the 31 UI
+  workflows against the unpacked Windows package.
 - Not done: a human install of the Windows installer on a real machine, the
   native Arabic review, a live ChatGPT sign-in, `npm run eval`, `npm run bench`.
 
