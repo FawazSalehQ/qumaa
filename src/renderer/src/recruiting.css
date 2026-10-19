@@ -39,7 +39,7 @@
 .recruit-company-filter { display: grid; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
 .recruit-company-filter .recruit-text-button { justify-self: start; }
 .recruit-temporary-entry { background: var(--accent-soft); border-bottom: 1px solid var(--accent-border); }
-.recruit-temporary-entry .recruit-eyebrow { margin: 0; color: var(--accent); letter-spacing: 0.24em; }
+.recruit-temporary-entry .recruit-eyebrow { margin: 0; color: var(--accent); }
 .recruit-temporary-entry.selected { box-shadow: inset 0 0 0 1px var(--accent-border); }
 
 /* Workspace */
@@ -49,9 +49,7 @@
 .recruit-workspace-head > div:first-child > .recruit-job-state { order: 2; }
 .recruit-workspace-head > div:first-child > .hint { order: 3; flex-basis: 100%; margin: 0; }
 .recruit-workspace-head h3 { margin: 0; overflow-wrap: anywhere; }
-.recruit-workspace-head h3 .lb { align-self: center; }
 .recruit-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.recruit-actions .btn { white-space: nowrap; }
 .recruit-workspace-head > .recruit-actions { flex-shrink: 0; justify-content: flex-end; }
 .recruit-notice, .recruit-error { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 11px 16px; font-size: var(--fs-sm); line-height: 1.55; }
 .recruit-notice { background: var(--accent-soft); color: var(--text-dim); border-top: 1px solid var(--accent-border); border-bottom: 1px solid var(--accent-border); }
@@ -107,9 +105,8 @@
 /* Candidate table: the station board */
 .recruit-table-scroll { overflow-x: auto; width: 100%; }
 .recruit-candidate-table { width: 100%; border-collapse: collapse; margin: 0; font-size: var(--fs-md); background: transparent; border: 0; border-radius: 0; }
-.recruit-candidate-table th { color: var(--text-faint); font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.24em; text-transform: uppercase; text-align: start; padding: 9px 14px; background: var(--bg-strip); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); position: static; border-radius: 0; }
+.recruit-candidate-table th { padding: 9px 14px; border-top: 1px solid var(--border); position: static; border-radius: 0; }
 .recruit-candidate-table td { padding: 13px 14px; vertical-align: middle; border-bottom: 1px solid var(--border); border-radius: 0; }
-.recruit-candidate-table tr:last-child td { border-bottom: 0; }
 .recruit-candidate-table tbody tr:last-child td:first-child, .recruit-candidate-table tbody tr:last-child td:last-child { border-radius: 0; }
 @media (hover: hover) { .recruit-candidate-table tbody tr:hover td { background: var(--bg-hover); } }
 .recruit-candidate-table tr.reviewing td { background: var(--accent-soft); }
@@ -163,7 +160,6 @@
 .recruit-section-head h3 { margin-bottom: 0; }
 .recruit-section-head > .hint { align-self: center; }
 .recruit-fieldset { display: flex; flex-direction: column; gap: 18px; border: 0; padding: 0; margin: 0; min-width: 0; }
-.recruit-editor-top { display: grid; grid-template-columns: minmax(0, 1fr) 135px; gap: 16px; }
 .recruit-editor-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .recruit-fieldset > .recruit-section-head { margin: 4px 0 -4px; }
 .recruit-criteria-editor { display: flex; flex-direction: column; gap: 8px; }
@@ -282,11 +278,8 @@
 .recruit-criterion-source { margin: 0.35rem 0 0.75rem; margin-inline-start: 1.5rem; color: var(--text-dim); font-size: var(--fs-sm); }
 .recruit-criterion-source blockquote { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 
-/* Arabic has connected letterforms; tracking and case transforms are Latin-only. */
-:lang(ar) .recruiting h2, :lang(ar) .recruit-eyebrow, :lang(ar) .recruit-candidate-table th { letter-spacing: normal; text-transform: none; }
+/* Arabic has connected letterforms; the global reset already covers headings, eyebrows and table heads. */
 :lang(ar) .recruit-importance { text-transform: none; }
-.recruiting [dir="auto"], .recruiter-profile [dir="auto"] { unicode-bidi: isolate; }
-.recruiting input[dir="ltr"], .recruiter-profile [dir="ltr"] { unicode-bidi: isolate; }
 
 @media (max-width: 1200px) {
   .recruit-layout { grid-template-columns: 220px minmax(0, 1fr); gap: 14px; }

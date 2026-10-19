@@ -71,7 +71,7 @@ import { registerClientPackHandlers } from './client-pack-ipc.js'
 import { registerHiringBudgetHandlers } from './hiring-budget-ipc.js'
 import { ipcSchemas, parseIpc } from './ipc-validation.js'
 import { maintenance } from './maintenance.js'
-import { restoredBounds, trackWindow } from './windowState.js'
+import { MIN_HEIGHT, MIN_WIDTH, restoredBounds, trackWindow } from './windowState.js'
 import { showStartupRecovery } from './startup-recovery.js'
 import type {
   AppSettings,
@@ -270,8 +270,8 @@ function createWindow(): void {
 
   mainWindow = new BrowserWindow({
     ...options,
-    minWidth: 940,
-    minHeight: 620,
+    minWidth: MIN_WIDTH,
+    minHeight: MIN_HEIGHT,
     show: false,
     // `hiddenInset` is macOS-only. On Windows it would hide the title bar
     // *and* the window controls, leaving no way to close the window.

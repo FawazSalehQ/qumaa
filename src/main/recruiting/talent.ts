@@ -4,10 +4,10 @@ import type { CandidateProfile, CandidateReview, Company } from '@shared/recruit
 import { candidateWithProfile } from '@shared/recruiting.js'
 import type { Activity, Assignment, MergePreview, Person, Screening, TalentOverview, TalentPool } from '@shared/talent.js'
 import { peopleInPool } from '@shared/talent.js'
-import type { ResumeRef } from '@shared/types.js'
-import { getDb, getSetting, listResumes } from '../db/index.js'
+import { getDb, listResumes } from '../db/index.js'
+import { currentLanguage } from '../language.js'
 import { parseRecruiting, type JobRecord, type RecordKind, type StoredRecord } from './schema.js'
-import { putRecord, putRecords, readRecord, readRecords, removeTalentPeople } from './storage.js'
+import { putRecord, putRecords, readRecord, readRecords, removeTalentPeople, nowAfter, requireResume } from './storage.js'
 import { talentSchemas } from './talent-schema.js'
 import { contactConflicts, mergeAssignments, mergePeople, planScreeningQuestions } from './talent-planning.js'
 
@@ -18,10 +18,6 @@ function required<T extends StoredRecord>(kind: RecordKind, id: string): T {
 }
 function requireVersion(record: { updatedAt: number }, expected: number | undefined): void {
   if (record.updatedAt !== expected) throw new Error('This recruiting record changed. Refresh before saving your edits.')
-}
-function nowAfter(previous?: { updatedAt: number }): number { return Math.max(Date.now(), (previous?.updatedAt ?? -1) + 1) }
-function requireResume(ref: ResumeRef): void {
-  if (!getDb().prepare('SELECT 1 FROM resumes WHERE id = ? AND content_hash = ?').get(ref.id, ref.recordKey)) throw new Error('This CV changed or was removed. Refresh the library and try again.')
 }
 function readTalent(): TalentOverview {
   return {
@@ -93,7 +89,7 @@ export function overview(): TalentOverview {
 
 export function ensurePerson(input: unknown): Person {
   const resume = parseRecruiting(talentSchemas.ensurePerson, input)
-  requireResume(resume)
+  requireResume(getDb(), resume)
   const person = ensurePeople().find((candidate) => candidate.recordKeys.includes(resume.recordKey))
   if (!person) throw new Error('This CV has no contact. Refresh and try again.')
   return person
@@ -174,7 +170,7 @@ export function mergeContacts(input: unknown): Person {
 
 export function linkCv(input: unknown): Person {
   const args = parseRecruiting(talentSchemas.linkCv, input)
-  requireResume(args.resume)
+  requireResume(getDb(), args.resume)
   const primary = required<Person>('person', args.personId)
   requireVersion(primary, args.expectedUpdatedAt)
   // Contact materialisation and merge are one transaction: a failed merge does
@@ -272,7 +268,7 @@ export function generateScreening(input: unknown): Screening {
   const keys = new Set([...person.recordKeys, ...profiles.map((profile) => profile.candidateKey)])
   const assessments = readRecords<CandidateReview>(getDb(), 'review').filter((review) => review.jobId === job.id && keys.has(review.candidateKey)).flatMap((review) => review.assessments)
   const now = Date.now()
-  const language = getSetting('language') === 'ar' ? 'ar' : 'en'
+  const language = currentLanguage()
   const title = language === 'ar' ? `مقابلة أولية: ${job.posting.position || 'الوظيفة'}` : `${job.posting.position || 'Job'} screening`
   const screening: Screening = { id: randomUUID(), personId: person.id, jobId: job.id, title: title.slice(0, 512),
     questions: planScreeningQuestions(job.criteria, assessments, randomUUID, language), heldAt: null, note: '', createdAt: now, updatedAt: now }

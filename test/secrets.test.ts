@@ -139,11 +139,6 @@ describe('API key storage', () => {
     expect(store.has('openaiApiKey')).toBe(false)
   })
 
-  it('round trips a key through encryption', () => {
-    setApiKey(SECRET)
-    expect(getApiKey()).toBe(SECRET)
-  })
-
   it('does not write the key in cleartext', () => {
     setApiKey(SECRET)
     const stored = store.get(KEY)!

@@ -11,8 +11,6 @@ export const pipelineAr: Record<string, string> = {
   'Unverified': 'غير متحقق منه',
   'Candidate stated': 'بحسب إفادة المرشح',
   'Verified': 'تم التحقق',
-  'Could not load the pipeline.': 'تعذّر تحميل مسار المرشحين.',
-  'Could not save the pipeline.': 'تعذّر حفظ مسار المرشحين.',
   'Job pipeline': 'مسار مرشحي الوظيفة',
   'Candidate pipeline': 'مسار المرشحين',
   'Save or cancel your pipeline changes before switching candidates or jobs.': 'احفظ تغييرات المسار أو ألغِها قبل الانتقال إلى مرشح أو وظيفة أخرى.',

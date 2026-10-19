@@ -10,8 +10,8 @@ import { getSetting, setSetting } from './db/index.js'
 const KEY = 'windowState'
 
 const DEFAULTS = { width: 1280, height: 860 }
-const MIN_WIDTH = 940
-const MIN_HEIGHT = 620
+export const MIN_WIDTH = 940
+export const MIN_HEIGHT = 620
 
 interface WindowState extends Rectangle {
   maximized: boolean

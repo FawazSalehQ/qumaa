@@ -3,12 +3,6 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import type { ClaudeRerankPreview, JsonValue, MatchResult, ResumeSummary } from '@shared/types.js'
 import { DEFAULT_RERANK_CONFIG, isChatGptConfig, isRerankConfig, rerankProviderLabel, RERANK_CONSENT_VERSION, RERANK_MODELS, type RerankConfig } from '@shared/rerank.js'
 
-export type { ClaudeRerankPreview } from '@shared/types.js'
-
-export const CLAUDE_RERANK_MODEL = 'claude-sonnet-5' as const
-/** Compatibility name for existing callers; consent now binds each provider/model. */
-export const CLAUDE_RERANK_CONSENT_VERSION = RERANK_CONSENT_VERSION
-
 /** Reranking more than this wastes tokens; retrieval is reliable at the top. */
 export const RERANK_LIMIT = 15
 
@@ -234,7 +228,7 @@ function preview(config: RerankConfig, results: MatchResult[], request: unknown)
   }
 }
 
-export function prepareClaudeRerank(jobDescription: string, results: MatchResult[], model: AnthropicRerankModel = CLAUDE_RERANK_MODEL) {
+export function prepareClaudeRerank(jobDescription: string, results: MatchResult[], model: AnthropicRerankModel) {
   if (!isRerankConfig({ provider: 'anthropic', model })) throw new Error('Choose a supported reranking provider and model in Settings.')
   const sdkRequest = {
     model,

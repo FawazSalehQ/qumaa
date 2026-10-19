@@ -1,12 +1,6 @@
 import { translate, type Language } from '@shared/i18n.js'
-import type { MatchResult } from '@shared/types.js'
-
-/** Quoting handles delimiters; the apostrophe keeps spreadsheet formulas inert. */
-function cell(value: string | number | null): string {
-  let text = value === null ? '' : String(value)
-  if (/^[\s]*[=+@-]/u.test(text) || /^[\t\r\n]/u.test(text)) text = `'${text}`
-  return `"${text.replace(/"/g, '""')}"`
-}
+import { EDUCATION_LABELS, type MatchResult } from '@shared/types.js'
+import { csvCell } from './csv.js'
 
 export function shortlistCsv(args: {
   jobTitle: string
@@ -22,12 +16,12 @@ export function shortlistCsv(args: {
     const resume = result.resume
     rows.push([
       args.jobTitle, index + 1, resume.name ?? resume.fileName, resume.email, resume.phone,
-      resume.location, resume.yearsExperience, resume.educationLevel ? t(resume.educationLevel) : null,
+      resume.location, resume.yearsExperience, resume.educationLevel ? t(EDUCATION_LABELS[resume.educationLevel]) : null,
       Math.round(result.score * 100), result.matchedSkills.join('; '),
       result.missingSkills.join('; '), args.notes?.[resume.recordKey] ?? ''
     ])
   })
   // Numeric cells stay machine-readable in both languages for spreadsheet sorting.
   // UTF-8 BOM lets desktop Excel recognize Arabic without an import wizard.
-  return '\ufeff' + rows.map((row) => row.map(cell).join(',')).join('\r\n') + '\r\n'
+  return '\ufeff' + rows.map((row) => row.map(csvCell).join(',')).join('\r\n') + '\r\n'
 }

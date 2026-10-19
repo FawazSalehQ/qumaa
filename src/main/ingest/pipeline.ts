@@ -23,7 +23,6 @@ import {
   extractFile,
   extractValidatedFile,
   isSupported,
-  MAX_EXTRACTED_TEXT_CHARS,
   type Extracted
 } from './extract.js'
 import type { ValidatedFileSource } from './source-file.js'
@@ -56,13 +55,6 @@ export async function ingestText(args: {
         args.fileName.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, DATABASE_LIMITS.labelChars) ||
         'Resume',
       reason: 'Resume source path or filename exceeds Qumaa\'s safety limit or contains control characters.'
-    }
-  }
-  if (args.text.length > MAX_EXTRACTED_TEXT_CHARS) {
-    return {
-      status: 'failed',
-      fileName: args.fileName,
-      reason: 'Resume text exceeds Qumaa\'s 500,000 character safety limit.'
     }
   }
   let derived: ReturnType<typeof deriveResumeText>
@@ -104,7 +96,10 @@ export async function ingestText(args: {
   const db = getDb()
   // One transaction: a resume is never half-indexed, so a crash mid-import
   // cannot leave a row whose chunks are missing from search.
-  const insert = db.transaction((): number | string => {
+  const insert = db.transaction((): number | string | { duplicate: number } => {
+    // The embedding await above let another import of the same text land first.
+    const raced = findByHash(hash)
+    if (raced) return { duplicate: raced.id }
     const capacityError = resumeCapacityError(
       normalized.length,
       chunks.length,
@@ -152,6 +147,9 @@ export async function ingestText(args: {
   const inserted = insert()
   if (typeof inserted === 'string') {
     return { status: 'failed', fileName: args.fileName, reason: inserted }
+  }
+  if (typeof inserted === 'object') {
+    return { status: 'duplicate', fileName: args.fileName, existingId: inserted.duplicate }
   }
   const id = inserted
   recordResumeInserted(normalized.length, chunks.length, chunkTextChars)

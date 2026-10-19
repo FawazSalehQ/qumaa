@@ -1,26 +1,14 @@
-import { mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
   recoverInterruptedRestore,
   restoreMarkerPath,
   writeRestoreMarker
 } from '../src/main/db/replacement.js'
+import { temporaryDirectories } from './fixtures/temporary.js'
 
-const scratchDirectories: string[] = []
-
-function scratch(): string {
-  const path = mkdtempSync(join(tmpdir(), 'qumaa-restore-test-'))
-  scratchDirectories.push(path)
-  return path
-}
-
-afterEach(() => {
-  for (const path of scratchDirectories.splice(0)) {
-    rmSync(path, { recursive: true, force: true })
-  }
-})
+const { createSync: scratch } = temporaryDirectories('qumaa-restore-test-')
 
 describe('database replacement crash recovery', () => {
   it('restores the old database if a crash happens after replacement', () => {

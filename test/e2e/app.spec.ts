@@ -1,4 +1,4 @@
-import { expect, test, _electron as electron, type ElectronApplication, type Page } from '@playwright/test'
+import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { spawn } from 'node:child_process'
 import { createSocket } from 'node:dgram'
@@ -6,12 +6,13 @@ import { once } from 'node:events'
 import { createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { tmpdir } from 'node:os'
-import { isAbsolute, resolve } from 'node:path'
+import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { exportJWK, generateKeyPair, SignJWT } from 'jose'
 import { translate } from '../../src/shared/i18n.js'
 import type { AppSettings } from '../../src/shared/types.js'
 import type { RerankConfig } from '../../src/shared/rerank.js'
+import { launchQumaa } from './launch.js'
 
 const ROOT = resolve(__dirname, '../..')
 
@@ -20,22 +21,7 @@ let page: Page
 let scratch: string
 
 async function launchApplication(): Promise<void> {
-  const packagedExecutable = process.env.QUMAA_E2E_EXECUTABLE
-
-  application = await electron.launch({
-    ...(packagedExecutable
-      ? { executablePath: isAbsolute(packagedExecutable) ? packagedExecutable : resolve(ROOT, packagedExecutable) }
-      : { args: [ROOT] }),
-    cwd: ROOT,
-    env: {
-      ...process.env,
-      QUMAA_E2E_USER_DATA: scratch,
-      ELECTRON_DISABLE_SECURITY_WARNINGS: 'true'
-    }
-  })
-
-  page = await application.firstWindow()
-  await page.waitForLoadState('domcontentloaded')
+  ;({ application, page } = await launchQumaa(scratch))
 }
 
 test.beforeEach(async () => {

@@ -2,7 +2,6 @@
 .job-pipeline { padding: 18px 24px 24px; }
 .pipeline-add { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; margin-block: 16px; }
 .pipeline-add .recruit-field { min-width: 230px; flex: 1; }
-.pipeline-add .hint { flex-basis: 100%; margin: 0; }
 .pipeline-stage-counts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin-block: 18px; padding: 8px 10px; background: var(--bg-strip); border: 1px solid var(--border); border-radius: var(--radius); }
 .pipeline-stage-counts button { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px 4px 5px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-dim); font-size: var(--fs-sm); white-space: nowrap; cursor: pointer; transition: color 0.12s ease, background 0.12s ease; }
 

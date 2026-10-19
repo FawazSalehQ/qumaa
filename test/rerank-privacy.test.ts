@@ -3,7 +3,6 @@ import type { MatchResult } from '../src/shared/types.js'
 import { RERANK_MODELS, RERANK_CONSENT_VERSION, type RerankConfig } from '../src/shared/rerank.js'
 import {
   buildRerankPreview,
-  CLAUDE_RERANK_CONSENT_VERSION,
   redactCandidateText,
   requestCandidateIndex
 } from '../src/main/search/rerankPrivacy.js'
@@ -67,7 +66,7 @@ describe('Claude rerank privacy', () => {
     const preview = buildRerankPreview('Senior platform engineer', [candidate()])
     const serialized = JSON.stringify(preview)
 
-    expect(preview.consentVersion).toBe(CLAUDE_RERANK_CONSENT_VERSION)
+    expect(preview.consentVersion).toBe(RERANK_CONSENT_VERSION)
     expect(preview.provider).toBe('Anthropic')
     expect(preview.model).toBe('claude-sonnet-5')
     expect(preview.candidateCount).toBe(1)

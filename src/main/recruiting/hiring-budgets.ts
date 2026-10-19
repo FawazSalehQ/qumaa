@@ -5,7 +5,7 @@ import type { Company } from '@shared/recruiting.js'
 import { getDb } from '../db/index.js'
 import { hiringBudgetSchemas, assertHiringBudgetReferences } from './hiring-budget-schema.js'
 import { parseRecruiting, type JobRecord } from './schema.js'
-import { putRecord, readRecord, readRecords } from './storage.js'
+import { nowAfter, putRecord, readRecord, readRecords } from './storage.js'
 
 export function listHiringBudgets(companyId: unknown): SavedHiringBudget[] {
   const id = parseRecruiting(hiringBudgetSchemas.companyId, companyId)
@@ -30,7 +30,7 @@ export function saveHiringBudget(input: unknown): SavedHiringBudget {
     new Map(readRecords<JobRecord>(getDb(), 'job').map((job) => [job.id, job])))
   // Calculate in main, even when a renderer supplied a successful preview.
   calculateHiringCosts(args.inputs)
-  const now = Math.max(Date.now(), (previous?.updatedAt ?? -1) + 1)
+  const now = nowAfter(previous)
   const plan: SavedHiringBudget = {
     id: previous?.id ?? randomUUID(), companyId: args.companyId, name: args.name, jobId: args.jobId,
     inputs: args.inputs, calculationVersion: HIRING_COST_RULES_VERSION,

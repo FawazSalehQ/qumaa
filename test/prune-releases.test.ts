@@ -1,17 +1,16 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { describe, expect, it } from 'vitest'
+import { lstatSync, mkdirSync, readFileSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { pruneReleases } from '../scripts/prune-releases.mjs'
+import { temporaryDirectories } from './fixtures/temporary.js'
 
-const temporaryDirectories: string[] = []
+const scratch = temporaryDirectories('qumaa-prune-test-')
 const CURRENT = '0.1.0-beta.3'
 const MAC = `Qumaa-${CURRENT}-arm64.dmg`
 const WIN = `Qumaa-${CURRENT}-Setup-x64.exe`
 
 function fixture(names: string[]): string {
-  const directory = mkdtempSync(join(tmpdir(), 'qumaa-prune-test-'))
-  temporaryDirectories.push(directory)
+  const directory = scratch.createSync()
   for (const name of names) writeFileSync(join(directory, name), `fixture: ${name}`)
   return directory
 }
@@ -21,10 +20,6 @@ function linkFixtureFile(file: string, targetDirectory: string, link: string): v
   // without requiring Developer Mode or symbolic-link privileges in CI.
   symlinkSync(process.platform === 'win32' ? targetDirectory : file, link, process.platform === 'win32' ? 'junction' : 'file')
 }
-
-afterEach(() => {
-  for (const directory of temporaryDirectories.splice(0)) rmSync(directory, { recursive: true, force: true })
-})
 
 describe('local release cleanup', () => {
   it('keeps the current version and other platform until their replacements exist', () => {

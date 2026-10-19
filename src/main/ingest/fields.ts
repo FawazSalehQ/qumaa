@@ -4,7 +4,7 @@
  * search result.
  */
 import type { EducationLevel } from '@shared/types.js'
-import { DATABASE_LIMITS } from '../db/migrations.js'
+import { DATABASE_LIMITS } from '../db/limits.js'
 import { extractSkills } from './skills.js'
 import { sectionText, type Section } from './sections.js'
 
@@ -66,7 +66,7 @@ const NAME_AFFIX = /^(?:(?:mr|mrs|ms|miss|dr|prof|eng)\.?|السيد(?:ة)?|د\.
 function looksLikeName(line: string): boolean {
   const t = line.trim().replace(NAME_AFFIX, '')
   if (!t || t.length > 60) return false
-  if (/\d|@|https?:|\|/.test(t)) return false
+  if (/\p{Nd}|@|https?:|\|/u.test(t)) return false
   if (NOT_A_NAME.test(t)) return false
 
   const words = t.split(/\s+/)
@@ -179,18 +179,32 @@ function extractLocation(text: string): string | null {
 
 /* ---------- education ---------- */
 
+// Inside a recognised education section short tokens such as MA or BA are degrees.
 const EDUCATION_PATTERNS: Array<[EducationLevel, RegExp]> = [
   ['phd', /\b(ph\.?d|doctorate|doctoral|d\.phil)\b/i],
   ['masters', /\b(master'?s?|m\.?sc|m\.?a\b|m\.?b\.?a|m\.?eng|msc|mba)\b/i],
   ['bachelors', /\b(bachelor'?s?|b\.?sc|b\.?a\b|b\.?eng|bsc|undergraduate degree)\b/i],
-  ['associate', /\b(associate'?s?\s+degree|a\.?a\.?s|diploma)\b/i]
+  ['associate', /\b(associate'?s?\s+degree|a\.?a\.?s|(?<!high school )diploma)\b/i]
+]
+// Elsewhere a bare "Master" is a job title (Scrum Master), "MA" a US state and
+// "BA" a business analyst, so the whole-document fallback demands degree context.
+const STRICT_EDUCATION_PATTERNS: Array<[EducationLevel, RegExp]> = [
+  ['phd', /\b(ph\.?d|doctorate|doctoral|d\.phil)\b/i],
+  ['masters', /\b(master(?:'s|s)?\s+(?:of|in|degree)\b|m\.?sc\b|m\.a\.|ma\s+(?:in\b|\(hons\))|m\.?b\.?a\b|m\.?eng\b)/i],
+  ['bachelors', /\b(bachelor(?:'s|s)?\b|b\.?sc\b|b\.a\.|ba\s+(?:in\b|\(hons\))|b\.?eng\b|undergraduate degree)/i],
+  ['associate', /\b(associate'?s?\s+degree|a\.?a\.?s|(?<!high school )diploma)\b/i]
 ]
 
-function extractEducation(text: string): EducationLevel | null {
-  for (const [level, re] of EDUCATION_PATTERNS) {
+function matchEducation(text: string, patterns: Array<[EducationLevel, RegExp]>): EducationLevel | null {
+  for (const [level, re] of patterns) {
     if (re.test(text)) return level // ordered highest-first
   }
   return null
+}
+
+function extractEducation(fullText: string, sections: Section[]): EducationLevel | null {
+  const education = sectionText(sections, 'education')
+  return (education ? matchEducation(education, EDUCATION_PATTERNS) : null) ?? matchEducation(fullText, STRICT_EDUCATION_PATTERNS)
 }
 
 /* ---------- years of experience ---------- */
@@ -219,22 +233,28 @@ function parseEndpoint(raw: string, isEnd: boolean): number | null {
   let m = s.match(/^([a-z]{3,9})\.?\s+(\d{4})$/)
   if (m) {
     const mon = MONTHS[m[1].slice(0, 3)]
-    if (mon !== undefined) return monthIndex(Number(m[2]), mon)
+    if (mon !== undefined && plausibleYear(Number(m[2]))) return monthIndex(Number(m[2]), mon)
   }
   m = s.match(/^(\d{1,2})\s*[/.-]\s*(\d{4})$/)
   if (m) {
     const mon = Number(m[1]) - 1
-    if (mon >= 0 && mon <= 11) return monthIndex(Number(m[2]), mon)
+    if (mon >= 0 && mon <= 11 && plausibleYear(Number(m[2]))) return monthIndex(Number(m[2]), mon)
   }
   m = s.match(/^(\d{4})$/)
   if (m) {
     const y = Number(m[1])
-    if (y >= 1950 && y <= new Date().getFullYear() + 1) {
+    if (plausibleYear(y)) {
       // A bare year as a start means January; as an end, December.
       return monthIndex(y, isEnd ? 11 : 0)
     }
   }
   return null
+}
+
+// A typo, OCR slip or Hijri year in any date form must skip that range, not
+// produce a span the startup validator rejects and the library cannot open with.
+function plausibleYear(year: number): boolean {
+  return year >= 1950 && year <= new Date().getFullYear() + 1
 }
 
 // A generic word before a year ("Engineer 2019") must not consume that year as
@@ -285,7 +305,8 @@ export function extractFields(fullText: string, sections: Section[]): ExtractedF
   const experience = sectionText(sections, 'experience')
   // Prefer date ranges inside the experience section; fall back to the whole
   // document for resumes with no recognisable headings.
-  const years = yearsFromDateRanges(experience || fullText)
+  const parsedYears = yearsFromDateRanges(experience || fullText)
+  const years = parsedYears !== null && parsedYears <= DATABASE_LIMITS.yearsExperience ? parsedYears : null
 
   return {
     name: extractName(fullText),
@@ -293,7 +314,7 @@ export function extractFields(fullText: string, sections: Section[]): ExtractedF
     phone: extractPhone(fullText),
     location: extractLocation(fullText),
     yearsExperience: years,
-    educationLevel: extractEducation(fullText),
+    educationLevel: extractEducation(fullText, sections),
     skills: extractSkills(fullText)
   }
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { DbStats, ModelStatus, ThemeChoice } from '@shared/types.js'
+import type { AppSettings, DbStats, ModelStatus, ThemeChoice } from '@shared/types.js'
 import { DEFAULT_RERANK_CONFIG, DEFAULT_RERANK_MODELS, PROVIDER_LABELS, RERANK_MODELS, isChatGptConfig, rerankProviderLabel, type RerankConfig, type RerankModel, type RerankProvider } from '@shared/rerank.js'
 import type { ChatGptStatus } from '@shared/chatgpt.js'
 import type { Toast } from '../components/Toasts.js'
@@ -54,14 +54,15 @@ export default function SettingsView({
   const aiDisabled = !aiReady || aiBusy || waitingForSignIn || dataAction !== null
   const modelChoices = useChatGpt ? chatGpt.models : RERANK_MODELS[rerankConfig.provider]
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (): Promise<AppSettings> => {
     const epoch = ++loadEpoch.current
     const [settings, s, m] = await Promise.all([
       window.api.settings.get(),
       window.api.settings.stats(),
       window.api.settings.modelStatus()
     ])
-    if (epoch !== loadEpoch.current) return
+    // A newer load owns the state now; still hand back what this one fetched.
+    if (epoch !== loadEpoch.current) return settings
     setWatched(settings.watchedFolder)
     setHasKey(settings.hasApiKey)
     setKeyStatus(settings.apiKeyStatus)
@@ -75,6 +76,7 @@ export default function SettingsView({
     setAiReady(true)
     setStats(s)
     setModel(m)
+    return settings
   }, [])
 
   useEffect(() => {
@@ -148,11 +150,6 @@ export default function SettingsView({
   const wipe = useCallback(async () => {
     const done = await window.api.settings.deleteAll()
     if (!done) return
-    setWatched(null)
-    setHasKey(false)
-    setKeyStatus('none')
-    setRerankOn(false)
-    setConsentGranted(false)
     setKeyDraft('')
     await Promise.all([load(), onChanged(true)])
     onToast([{ id: crypto.randomUUID(), kind: 'success', message: t('All data deleted.') }])
@@ -208,15 +205,9 @@ export default function SettingsView({
     try {
       const result = await window.api.settings.restore()
       if (!result) return
-      const restoredSettings = await window.api.settings.get()
-      setWatched(restoredSettings.watchedFolder)
-      setHasKey(restoredSettings.hasApiKey)
-      setKeyStatus(restoredSettings.apiKeyStatus)
-      setRerankOn(restoredSettings.rerankEnabled)
-      setConsentGranted(restoredSettings.rerankConsentGranted)
       setKeyDraft('')
+      const [restoredSettings] = await Promise.all([load(), onChanged(true)])
       onThemeChange(restoredSettings.theme)
-      await Promise.all([load(), onChanged(true)])
       onToast([
         {
           id: crypto.randomUUID(),

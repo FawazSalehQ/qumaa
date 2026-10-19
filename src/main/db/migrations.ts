@@ -8,6 +8,8 @@
  */
 import type Database from 'better-sqlite3'
 import { EMBEDDING_DIM } from '../embed/protocol.js'
+import { DATABASE_LIMITS } from './limits.js'
+export { DATABASE_LIMITS } from './limits.js'
 import { assertRecruitingData, RECRUITING_TABLE_SQL } from '../recruiting/storage.js'
 
 /** ASCII "QUMA", stored in SQLite's standard application_id header field. */
@@ -52,26 +54,6 @@ const VECTOR_BYTES = EMBEDDING_DIM * Float32Array.BYTES_PER_ELEMENT
  * above that target while keeping a hostile/corrupt backup from turning schema
  * validation into an unbounded allocation or multi-million-vector scan.
  */
-export const DATABASE_LIMITS = Object.freeze({
-  resumes: 5_000,
-  chunks: 100_000,
-  chunksPerResume: 512,
-  rawTextCharsPerResume: 500_000,
-  totalRawTextChars: 250_000_000,
-  chunkTextChars: 500_000,
-  totalChunkTextChars: 400_000_000,
-  filePathChars: 4_096,
-  labelChars: 512,
-  emailChars: 512,
-  phoneChars: 128,
-  skills: 512,
-  skillChars: 256,
-  skillsJsonChars: 150_000,
-  skillsVersionChars: 512,
-  settings: 128,
-  settingKeyChars: 128,
-  settingValueChars: 1_000_000
-})
 
 /**
  * SQLite's length(TEXT) stops at the first U+0000 character. Pre-materialisation
@@ -450,8 +432,7 @@ export function inspectSchema(database: Database.Database): SchemaShape {
     tables: {
       resumes: tableColumns(database, 'resumes'),
       chunks: tableColumns(database, 'chunks'),
-      settings: tableColumns(database, 'settings'),
-      recruiting_records: tableColumns(database, 'recruiting_records')
+      settings: tableColumns(database, 'settings')
     }
   }
 }
@@ -1042,7 +1023,7 @@ function assertResumeRows(database: Database.Database, version: number): void {
         typeof resume.yearsExperience === 'number' &&
         Number.isFinite(resume.yearsExperience) &&
         resume.yearsExperience >= 0 &&
-        resume.yearsExperience <= 100
+        resume.yearsExperience <= DATABASE_LIMITS.yearsExperience
       )
     ) {
       schemaMismatch(version, `resume ${resume.id} has invalid years of experience`)
@@ -1259,7 +1240,7 @@ export function rebuildAndVerifySearchIndex(database: Database.Database): void {
   })()
 }
 
-function pragmaNumber(database: Database.Database, name: 'application_id' | 'user_version'): number {
+export function pragmaNumber(database: Database.Database, name: 'application_id' | 'user_version'): number {
   return database.pragma(name, { simple: true }) as number
 }
 

@@ -8,7 +8,7 @@
  */
 import { isAbsolute } from 'node:path'
 import { z } from 'zod'
-import { isRerankConfig } from '../shared/rerank.js'
+import { isRerankConfig, RERANK_PROVIDERS } from '../shared/rerank.js'
 
 const MAX_PATH = 4_096
 const MAX_LABEL = 512
@@ -42,9 +42,9 @@ export const ipcSchemas = {
     label: textLabel
   }),
   apiKey: boundedString(4_096).trim().min(1).nullable(),
-  rerankProvider: z.enum(['anthropic', 'openai']),
+  rerankProvider: z.enum(RERANK_PROVIDERS),
   rerankConfig: z.object({
-    provider: z.enum(['anthropic', 'openai']),
+    provider: z.enum(RERANK_PROVIDERS),
     model: boundedString(128),
     authMode: z.enum(['api-key', 'chatgpt']).optional()
   }).strict().refine(isRerankConfig, 'must choose a supported model for the provider'),

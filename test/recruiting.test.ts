@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applySavedRerank, deduplicateVersions, emptyProfile, isShortlisted, mergeProfiles, mergeReviews, passageExcerpt, postingText, suggestCriterionEvidence } from '../src/main/recruiting/planning.js'
+import { applySavedRerank, deduplicateVersions, emptyProfile, isShortlisted, mergeProfiles, mergeReviews, passageExcerpt, postingText } from '../src/main/recruiting/planning.js'
 import { companyRecordSchema, jobRecordSchema, profileRecordSchema, recruitingSchemas, reviewRecordSchema, snapshotRecordSchema } from '../src/main/recruiting/schema.js'
 import type { CandidateReview } from '../src/shared/recruiting.js'
 import type { MatchResult } from '../src/shared/types.js'
@@ -81,18 +81,6 @@ describe('recruiter workflow rules', () => {
     expect(() => mergeReviews({ ...left, note: 'Conflicting' }, { ...right, note: 'Another' })).toThrow('different notes')
   })
 
-  it('suggests real requirement passages without inventing evidence for absent terms', () => {
-    const actual = 'Built Python APIs and operated Kubernetes clusters for retail payments.'
-    const evidence = suggestCriterionEvidence([{ id: 'a', text: 'Python and Kubernetes experience', importance: 'required' }, { id: 'b', text: 'CPA certification', importance: 'preferred' }], [{ section: 'experience', text: actual }])
-    expect(evidence[0]).toMatchObject({ criterionId: 'a', passage: { section: 'experience', text: actual, similarity: 1 } })
-    expect(evidence[1]).toEqual({ criterionId: 'b', passage: null })
-    expect(suggestCriterionEvidence([{ id: 'a', text: 'years of experience', importance: 'required' }], [{ section: 'summary', text: 'Many years of experience' }])[0].passage).toBeNull()
-  })
-
-  it('supports Arabic term overlap and prefers work evidence over a matching summary', () => {
-    const actual = 'خبرة في إدارة المطاعم وتدريب فرق العمل'
-    expect(suggestCriterionEvidence([{ id: 'a', text: 'إدارة المطاعم', importance: 'required' }], [{ section: 'summary', text: 'إدارة المطاعم' }, { section: 'experience', text: actual }])[0].passage?.text).toBe(actual)
-  })
 
   it('bounds long evidence using original-text offsets and intact Unicode', () => {
     const text = `${'مُقدمة '.repeat(1_000)}إدارة المطاعم ${'بنجاح '.repeat(1_000)}`

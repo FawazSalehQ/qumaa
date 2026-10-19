@@ -1,6 +1,7 @@
 /** One bounded search kept only in process memory until explicitly saved. */
 import { jobRecordSchema, snapshotRecordSchema, RECRUITING_LIMITS, parseRecruiting, type JobRecord, type SnapshotRecord } from './schema.js'
 import type { SearchSession } from '../search/sessions.js'
+import { pruneSnapshot } from './job-status.js'
 
 interface TemporarySearch { job: JobRecord; snapshot: SnapshotRecord }
 
@@ -58,12 +59,7 @@ export class TemporarySearchStore {
 
   prune(currentKeys: Set<string>): void {
     if (!this.current) return
-    const { rerank, rerankConfig, ...snapshot } = this.current.snapshot
-    this.current.snapshot = {
-      ...snapshot,
-      results: snapshot.results.filter((result) => currentKeys.has(result.recordKey)),
-      ...(rerank?.every((entry) => currentKeys.has(entry.recordKey)) ? { rerank, ...(rerankConfig ? { rerankConfig } : {}) } : {})
-    }
+    this.current.snapshot = pruneSnapshot(this.current.snapshot, currentKeys)
     this.displayedSession = null
   }
 }

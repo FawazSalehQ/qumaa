@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useI18n } from '../i18n.js'
 import { displayError } from '@shared/i18n.js'
-import type { ResumeSummary } from '@shared/types.js'
+import { EDUCATION_LABELS, type ResumeSummary } from '@shared/types.js'
 import { candidateWithProfile, type CandidateProfile } from '@shared/recruiting.js'
 import type { Toast } from '../components/Toasts.js'
 import { QumaaMark } from '../components/Brand.js'
@@ -381,7 +381,7 @@ export default function LibraryView({
                   {!r.email && !r.phone && !r.location && <span className="muted">{t('n/a')}</span>}
                 </td>
                 <td className="num">{r.yearsExperience !== null ? formatNumber(r.yearsExperience) : <span className="muted">{t('n/a')}</span>}</td>
-                <td className="muted">{t(r.educationLevel ?? 'n/a')}</td>
+                <td className="muted">{t(r.educationLevel ? EDUCATION_LABELS[r.educationLevel] : 'n/a')}</td>
                 <td className="cell-sub">
                   {r.skills.length ? <span dir="auto">{r.skills.slice(0, 8).map((skill, index) => <span key={skill}>{index > 0 && ', '}<bdi>{skill}</bdi></span>)}</span> : <span className="muted">{t('none detected')}</span>}
                   {r.skills.length > 8 && ` +${formatNumber(r.skills.length - 8)}`}

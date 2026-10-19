@@ -94,7 +94,7 @@
 .company-form-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .company-error { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px; margin-bottom: 16px; border: 1px solid var(--bad); background: var(--bad-soft); border-radius: var(--radius-sm); color: var(--bad); font-size: var(--fs-sm); line-height: 1.55; }
 .company-error > span { overflow-wrap: anywhere; }
-:root[lang='ar'] .company-eyebrow, :root[lang='ar'] .company-details dt { letter-spacing: normal; text-transform: none; }
+:root[lang='ar'] .company-details dt { letter-spacing: normal; text-transform: none; }
 
 @media (max-width: 1050px) {
   .company-layout { grid-template-columns: 224px minmax(0, 1fr); gap: 16px; }

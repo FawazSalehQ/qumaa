@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import type { Company, JobStatus, SavedJob } from '@shared/recruiting.js'
+import type { Company, SavedJob } from '@shared/recruiting.js'
 import type { Toast } from '../components/Toasts.js'
 import CompanyDetailInput, { type CompanyDetailInputHandle } from '../components/CompanyDetailInput.js'
 import { budgetLabel, hiringBudgetLabel } from '../components/recruiting/JobBudgetEditor.js'
-import { errorMessage, recruitingError } from '../components/recruiting/helpers.js'
+import { errorMessage, recruitingError, JOB_STATUS_LABELS } from '../components/recruiting/helpers.js'
 import { jobPostingTitle } from '../jobPosting.js'
 import { useI18n } from '../i18n.js'
 import '../companies.css'
@@ -18,7 +18,6 @@ interface Props {
   onToast: (toasts: Toast[]) => void
 }
 
-const JOB_LABELS: Record<JobStatus, string> = { open: 'Open', 'on-hold': 'On hold', filled: 'Filled', archived: 'Archived' }
 const DETAIL_FIELDS = ['industry', 'location', 'contactName', 'contactEmail'] as const
 type DetailField = typeof DETAIL_FIELDS[number]
 type CompanyDraft = Omit<Company, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }
@@ -243,7 +242,7 @@ export default function CompaniesView({ onChanged, onNavigationLockChange, onNew
                   {job.hiringBudget && <span className="company-job-budget"><span>{t('Total hiring budget')}: </span><bdi>{hiringBudgetLabel(job.hiringBudget, formatNumber, t)}</bdi></span>}
                   {!job.budget && !job.hiringBudget && <span className="company-job-budget">{t('Budget not set')}</span>}
                 </div>
-                <div className="company-job-progress"><span className={`company-job-status ${job.status}`}>{t(JOB_LABELS[job.status])}</span><span>{t('{count} shortlisted', { count: job.shortlistCount })}</span></div>
+                <div className="company-job-progress"><span className={`company-job-status ${job.status}`}>{t(JOB_STATUS_LABELS[job.status])}</span><span>{t('{count} shortlisted', { count: job.shortlistCount })}</span></div>
                 <span className="company-job-open" aria-hidden="true">{t('Open job')}<svg className="directional-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 8h10M9 4l4 4-4 4" /></svg></span>
               </button>)}</div>}
           </section>

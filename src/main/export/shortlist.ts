@@ -14,7 +14,7 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { directionFor, localeFor, translate, type Language } from '@shared/i18n.js'
 import arabicRegularPath from '@fontsource/ibm-plex-sans-arabic/files/ibm-plex-sans-arabic-arabic-400-normal.woff2?asset'
 import arabicSemiboldPath from '@fontsource/ibm-plex-sans-arabic/files/ibm-plex-sans-arabic-arabic-600-normal.woff2?asset'
-import type { MatchResult } from '@shared/types.js'
+import { EDUCATION_LABELS, type MatchResult } from '@shared/types.js'
 
 const INK = '#2b2733'
 const VIOLET = '#6d3fb0'
@@ -50,7 +50,7 @@ function candidateBlock(m: MatchResult, rank: number, language: Language, note?:
   ].filter(Boolean).join(' &middot; ')
   const facts = [
     r.yearsExperience !== null ? translate(language, '{count} years', { count: number(r.yearsExperience) }) : null,
-    r.educationLevel ? t(r.educationLevel) : null
+    r.educationLevel ? t(EDUCATION_LABELS[r.educationLevel]) : null
   ]
     .filter(Boolean)
     .map((x) => esc(String(x)))

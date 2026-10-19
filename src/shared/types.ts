@@ -2,6 +2,7 @@
 
 export type SectionKind = 'summary' | 'experience' | 'education' | 'skills' | 'projects' | 'other'
 
+export const EDUCATION_LABELS = { associate: 'Associate', bachelors: 'Bachelor’s', masters: 'Master’s', phd: 'PhD' } as const satisfies Record<EducationLevel, string>
 export type EducationLevel = 'phd' | 'masters' | 'bachelors' | 'associate'
 
 /** A resume row as shown in the Library view (no raw text, no vectors). */

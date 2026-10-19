@@ -84,7 +84,7 @@ export async function reindexAll(onProgress?: (p: ReindexProgress) => void): Pro
     text: string
   }>
   if (rows.length === 0) {
-    setSetting(MODEL_KEY, COMMITTED_MARKER)
+    markCompletedIndexRebuild()
     return 0
   }
 
@@ -107,9 +107,7 @@ export async function reindexAll(onProgress?: (p: ReindexProgress) => void): Pro
   // forces another rebuild, or a committed index with vectors visibly pending.
   db.transaction(() => {
     db.exec('UPDATE resumes SET doc_vector = NULL')
-    db.prepare(
-      'INSERT INTO settings(key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
-    ).run(MODEL_KEY, COMMITTED_MARKER)
+    markCompletedIndexRebuild()
   })()
 
   return rows.length

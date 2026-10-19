@@ -48,9 +48,8 @@ interface LibraryUsage {
 
 export function getDb(): Database.Database {
   if (db) return db
-  const dir = app.getPath('userData')
-  mkdirSync(dir, { recursive: true })
-  const path = join(dir, 'cv_filter.db')
+  mkdirSync(app.getPath('userData'), { recursive: true })
+  const path = dbPath()
   if (!recoveryChecked) {
     recoverInterruptedRestore(path)
     pruneStaleDatabaseArtifacts(path)

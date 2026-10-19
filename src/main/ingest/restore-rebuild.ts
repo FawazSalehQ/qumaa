@@ -11,11 +11,7 @@ import { DATABASE_LIMITS, rebuildAndVerifySearchIndex } from '../db/migrations.j
 import { embedder } from '../embed/client.js'
 import { markCompletedIndexRebuild } from '../embed/reindex.js'
 import { documentVector } from './duplicates.js'
-import {
-  deriveResumeText,
-  normalizeResumeText,
-  resumeContentHash
-} from './derive.js'
+import { assertStoredResumeText, deriveStoredResumeText, resumeContentHash } from './derive.js'
 import { SKILL_GAZETTEER_VERSION } from './skills-backfill-plan.js'
 import { markResumeDerivationCurrent } from './derived-backfill.js'
 
@@ -61,7 +57,7 @@ export async function rebuildRestoredDerivedData(
     if (typeof row.rawText !== 'string') {
       throw new Error(`Restored resume ${row.id} does not contain canonical text.`)
     }
-    const hash = resumeContentHash(normalizeResumeText(row.rawText))
+    const hash = resumeContentHash(assertStoredResumeText(row.rawText))
     const previousId = seenHashes.get(hash)
     if (previousId !== undefined) {
       throw new Error(
@@ -125,7 +121,7 @@ export async function rebuildRestoredDerivedData(
   for (const resumeId of resumeIds) {
     const row = textForResume.get(resumeId) as StoredResumeText | undefined
     if (!row) throw new Error(`Restored resume ${resumeId} disappeared during index rebuilding.`)
-    const derived = deriveResumeText(row.rawText)
+    const derived = deriveStoredResumeText(row.rawText)
     chunkCount += derived.chunks.length
     if (chunkCount > DATABASE_LIMITS.chunks) {
       throw new Error(
@@ -173,7 +169,7 @@ export async function rebuildRestoredDerivedData(
     onProgress?.({ processed, total: resumeCount })
   }
 
-  // FTS is derived from the newly normalised source text. Only after its
+  // FTS is derived from the restored canonical text. Only after its
   // external-content integrity check succeeds may this vector set be marked as
   // complete for the bundled immutable model.
   rebuildAndVerifySearchIndex(db)

@@ -27,7 +27,6 @@ export const familySchema = z.strictObject({
     if (Object.values(vacancy.labels).filter((label) => label === 1).length < 3) context.addIssue({ code: 'custom', message: 'Each vacancy requires at least three strong-fit reference careers.' })
   }
 })
-export type EvaluationFamily = z.infer<typeof familySchema>
 export type Cohort = 'mixed-a' | 'mixed-b' | 'english' | 'arabic'
 export type Language = 'en' | 'ar'
 export const manifestSchema = z.strictObject({

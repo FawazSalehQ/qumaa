@@ -13,17 +13,18 @@ import {
   type ValidatedFileSource
 } from './source-file.js'
 
-export { MAX_SOURCE_FILE_BYTES } from './source-file.js'
+import { MAX_EXTRACTED_TEXT_CHARS } from './extraction-protocol.js'
+export { MAX_EXTRACTED_TEXT_CHARS, MAX_SOURCE_FILE_BYTES } from './extraction-protocol.js'
 
 type FileType = 'pdf' | 'docx' | 'md'
 
 /** A PDF yielding less than this many characters is almost certainly a scan. */
 const SCANNED_TEXT_THRESHOLD = 100
-export const MAX_EXTRACTED_TEXT_CHARS = 500_000
 const MAX_DOCX_EXPANDED_BYTES = 64 * 1024 * 1024
 const MAX_DOCX_ENTRIES = 2_048
 
-export const SUPPORTED_EXTENSIONS = ['.pdf', '.docx', '.md', '.markdown'] as const
+const FILE_TYPES: Readonly<Record<string, FileType>> = { '.pdf': 'pdf', '.docx': 'docx', '.md': 'md', '.markdown': 'md' }
+export const SUPPORTED_EXTENSIONS: readonly string[] = Object.keys(FILE_TYPES)
 
 export interface Extracted {
   text: string
@@ -32,21 +33,11 @@ export interface Extracted {
 }
 
 export function isSupported(path: string): boolean {
-  return (SUPPORTED_EXTENSIONS as readonly string[]).includes(extname(path).toLowerCase())
+  return fileTypeOf(path) !== null
 }
 
 function fileTypeOf(path: string): FileType | null {
-  switch (extname(path).toLowerCase()) {
-    case '.pdf':
-      return 'pdf'
-    case '.docx':
-      return 'docx'
-    case '.md':
-    case '.markdown':
-      return 'md'
-    default:
-      return null
-  }
+  return FILE_TYPES[extname(path).toLowerCase()] ?? null
 }
 
 async function extractInWorker(
@@ -468,9 +459,9 @@ async function extractFileUnqueued(
 // reads and parser workers serial so 25 MB buffers cannot accumulate in main.
 let extractionQueue: Promise<void> = Promise.resolve()
 
-export function extractFile(path: string): Promise<Extracted> {
-  const run = (): Promise<Extracted> => extractFileUnqueued(path)
-  const result = extractionQueue.then(run, run)
+function enqueueExtraction(run: () => Promise<Extracted>): Promise<Extracted> {
+  // The queue promise never rejects, so the next job starts whatever happened before it.
+  const result = extractionQueue.then(run)
   extractionQueue = result.then(
     () => undefined,
     () => undefined
@@ -478,13 +469,11 @@ export function extractFile(path: string): Promise<Extracted> {
   return result
 }
 
+export function extractFile(path: string): Promise<Extracted> {
+  return enqueueExtraction(() => extractFileUnqueued(path))
+}
+
 /** Watched-folder path whose canonical identity was already validated. */
 export function extractValidatedFile(source: ValidatedFileSource): Promise<Extracted> {
-  const run = (): Promise<Extracted> => extractFileUnqueued(source.canonicalPath, source)
-  const result = extractionQueue.then(run, run)
-  extractionQueue = result.then(
-    () => undefined,
-    () => undefined
-  )
-  return result
+  return enqueueExtraction(() => extractFileUnqueued(source.canonicalPath, source))
 }

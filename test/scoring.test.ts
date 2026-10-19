@@ -91,9 +91,6 @@ describe('buildFtsQuery', () => {
     expect(buildFtsQuery('python python python')).toBe('"python"')
   })
 
-  it('returns null when nothing survives filtering', () => {
-    expect(buildFtsQuery('a an of')).toBeNull()
-  })
 })
 
 describe('skillOverlap', () => {

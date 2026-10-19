@@ -1,17 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { SharedExclusiveGate } from '../src/main/shared-exclusive-gate.js'
-
-function deferred(): { promise: Promise<void>; resolve: () => void } {
-  let resolve!: () => void
-  const promise = new Promise<void>((done) => {
-    resolve = done
-  })
-  return { promise, resolve }
-}
-
-async function settle(): Promise<void> {
-  await new Promise<void>((resolve) => setTimeout(resolve, 0))
-}
+import { deferred, settle } from './fixtures/async.js'
 
 describe('SharedExclusiveGate', () => {
   it('waits for active shared work and blocks later readers behind a writer', async () => {

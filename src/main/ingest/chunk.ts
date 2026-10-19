@@ -6,13 +6,14 @@
  * vector per ~200 words lets a specific bullet answer a specific requirement.
  */
 import type { SectionKind } from '@shared/types.js'
+import { DATABASE_LIMITS } from '../db/limits.js'
 import type { Section } from './sections.js'
 
 const TARGET_WORDS = 200
 const OVERLAP_WORDS = 50
 /** Below this, a window is noise rather than signal (e.g. a trailing address). */
 const MIN_WORDS = 12
-export const MAX_CHUNKS_PER_RESUME = 512
+export const MAX_CHUNKS_PER_RESUME = DATABASE_LIMITS.chunksPerResume
 
 export interface Chunk {
   section: SectionKind

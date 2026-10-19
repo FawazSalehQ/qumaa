@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { mkdir, mkdtemp, readFile, rm, symlink, truncate, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, symlink, truncate, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { tmpdir } from 'node:os'
 import { crc32, deflateRawSync } from 'node:zlib'
 import JSZip from 'jszip'
 import mammoth from 'mammoth'
@@ -13,6 +12,7 @@ import {
   MAX_SOURCE_FILE_BYTES,
   SUPPORTED_EXTENSIONS
 } from '../src/main/ingest/extract.js'
+import { temporaryDirectories } from './fixtures/temporary.js'
 
 const { workerInputs } = vi.hoisted(() => ({ workerInputs: [] as Buffer[] }))
 
@@ -45,15 +45,10 @@ vi.mock('electron', async () => {
 })
 vi.mock('../src/main/embed/client.js', () => ({ getEntryDir: () => '/unused-test-worker' }))
 
-const temporaryDirectories: string[] = []
+const scratch = temporaryDirectories('qumaa-extract-')
 
-afterEach(async () => {
+afterEach(() => {
   workerInputs.splice(0)
-  await Promise.all(
-    temporaryDirectories.splice(0).map((directory) =>
-      rm(directory, { recursive: true, force: true })
-    )
-  )
 })
 
 async function fixtureDocx(): Promise<Buffer> {
@@ -83,8 +78,7 @@ function withHiddenDirectory(archive: Buffer): Buffer {
 }
 
 async function temporaryFile(name: string): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), 'qumaa-extract-'))
-  temporaryDirectories.push(directory)
+  const directory = await scratch.create()
   return join(directory, name)
 }
 

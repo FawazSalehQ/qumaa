@@ -3,7 +3,6 @@ export const companiesAr: Record<string, string> = {
   'No companies yet.': 'لا توجد شركات بعد.',
   'Company': 'الشركة',
   'Companies': 'الشركات',
-  'Your company directory': 'دليل شركاتك',
   '+ New company': '+ شركة جديدة',
   'Company directory': 'دليل الشركات',
   'All companies': 'جميع الشركات',

@@ -105,10 +105,12 @@ export function clearRestoreMarker(livePath: string): void {
   syncPath(dirname(livePath))
 }
 
-function removeDatabaseFileSet(path: string): void {
+/** Removes a SQLite file and every sidecar it may have left behind. */
+export function removeDatabaseFileSet(path: string): void {
   rmSync(path, { force: true })
   rmSync(`${path}-wal`, { force: true })
   rmSync(`${path}-shm`, { force: true })
+  rmSync(`${path}-journal`, { force: true })
 }
 
 /** Moves the main SQLite file and any closed WAL sidecars as one recoverable set. */

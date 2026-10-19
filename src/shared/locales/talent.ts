@@ -12,7 +12,6 @@ export const talentAr: Record<string, string> = {
   'Talent pools': 'مجموعات المواهب',
   'Loading your recruiter desk…': 'جارٍ تحميل مكتب التوظيف…',
   'Recruiter desk unavailable': 'مكتب التوظيف غير متاح',
-  'Recruiter desk updated': 'تم تحديث مكتب التوظيف',
   'Could not load the recruiter desk.': 'تعذّر تحميل مكتب التوظيف.',
   'The change was saved. Refresh the desk to see the latest records.': 'تم حفظ التغيير. حدّث المكتب للاطلاع على أحدث السجلات.',
   'The recruiter data is invalid. Check the fields and try again.': 'بيانات التوظيف غير صالحة. راجع الحقول وحاول مجددًا.',

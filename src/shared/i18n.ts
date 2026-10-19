@@ -17,10 +17,12 @@ export type Language = 'en' | 'ar'
 export type TranslationValues = Record<string, string | number>
 export type Translator = (message: string, values?: TranslationValues) => string
 
-export const arabicMessages: Readonly<Record<string, string>> = {
-  ...commonAr, ...recruitingAr, ...matchingAr, ...nativeAr, ...exportsAr, ...companiesAr, ...jobsCompanyAr,
-  ...talentAr, ...pipelineAr, ...clientPackAr, ...requirementsAr, ...hiringCostsAr, ...hiringCostAssumptionTranslations
-}
+/** Every Arabic catalog, in merge order; a later catalog's entry wins, so identical keys must carry identical Arabic. */
+export const arabicCatalogs: ReadonlyArray<Readonly<Record<string, string>>> = [
+  commonAr, recruitingAr, matchingAr, nativeAr, exportsAr, companiesAr, jobsCompanyAr,
+  talentAr, pipelineAr, clientPackAr, requirementsAr, hiringCostsAr, hiringCostAssumptionTranslations
+]
+export const arabicMessages: Readonly<Record<string, string>> = Object.assign({}, ...arabicCatalogs)
 
 export function normalizeLanguage(value: unknown): Language {
   return value === 'ar' ? 'ar' : 'en'
@@ -66,9 +68,13 @@ export function translate(language: Language, message: string, values: Translati
   })
 }
 
+/** Removes Electron's IPC transport wrapper so the original message can be shown or translated. */
+export function stripIpcError(message: string): string {
+  return message.replace(/^Error invoking remote method '[^']+':\s*(?:Error:\s*)?/, '')
+}
+
 /** Preserve useful error details without showing Electron's transport wrapper. */
 export function displayError(language: Language, error: unknown, fallback: string): string {
   const message = error instanceof Error ? error.message : typeof error === 'string' ? error : fallback
-  const clean = message.replace(/^Error invoking remote method '[^']+':\s*(?:Error:\s*)?/, '')
-  return translate(language, clean || fallback)
+  return translate(language, stripIpcError(message) || fallback)
 }

@@ -16,7 +16,7 @@ export function talentSnapshot(): string {
 const rejected = (operation: () => unknown): boolean => { try { operation(); return false } catch { return true } }
 
 export function smokeTalent(check: Check, jobId: string, linkedCv: ResumeRef): { snapshot: string; prospectId: string; libraryPersonId: string } {
-  console.log('\n7a. Recruiter desk, pipelines, submissions and screenings')
+  console.log('\n7a-2. Recruiter desk, pipelines, submissions and screenings')
   const baseline = JSON.stringify(getJob(jobId).response?.results)
   const libraryPerson = talent.ensurePerson(linkedCv)
   check('groups linked CV versions under one stable contact', libraryPerson.recordKeys.length === 2 && talent.ensurePerson(linkedCv).id === libraryPerson.id)

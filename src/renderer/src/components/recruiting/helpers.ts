@@ -1,7 +1,9 @@
-import type { AssessmentStatus, CandidateProfile, CandidateReview, JobWorkspace, ReviewStatus } from '@shared/recruiting.js'
+import type { AssessmentStatus, CandidateProfile, CandidateReview, JobStatus, JobWorkspace, ReviewStatus } from '@shared/recruiting.js'
 import { candidateWithProfile, profileForResume } from '@shared/recruiting.js'
 import type { MatchResult } from '@shared/types.js'
-import type { Language, Translator } from '@shared/i18n.js'
+import { stripIpcError, type Language, type Translator } from '@shared/i18n.js'
+
+export const JOB_STATUS_LABELS: Record<JobStatus, string> = { open: 'Open', 'on-hold': 'On hold', filled: 'Filled', archived: 'Archived' }
 
 export const REVIEW_LABELS: Record<ReviewStatus, string> = {
   unreviewed: 'Unreviewed',
@@ -62,8 +64,8 @@ export function matchProfile(workspace: JobWorkspace, match: MatchResult): Candi
   return profileForResume(workspace.profiles, match.resume.recordKey)
 }
 
-export function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : 'The operation could not be completed. Please try again.'
+export function errorMessage(error: unknown, fallback = 'The operation could not be completed. Please try again.'): string {
+  return error instanceof Error ? error.message : fallback
 }
 
 /** Isolate interpolated user data without changing its stored value. */
@@ -73,7 +75,7 @@ export function bidiValue(value: string, language: Language, direction: 'auto' |
 
 /** IPC errors stay in source form until render so switching language also updates an open error. */
 export function recruitingError(message: string, t: Translator, language: Language): string {
-  const clean = message.replace(/^Error invoking remote method '[^']+':\s*(?:Error:\s*)?/, '')
+  const clean = stripIpcError(message)
   const conflict = /^These profiles have different (\w+) values\. Reconcile those edits before linking CVs\.$/.exec(clean)
   if (conflict) {
     const fields: Record<string, string> = {

@@ -33,9 +33,10 @@ export function normalizeText(input: string): string {
   // Rejoin words split across a line break by hyphenation: "engi-\nneering".
   t = t.replace(/([A-Za-z])-\n([a-z])/g, '$1$2')
 
-  // Strip standalone page markers, e.g. "Page 2 of 5" or a lone "3", consuming
-  // the trailing newline so no blank line is left behind.
-  t = t.replace(/^[ \t]*(?:page\s+)?\d+(?:\s+of\s+\d+)?[ \t]*$\n?/gim, '')
+  // Strip standalone page markers, e.g. "Page 2 of 5", "3 of 12" or a lone "3",
+  // consuming the trailing newline so no blank line is left behind. A longer
+  // lone number is a phone number or a year, which must survive.
+  t = t.replace(/^[ \t]*(?:page\s+\d+(?:\s+of\s+\d+)?|\d+\s+of\s+\d+|\d{1,3})[ \t]*$\n?/gim, '')
 
   t = t.replace(BULLETS, '')
 

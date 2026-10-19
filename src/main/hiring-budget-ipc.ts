@@ -6,6 +6,7 @@ import { currentLanguage, nativeText as t } from './language.js'
 import { getDb } from './db/index.js'
 import { hiringBudgetCsv } from './export/hiring-budget-csv.js'
 import { listHiringBudgets, saveHiringBudget, removeHiringBudget, requireHiringBudget } from './recruiting/hiring-budgets.js'
+import { assertHiringBudgetReferences } from './recruiting/hiring-budget-schema.js'
 import { readRecord } from './recruiting/storage.js'
 import type { JobRecord } from './recruiting/schema.js'
 
@@ -15,7 +16,7 @@ function captureExport(input: unknown): { name: string; csv: string } {
   const company = readRecord<Company>(getDb(), 'company', plan.companyId)
   if (!company) throw new Error('This company no longer exists.')
   const job = plan.jobId ? readRecord<JobRecord>(getDb(), 'job', plan.jobId) : null
-  if (plan.jobId && (!job || job.companyId !== plan.companyId)) throw new Error('The hiring budget job must belong to its company.')
+  assertHiringBudgetReferences(plan, new Set([company.id]), new Map(job ? [[job.id, job]] : []))
   return { name: plan.name, csv: hiringBudgetCsv(plan, company.name, job?.posting.position ?? '', currentLanguage()) }
 }
 

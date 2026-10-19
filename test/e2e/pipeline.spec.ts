@@ -1,21 +1,16 @@
-import { expect, test, _electron as electron, type ElectronApplication, type Page } from '@playwright/test'
+import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { isAbsolute, resolve } from 'node:path'
+import { resolve } from 'node:path'
 import { translate, type Language } from '../../src/shared/i18n.js'
+import { launchQumaa } from './launch.js'
 
-const ROOT = resolve(__dirname, '../..')
 let application: ElectronApplication | undefined
 let page: Page
 let scratch: string
 test.beforeEach(async () => {
   scratch = mkdtempSync(resolve(tmpdir(), 'qumaa-pipeline-ui-'))
-  const packagedExecutable = process.env.QUMAA_E2E_EXECUTABLE
-  const env: NodeJS.ProcessEnv = { ...process.env, QUMAA_E2E_USER_DATA: scratch, ELECTRON_DISABLE_SECURITY_WARNINGS: 'true' }
-  delete env.ELECTRON_RUN_AS_NODE
-  application = await electron.launch({ ...(packagedExecutable ? { executablePath: isAbsolute(packagedExecutable) ? packagedExecutable : resolve(ROOT, packagedExecutable) } : { args: [ROOT] }), cwd: ROOT, env })
-  page = await application.firstWindow()
-  await page.waitForLoadState('domcontentloaded')
+  ;({ application, page } = await launchQumaa(scratch))
 })
 test.afterEach(async () => { await application?.close(); application = undefined; rmSync(scratch, { recursive: true, force: true }) })
 

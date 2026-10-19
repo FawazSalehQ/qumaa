@@ -1,5 +1,5 @@
 import type { JobPlacement, JobPlacementCandidate } from '@shared/recruiting.js'
-import type { JobRecord } from './schema.js'
+import type { JobRecord, SnapshotRecord } from './schema.js'
 
 /** Ignore later name corrections when deciding whether selected people changed. */
 export function samePlacementPeople(left?: JobPlacement, right?: JobPlacement): boolean {
@@ -25,4 +25,16 @@ export function pruneJobPlacements(job: JobRecord, currentKeys: Set<string>): Jo
     ...(job.statusHistory ? { statusHistory: job.statusHistory.map((event) => event.placement ? { ...event, placement: placement(event.placement) } : event) } : {})
   }
   return changed ? result : job
+}
+
+/** Drops deleted CV identities from a saved ranking; returns the same object when nothing changed. */
+export function pruneSnapshot(snapshot: SnapshotRecord, currentKeys: ReadonlySet<string>): SnapshotRecord {
+  const results = snapshot.results.filter((result) => currentKeys.has(result.recordKey))
+  if (results.length === snapshot.results.length) return snapshot
+  // A deleted CV's AI explanation is private derived text too.
+  const { rerank, rerankConfig, ...localSnapshot } = snapshot
+  return {
+    ...localSnapshot, results,
+    ...(rerank?.every((entry) => currentKeys.has(entry.recordKey)) ? { rerank, ...(rerankConfig ? { rerankConfig } : {}) } : {})
+  }
 }

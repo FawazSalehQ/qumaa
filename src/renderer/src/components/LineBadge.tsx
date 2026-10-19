@@ -41,16 +41,14 @@ export function initialsFor(text: string): string {
 export default function LineBadge({
   tone = 'neutral',
   size,
-  className,
   children
 }: {
   tone?: LineTone
   size?: 'sm' | 'lg'
-  className?: string
   children: ReactNode
 }): React.JSX.Element {
   return (
-    <span className={`lb ${tone}${size ? ` ${size}` : ''}${className ? ` ${className}` : ''}`} aria-hidden="true">
+    <span className={`lb ${tone}${size ? ` ${size}` : ''}`} aria-hidden="true">
       {children}
     </span>
   )

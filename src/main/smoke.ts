@@ -362,6 +362,16 @@ async function run(): Promise<void> {
   // ingestion behind the readiness barrier until the migration below finishes.
   setSetting('embeddingModel', 'legacy-model')
 
+  console.log('\n5a. Concurrent identical imports')
+  const twinText = 'Concurrent Twin\nRiyadh\n\nEXPERIENCE\nAcme — Analyst\nJan 2020 - Dec 2023\nPrepared financial models and quarterly forecasts for retail and logistics clients.'
+  const twins = await Promise.all([
+    ingestText({ text: twinText, fileName: 'twin-a.md', filePath: '/fictional-originals/twin-a.md', fileType: 'md' }),
+    ingestText({ text: twinText, fileName: 'twin-b.md', filePath: '/fictional-originals/twin-b.md', fileType: 'md' })
+  ])
+  check('two concurrent imports of the same text yield one import and one duplicate', twins.map((outcome) => outcome.status).sort().join(',') === 'duplicate,imported')
+  const twin = twins.find((outcome) => outcome.status === 'imported')
+  check('the concurrent twin can be removed again', twin !== undefined && twin.status === 'imported' && deleteResume({ id: twin.resume.id, recordKey: twin.resume.recordKey }))
+
   console.log('\n5b. Near-duplicate detection')
   // Same person, one edited date. Byte hashing cannot catch this; the document
   // vector should.
@@ -1263,7 +1273,7 @@ Requirements:
   const staleFts = new Database(staleFtsPath)
   const staleFtsResume = staleFts
     .prepare("SELECT id, raw_text AS rawText FROM resumes WHERE raw_text LIKE '%Kubernetes%' LIMIT 1")
-    .get() as { id: number; recordKey: string; rawText: string }
+    .get() as { id: number; rawText: string }
   staleFts
     .prepare(
       "INSERT INTO resumes_fts(resumes_fts, rowid, raw_text) VALUES ('delete', ?, ?)"

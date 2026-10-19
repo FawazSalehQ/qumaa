@@ -2,7 +2,7 @@ import { constants, type BigIntStats } from 'node:fs'
 import { lstat, open, realpath } from 'node:fs/promises'
 import { posix, win32 } from 'node:path'
 
-export const MAX_SOURCE_FILE_BYTES = 25 * 1024 * 1024
+import { MAX_SOURCE_FILE_BYTES } from './extraction-protocol.js'
 
 interface FileIdentity {
   device: bigint

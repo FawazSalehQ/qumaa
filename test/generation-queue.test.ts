@@ -1,16 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { GenerationQueue } from '../src/main/ingest/generation-queue.js'
-
-function deferred<T>(): {
-  promise: Promise<T>
-  resolve: (value: T) => void
-} {
-  let resolve!: (value: T) => void
-  const promise = new Promise<T>((res) => {
-    resolve = res
-  })
-  return { promise, resolve }
-}
+import { deferred } from './fixtures/async.js'
 
 describe('GenerationQueue', () => {
   it('skips work that was queued by an invalidated generation', async () => {

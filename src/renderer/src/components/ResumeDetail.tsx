@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useI18n } from '../i18n.js'
 import type { Translator } from '@shared/i18n.js'
-import type { MatchResult, ResumeDetail as Detail, ResumeSummary } from '@shared/types.js'
+import { EDUCATION_LABELS, type MatchResult, type ResumeDetail as Detail, type ResumeSummary } from '@shared/types.js'
 import { CloseIcon } from './Icons.js'
 import RecruiterProfile from './RecruiterProfile.js'
 
@@ -167,7 +167,7 @@ export default function ResumeDetail({ resume, match, onClose, onDeleted, onProf
                 label={t('Experience')}
                 value={resume.yearsExperience !== null ? t('{count} years', { count: formatNumber(resume.yearsExperience) }) : null}
               />
-              <Field label={t('Education')} value={resume.educationLevel ? t(resume.educationLevel) : null} />
+              <Field label={t('Education')} value={resume.educationLevel ? t(EDUCATION_LABELS[resume.educationLevel]) : null} />
               <Field label={t('Source')} value={resume.fileName} />
             </dl>
             <p className="hint">

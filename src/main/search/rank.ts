@@ -34,7 +34,7 @@ export interface SearchInspection {
   candidates: Array<{ resumeId: number; chunks: ScoredChunk[]; semantic: number; lexical: number }>
 }
 
-function lexicalScores(jd: string): Map<number, number> {
+export function lexicalScores(jd: string): Map<number, number> {
   const scores = new Map<number, number>()
   const query = buildFtsQuery(jd)
   if (!query) return scores

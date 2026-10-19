@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { randomUUID } from 'node:crypto'
+import { deferred } from './fixtures/async.js'
 
 const fixture = vi.hoisted(() => ({
   store: new Map<string, string | null>(), encryptionAvailable: true,
@@ -37,12 +38,6 @@ const changed = vi.fn()
 function tokens(overrides: Partial<import('../src/main/chatgpt/store.js').StoredTokens> = {}) {
   return { accessToken: 'test-access-secret', refreshToken: 'test-refresh-secret', idToken: 'test-id-secret',
     expiresAt: Date.now() + 3600_000, scopes: SCOPES.split(' '), ...overrides }
-}
-function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void; reject: (error: Error) => void } {
-  let resolve!: (value: T) => void
-  let reject!: (error: Error) => void
-  const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no })
-  return { promise, resolve, reject }
 }
 async function settleUntil(check: () => boolean): Promise<void> {
   for (let i = 0; i < 40 && !check(); i++) await new Promise<void>((resolve) => setImmediate(resolve))

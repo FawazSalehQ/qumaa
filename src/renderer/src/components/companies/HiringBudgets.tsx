@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { calculateHiringCosts, hiringCostInputsSchema, type HiringCostInputs, type HiringCostResult, type GosiScheme } from '@shared/hiring-costs.js'
+import { calculateHiringCosts, hiringCostInputsSchema, type HiringCostInputs, type HiringCostResult, type GosiScheme, localizeHiringAssumption } from '@shared/hiring-costs.js'
 import { parseHiringHundredths as hundredths, hiringDecimal, formatHiringMoney } from '@shared/hiring-money.js'
 import type { SavedHiringBudget } from '@shared/hiring-budget.js'
 import type { SavedJob } from '@shared/recruiting.js'
@@ -43,7 +43,7 @@ function draftInputs(d: Draft): HiringCostInputs {
 const schemeLabel = (scheme: GosiScheme): string => scheme === 'existing' ? 'Existing GOSI scheme' : 'New GOSI scheme'
 
 function CostPreview({ result }: { result: HiringCostResult }): React.JSX.Element {
-  const { t, formatNumber, locale } = useI18n()
+  const { t, formatNumber, locale, language } = useI18n()
   const money = (value: number): string => `${formatHiringMoney(value, locale)} ${t('SAR')}`
   const percent = (value: number): string => `${formatNumber(value / 100, { maximumFractionDigits: 2 })}%`
   const row = (label: string, value: number, key = label): React.JSX.Element => <div key={key}><dt>{t(label)}</dt><dd><bdi>{money(value)}</bdi></dd></div>
@@ -83,7 +83,7 @@ function CostPreview({ result }: { result: HiringCostResult }): React.JSX.Elemen
       </dl> : <p className="hint">{t('This forecast includes an active month before the new scheme is supported. No complete total is shown.')}</p>}
       <details className="disclosure hiring-monthly"><DisclosureSummary>{t('Month-by-month calculation')}</DisclosureSummary><div className="hiring-table-scroll"><table><thead><tr><th>{t('Month')}</th><th>{t('Employee / employer rate')}</th><th>{t('EOS provision per employee')}</th><th>{t('Headcount cost')}</th></tr></thead><tbody>{scenario.months.map((month) => <tr key={month.month}><th scope="row"><bdi>{month.month}</bdi></th>{!month.active ? <td colSpan={3}>{t('Before employment · zero cost')}</td> : !month.available ? <td colSpan={3}>{t('New-scheme rate unavailable')}</td> : <><td><bdi>{percent(month.rates.employeeTotalBps)} / {percent(month.rates.employerTotalBps)}</bdi></td><td><bdi>{money(month.eosProvisionHalala)}</bdi></td><td><bdi>{money(month.headcountEmployerCostHalala)}</bdi></td></>}</tr>)}</tbody></table></div></details>
     </section>)}</div>
-    <details className="disclosure hiring-assumptions"><DisclosureSummary>{t('Calculation assumptions and sources')}</DisclosureSummary><ul>{result.assumptions.map((assumption) => <li key={assumption}>{assumption.startsWith('Verified registered GOSI wage override: ') ? t('Verified registered GOSI wage override: {note}', { note: result.inputs.gosi.registeredWageNote }) : assumption.startsWith('Configured contribution-wage limits: ') ? t('Configured contribution-wage limits: {note}', { note: result.inputs.gosi.limitNote }) : t(assumption)}</li>)}</ul><p>{t('GOSI: new-system employer guidance and contributor FAQ. HRSD: end-of-service award regulations. The SAR 1,500 minimum is the published pension minimum; verify the applicable limit for the employee’s classification.')}</p><p dir="ltr" className="hiring-source">awareness.gosi.gov.sa/businessJourney.html<br />www.gosi.gov.sa/GOSIOnline/FAQ_Contributor<br />www.hrsd.gov.sa/en/knowledge-centre/articles/317</p></details>
+    <details className="disclosure hiring-assumptions"><DisclosureSummary>{t('Calculation assumptions and sources')}</DisclosureSummary><ul>{result.assumptions.map((assumption) => <li key={assumption}>{localizeHiringAssumption(language, assumption)}</li>)}</ul><p>{t('GOSI: new-system employer guidance and contributor FAQ. HRSD: end-of-service award regulations. The SAR 1,500 minimum is the published pension minimum; verify the applicable limit for the employee’s classification.')}</p><p dir="ltr" className="hiring-source">awareness.gosi.gov.sa/businessJourney.html<br />www.gosi.gov.sa/GOSIOnline/FAQ_Contributor<br />www.hrsd.gov.sa/en/knowledge-centre/articles/317</p></details>
   </div>
 }
 

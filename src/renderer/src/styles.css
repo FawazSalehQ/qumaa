@@ -72,15 +72,12 @@
   --good-border: #a7d8bf;
   --bad: var(--line-red);
   --bad-soft: #f9e6e4;
-  --warn: var(--line-amber);
-  --warn-soft: #fbf0d9;
 
   --shadow-panel: 0 24px 56px -16px rgba(31, 27, 39, 0.38), 0 2px 8px -2px rgba(31, 27, 39, 0.18);
   --shadow-pop: 0 14px 36px -10px rgba(31, 27, 39, 0.3), 0 1px 3px rgba(31, 27, 39, 0.1);
   --scrim: rgba(23, 19, 31, 0.42);
 
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 
   --font-latin: 'IBM Plex Sans Variable', 'IBM Plex Sans', system-ui, sans-serif;
   --font-arabic: 'IBM Plex Sans Arabic', system-ui, sans-serif;
@@ -158,7 +155,6 @@
   --good-soft: #1f3328;
   --good-border: #35604a;
   --bad-soft: #3b2426;
-  --warn-soft: #3a2f16;
 
   --shadow-panel: 0 24px 56px -16px rgba(0, 0, 0, 0.7), 0 2px 8px -2px rgba(0, 0, 0, 0.4);
   --shadow-pop: 0 14px 36px -10px rgba(0, 0, 0, 0.6), 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -341,7 +337,6 @@ a {
 .pill.neutral { --tone: var(--line-neutral); }
 
 /* Field labels: the small tracked mono label the brand specifies. */
-.field-label,
 .recruit-eyebrow,
 .company-eyebrow,
 .talent-eyebrow {
@@ -1112,23 +1107,6 @@ input[type='search']::-webkit-search-cancel-button {
   font-size: 10px;
   margin-top: 3px;
   color: var(--text-dim);
-}
-
-.score-ring {
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  position: relative;
-}
-
-.score-ring svg {
-  transform: rotate(-90deg);
-}
-
-.score-ring .val {
-  position: absolute;
-  font-weight: 700;
-  color: var(--accent);
 }
 
 .score-bars {
@@ -1973,18 +1951,13 @@ tbody tr.selected td {
   line-height: 1.7;
 }
 
-:root[lang='ar'] :is(h1, h2, h3, h4, .tag, .label, .tab, .chip, .score-bar-label, th, .creator-label, .setting-badge, .field-label, .recruit-eyebrow, .company-eyebrow, .talent-eyebrow, .evidence .tag, .llm-reason .tag) {
+:root[lang='ar'] :is(h1, h2, h3, h4, .tag, .label, .tab, .chip, .score-bar-label, th, .creator-label, .setting-badge, .recruit-eyebrow, .company-eyebrow, .talent-eyebrow, .evidence .tag, .llm-reason .tag) {
   letter-spacing: normal;
   text-transform: none;
 }
 
 :root[lang='ar'] :is(.lb, .pill) {
   letter-spacing: normal;
-}
-
-:root[dir='rtl'] .topbar.draggable {
-  padding-inline-start: var(--s5);
-  padding-left: 84px;
 }
 
 .setting-path,
@@ -2004,19 +1977,6 @@ bdi,
   text-align: start;
 }
 
-:root[lang='ar'] :is(input, textarea, select) {
-  font: inherit;
-}
-
-input:not([type='checkbox']):not([type='radio']),
-textarea {
-  min-width: 0;
-}
-
-.row,
-.setting-actions {
-  min-width: 0;
-}
 
 .setting-path {
   max-width: 100%;

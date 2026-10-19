@@ -1,7 +1,6 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { mkdir, mkdtemp, rename, rm, symlink, writeFile } from 'node:fs/promises'
+import { describe, expect, it } from 'vitest'
+import { mkdir, rename, symlink, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { tmpdir } from 'node:os'
 import {
   canonicalizeWatchedRoot,
   isCanonicalPathWithinRoot,
@@ -9,22 +8,10 @@ import {
   validateFileSource,
   validateWatchedFileSource
 } from '../src/main/ingest/source-file.js'
+import { temporaryDirectories } from './fixtures/temporary.js'
 
-const temporaryDirectories: string[] = []
-
-afterEach(async () => {
-  await Promise.all(
-    temporaryDirectories.splice(0).map((directory) =>
-      rm(directory, { recursive: true, force: true })
-    )
-  )
-})
-
-async function temporaryDirectory(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), 'qumaa-source-boundary-'))
-  temporaryDirectories.push(directory)
-  return directory
-}
+const scratch = temporaryDirectories('qumaa-source-boundary-')
+const temporaryDirectory = (): Promise<string> => scratch.create()
 
 async function linkDirectory(target: string, path: string): Promise<void> {
   await symlink(target, path, process.platform === 'win32' ? 'junction' : 'dir')

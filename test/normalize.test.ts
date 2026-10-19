@@ -20,6 +20,13 @@ describe('normalizeText', () => {
 
   it('removes standalone page markers', () => {
     expect(normalizeText('Skills\nPage 2 of 5\nPython')).toBe('Skills\nPython')
+    expect(normalizeText('Skills\n3\nPython')).toBe('Skills\nPython')
+    expect(normalizeText('Skills\n12 of 40\nPython')).toBe('Skills\nPython')
+  })
+
+  it('keeps phone numbers and years that stand on their own line', () => {
+    expect(normalizeText('Mobile\n0501234567\nRiyadh')).toBe('Mobile\n0501234567\nRiyadh')
+    expect(normalizeText('Awards\n2015\nBest engineer')).toBe('Awards\n2015\nBest engineer')
   })
 
   it('preserves line structure, which the section splitter depends on', () => {

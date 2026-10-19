@@ -28,7 +28,7 @@ function recruitingState(jobId: string): Record<string, string> {
 }
 
 export function smokeHiringBudgets(check: Check, companyId: string, jobId: string, otherCompanyId: string): { snapshot: string; plan: SavedHiringBudget } {
-  console.log('\n7a. Company hiring budgets and employment costs')
+  console.log('\n7a-3. Company hiring budgets and employment costs')
   const inputs: HiringCostInputs = {
     eligibleSaudiPrivateSector: true,
     salary: { mode: 'combined', basicHalala: 0, housingHalala: 0, combinedHalala: 2_000_000, basicPercentBps: 7500, housingPercentBps: 2500, transportHalala: 100_000 },

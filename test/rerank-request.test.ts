@@ -143,7 +143,6 @@ describe('Claude rerank request', () => {
       fetchOptions: { redirect: 'error' }
     })
     expect(mocks.create.mock.calls[0][1]).toEqual({ headers: { Authorization: null, 'X-Api-Key': 'test' } })
-    vi.unstubAllEnvs()
   })
 
   it('ignores invented opaque ids and preserves omitted candidates locally', async () => {

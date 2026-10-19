@@ -13,7 +13,7 @@ export const RERANK_MODELS = {
 } as const
 
 export type RerankProvider = keyof typeof RERANK_MODELS
-export type ApiRerankModel = (typeof RERANK_MODELS)[RerankProvider][number]['id']
+export const RERANK_PROVIDERS = ['anthropic', 'openai'] as const satisfies readonly RerankProvider[]
 /** Subscription models are discovered for the connected account, never hardcoded. */
 export type RerankModel = string
 export type RerankAuthMode = 'api-key' | 'chatgpt'
