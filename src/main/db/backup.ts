@@ -11,8 +11,7 @@ import {
   lstatSync,
   mkdirSync,
   openSync,
-  realpathSync,
-  rmSync
+  realpathSync
 } from 'node:fs'
 import { basename, dirname, resolve } from 'node:path'
 import { isPortableSetting } from './backup-policy.js'
@@ -21,6 +20,7 @@ import {
   assertSchemaVersion,
   CURRENT_SCHEMA_VERSION,
   migrateDatabase,
+  pragmaNumber,
   QUMAA_APPLICATION_ID,
   rebuildAndVerifySearchIndex
 } from './migrations.js'
@@ -31,6 +31,8 @@ import {
   moveClosedDatabaseFileSet,
   readRestoreMarker,
   recoverInterruptedRestore,
+  removeDatabaseFileSet,
+  restoreMarkerPath,
   syncFileAndDirectory,
   writeRestoreMarker
 } from './replacement.js'
@@ -50,16 +52,11 @@ export interface RestoreResult extends BackupValidation {
 }
 
 export interface StagedRestore extends BackupValidation {
-  readonly sourcePath: string
   readonly stagingPath: string
 }
 
 /** The 3,000-resume benchmark is far below this; larger files fail before SQLite opens them. */
 export const MAX_PORTABLE_BACKUP_BYTES = 1024 * 1024 * 1024
-
-function pragmaNumber(database: Database.Database, name: 'application_id' | 'user_version'): number {
-  return database.pragma(name, { simple: true }) as number
-}
 
 function assertDatabaseSizeBudget(database: Database.Database): void {
   const pageCount = database.pragma('page_count', { simple: true }) as number
@@ -143,7 +140,7 @@ function inspectOpenDatabase(
   return { schemaVersion, resumeCount, chunkCount }
 }
 
-function openAndInspect(path: string, requirePortable: boolean): BackupValidation {
+function openAndInspect(path: string): BackupValidation {
   assertRegularBackupFile(path)
   let database: Database.Database
   try {
@@ -153,7 +150,7 @@ function openAndInspect(path: string, requirePortable: boolean): BackupValidatio
   }
   try {
     database.pragma('foreign_keys = ON')
-    return inspectOpenDatabase(database, requirePortable)
+    return inspectOpenDatabase(database, true)
   } finally {
     database.close()
   }
@@ -161,7 +158,7 @@ function openAndInspect(path: string, requirePortable: boolean): BackupValidatio
 
 /** Validates identity, supported schema, portability policy, and SQLite integrity. */
 export function validatePortableBackup(path: string): BackupValidation {
-  return openAndInspect(path, true)
+  return openAndInspect(path)
 }
 
 function makePrivate(path: string): void {
@@ -177,42 +174,34 @@ function reservePrivateFile(path: string): void {
   closeSync(descriptor)
 }
 
-function removeDatabaseFileSet(path: string): void {
-  rmSync(path, { force: true })
-  rmSync(`${path}-wal`, { force: true })
-  rmSync(`${path}-shm`, { force: true })
-  rmSync(`${path}-journal`, { force: true })
-}
-
-function prepareCandidate(path: string, portable: boolean): BackupValidation {
+/** Sanitises a staged copy into a portable file: no local paths, secrets or machine-derived rankings. */
+function prepareCandidate(path: string): BackupValidation {
   assertRegularBackupFile(path)
   const database = new Database(path, { fileMustExist: true })
   try {
     database.pragma('foreign_keys = ON')
     assertDatabaseSizeBudget(database)
     migrateDatabase(database)
-    if (portable) {
-      database.transaction(() => {
-        database.prepare("UPDATE resumes SET file_path = ''").run()
-        const settings = database
-          .prepare('SELECT key FROM settings ORDER BY key')
-          .iterate() as IterableIterator<{ key: string }>
-        const keysToRemove: string[] = []
-        for (const { key } of settings) {
-          if (!isPortableSetting(key)) keysToRemove.push(key)
-        }
-        const removeSetting = database.prepare('DELETE FROM settings WHERE key = ?')
-        for (const key of keysToRemove) removeSetting.run(key)
-        // Portable files are untrusted input when restored. Force a complete
-        // re-embed from retained text under the bundled, hash-verified model;
-        // a forged provenance marker can never make arbitrary vectors trusted.
-        removeSetting.run('embeddingModel')
-        // Recruiter decisions and profile corrections are portable. Rankings
-        // are local machine-derived assertions and must be recomputed after
-        // restore before they can create a trusted Claude search session.
-        database.prepare("DELETE FROM recruiting_records WHERE kind = 'snapshot'").run()
-      })()
-    }
+    database.transaction(() => {
+      database.prepare("UPDATE resumes SET file_path = ''").run()
+      const settings = database
+        .prepare('SELECT key FROM settings ORDER BY key')
+        .iterate() as IterableIterator<{ key: string }>
+      const keysToRemove: string[] = []
+      for (const { key } of settings) {
+        if (!isPortableSetting(key)) keysToRemove.push(key)
+      }
+      const removeSetting = database.prepare('DELETE FROM settings WHERE key = ?')
+      for (const key of keysToRemove) removeSetting.run(key)
+      // Portable files are untrusted input when restored. Force a complete
+      // re-embed from retained text under the bundled, hash-verified model;
+      // a forged provenance marker can never make arbitrary vectors trusted.
+      removeSetting.run('embeddingModel')
+      // Recruiter decisions and profile corrections are portable. Rankings
+      // are local machine-derived assertions and must be recomputed after
+      // restore before they can create a trusted Claude search session.
+      database.prepare("DELETE FROM recruiting_records WHERE kind = 'snapshot'").run()
+    })()
 
     // The FTS5 table is derived data. Rebuilding on the isolated candidate
     // makes stale/tampered postings harmless, then verifies external-content
@@ -223,7 +212,7 @@ function prepareCandidate(path: string, portable: boolean): BackupValidation {
     database.pragma('journal_mode = DELETE')
     database.exec('VACUUM')
     syncFileAndDirectory(path)
-    return inspectOpenDatabase(database, portable)
+    return inspectOpenDatabase(database, true)
   } finally {
     database.close()
   }
@@ -264,13 +253,14 @@ function assertOutsideLiveNamespace(candidate: string): void {
   if (!sameDirectory) return
   const name = caseFold(basename(candidate))
   const liveName = caseFold(basename(livePath))
+  const marker = caseFold(basename(restoreMarkerPath(livePath)))
   if (
     name === liveName ||
     name === `${liveName}-wal` ||
     name === `${liveName}-shm` ||
     name === `${liveName}-journal` ||
-    name === `${liveName}.restore-in-progress.json` ||
-    name === `${liveName}.restore-in-progress.json.tmp` ||
+    name === marker ||
+    name === `${marker}.tmp` ||
     name.startsWith(`${liveName}.rollback-`) ||
     name.startsWith(`.${liveName}.`)
   ) {
@@ -307,13 +297,20 @@ function publishExport(stagingPath: string, destinationPath: string): void {
   // Linking a fully-written sibling stage is an atomic create on Windows and
   // macOS and, unlike rename, can never overwrite a file that appeared after
   // validation. Refuse overwrite so a crash cannot hide the previous backup.
+  const occupied = (error: unknown): boolean => (error as NodeJS.ErrnoException).code === 'EEXIST'
   try {
     linkSync(stagingPath, destinationPath)
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
-      throw new Error('A file already exists at the backup destination. Choose a new name.')
+    if (occupied(error)) throw new Error('A file already exists at the backup destination. Choose a new name.')
+    // exFAT, FAT32 and many network shares cannot hard-link. An exclusive
+    // copy keeps the same no-overwrite guarantee at the cost of one more write.
+    try {
+      copyFileSync(stagingPath, destinationPath, constants.COPYFILE_EXCL)
+    } catch (copyError) {
+      if (occupied(copyError)) throw new Error('A file already exists at the backup destination. Choose a new name.')
+      throw copyError
     }
-    throw error
+    makePrivate(destinationPath)
   }
   syncFileAndDirectory(destinationPath)
   removeDatabaseFileSet(stagingPath)
@@ -341,7 +338,7 @@ export async function exportPortableBackup(destinationPath: string): Promise<Bac
     reservePrivateFile(privateStage)
     await getDb().backup(privateStage)
     makePrivate(privateStage)
-    const validation = prepareCandidate(privateStage, true)
+    const validation = prepareCandidate(privateStage)
 
     copyFileSync(privateStage, publishStage, constants.COPYFILE_EXCL)
     makePrivate(publishStage)
@@ -356,7 +353,7 @@ export async function exportPortableBackup(destinationPath: string): Promise<Bac
   }
 }
 
-function replaceManagedDatabase(stagingPath: string, portable: boolean): RestoreResult {
+function replaceManagedDatabase(stagingPath: string): RestoreResult {
   const livePath = resolve(dbPath())
   const rollbackPath = `${livePath}.rollback-${Date.now()}-${randomUUID()}`
 
@@ -371,7 +368,7 @@ function replaceManagedDatabase(stagingPath: string, portable: boolean): Restore
     moveClosedDatabaseFileSet(livePath, rollbackPath)
     moveClosedDatabaseFileSet(stagingPath, livePath)
 
-    const validation = inspectOpenDatabase(getDb(), portable)
+    const validation = inspectOpenDatabase(getDb(), true)
     return { ...validation, rollbackPath }
   } catch (error) {
     try {
@@ -422,8 +419,8 @@ export async function stagePortableRestore(sourcePath: string): Promise<StagedRe
     reservePrivateFile(stagingPath)
     await sourceDatabase.backup(stagingPath)
     makePrivate(stagingPath)
-    const validation = prepareCandidate(stagingPath, true)
-    return { ...validation, sourcePath: source, stagingPath }
+    const validation = prepareCandidate(stagingPath)
+    return { ...validation, stagingPath }
   } catch (error) {
     removeDatabaseFileSet(stagingPath)
     throw error
@@ -445,8 +442,8 @@ export async function installStagedPortableRestore(
   if (!isManagedStagingPath(livePath, stagingPath) || !existsSync(stagingPath)) {
     throw new Error('The prepared restore candidate is no longer available.')
   }
-  prepareCandidate(stagingPath, true)
-  const installed = replaceManagedDatabase(stagingPath, true)
+  prepareCandidate(stagingPath)
+  const installed = replaceManagedDatabase(stagingPath)
   try {
     const rebuilt = await rebuildRestoredDerivedData()
     getDb().transaction(() => pruneRecruitingRecords(getDb()))()

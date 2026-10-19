@@ -1,9 +1,6 @@
 /** Disposable, memory-capped PDF/DOCX parsing utility process. */
 import { extractPdfTextBounded } from './pdf-extract-core.js'
-import type { FromExtractionWorker, ToExtractionWorker } from './extraction-protocol.js'
-
-const MAX_WORKER_INPUT_BYTES = 25 * 1024 * 1024
-const MAX_WORKER_OUTPUT_CHARS = 500_000
+import { MAX_EXTRACTED_TEXT_CHARS, MAX_SOURCE_FILE_BYTES, type FromExtractionWorker, type ToExtractionWorker } from './extraction-protocol.js'
 
 function send(message: FromExtractionWorker): void {
   process.parentPort.postMessage(message)
@@ -15,9 +12,9 @@ function safeRequest(value: unknown): value is ToExtractionWorker {
   return (
     (request.type === 'extract-pdf' || request.type === 'extract-docx') &&
     request.data instanceof Uint8Array &&
-    request.data.byteLength <= MAX_WORKER_INPUT_BYTES &&
+    request.data.byteLength <= MAX_SOURCE_FILE_BYTES &&
     Number.isInteger(request.maxCharacters) &&
-    request.maxCharacters === MAX_WORKER_OUTPUT_CHARS
+    request.maxCharacters === MAX_EXTRACTED_TEXT_CHARS
   )
 }
 
@@ -40,7 +37,7 @@ process.parentPort.once('message', (event) => {
 
   extract(request)
     .then((text) => {
-      if (text.length > MAX_WORKER_OUTPUT_CHARS) {
+      if (text.length > MAX_EXTRACTED_TEXT_CHARS) {
         throw new Error("Resume text exceeds Qumaa's 500,000 character safety limit.")
       }
       send({ type: 'result', text })

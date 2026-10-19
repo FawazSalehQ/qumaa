@@ -8,9 +8,8 @@ import { CriterionSource } from './JobCriteriaEditor.js'
 export default function RequirementPassages({ workspace, match, onClose, onOpenCandidate }: { workspace: JobWorkspace; match: MatchResult; onClose: () => void; onOpenCandidate: (match: MatchResult) => void }): React.JSX.Element {
   const { t } = useI18n()
   const evidence = workspace.evidence[match.resume.recordKey]
-  return <section className="recruit-review-panel" aria-label={t('Requirement passages')}>
+  return <section aria-label={t('Requirement passages')}>
     <div className="recruit-section-head"><h4>{t('Requirement passages')} · <bdi>{match.resume.name ?? match.resume.fileName}</bdi></h4><button type="button" className="btn sm" onClick={onClose}>{t('Close passages')}</button></div>
-    <p className="hint">{t('Nearest passages need review. Similar wording does not establish experience, ownership, qualifications, or eligibility.')}</p>
     <p className="hint">{t('This express search is read-only. Save as job to record assessments.')}</p>
     <div className="recruit-scorecard">{workspace.job.criteria.map((criterion) => {
       const passage = evidence?.find((entry) => entry.criterionId === criterion.id)?.passage

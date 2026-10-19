@@ -59,7 +59,7 @@ const CompanyDetailInput = forwardRef<CompanyDetailInputHandle, Props>(function 
     input.current?.focus()
   }
 
-  return <div className="company-field company-entry-field">
+  return <div className="company-field">
     <label htmlFor={id}>{t(label)}</label>
     <div className="company-entry-controls">
       <input ref={input} id={id} name={name} type={email ? 'email' : 'text'} maxLength={512}

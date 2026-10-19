@@ -1,9 +1,10 @@
 import type Database from 'better-sqlite3'
 import type { SavedHiringBudget } from '@shared/hiring-budget.js'
+import type { ResumeRef } from '@shared/types.js'
 import { assertHiringBudgetReferences } from './hiring-budget-schema.js'
 import type { CandidateProfile, CandidateReview } from '@shared/recruiting.js'
 import type { Activity, Assignment, Person, Screening, TalentOverview, TalentPool } from '@shared/talent.js'
-import { pruneJobPlacements } from './job-status.js'
+import { pruneJobPlacements, pruneSnapshot } from './job-status.js'
 import { assertTalentReferences } from './talent-planning.js'
 import {
   parseRecruiting,
@@ -14,8 +15,17 @@ import {
   recordSchemas,
   type JobRecord,
   type RecordKind,
+  type SnapshotRecord,
   type StoredRecord
 } from './schema.js'
+
+/** Rejects a stale CV reference before any recruiting record can point at it. */
+export function requireResume(database: Database.Database, ref: ResumeRef): void {
+  if (!database.prepare('SELECT 1 FROM resumes WHERE id = ? AND content_hash = ?').get(ref.id, ref.recordKey)) throw new Error('This CV changed or was removed. Refresh the library and try again.')
+}
+
+/** A strictly increasing edit time, even when the clock has not moved since the last write. */
+export function nowAfter(previous?: { updatedAt: number } | null): number { return Math.max(Date.now(), (previous?.updatedAt ?? -1) + 1) }
 
 export const RECRUITING_TABLE_SQL = `CREATE TABLE recruiting_records (
   kind TEXT NOT NULL,
@@ -52,8 +62,8 @@ export function putRecord(database: Database.Database, kind: RecordKind, input: 
   const data = JSON.stringify(value)
   const size = Buffer.byteLength(data)
   if (size > RECRUITING_LIMITS.recordBytes) throw new Error('This recruiting record exceeds the storage limit.')
-  const usage = database.prepare(`SELECT COUNT(*) AS count, COALESCE(SUM(length(CAST(data AS BLOB))), 0) AS bytes,
-    COALESCE(SUM(CASE WHEN kind = ? THEN 1 ELSE 0 END), 0) AS kindCount FROM recruiting_records`).get(kind) as { count: number; bytes: number; kindCount: number }
+  const usage = database.prepare(`SELECT COALESCE(SUM(length(CAST(data AS BLOB))), 0) AS bytes,
+    COALESCE(SUM(CASE WHEN kind = ? THEN 1 ELSE 0 END), 0) AS kindCount FROM recruiting_records`).get(kind) as { bytes: number; kindCount: number }
   const previous = database.prepare('SELECT length(CAST(data AS BLOB)) AS bytes FROM recruiting_records WHERE kind = ? AND id = ?').get(kind, id) as { bytes: number } | undefined
   const limit = RECORD_LIMITS[kind]
   if (!previous && usage.kindCount >= limit) throw new Error(`The library has reached its ${limit}-${kind} storage limit.`)
@@ -193,7 +203,7 @@ export function removeTalentPeople(database: Database.Database, ids: ReadonlySet
   }
   for (const pool of readRecords<TalentPool>(database, 'pool')) {
     const members = pool.members.filter((member) => !ids.has(member.personId))
-    if (members.length !== pool.members.length) putRecord(database, 'pool', { ...pool, members, updatedAt: Math.max(Date.now(), pool.updatedAt + 1) })
+    if (members.length !== pool.members.length) putRecord(database, 'pool', { ...pool, members, updatedAt: nowAfter(pool) })
   }
 }
 
@@ -204,7 +214,7 @@ export function pruneRecruitingRecords(database: Database.Database): void {
   for (const person of readRecords<Person>(database, 'person')) {
     const recordKeys = person.recordKeys.filter((key) => currentKeys.has(key))
     if (!recordKeys.length && person.origin === 'library') removedPeople.add(person.id)
-    else if (recordKeys.length !== person.recordKeys.length) putRecord(database, 'person', { ...person, recordKeys, updatedAt: Math.max(Date.now(), person.updatedAt + 1) })
+    else if (recordKeys.length !== person.recordKeys.length) putRecord(database, 'person', { ...person, recordKeys, updatedAt: nowAfter(person) })
   }
   removeTalentPeople(database, removedPeople)
   const remove = database.prepare('DELETE FROM recruiting_records WHERE kind = ? AND id = ?')
@@ -232,19 +242,12 @@ export function pruneRecruitingRecords(database: Database.Database): void {
   }
   for (const job of readRecords<JobRecord>(database, 'job')) {
     const pruned = pruneJobPlacements(job, currentKeys)
-    if (pruned !== job) putRecord(database, 'job', { ...pruned, updatedAt: Math.max(Date.now(), job.updatedAt + 1) })
+    if (pruned !== job) putRecord(database, 'job', { ...pruned, updatedAt: nowAfter(job) })
   }
   // Saved rankings refer only to current CV identities; their source library
   // fingerprint deliberately stays unchanged so the UI requests a refresh.
-  for (const snapshot of readRecords<import('./schema.js').SnapshotRecord>(database, 'snapshot')) {
-    const results = snapshot.results.filter((result) => currentKeys.has(result.recordKey))
-    if (results.length !== snapshot.results.length) {
-      // A deleted CV's Claude explanation is private derived text too.
-      const { rerank, rerankConfig, ...localSnapshot } = snapshot
-      putRecord(database, 'snapshot', {
-        ...localSnapshot, results,
-        ...(rerank?.every((entry) => currentKeys.has(entry.recordKey)) ? { rerank, ...(rerankConfig ? { rerankConfig } : {}) } : {})
-      })
-    }
+  for (const snapshot of readRecords<SnapshotRecord>(database, 'snapshot')) {
+    const pruned = pruneSnapshot(snapshot, currentKeys)
+    if (pruned !== snapshot) putRecord(database, 'snapshot', pruned)
   }
 }

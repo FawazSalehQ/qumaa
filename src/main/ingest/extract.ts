@@ -13,17 +13,18 @@ import {
   type ValidatedFileSource
 } from './source-file.js'
 
-export { MAX_SOURCE_FILE_BYTES } from './source-file.js'
+import { MAX_EXTRACTED_TEXT_CHARS } from './extraction-protocol.js'
+export { MAX_EXTRACTED_TEXT_CHARS, MAX_SOURCE_FILE_BYTES } from './extraction-protocol.js'
 
 type FileType = 'pdf' | 'docx' | 'md'
 
 /** A PDF yielding less than this many characters is almost certainly a scan. */
 const SCANNED_TEXT_THRESHOLD = 100
-export const MAX_EXTRACTED_TEXT_CHARS = 500_000
 const MAX_DOCX_EXPANDED_BYTES = 64 * 1024 * 1024
 const MAX_DOCX_ENTRIES = 2_048
 
-export const SUPPORTED_EXTENSIONS = ['.pdf', '.docx', '.md', '.markdown'] as const
+const FILE_TYPES: Readonly<Record<string, FileType>> = { '.pdf': 'pdf', '.docx': 'docx', '.md': 'md', '.markdown': 'md' }
+export const SUPPORTED_EXTENSIONS: readonly string[] = Object.keys(FILE_TYPES)
 
 export interface Extracted {
   text: string
@@ -32,21 +33,11 @@ export interface Extracted {
 }
 
 export function isSupported(path: string): boolean {
-  return (SUPPORTED_EXTENSIONS as readonly string[]).includes(extname(path).toLowerCase())
+  return fileTypeOf(path) !== null
 }
 
 function fileTypeOf(path: string): FileType | null {
-  switch (extname(path).toLowerCase()) {
-    case '.pdf':
-      return 'pdf'
-    case '.docx':
-      return 'docx'
-    case '.md':
-    case '.markdown':
-      return 'md'
-    default:
-      return null
-  }
+  return FILE_TYPES[extname(path).toLowerCase()] ?? null
 }
 
 async function extractInWorker(
@@ -133,8 +124,8 @@ async function extractPdf(buf: Buffer): Promise<string> {
 }
 
 async function extractDocx(buf: Buffer): Promise<string> {
-  await assertSafeDocxArchive(buf)
-  return extractInWorker(buf, 'extract-docx')
+  const verifiedArchive = await prepareSafeDocxArchive(buf)
+  return extractInWorker(verifiedArchive, 'extract-docx')
 }
 
 interface ZipEntry {
@@ -190,7 +181,11 @@ function findEndOfCentralDirectory(buffer: Buffer): number {
   throw archiveError('is missing its central directory.')
 }
 
-function readCentralDirectory(buffer: Buffer): { entries: ZipEntry[]; centralOffset: number } {
+function readCentralDirectory(buffer: Buffer): {
+  entries: ZipEntry[]
+  centralOffset: number
+  eocd: number
+} {
   const eocd = findEndOfCentralDirectory(buffer)
   const diskNumber = buffer.readUInt16LE(eocd + 4)
   const centralDisk = buffer.readUInt16LE(eocd + 6)
@@ -285,7 +280,7 @@ function readCentralDirectory(buffer: Buffer): { entries: ZipEntry[]; centralOff
   if (offset !== centralOffset + centralSize) {
     throw archiveError('central directory is malformed.')
   }
-  return { entries, centralOffset }
+  return { entries, centralOffset, eocd }
 }
 
 function readLocalEntries(buffer: Buffer, entries: ZipEntry[], centralOffset: number): void {
@@ -410,16 +405,22 @@ async function verifyEntryContents(
 
 /**
  * Validates ZIP metadata and bounded, actual decompression before Mammoth parses a DOCX.
- * No expanded entry content is retained in memory.
+ * No expanded entry content is retained in memory. The returned copy omits the
+ * archive comment so JSZip consumes the same central directory that was checked:
+ * JSZip otherwise selects the last EOCD signature, including one inside a comment.
  */
-async function assertSafeDocxArchive(buffer: Buffer): Promise<void> {
-  const { entries, centralOffset } = readCentralDirectory(buffer)
+async function prepareSafeDocxArchive(buffer: Buffer): Promise<Buffer> {
+  const { entries, centralOffset, eocd } = readCentralDirectory(buffer)
   readLocalEntries(buffer, entries, centralOffset)
 
   let expandedBytes = 0
   for (const entry of entries) {
     expandedBytes = await verifyEntryContents(buffer, entry, expandedBytes)
   }
+
+  const verifiedArchive = Buffer.from(buffer.subarray(0, eocd + 22))
+  verifiedArchive.writeUInt16LE(0, eocd + 20)
+  return verifiedArchive
 }
 
 async function extractFileUnqueued(
@@ -458,9 +459,9 @@ async function extractFileUnqueued(
 // reads and parser workers serial so 25 MB buffers cannot accumulate in main.
 let extractionQueue: Promise<void> = Promise.resolve()
 
-export function extractFile(path: string): Promise<Extracted> {
-  const run = (): Promise<Extracted> => extractFileUnqueued(path)
-  const result = extractionQueue.then(run, run)
+function enqueueExtraction(run: () => Promise<Extracted>): Promise<Extracted> {
+  // The queue promise never rejects, so the next job starts whatever happened before it.
+  const result = extractionQueue.then(run)
   extractionQueue = result.then(
     () => undefined,
     () => undefined
@@ -468,13 +469,11 @@ export function extractFile(path: string): Promise<Extracted> {
   return result
 }
 
+export function extractFile(path: string): Promise<Extracted> {
+  return enqueueExtraction(() => extractFileUnqueued(path))
+}
+
 /** Watched-folder path whose canonical identity was already validated. */
 export function extractValidatedFile(source: ValidatedFileSource): Promise<Extracted> {
-  const run = (): Promise<Extracted> => extractFileUnqueued(source.canonicalPath, source)
-  const result = extractionQueue.then(run, run)
-  extractionQueue = result.then(
-    () => undefined,
-    () => undefined
-  )
-  return result
+  return enqueueExtraction(() => extractFileUnqueued(source.canonicalPath, source))
 }

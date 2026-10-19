@@ -42,6 +42,14 @@ describe('yearsFromDateRanges', () => {
     expect(yearsFromDateRanges('01/2019 - 12/2019')).toBe(1)
   })
 
+  it('skips ranges whose month or numeric form carries an impossible year', () => {
+    // A typo, OCR slip or Hijri year must not produce a span the library validator rejects.
+    expect(yearsFromDateRanges('Jan 1800 - Dec 2020')).toBeNull()
+    expect(yearsFromDateRanges('01/1442 - 12/2020')).toBeNull()
+    expect(yearsFromDateRanges('Jan 2019 - Dec 9999')).toBeNull()
+    expect(yearsFromDateRanges('Jan 1015 - Present\nJan 2019 - Dec 2020')).toBe(2)
+  })
+
   it('treats Present as today', () => {
     const thisYear = new Date().getFullYear()
     const years = yearsFromDateRanges(`Jan ${thisYear - 3} - Present`)
@@ -112,6 +120,23 @@ describe('extractFields', () => {
     expect(fields.educationLevel).toBe('masters')
   })
 
+  it('does not read job titles, places or abbreviations as degrees', () => {
+    const level = (text: string) => extractFields(normalizeText(text), splitSections(normalizeText(text))).educationLevel
+    expect(level('Jane Doe\nCertified Scrum Master\n\nEXPERIENCE\nAcme — Scrum Master\nJan 2019 - Dec 2023\nLed delivery.')).toBeNull()
+    expect(level('Jane Doe\nScrum Master\n\nEDUCATION\nBSc Computer Science, 2014')).toBe('bachelors')
+    expect(level('Jane Doe\nBoston, MA 02116\n\nEDUCATION\nBSc Computer Science, 2014')).toBe('bachelors')
+    expect(level('Jane Doe\nSenior BA\n\nEXPERIENCE\nBusiness analyst at Acme, 2019 to 2023.')).toBeNull()
+    expect(level('Jane Doe\n\nEDUCATION\nMA Economics, 2016')).toBe('masters')
+    expect(level('Jane Doe\nMaster of Science in Physics, 2016\nBA (Hons) English, 2012')).toBe('masters')
+    expect(level('Jane Doe\n\nEDUCATION\nHigh school diploma, 2010')).toBeNull()
+  })
+
+  it('never stores more experience than the library validator accepts', () => {
+    const text = normalizeText('Jane Doe\n\nEXPERIENCE\nJan 1960 - Present\nJan 1950 - Dec 1959')
+    const years = extractFields(text, splitSections(text)).yearsExperience
+    expect(years === null || years <= 100).toBe(true)
+  })
+
   it('counts experience only from the experience section', () => {
     // Graduation years in EDUCATION must not be read as employment.
     expect(fields.yearsExperience).toBe(5)
@@ -120,6 +145,13 @@ describe('extractFields', () => {
   it('detects skills', () => {
     expect(fields.skills).toContain('python')
     expect(fields.skills).toContain('kubernetes')
+  })
+
+  it('rejects digit lines as names in every script', () => {
+    const name = (text: string) => extractFields(normalizeText(text), splitSections(normalizeText(text))).name
+    expect(name('فواز بن عبدالله بن محمد القحطاني\nجوال ٠٥٠١٢٣٤٥٦٧\nالرياض')).toBeNull()
+    expect(name('٠٥٠ ١٢٣ ٤٥٦٧\nفواز القحطاني\nالرياض')).toBe('فواز القحطاني')
+    expect(name('050 123 4567\nJane Doe\nRiyadh')).toBe('Jane Doe')
   })
 
   it('handles an all-caps name header', () => {

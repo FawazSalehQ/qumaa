@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { translate, type Language } from './i18n.js'
 
 /** All public money values are integer halalas; all rates are integer basis points. */
 export const HIRING_COST_RULES_VERSION = 'saudi-hiring-costs-2024-2028-v1'
@@ -295,4 +296,12 @@ export function calculateHiringCosts(value: HiringCostInputs): HiringCostResult 
       ...(inputs.gosi.limitNote.trim() ? [`Configured contribution-wage limits: ${inputs.gosi.limitNote}`] : [])
     ]
   }
+}
+
+/** Localize an engine assumption. The two note-bearing lines keep the recruiter's own note verbatim. */
+export function localizeHiringAssumption(language: Language, assumption: string): string {
+  for (const prefix of ['Verified registered GOSI wage override: ', 'Configured contribution-wage limits: ']) {
+    if (assumption.startsWith(prefix)) return translate(language, `${prefix}{note}`, { note: assumption.slice(prefix.length) })
+  }
+  return translate(language, assumption)
 }

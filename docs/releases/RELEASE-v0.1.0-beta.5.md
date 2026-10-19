@@ -1,5 +1,9 @@
 # Qumaa 0.1.0-beta.5 — local build, 2026-10-04
 
+> Superseded on 19 October 2026 by a rebuild of the same version: see
+> [RELEASE-v0.1.0-beta.5-2026-10-19.md](RELEASE-v0.1.0-beta.5-2026-10-19.md).
+> This document describes the 4 October build published on 11 October.
+
 **Companies → select a company → Hiring Budgets & Costs** now supports saved
 employment-cost plans, optionally linked to a job belonging to that company.
 Enter basic, housing and fixed transport, or split a combined basic/housing

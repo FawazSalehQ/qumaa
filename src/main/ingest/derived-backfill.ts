@@ -5,7 +5,7 @@ import { embedder } from '../embed/client.js'
 import { markCompletedIndexRebuild } from '../embed/reindex.js'
 import { searchSessions } from '../search/sessions.js'
 import { temporarySearch } from '../recruiting/temporary.js'
-import { deriveResumeText } from './derive.js'
+import { deriveStoredResumeText } from './derive.js'
 import { documentVector } from './duplicates.js'
 import { RESUME_DERIVATION_KEY, RESUME_DERIVATION_VERSION } from './derivation-version.js'
 import { SKILL_GAZETTEER_VERSION } from './skills-backfill-plan.js'
@@ -31,10 +31,10 @@ export async function backfillResumeDerivedData(
   const db = getDb()
   const ids = (db.prepare('SELECT id FROM resumes ORDER BY id').all() as Array<{ id: number }>).map((row) => row.id)
   const source = db.prepare('SELECT raw_text AS rawText, content_hash AS recordKey FROM resumes WHERE id = ?')
-  const derive = (id: number): ReturnType<typeof deriveResumeText> => {
+  const derive = (id: number): ReturnType<typeof deriveStoredResumeText> => {
     const row = source.get(id) as { rawText: string; recordKey: string } | undefined
     if (!row) throw new Error('A resume disappeared while updating the search index.')
-    const derived = deriveResumeText(row.rawText)
+    const derived = deriveStoredResumeText(row.rawText)
     if (derived.contentHash !== row.recordKey) throw new Error('A resume has an inconsistent text identity. Its original record was retained.')
     return derived
   }

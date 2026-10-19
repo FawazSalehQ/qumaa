@@ -142,6 +142,9 @@ async function run(): Promise<void> {
   )
   freshV3Fixture.close()
 
+  const { runSchemaSecuritySmoke } = await import('./smoke-security.js')
+  runSchemaSecuritySmoke(check, scratch)
+
   const { RECRUITING_TABLE_SQL, readRecord } = await import('./recruiting/storage.js')
   for (const publishedVersion of [4, 7, 8, 9, 10, 11]) {
     const fixture = new Database(join(scratch, `published-v${publishedVersion}.db`))
@@ -358,6 +361,16 @@ async function run(): Promise<void> {
   // ingestion must never overwrite this library-wide marker; production holds
   // ingestion behind the readiness barrier until the migration below finishes.
   setSetting('embeddingModel', 'legacy-model')
+
+  console.log('\n5a. Concurrent identical imports')
+  const twinText = 'Concurrent Twin\nRiyadh\n\nEXPERIENCE\nAcme — Analyst\nJan 2020 - Dec 2023\nPrepared financial models and quarterly forecasts for retail and logistics clients.'
+  const twins = await Promise.all([
+    ingestText({ text: twinText, fileName: 'twin-a.md', filePath: '/fictional-originals/twin-a.md', fileType: 'md' }),
+    ingestText({ text: twinText, fileName: 'twin-b.md', filePath: '/fictional-originals/twin-b.md', fileType: 'md' })
+  ])
+  check('two concurrent imports of the same text yield one import and one duplicate', twins.map((outcome) => outcome.status).sort().join(',') === 'duplicate,imported')
+  const twin = twins.find((outcome) => outcome.status === 'imported')
+  check('the concurrent twin can be removed again', twin !== undefined && twin.status === 'imported' && deleteResume({ id: twin.resume.id, recordKey: twin.resume.recordKey }))
 
   console.log('\n5b. Near-duplicate detection')
   // Same person, one edited date. Byte hashing cannot catch this; the document
@@ -709,6 +722,8 @@ Requirements:
   setSetting('language', 'ar')
   setSetting('anthropicApiKey', 'must-not-leave-this-machine')
   setSetting('openaiApiKey', 'openai-must-not-leave-this-machine')
+  const privateChatGptKeys = ['chatgpt:accounts:v1', 'chatgpt:host:v1', 'chatgpt:pending-client:v1', 'chatgpt:credentials:synthetic-account', 'rerankAuthMode:openai', 'rerankModel:chatgpt', 'rerankConsent:chatgpt:plan-model']
+  for (const key of privateChatGptKeys) setSetting(key, 'synthetic-must-not-leave-this-machine')
   setSetting('rerankProvider', 'openai')
   setSetting('rerankModel:openai', 'gpt-6-astra')
   setSetting('rerankConsent:openai:gpt-6-astra', 'ai-rerank-v2')
@@ -781,6 +796,27 @@ Requirements:
   let malformedRecruitingRejected = false
   try { validatePortableBackup(malformedRecruitingPath) } catch { malformedRecruitingRejected = true }
   check('rejects malformed recruiter records before portable restore', malformedRecruitingRejected)
+
+  const invalidDatePath = join(scratch, 'invalid-date.qumaa-backup')
+  copyFileSync(backupPath, invalidDatePath)
+  const invalidDateDatabase = new Database(invalidDatePath)
+  const invalidDateJob = {
+    ...backedJob,
+    status: 'open', createdAt: 8_640_000_000_000_001, updatedAt: 8_640_000_000_000_001,
+    lastSearchedAt: null, statusHistory: undefined, placement: undefined
+  }
+  invalidDateDatabase.prepare("UPDATE recruiting_records SET data = ? WHERE kind = 'job' AND id = ?")
+    .run(JSON.stringify(invalidDateJob), savedJob.id)
+  invalidDateDatabase.close()
+  const invalidDateBytes = readFileSync(invalidDatePath)
+  const currentJobBeforeInvalidDate = JSON.stringify(recruiting.getJob(savedJob.id).job)
+  let invalidDateRejected = false
+  try { await restorePortableBackup(invalidDatePath) } catch { invalidDateRejected = true }
+  check(
+    'rejects out-of-range restored dates before changing the current library or source backup',
+    invalidDateRejected && readFileSync(invalidDatePath).equals(invalidDateBytes) &&
+      JSON.stringify(recruiting.getJob(savedJob.id).job) === currentJobBeforeInvalidDate
+  )
   const malformedCompanyCases = [
     { label: 'dangling hiring company', change: { companyId: unknownCompanyId }, error: 'unknown company' },
     { label: 'dangling target company', change: { targetCompanies: [{ ...mappedTargets[0], companyId: unknownCompanyId }] }, error: 'target company no longer exists' },
@@ -1237,7 +1273,7 @@ Requirements:
   const staleFts = new Database(staleFtsPath)
   const staleFtsResume = staleFts
     .prepare("SELECT id, raw_text AS rawText FROM resumes WHERE raw_text LIKE '%Kubernetes%' LIMIT 1")
-    .get() as { id: number; recordKey: string; rawText: string }
+    .get() as { id: number; rawText: string }
   staleFts
     .prepare(
       "INSERT INTO resumes_fts(resumes_fts, rowid, raw_text) VALUES ('delete', ?, ?)"
@@ -1268,6 +1304,7 @@ Requirements:
   check('restores portable preferences', getSetting('theme') === 'dark')
   check('restores the interface language', getSetting('language') === 'ar')
   check('does not restore an API key', getSetting('anthropicApiKey') === null)
+  check('does not restore ChatGPT credentials, registrations, host identity or sharing settings', privateChatGptKeys.every((key) => getSetting(key) === null))
   check('does not restore OpenAI credentials or provider sharing settings', getSetting('openaiApiKey') === null && getSetting('rerankProvider') === null && getSetting('rerankModel:openai') === null && getSetting('rerankConsent:openai:gpt-6-astra') === null)
   check('does not restore a watched folder', getSetting('watchedFolder') === null)
   check('does not restore machine window state', getSetting('windowState') === null)

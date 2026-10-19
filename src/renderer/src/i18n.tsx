@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { directionFor, localeFor, normalizeLanguage, translate, type Language, type Translator } from '@shared/i18n.js'
+import { directionFor, formatLocalizedDate, localeFor, normalizeLanguage, translate, type Language, type Translator } from '@shared/i18n.js'
 
 interface I18nContextValue {
   language: Language
@@ -49,7 +49,7 @@ export function LanguageProvider({ children }: { children: ReactNode }): React.J
     setLanguage,
     reloadLanguage,
     formatNumber: (number, options) => new Intl.NumberFormat(localeFor(language), options).format(number),
-    formatDate: (date, options) => new Intl.DateTimeFormat(localeFor(language), options).format(date)
+    formatDate: (date, options) => formatLocalizedDate(language, date, options)
   }), [language, setLanguage, reloadLanguage])
 
   return <I18nContext.Provider value={value}>{ready ? children : null}</I18nContext.Provider>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { applySavedRerank, deduplicateVersions, emptyProfile, isShortlisted, mergeProfiles, mergeReviews, passageExcerpt, postingText, suggestCriterionEvidence } from '../src/main/recruiting/planning.js'
-import { profileRecordSchema, recruitingSchemas, snapshotRecordSchema } from '../src/main/recruiting/schema.js'
+import { applySavedRerank, deduplicateVersions, emptyProfile, isShortlisted, mergeProfiles, mergeReviews, passageExcerpt, postingText } from '../src/main/recruiting/planning.js'
+import { companyRecordSchema, jobRecordSchema, profileRecordSchema, recruitingSchemas, reviewRecordSchema, snapshotRecordSchema } from '../src/main/recruiting/schema.js'
 import type { CandidateReview } from '../src/shared/recruiting.js'
 import type { MatchResult } from '../src/shared/types.js'
 import { extractJobRequirements } from '../src/shared/job-requirements.js'
@@ -81,18 +81,6 @@ describe('recruiter workflow rules', () => {
     expect(() => mergeReviews({ ...left, note: 'Conflicting' }, { ...right, note: 'Another' })).toThrow('different notes')
   })
 
-  it('suggests real requirement passages without inventing evidence for absent terms', () => {
-    const actual = 'Built Python APIs and operated Kubernetes clusters for retail payments.'
-    const evidence = suggestCriterionEvidence([{ id: 'a', text: 'Python and Kubernetes experience', importance: 'required' }, { id: 'b', text: 'CPA certification', importance: 'preferred' }], [{ section: 'experience', text: actual }])
-    expect(evidence[0]).toMatchObject({ criterionId: 'a', passage: { section: 'experience', text: actual, similarity: 1 } })
-    expect(evidence[1]).toEqual({ criterionId: 'b', passage: null })
-    expect(suggestCriterionEvidence([{ id: 'a', text: 'years of experience', importance: 'required' }], [{ section: 'summary', text: 'Many years of experience' }])[0].passage).toBeNull()
-  })
-
-  it('supports Arabic term overlap and prefers work evidence over a matching summary', () => {
-    const actual = 'خبرة في إدارة المطاعم وتدريب فرق العمل'
-    expect(suggestCriterionEvidence([{ id: 'a', text: 'إدارة المطاعم', importance: 'required' }], [{ section: 'summary', text: 'إدارة المطاعم' }, { section: 'experience', text: actual }])[0].passage?.text).toBe(actual)
-  })
 
   it('bounds long evidence using original-text offsets and intact Unicode', () => {
     const text = `${'مُقدمة '.repeat(1_000)}إدارة المطاعم ${'بنجاح '.repeat(1_000)}`
@@ -107,6 +95,32 @@ describe('recruiter workflow rules', () => {
 
 describe('recruiting trust boundary', () => {
   const posting = { position: 'Engineer', jobDescription: '', requirements: '', educationAndCertifications: '' }
+  it('rejects unrenderable restored timestamps across recruiting records and status history', () => {
+    const job = { id: jobId, posting, status: 'open', criteria: [], createdAt: 1, updatedAt: 1, lastSearchedAt: null }
+    const company = { id: jobId, name: 'Fictional company', industry: [], location: [], website: '', contactName: [], contactEmail: [], note: '', createdAt: 1, updatedAt: 1 }
+    const snapshot = { jobId, libraryFingerprint: keyA, postingFingerprint: keyA, modelFingerprint: keyA, searchedAt: 1, libraryKeys: [], requiredSkills: [], elapsedMs: 1, results: [] }
+    for (const at of [8.64e15 + 1, Number.MAX_SAFE_INTEGER, Infinity, NaN, -1, 1.5]) {
+      for (const field of ['createdAt', 'updatedAt', 'lastSearchedAt']) {
+        expect(jobRecordSchema.safeParse({ ...job, [field]: at }).success).toBe(false)
+      }
+      expect(jobRecordSchema.safeParse({ ...job, statusHistory: [{ id: jobId, kind: 'created', status: 'open', at }] }).success).toBe(false)
+      for (const field of ['createdAt', 'updatedAt']) {
+        expect(companyRecordSchema.safeParse({ ...company, [field]: at }).success).toBe(false)
+      }
+      expect(profileRecordSchema.safeParse({ ...emptyProfile(keyA), updatedAt: at }).success).toBe(false)
+      expect(reviewRecordSchema.safeParse({ ...review(keyA), updatedAt: at }).success).toBe(false)
+      expect(snapshotRecordSchema.safeParse({ ...snapshot, searchedAt: at }).success).toBe(false)
+      expect(recruitingSchemas.changeJobStatus.safeParse({ jobId, expectedUpdatedAt: at, status: 'on-hold' }).success).toBe(false)
+    }
+    for (const at of [0, Date.now(), 8.64e15]) {
+      expect(jobRecordSchema.safeParse({ ...job, createdAt: at, updatedAt: at, lastSearchedAt: at, statusHistory: [{ id: jobId, kind: 'created', status: 'open', at }] }).success).toBe(true)
+      expect(companyRecordSchema.safeParse({ ...company, createdAt: at, updatedAt: at }).success).toBe(true)
+      expect(profileRecordSchema.safeParse({ ...emptyProfile(keyA), updatedAt: at }).success).toBe(true)
+      expect(reviewRecordSchema.safeParse({ ...review(keyA), updatedAt: at }).success).toBe(true)
+      expect(snapshotRecordSchema.safeParse({ ...snapshot, searchedAt: at }).success).toBe(true)
+    }
+  })
+
   it('rejects duplicate requirements, oversized notes, forged fields, and stale numeric-only CV references', () => {
     const criterion = { id: 'one', text: 'Python', importance: 'required' }
     expect(recruitingSchemas.saveJob.safeParse({ posting, status: 'open', criteria: [criterion, criterion] }).success).toBe(false)
@@ -131,6 +145,9 @@ describe('recruiting trust boundary', () => {
     const snapshot = { jobId, libraryFingerprint: keyA, postingFingerprint: keyA, modelFingerprint: keyA, searchedAt: 1, libraryKeys: [keyA], requiredSkills: [], elapsedMs: 1, results: [result] }
     expect(snapshotRecordSchema.safeParse(snapshot).success).toBe(true)
     expect(snapshotRecordSchema.safeParse({ ...snapshot, rerankConfig: { provider: 'openai', model: 'gpt-6-astra' } }).success).toBe(true)
+    expect(snapshotRecordSchema.safeParse({ ...snapshot, rerankConfig: { provider: 'openai', model: 'retired-plan-model', authMode: 'chatgpt' } }).success).toBe(true)
+    expect(snapshotRecordSchema.safeParse({ ...snapshot, rerankConfig: { provider: 'openai', model: '', authMode: 'chatgpt' } }).success).toBe(false)
+    expect(snapshotRecordSchema.safeParse({ ...snapshot, rerankConfig: { provider: 'openai', model: 'plan-model', authMode: 'chatgpt', accountId: 'must-not-persist' } }).success).toBe(false)
     expect(snapshotRecordSchema.safeParse({ ...snapshot, rerankConfig: { provider: 'anthropic', model: 'gpt-6-astra' } }).success).toBe(false)
     expect(snapshotRecordSchema.safeParse({ ...snapshot, rerankConfig: { provider: 'openai', model: 'unapproved-model' } }).success).toBe(false)
     expect(snapshotRecordSchema.safeParse({ ...snapshot, results: [{ ...result, resume: { filePath: '/tmp/private' } }] }).success).toBe(false)

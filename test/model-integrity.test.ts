@@ -1,7 +1,6 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { describe, expect, it } from 'vitest'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { tmpdir } from 'node:os'
 import {
   assertModelFile,
   assertExactModelTree,
@@ -9,20 +8,12 @@ import {
   ModelIntegrityError
 } from '../scripts/model-integrity.mjs'
 import { MODEL_ID, MODEL_REVISION } from '../src/main/embed/protocol.js'
+import { temporaryDirectories } from './fixtures/temporary.js'
 
-const temporaryDirectories: string[] = []
-
-afterEach(async () => {
-  await Promise.all(
-    temporaryDirectories.splice(0).map((directory) =>
-      rm(directory, { recursive: true, force: true })
-    )
-  )
-})
+const scratch = temporaryDirectories('qumaa-model-integrity-')
 
 async function fixture(contents: string): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), 'qumaa-model-integrity-'))
-  temporaryDirectories.push(directory)
+  const directory = await scratch.create()
   const path = join(directory, 'model.bin')
   await writeFile(path, contents)
   return path
@@ -74,8 +65,7 @@ describe('model integrity', () => {
   })
 
   it('rejects unlisted files from the packaged model directory', async () => {
-    const directory = await mkdtemp(join(tmpdir(), 'qumaa-model-tree-'))
-    temporaryDirectories.push(directory)
+    const directory = await scratch.create()
     await mkdir(join(directory, 'onnx'))
     await writeFile(join(directory, 'config.json'), '{}')
     await writeFile(join(directory, 'onnx', 'model.onnx'), 'model')

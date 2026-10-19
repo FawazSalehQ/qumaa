@@ -15,7 +15,7 @@ import { candidateWithProfile, profileForResume } from '@shared/recruiting.js'
 import type { CandidateProfile, CandidateReview, Company, JobPlacement, JobPlacementCandidate, JobWorkspace, SavedJob } from '@shared/recruiting.js'
 import type { MatchResult, ResumeRef, ResumeSummary, SectionKind } from '@shared/types.js'
 import { assertJobCompanyReferences, parseRecruiting, recruitingSchemas, RECRUITING_LIMITS, recordId, type JobRecord, type SnapshotRecord } from './schema.js'
-import { putRecord, readRecord, readRecords, replaceExistingRecords } from './storage.js'
+import { putRecord, readRecord, readRecords, replaceExistingRecords, nowAfter, requireResume } from './storage.js'
 import { temporarySearch } from './temporary.js'
 import { assertTalentVersionLink } from './talent.js'
 import { samePlacementPeople } from './job-status.js'
@@ -50,9 +50,6 @@ function workspaceRecord(input: unknown): { job: JobRecord; snapshot: SnapshotRe
   return { job, snapshot: readRecord<SnapshotRecord>(getDb(), 'snapshot', id), temporary: false }
 }
 
-function requireResume(ref: ResumeRef): void {
-  if (!getDb().prepare('SELECT 1 FROM resumes WHERE id = ? AND content_hash = ?').get(ref.id, ref.recordKey)) throw new Error('This CV changed or was removed. Refresh the library and try again.')
-}
 function reviewsForJob(id: string): CandidateReview[] {
   return readRecords<CandidateReview>(getDb(), 'review').filter((review) => review.jobId === id)
 }
@@ -143,7 +140,7 @@ export function saveTargetCompanies(input: unknown): JobWorkspace {
   const args = parseRecruiting(recruitingSchemas.saveTargetCompanies, input)
   const previous = requireJob(args.jobId)
   if (previous.updatedAt !== args.expectedUpdatedAt) throw new Error('This job changed. Reopen it before updating target companies.')
-  const job: JobRecord = { ...previous, targetCompanies: args.companies, updatedAt: Math.max(Date.now(), previous.updatedAt + 1) }
+  const job: JobRecord = { ...previous, targetCompanies: args.companies, updatedAt: nowAfter(previous) }
   requireJobCompanies(job)
   putRecord(getDb(), 'job', job)
   return getJob(job.id)
@@ -160,7 +157,7 @@ export function changeJobStatus(input: unknown): JobWorkspace {
     const resumes = listResumes()
     const selected = new Set<string>()
     const snapshot = (ref: ResumeRef): JobPlacementCandidate => {
-      requireResume(ref)
+      requireResume(getDb(), ref)
       const profile = profileForResume(profiles, ref.recordKey)
       const candidateKey = profile?.candidateKey ?? ref.recordKey
       if (selected.has(candidateKey)) throw new Error('Choose a different candidate for each hiring slot. Linked CV versions belong to the same person.')
@@ -181,7 +178,7 @@ export function changeJobStatus(input: unknown): JobWorkspace {
   if (!statusChanged && !placementChanged) return getJob(previous.id)
   const history = previous.statusHistory ?? []
   if (history.length >= RECRUITING_LIMITS.statusEvents) throw new Error('This job has reached its 1,000-entry status history limit. Its existing history has been preserved.')
-  const now = Math.max(Date.now(), previous.updatedAt + 1)
+  const now = nowAfter(previous)
   putRecord(getDb(), 'job', {
     ...previous, status: args.status, updatedAt: now,
     ...(placement ? { placement } : {}),
@@ -266,7 +263,7 @@ export function saveJobRerank(input: unknown, ordered: MatchResult[], config: Re
 export async function getEvidence(input: unknown): Promise<JobWorkspace['evidence']> {
   const { jobId, resumes } = parseRecruiting(recruitingSchemas.evidence, input)
   const { job } = workspaceRecord(jobId)
-  resumes.forEach(requireResume)
+  resumes.forEach((ref) => requireResume(getDb(), ref))
   if (!job.criteria.length) return Object.fromEntries(resumes.map((resume) => [resume.recordKey, []]))
   if (!isIndexCommitted()) throw new Error('The search index is being updated. Try requirement evidence again when it is ready.')
   const libraryAtStart = libraryFingerprint(listResumes())
@@ -282,7 +279,7 @@ export async function getEvidence(input: unknown): Promise<JobWorkspace['evidenc
   }
   const statement = getDb().prepare('SELECT section, text, embedding FROM chunks WHERE resume_id = ? ORDER BY ordinal')
   return Object.fromEntries(resumes.map((resume) => {
-    requireResume(resume)
+    requireResume(getDb(), resume)
     const rows = statement.all(resume.id) as Array<StoredPassage & { embedding: Buffer }>
     return [resume.recordKey, suggestSemanticCriterionEvidence(job.criteria,
       rows.map((row) => ({ section: row.section, text: row.text, vector: blobToVector(row.embedding) })),
@@ -386,7 +383,7 @@ export function getTemporaryExport(input: unknown): { jobTitle: string; required
 
 export function saveReview(input: unknown): CandidateReview {
   const args = parseRecruiting(recruitingSchemas.saveReview, input)
-  requireResume(args.resume)
+  requireResume(getDb(), args.resume)
   const job = requireJob(args.jobId)
   if (args.assessments.some((assessment) => !job.criteria.some((criterion) => criterion.id === assessment.criterionId))) throw new Error('A requirement changed. Reopen this job before saving the scorecard.')
   const candidateKey = profileForResume(listProfiles(), args.resume.recordKey)?.candidateKey ?? args.resume.recordKey
@@ -397,7 +394,7 @@ export function saveReview(input: unknown): CandidateReview {
 
 export function saveProfile(input: unknown): CandidateProfile {
   const { resume, ...fields } = parseRecruiting(recruitingSchemas.saveProfile, input)
-  requireResume(resume)
+  requireResume(getDb(), resume)
   const previous = profileForResume(listProfiles(), resume.recordKey) ?? emptyProfile(resume.recordKey)
   const profile = { ...previous, ...fields, updatedAt: Date.now() }
   putRecord(getDb(), 'profile', profile)
@@ -406,8 +403,8 @@ export function saveProfile(input: unknown): CandidateProfile {
 
 export function linkVersions(input: unknown): CandidateProfile {
   const args = parseRecruiting(recruitingSchemas.linkVersions, input)
-  requireResume(args.primary)
-  requireResume(args.version)
+  requireResume(getDb(), args.primary)
+  requireResume(getDb(), args.version)
   const profiles = listProfiles()
   const primary = profileForResume(profiles, args.primary.recordKey) ?? emptyProfile(args.primary.recordKey)
   const version = profileForResume(profiles, args.version.recordKey) ?? emptyProfile(args.version.recordKey)
@@ -434,7 +431,7 @@ export function linkVersions(input: unknown): CandidateProfile {
 
 export function unlinkVersion(input: unknown): void {
   const { resume } = parseRecruiting(recruitingSchemas.unlinkVersion, input)
-  requireResume(resume)
+  requireResume(getDb(), resume)
   const profile = profileForResume(listProfiles(), resume.recordKey)
   if (!profile || profile.recordKeys.length < 2) return
   const remainingKeys = profile.recordKeys.filter((key) => key !== resume.recordKey)
@@ -467,7 +464,7 @@ export function reorderShortlist(input: unknown): void {
   if (expected.has(undefined) || resumes.length !== selected.length || resumes.some((resume) => !expected.has(resume.recordKey))) throw new Error('The shortlist changed. Refresh this job before reordering candidates.')
   getDb().transaction(() => {
     const updates = resumes.map((resume, order) => {
-      requireResume(resume)
+      requireResume(getDb(), resume)
       const review = expected.get(resume.recordKey)!
       return { ...review, order }
     })

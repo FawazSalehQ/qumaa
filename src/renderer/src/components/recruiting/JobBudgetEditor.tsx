@@ -3,6 +3,8 @@ import type { Translator } from '@shared/i18n.js'
 import { useI18n } from '../../i18n.js'
 import LocalizedNumberInput from '../LocalizedNumberInput.js'
 
+const CURRENCY_CODES = ['SAR', 'USD', 'EUR', 'AED', 'GBP', 'QAR', 'KWD', 'BHD', 'OMR', 'EGP']
+
 export interface HiringBudgetDraft {
   enabled: boolean
   min: string
@@ -52,9 +54,8 @@ export default function JobBudgetEditor({ value, onChange }: { value: BudgetDraf
     {value.enabled ? <div className="recruit-budget-fields">
       <label className="recruit-field">{t('Minimum salary')}<LocalizedNumberInput reportOnBlur={false} required min={0} max={1e9} step={0.01} value={value.min} onChangeValue={(min) => onChange({ ...value, min })} /></label>
       <label className="recruit-field">{t('Maximum salary')}<LocalizedNumberInput reportOnBlur={false} required min={value.min && Number.isFinite(Number(value.min)) ? Math.max(0, Number(value.min)) : 0} max={1e9} step={0.01} value={value.max} onChangeValue={(max) => onChange({ ...value, max })} /></label>
-      <label className="recruit-field">{t('Currency')}<input required dir="ltr" maxLength={3} pattern="[A-Z]{3}" title={t('Use a three-letter currency code, such as SAR or USD.')} list="job-budget-currencies" value={value.currency} onChange={(event) => onChange({ ...value, currency: event.target.value.toUpperCase() })} /><datalist id="job-budget-currencies">{['SAR', 'USD', 'EUR', 'AED', 'GBP', 'QAR', 'KWD', 'BHD', 'OMR', 'EGP'].map((code) => <option key={code} value={code} />)}</datalist></label>
+      <label className="recruit-field">{t('Currency')}<input required dir="ltr" maxLength={3} pattern="[A-Z]{3}" title={t('Use a three-letter currency code, such as SAR or USD.')} list="job-budget-currencies" value={value.currency} onChange={(event) => onChange({ ...value, currency: event.target.value.toUpperCase() })} /><datalist id="job-budget-currencies">{CURRENCY_CODES.map((code) => <option key={code} value={code} />)}</datalist></label>
       <label className="recruit-field">{t('Pay period')}<select aria-label={t('Pay period')} value={value.period} onChange={(event) => onChange({ ...value, period: event.target.value as JobBudget['period'] })}><option value="monthly">{t('Monthly')}</option><option value="annual">{t('Annual')}</option><option value="hourly">{t('Hourly')}</option></select></label>
-      <p className="hint">{t('Salary range per person. Use the same pay period for both amounts.')}</p>
     </div> : <p className="hint">{t('No salary budget specified yet.')}</p>}
   </div>
 }
@@ -66,8 +67,7 @@ export function HiringBudgetEditor({ value, onChange }: { value: HiringBudgetDra
     {value.enabled ? <div className="recruit-budget-fields">
       <label className="recruit-field">{t('Minimum hiring budget')}<LocalizedNumberInput reportOnBlur={false} required min={0} max={1e9} step={0.01} value={value.min} onChangeValue={(min) => onChange({ ...value, min })} /></label>
       <label className="recruit-field">{t('Maximum hiring budget')}<LocalizedNumberInput reportOnBlur={false} required min={value.min && Number.isFinite(Number(value.min)) ? Math.max(0, Number(value.min)) : 0} max={1e9} step={0.01} value={value.max} onChangeValue={(max) => onChange({ ...value, max })} /></label>
-      <label className="recruit-field">{t('Hiring budget currency')}<input required dir="ltr" maxLength={3} pattern="[A-Z]{3}" title={t('Use a three-letter currency code, such as SAR or USD.')} list="hiring-budget-currencies" value={value.currency} onChange={(event) => onChange({ ...value, currency: event.target.value.toUpperCase() })} /><datalist id="hiring-budget-currencies">{['SAR', 'USD', 'EUR', 'AED', 'GBP', 'QAR', 'KWD', 'BHD', 'OMR', 'EGP'].map((code) => <option key={code} value={code} />)}</datalist></label>
-      <p className="hint">{t('Total budget for this vacancy, tracked separately from the salary range.')}</p>
+      <label className="recruit-field">{t('Hiring budget currency')}<input required dir="ltr" maxLength={3} pattern="[A-Z]{3}" title={t('Use a three-letter currency code, such as SAR or USD.')} list="hiring-budget-currencies" value={value.currency} onChange={(event) => onChange({ ...value, currency: event.target.value.toUpperCase() })} /><datalist id="hiring-budget-currencies">{CURRENCY_CODES.map((code) => <option key={code} value={code} />)}</datalist></label>
     </div> : <p className="hint">{t('No total hiring budget specified yet.')}</p>}
   </div>
 }

@@ -34,17 +34,31 @@ const HEADING_PATTERNS: Array<[SectionKind, RegExp]> = [
  * Python". Markdown decoration and Arabic marks are normalized only for this
  * comparison; source text and offsets remain intact.
  */
+function trimHeadingPunctuation(text: string): string {
+  let end = text.length
+  while (end > 0 && ':：-–—'.includes(text[end - 1])) end--
+  return text.slice(0, end)
+}
+
+function trimMarkdownClosingHashes(text: string): string {
+  let end = text.length
+  while (end > 0 && text[end - 1] === '#') end--
+  // Closing hashes are decoration only when separated from the heading.
+  return end < text.length && end > 0 && /\s/u.test(text[end - 1])
+    ? text.slice(0, end).trimEnd()
+    : text
+}
+
 function headingKind(line: string): SectionKind | null {
   let trimmed = line.trim()
   if (/^#{1,6}\s/u.test(trimmed)) {
-    trimmed = trimmed.replace(/^#{1,6}\s+/u, '').replace(/\s+#+$/u, '').trim()
+    trimmed = trimMarkdownClosingHashes(trimmed.replace(/^#{1,6}\s+/u, '')).trim()
   }
   // Accept whole-line emphasis, including a colon outside the closing marker.
-  trimmed = trimmed.replace(/[:：\-–—]+$/u, '').trim()
+  trimmed = trimHeadingPunctuation(trimmed).trim()
   const emphasis = trimmed.match(/^(\*{1,3}|_{1,3})(.+)\1$/u)
   if (emphasis) trimmed = emphasis[2].trim()
-  trimmed = trimmed
-    .replace(/[:：\-–—]+$/u, '')
+  trimmed = trimHeadingPunctuation(trimmed)
     .replace(/[\u0610-\u061a\u064b-\u065f\u0670\u06d6-\u06edـ]/gu, '')
     .replace(/[أإآ]/gu, 'ا')
     .trim()

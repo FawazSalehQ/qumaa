@@ -1,16 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { IndexReadiness } from '../src/main/embed/readiness.js'
-
-function deferred(): {
-  promise: Promise<void>
-  resolve: () => void
-} {
-  let resolve!: () => void
-  const promise = new Promise<void>((res) => {
-    resolve = res
-  })
-  return { promise, resolve }
-}
+import { deferred } from './fixtures/async.js'
 
 describe('IndexReadiness', () => {
   it('holds callers until the complete initialization task finishes', async () => {

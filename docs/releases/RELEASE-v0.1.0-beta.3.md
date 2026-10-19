@@ -72,4 +72,4 @@ modest, uneven improvements at higher storage/runtime cost, so the small model
 remains. Passing software checks does not establish hiring accuracy across all
 professions. Independent recruiter/translation review and better cross-language
 retrieval remain necessary. See the
-[quality report](../../pilot/CROSS-DOMAIN-2026-09-27.md) and [roadmap](../ROADMAP.md).
+[quality report](../../pilot/CROSS-DOMAIN-2026-09-27.md) and [roadmap](../../ROADMAP.md).

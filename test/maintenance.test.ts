@@ -1,17 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { MaintenanceCoordinator } from '../src/main/maintenance.js'
-
-function deferred(): { promise: Promise<void>; resolve: () => void } {
-  let resolve!: () => void
-  const promise = new Promise<void>((done) => {
-    resolve = done
-  })
-  return { promise, resolve }
-}
-
-async function settle(): Promise<void> {
-  await new Promise<void>((resolve) => setTimeout(resolve, 0))
-}
+import { deferred, settle } from './fixtures/async.js'
 
 describe('MaintenanceCoordinator', () => {
   it('drains normal work before maintenance and blocks later work', async () => {

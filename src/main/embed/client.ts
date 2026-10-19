@@ -155,7 +155,7 @@ class Embedder {
       return out
     }
 
-    const chained = this.queue.then(run, run)
+    const chained = this.queue.then(run)
     // Keep the chain alive even if this call rejects.
     this.queue = chained.catch(() => undefined)
     return chained

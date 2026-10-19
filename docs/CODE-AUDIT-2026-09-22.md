@@ -67,4 +67,4 @@ provider API calls were not exercised in this audit.
 Subsequent release build on the same date: both local installers were rebuilt,
 and all 22 UI workflows passed against the packaged macOS app. DMG integrity,
 packaged payloads, model hashes, native architectures and release checksums were
-verified. See the local [release notes](docs/releases/RELEASE-v0.1.0-beta.2.md).
+verified. See the local [release notes](releases/RELEASE-v0.1.0-beta.2.md).

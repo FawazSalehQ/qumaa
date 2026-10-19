@@ -1,8 +1,9 @@
 import { useI18n } from '../i18n.js'
 import { useEffect, useId, useState } from 'react'
-import type { EducationLevel, ResumeSummary } from '@shared/types.js'
+import { EDUCATION_LABELS, type EducationLevel, type ResumeSummary } from '@shared/types.js'
 import { profileForResume, type CandidateProfile, type SaveProfileInput } from '@shared/recruiting.js'
-import { bidiValue, recruitingError } from './recruiting/helpers.js'
+import { bidiValue, errorMessage, recruitingError } from './recruiting/helpers.js'
+import { splitLabels } from './talent/helpers.js'
 import LocalizedNumberInput from './LocalizedNumberInput.js'
 import './recruiter-profile.css'
 
@@ -45,14 +46,6 @@ function draftFrom(profile?: CandidateProfile): ProfileDraft {
   }
 }
 
-function list(value: string): string[] {
-  return [...new Set(value.split(/[,،\n]/).map((item) => item.trim()).filter(Boolean))]
-}
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : 'Could not update the candidate profile.'
-}
-
 export default function RecruiterProfile({ resume, onChanged }: Props): React.JSX.Element {
   const { t, language, formatNumber, formatDate } = useI18n()
   const fieldId = useId()
@@ -85,7 +78,7 @@ export default function RecruiterProfile({ resume, onChanged }: Props): React.JS
       })
       .catch((err: unknown) => {
         if (active) {
-          setError(errorMessage(err))
+          setError(errorMessage(err, 'Could not update the candidate profile.'))
           setLoadFailed(true)
         }
       })
@@ -110,12 +103,12 @@ export default function RecruiterProfile({ resume, onChanged }: Props): React.JS
         location: draft.location.trim() || null,
         yearsExperience: draft.yearsExperience === '' ? null : Number(draft.yearsExperience),
         educationLevel: draft.educationLevel || null,
-        skills: draft.skills.trim() ? list(draft.skills) : null,
+        skills: draft.skills.trim() ? splitLabels(draft.skills) : null,
         expectedSalary: draft.expectedSalary.trim(),
         noticePeriod: draft.noticePeriod.trim(),
         availability: draft.availability.trim(),
         preferredLocation: draft.preferredLocation.trim(),
-        tags: list(draft.tags),
+        tags: splitLabels(draft.tags),
         note: draft.note.trim()
       }
       const saved = await window.api.recruiting.saveProfile(input)
@@ -125,7 +118,7 @@ export default function RecruiterProfile({ resume, onChanged }: Props): React.JS
       setNotice('Recruiter profile saved.')
       onChanged?.()
     } catch (err) {
-      setError(errorMessage(err))
+      setError(errorMessage(err, 'Could not update the candidate profile.'))
     } finally {
       setBusy(false)
     }
@@ -146,7 +139,7 @@ export default function RecruiterProfile({ resume, onChanged }: Props): React.JS
       setNotice('Resume versions linked to the same candidate.')
       onChanged?.()
     } catch (err) {
-      setError(errorMessage(err))
+      setError(errorMessage(err, 'Could not update the candidate profile.'))
     } finally {
       setBusy(false)
     }
@@ -164,7 +157,7 @@ export default function RecruiterProfile({ resume, onChanged }: Props): React.JS
       setNotice('This resume is now a separate candidate.')
       onChanged?.()
     } catch (err) {
-      setError(errorMessage(err))
+      setError(errorMessage(err, 'Could not update the candidate profile.'))
     } finally {
       setBusy(false)
     }
@@ -181,7 +174,7 @@ export default function RecruiterProfile({ resume, onChanged }: Props): React.JS
     ['Name', profile?.name], ['Email', profile?.email], ['Phone', profile?.phone],
     ['Location', profile?.location],
     ['Experience', profile?.yearsExperience === null || profile?.yearsExperience === undefined ? null : t('{count} years', { count: profile.yearsExperience })],
-    ['Education', profile?.educationLevel ? t({ associate: 'Associate', bachelors: 'Bachelor’s', masters: 'Master’s', phd: 'PhD' }[profile.educationLevel]) : null], ['Skills', profile?.skills?.join(', ')],
+    ['Education', profile?.educationLevel ? t(EDUCATION_LABELS[profile.educationLevel]) : null], ['Skills', profile?.skills?.join(', ')],
     ['Expected salary', profile?.expectedSalary], ['Notice period', profile?.noticePeriod],
     ['Availability', profile?.availability], ['Preferred location', profile?.preferredLocation]
   ]
@@ -196,7 +189,6 @@ export default function RecruiterProfile({ resume, onChanged }: Props): React.JS
           </button>
         )}
       </div>
-      <p className="recruiter-help">{t("Confirmed details and screening notes follow this candidate across jobs.")}</p>
       {error && (
         <div className="recruiter-message error" role="alert">
           {recruitingError(error, t, language)}
@@ -210,7 +202,7 @@ export default function RecruiterProfile({ resume, onChanged }: Props): React.JS
         <form className="recruiter-form" onSubmit={(event) => { event.preventDefault(); void save() }}>
           <fieldset disabled={busy}>
             <legend>{t("Correct or confirm CV details")}</legend>
-            <p className="recruiter-help">{t("Leave a field blank to use the CV extraction shown below. The original CV stays available.")}</p>
+            <p className="recruiter-help">{t('Blank fields fall back to the CV extraction below.')}</p>
             <div className="recruiter-fields">
               {([
                 ['name', t('Name'), resume.name], ['email', t('Email'), resume.email],
@@ -306,7 +298,7 @@ export default function RecruiterProfile({ resume, onChanged }: Props): React.JS
             {versions.map((version) => (
               <li key={version.recordKey}>
                 <div>
-                  <span className="version-name" dir="auto">{version.fileName}</span>
+                  <span className="version-name"><bdi>{version.fileName}</bdi></span>
                   <span className="version-date">{t(version.recordKey === resume.recordKey ? 'Imported {date} · Current resume' : 'Imported {date}', { date: formatDate(version.importedAt) })}</span>
                 </div>
                 {version.recordKey !== resume.recordKey && (

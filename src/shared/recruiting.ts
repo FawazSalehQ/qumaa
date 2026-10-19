@@ -158,7 +158,7 @@ export interface SavedJob {
 export interface CriterionEvidence {
   criterionId: string
   /** Retrieval locates a passage; it never confirms a qualification. */
-  method?: 'lexical' | 'semantic'
+  method?: 'semantic'
   reviewNeeded?: true
   passage: Evidence | null
 }

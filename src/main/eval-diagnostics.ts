@@ -1,20 +1,14 @@
 /** Opt-in, local evaluation diagnostics. Never exposed through the renderer API. */
 import { getDb } from './db/index.js'
 import { buildFtsQuery, cosine, parseRequirements, scoreSemantics } from './search/scoring.js'
-import type { SearchInspection } from './search/rank.js'
+import { lexicalScores, type SearchInspection } from './search/rank.js'
 import type { SectionKind } from '@shared/types.js'
 import { extractSkills } from './ingest/skills.js'
 
 /** Freeze identical parsed inputs for model-only experiments outside the app. */
 export function modelBenchmarkInput(posting: string) {
   const db = getDb()
-  const query = buildFtsQuery(posting)
-  const lexical = new Map<number, number>()
-  if (query) {
-    for (const row of db.prepare('SELECT rowid AS id, bm25(resumes_fts) AS score FROM resumes_fts WHERE resumes_fts MATCH ?').all(query) as Array<{ id: number; score: number }>) {
-      lexical.set(row.id, -row.score)
-    }
-  }
+  const lexical = lexicalScores(posting)
   const chunks = db.prepare('SELECT section, text FROM chunks WHERE resume_id = ? ORDER BY ordinal')
   return {
     queries: [posting, ...parseRequirements(posting)],

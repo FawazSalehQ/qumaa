@@ -14,7 +14,10 @@ const LIGATURES: Array<[RegExp, string]> = [
 ]
 
 /** Bullet glyphs and other decorative leaders that carry no meaning. */
-const BULLETS = /^[\s]*[•▪◦‣·∙●○*–—\-]{1,2}\s+/gm
+// Never scan across another multiline start: an all-newline prefix otherwise
+// retries the entire remaining suffix at each line. Keep the existing trailing
+// whitespace behavior, including standalone decorative bullet lines.
+const BULLETS = /^[^\S\r\n\u2028\u2029]*[•▪◦‣·∙●○*–—\-]{1,2}\s+/gm
 
 export function normalizeText(input: string): string {
   let t = input.replace(/\r\n?/g, '\n')
@@ -30,9 +33,10 @@ export function normalizeText(input: string): string {
   // Rejoin words split across a line break by hyphenation: "engi-\nneering".
   t = t.replace(/([A-Za-z])-\n([a-z])/g, '$1$2')
 
-  // Strip standalone page markers, e.g. "Page 2 of 5" or a lone "3", consuming
-  // the trailing newline so no blank line is left behind.
-  t = t.replace(/^[ \t]*(?:page\s+)?\d+(?:\s+of\s+\d+)?[ \t]*$\n?/gim, '')
+  // Strip standalone page markers, e.g. "Page 2 of 5", "3 of 12" or a lone "3",
+  // consuming the trailing newline so no blank line is left behind. A longer
+  // lone number is a phone number or a year, which must survive.
+  t = t.replace(/^[ \t]*(?:page\s+\d+(?:\s+of\s+\d+)?|\d+\s+of\s+\d+|\d{1,3})[ \t]*$\n?/gim, '')
 
   t = t.replace(BULLETS, '')
 

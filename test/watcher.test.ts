@@ -36,14 +36,8 @@ import {
   startWatching,
   stopWatching
 } from '../src/main/ingest/watcher.js'
+import { deferred } from './fixtures/async.js'
 
-function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
-  let resolve!: (value: T) => void
-  const promise = new Promise<T>((done) => {
-    resolve = done
-  })
-  return { promise, resolve }
-}
 
 describe('watched-folder lifecycle', () => {
   beforeEach(() => {

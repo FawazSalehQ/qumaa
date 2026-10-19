@@ -1,0 +1,209 @@
+{
+  "label": "Committed 4ccc942: redesign, copy pass, rail-stop disclosures, ChatGPT sign-in, backup copy fix",
+  "capturedAt": "2026-10-17T13:12:19.784Z",
+  "gitHead": "4ccc94252de3b8a23e912db9dad62d485547465e",
+  "gitBranch": "HEAD",
+  "workingTreeDirty": false,
+  "target": "built checkout (out/main/index.js)",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "syntheticData": true,
+  "outboundRequests": 0,
+  "screenshots": [
+    {
+      "file": "01-jobs-workspace.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "en",
+      "theme": "light",
+      "view": "Jobs: saved job with matches"
+    },
+    {
+      "file": "02-jobs-review.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "en",
+      "theme": "light",
+      "view": "Jobs: candidate review scorecard"
+    },
+    {
+      "file": "03-jobs-shortlist.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "en",
+      "theme": "light",
+      "view": "Jobs: shortlist tab"
+    },
+    {
+      "file": "04-jobs-pipeline.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "en",
+      "theme": "light",
+      "view": "Jobs: pipeline tab"
+    },
+    {
+      "file": "05-jobs-editor.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "en",
+      "theme": "light",
+      "view": "Jobs: new job editor"
+    },
+    {
+      "file": "06-jobs-express.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "en",
+      "theme": "light",
+      "view": "Jobs: express search form"
+    },
+    {
+      "file": "07-companies.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "en",
+      "theme": "light",
+      "view": "Companies: company workspace"
+    },
+    {
+      "file": "08-companies-editor.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "en",
+      "theme": "light",
+      "view": "Companies: editor"
+    },
+    {
+      "file": "09-talent-followups.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "en",
+      "theme": "light",
+      "view": "Recruiter desk: follow-ups"
+    },
+    {
+      "file": "10-talent-people.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "en",
+      "theme": "light",
+      "view": "Recruiter desk: people"
+    },
+    {
+      "file": "11-talent-pools.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "en",
+      "theme": "light",
+      "view": "Recruiter desk: talent pools"
+    },
+    {
+      "file": "12-library.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "en",
+      "theme": "light",
+      "view": "Library: table and filters"
+    },
+    {
+      "file": "13-library-detail.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "en",
+      "theme": "light",
+      "view": "Library: candidate detail slide-over"
+    },
+    {
+      "file": "14-settings.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "en",
+      "theme": "light",
+      "view": "Settings"
+    },
+    {
+      "file": "15-dark-jobs.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "en",
+      "theme": "dark",
+      "view": "Jobs (dark)"
+    },
+    {
+      "file": "16-dark-companies.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "en",
+      "theme": "dark",
+      "view": "Companies (dark)"
+    },
+    {
+      "file": "17-dark-library-detail.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "en",
+      "theme": "dark",
+      "view": "Library with detail (dark)"
+    },
+    {
+      "file": "18-dark-settings.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "en",
+      "theme": "dark",
+      "view": "Settings (dark)"
+    },
+    {
+      "file": "19-ar-jobs.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "ar",
+      "theme": "light",
+      "view": "Jobs (Arabic, RTL)"
+    },
+    {
+      "file": "20-ar-companies.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "ar",
+      "theme": "light",
+      "view": "Companies (Arabic, RTL)"
+    },
+    {
+      "file": "21-ar-talent.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "ar",
+      "theme": "light",
+      "view": "Recruiter desk (Arabic, RTL)"
+    },
+    {
+      "file": "22-ar-library-detail.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "ar",
+      "theme": "light",
+      "view": "Library with detail (Arabic, RTL)"
+    },
+    {
+      "file": "23-ar-settings.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "ar",
+      "theme": "light",
+      "view": "Settings (Arabic, RTL)"
+    },
+    {
+      "file": "24-ar-dark-jobs.png",
+      "width": 2880,
+      "height": 2000,
+      "language": "ar",
+      "theme": "dark",
+      "view": "Jobs (Arabic, dark)"
+    }
+  ],
+  "status": "completed"
+}

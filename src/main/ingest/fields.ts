@@ -4,7 +4,7 @@
  * search result.
  */
 import type { EducationLevel } from '@shared/types.js'
-import { DATABASE_LIMITS } from '../db/migrations.js'
+import { DATABASE_LIMITS } from '../db/limits.js'
 import { extractSkills } from './skills.js'
 import { sectionText, type Section } from './sections.js'
 
@@ -20,7 +20,10 @@ export interface ExtractedFields {
 
 /* ---------- contact ---------- */
 
-const EMAIL_RE = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/
+// Try only the beginning of each maximal local-part token. Retrying each
+// suffix of a long token with no @ is quadratic. The domain cannot cross @,
+// so each token is scanned a bounded number of times, even for malformed mail.
+const EMAIL_RE = /(?<![A-Za-z0-9._%+-])[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/
 // Deliberately permissive: international formats vary wildly. Requires 9+ digits
 // so it does not swallow years, postcodes, or "24/7".
 const PHONE_RE = /(?:\+\p{Nd}{1,3}[\s.-]?)?(?:\(\p{Nd}{1,4}\)[\s.-]?)?\p{Nd}[\p{Nd}\s.-]{7,}\p{Nd}/u
@@ -63,7 +66,7 @@ const NAME_AFFIX = /^(?:(?:mr|mrs|ms|miss|dr|prof|eng)\.?|السيد(?:ة)?|د\.
 function looksLikeName(line: string): boolean {
   const t = line.trim().replace(NAME_AFFIX, '')
   if (!t || t.length > 60) return false
-  if (/\d|@|https?:|\|/.test(t)) return false
+  if (/\p{Nd}|@|https?:|\|/u.test(t)) return false
   if (NOT_A_NAME.test(t)) return false
 
   const words = t.split(/\s+/)
@@ -92,7 +95,45 @@ function extractName(text: string): string | null {
 /* ---------- location ---------- */
 
 // "Riyadh, Saudi Arabia" / "London, UK" / "Austin, TX"
-const LOCATION_RE = /\b([A-Z][a-zA-Z.'-]+(?:\s+[A-Z][a-zA-Z.'-]+)?),\s*([A-Z]{2,}|[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\b/
+const PLACE_WORD_CHARACTER = /[a-zA-Z.'-]/
+const PLACE_REGION = /(?:[A-Z]{2,}|[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\b/y
+
+/** Find the original heuristic's earliest word start in one disjoint token. */
+function placeWordStart(line: string, start: number, end: number): number | null {
+  for (let index = start; index + 1 < end; index++) {
+    if (/[A-Z]/.test(line[index]) && (index === 0 || !/\w/.test(line[index - 1]))) return index
+  }
+  return null
+}
+
+function wordBefore(line: string, end: number): number {
+  let start = end
+  while (start > 0 && PLACE_WORD_CHARACTER.test(line[start - 1])) start--
+  return start
+}
+
+/** Scan comma-delimited candidates once, rather than retrying every A in A-A-A. */
+function matchPlace(line: string): string | null {
+  for (let comma = line.indexOf(','); comma !== -1; comma = line.indexOf(',', comma + 1)) {
+    const lastWord = wordBefore(line, comma)
+    let start = placeWordStart(line, lastWord, comma)
+    // The original heuristic accepts one or two words before the comma. Its
+    // second word must begin immediately after whitespace with a capital.
+    if (comma - lastWord >= 2 && /[A-Z]/.test(line[lastWord])) {
+      let separator = lastWord
+      while (separator > 0 && /\s/.test(line[separator - 1])) separator--
+      if (separator < lastWord) {
+        start = placeWordStart(line, wordBefore(line, separator), separator) ?? start
+      }
+    }
+    if (start === null) continue
+    let regionStart = comma + 1
+    while (regionStart < line.length && /\s/.test(line[regionStart])) regionStart++
+    PLACE_REGION.lastIndex = regionStart
+    if (PLACE_REGION.test(line)) return line.slice(start, PLACE_REGION.lastIndex)
+  }
+  return null
+}
 const ARABIC_LOCATION_LABEL =
   /(?<![\p{L}\p{M}\p{N}_])(?:العنوان|الموقع|مكان\s+الإقامة|المدينة(?!\s+المنورة(?:[^\p{L}\p{M}\p{N}_]|$))|الدولة)(?![\p{L}\p{M}\p{N}_])\s*[:：-]?\s*([\p{Script=Arabic}\p{M}][\p{Script=Arabic}\p{M}\s،,-]{1,80})/u
 // JavaScript's \b is ASCII-based: it cannot distinguish الخبر from الخبرة.
@@ -114,9 +155,8 @@ function candidateLocation(line: string): string | null {
     const value = arabicLabelled[1].trim().split(/\s{2,}|[|•]/u)[0]
     if (value) return value
   }
-  const m = line.match(LOCATION_RE)
-  if (!m) return null
-  const value = m[0].trim()
+  const value = matchPlace(line)
+  if (!value) return null
   return NOT_A_PLACE.test(value) || value.length > DATABASE_LIMITS.labelChars ? null : value
 }
 
@@ -139,18 +179,32 @@ function extractLocation(text: string): string | null {
 
 /* ---------- education ---------- */
 
+// Inside a recognised education section short tokens such as MA or BA are degrees.
 const EDUCATION_PATTERNS: Array<[EducationLevel, RegExp]> = [
   ['phd', /\b(ph\.?d|doctorate|doctoral|d\.phil)\b/i],
   ['masters', /\b(master'?s?|m\.?sc|m\.?a\b|m\.?b\.?a|m\.?eng|msc|mba)\b/i],
   ['bachelors', /\b(bachelor'?s?|b\.?sc|b\.?a\b|b\.?eng|bsc|undergraduate degree)\b/i],
-  ['associate', /\b(associate'?s?\s+degree|a\.?a\.?s|diploma)\b/i]
+  ['associate', /\b(associate'?s?\s+degree|a\.?a\.?s|(?<!high school )diploma)\b/i]
+]
+// Elsewhere a bare "Master" is a job title (Scrum Master), "MA" a US state and
+// "BA" a business analyst, so the whole-document fallback demands degree context.
+const STRICT_EDUCATION_PATTERNS: Array<[EducationLevel, RegExp]> = [
+  ['phd', /\b(ph\.?d|doctorate|doctoral|d\.phil)\b/i],
+  ['masters', /\b(master(?:'s|s)?\s+(?:of|in|degree)\b|m\.?sc\b|m\.a\.|ma\s+(?:in\b|\(hons\))|m\.?b\.?a\b|m\.?eng\b)/i],
+  ['bachelors', /\b(bachelor(?:'s|s)?\b|b\.?sc\b|b\.a\.|ba\s+(?:in\b|\(hons\))|b\.?eng\b|undergraduate degree)/i],
+  ['associate', /\b(associate'?s?\s+degree|a\.?a\.?s|(?<!high school )diploma)\b/i]
 ]
 
-function extractEducation(text: string): EducationLevel | null {
-  for (const [level, re] of EDUCATION_PATTERNS) {
+function matchEducation(text: string, patterns: Array<[EducationLevel, RegExp]>): EducationLevel | null {
+  for (const [level, re] of patterns) {
     if (re.test(text)) return level // ordered highest-first
   }
   return null
+}
+
+function extractEducation(fullText: string, sections: Section[]): EducationLevel | null {
+  const education = sectionText(sections, 'education')
+  return (education ? matchEducation(education, EDUCATION_PATTERNS) : null) ?? matchEducation(fullText, STRICT_EDUCATION_PATTERNS)
 }
 
 /* ---------- years of experience ---------- */
@@ -179,22 +233,28 @@ function parseEndpoint(raw: string, isEnd: boolean): number | null {
   let m = s.match(/^([a-z]{3,9})\.?\s+(\d{4})$/)
   if (m) {
     const mon = MONTHS[m[1].slice(0, 3)]
-    if (mon !== undefined) return monthIndex(Number(m[2]), mon)
+    if (mon !== undefined && plausibleYear(Number(m[2]))) return monthIndex(Number(m[2]), mon)
   }
   m = s.match(/^(\d{1,2})\s*[/.-]\s*(\d{4})$/)
   if (m) {
     const mon = Number(m[1]) - 1
-    if (mon >= 0 && mon <= 11) return monthIndex(Number(m[2]), mon)
+    if (mon >= 0 && mon <= 11 && plausibleYear(Number(m[2]))) return monthIndex(Number(m[2]), mon)
   }
   m = s.match(/^(\d{4})$/)
   if (m) {
     const y = Number(m[1])
-    if (y >= 1950 && y <= new Date().getFullYear() + 1) {
+    if (plausibleYear(y)) {
       // A bare year as a start means January; as an end, December.
       return monthIndex(y, isEnd ? 11 : 0)
     }
   }
   return null
+}
+
+// A typo, OCR slip or Hijri year in any date form must skip that range, not
+// produce a span the startup validator rejects and the library cannot open with.
+function plausibleYear(year: number): boolean {
+  return year >= 1950 && year <= new Date().getFullYear() + 1
 }
 
 // A generic word before a year ("Engineer 2019") must not consume that year as
@@ -245,7 +305,8 @@ export function extractFields(fullText: string, sections: Section[]): ExtractedF
   const experience = sectionText(sections, 'experience')
   // Prefer date ranges inside the experience section; fall back to the whole
   // document for resumes with no recognisable headings.
-  const years = yearsFromDateRanges(experience || fullText)
+  const parsedYears = yearsFromDateRanges(experience || fullText)
+  const years = parsedYears !== null && parsedYears <= DATABASE_LIMITS.yearsExperience ? parsedYears : null
 
   return {
     name: extractName(fullText),
@@ -253,7 +314,7 @@ export function extractFields(fullText: string, sections: Section[]): ExtractedF
     phone: extractPhone(fullText),
     location: extractLocation(fullText),
     yearsExperience: years,
-    educationLevel: extractEducation(fullText),
+    educationLevel: extractEducation(fullText, sections),
     skills: extractSkills(fullText)
   }
 }

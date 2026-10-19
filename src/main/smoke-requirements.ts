@@ -55,8 +55,9 @@ export async function smokeRequirements(check: Check): Promise<void> {
   recruiting.saveJob({ id: job.id, posting, status: 'open', criteria: [criterion] })
   const updated = recruiting.getJob(job.id)
   check('source-backed requirements persist and invalidate the old posting snapshot', updated.job.stale && updated.job.criteria[0].source?.text === posting.jobDescription && updated.reviews[0].assessments[0].status === 'contradicted')
-  assertRecruitingData(getDb())
-  check('portable-data validation accepts old and extended requirement records', true)
+  let accepted = true
+  try { assertRecruitingData(getDb()) } catch { accepted = false }
+  check('portable-data validation accepts old and extended requirement records', accepted)
 
   // A deferred model request must not publish suggestions for an edited job.
   const storedVector = getDb().prepare('SELECT embedding FROM chunks LIMIT 1').get() as { embedding: Buffer }

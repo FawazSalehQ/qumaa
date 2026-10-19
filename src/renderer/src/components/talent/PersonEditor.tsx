@@ -28,8 +28,7 @@ export default function PersonEditor({ person, busy, onCancel, onSave }: Props):
       availabilityConfirmedAt: inputTimestamp(draft.confirmed), sourceUrl: draft.sourceUrl.trim(), note: draft.note.trim()
     })
   }}>
-    <p className="talent-eyebrow">{t(person ? 'Contact details' : 'A relationship can start before a CV')}</p><h3>{t(person ? 'Edit contact' : 'New prospect')}</h3>
-    <p className="hint">{t('Keep recruiter notes and confirmed details alongside the person’s CVs.')}</p>
+    <h3>{t(person ? 'Edit contact' : 'New prospect')}</h3>
     <fieldset className="talent-form-grid" disabled={busy}>
       <label className="talent-field talent-wide">{t('Name')}<input aria-label={t('Name')} autoFocus required maxLength={512} dir="auto" value={draft.name} onChange={(event) => change('name', event.target.value)} /></label>
       <label className="talent-field">{t('Email')}<input aria-label={t('Email')} type="email" maxLength={512} dir="ltr" value={draft.email} onChange={(event) => change('email', event.target.value)} /></label>

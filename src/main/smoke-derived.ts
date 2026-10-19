@@ -4,7 +4,7 @@ import { embedder } from './embed/client.js'
 import { isIndexCommitted } from './embed/reindex.js'
 import { backfillResumeDerivedData, isResumeDerivationCurrent } from './ingest/derived-backfill.js'
 import { RESUME_DERIVATION_KEY } from './ingest/derivation-version.js'
-import { deriveResumeText } from './ingest/derive.js'
+import { deriveStoredResumeText } from './ingest/derive.js'
 import { ingestText } from './ingest/pipeline.js'
 import * as recruiting from './recruiting/index.js'
 import * as talent from './recruiting/talent.js'
@@ -18,12 +18,15 @@ import { normalizeScores } from './search/scoring.js'
 type Check = (label: string, ok: boolean, detail?: string) => void
 
 export async function smokeDerived(check: Check): Promise<void> {
+  const previousParser = '2:arabic-sections-and-locations'
   console.log('\n11. Parser upgrades and Arabic lexical retrieval')
   await backfillResumeDerivedData()
   check('establishes parser and model provenance on an empty library', isResumeDerivationCurrent() && isIndexCommitted())
   const texts = [
     'ليان منصور\n\n## الملخص المهني\nمهندسة تعمل على تخطيط الآبار وتصميم برامج الحفر ومراجعة البيانات التشغيلية وإعداد التقارير الفنية مع فريق العمل.\n\n## الخبرة المهنية\nمهندسة حفر\nJan 2019 - Dec 2023\nأعدت برامج تصميم التغليف وراجعت سوائل الحفر وحسابات الهيدروليكا وتحليل الأداء والتكاليف اليومية لعمليات النفط والغاز.',
-    'Mira Dawson\nRiyadh, Saudi Arabia\n\n## Work Experience\nEngineer\nJan 2018 - Dec 2023\nDesigned well casing programs and reviewed drilling fluids and hydraulics with multidisciplinary engineering teams for offshore operations.'
+    'Mira Dawson\nRiyadh, Saudi Arabia\n\n## Work Experience\nEngineer\nJan 2018 - Dec 2023\nDesigned well casing programs and reviewed drilling fluids and hydraulics with multidisciplinary engineering teams for offshore operations.',
+    // Bulleted bare numbers survive one normalisation only; the rebuild must derive stored text as it is.
+    'Omar Haddad\nDammam, Saudi Arabia\n\n## Awards\n• 2019\n• 2021\n\n## Work Experience\nDrilling supervisor\nJan 2016 - Dec 2023\nSupervised rig crews, managed well control drills and coordinated casing and cementing operations for onshore wells.'
   ]
   for (const [index, text] of texts.entries()) {
     const outcome = await ingestText({ text, fileName: `upgrade-${index}.md`, filePath: `/fictional-originals/upgrade-${index}.md`, fileType: 'md' })
@@ -46,7 +49,7 @@ export async function smokeDerived(check: Check): Promise<void> {
   const savedManual = manual()
   getDb().prepare("UPDATE chunks SET section = 'other'").run()
   getDb().prepare("UPDATE resumes SET location = 'الخبر', years_experience = 99").run()
-  setSetting(RESUME_DERIVATION_KEY, 'legacy-parser')
+  setSetting(RESUME_DERIVATION_KEY, previousParser)
 
   const oldIndex = JSON.stringify(getDb().prepare('SELECT * FROM chunks ORDER BY id').all())
   const oldSnapshots = JSON.stringify(getDb().prepare("SELECT * FROM recruiting_records WHERE kind = 'snapshot' ORDER BY id").all())
@@ -59,7 +62,7 @@ export async function smokeDerived(check: Check): Promise<void> {
   check('failed parser preflight retains the complete old index and saved evidence', preflightRejected &&
     oldIndex === JSON.stringify(getDb().prepare('SELECT * FROM chunks ORDER BY id').all()) &&
     oldSnapshots === JSON.stringify(getDb().prepare("SELECT * FROM recruiting_records WHERE kind = 'snapshot' ORDER BY id").all()) &&
-    oldModel === getSetting('embeddingModel') && getSetting(RESUME_DERIVATION_KEY) === 'legacy-parser')
+    oldModel === getSetting('embeddingModel') && getSetting(RESUME_DERIVATION_KEY) === previousParser)
 
   const originalEmbed = embedder.embedPassages
   let calls = 0
@@ -86,7 +89,7 @@ export async function smokeDerived(check: Check): Promise<void> {
   const actualChunks = getDb().prepare('SELECT section, ordinal, text FROM chunks WHERE resume_id = ? ORDER BY ordinal')
   const records = getDb().prepare('SELECT id,raw_text AS text,location,years_experience AS yearsExperience FROM resumes ORDER BY id').all() as Array<{ id: number; text: string; location: string | null; yearsExperience: number | null }>
   check('upgraded chunks and fields equal fresh canonical extraction', records.every((record) => {
-    const fresh = deriveResumeText(record.text)
+    const fresh = deriveStoredResumeText(record.text)
     return JSON.stringify(actualChunks.all(record.id)) === JSON.stringify(fresh.chunks) && record.location === fresh.fields.location && record.yearsExperience === fresh.fields.yearsExperience
   }))
   check('Arabic experience headings no longer invent a Khobar address', records[0].location === null)

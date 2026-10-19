@@ -1,9 +1,9 @@
-import { calculateHiringCosts, HIRING_COST_RULES_VERSION } from '@shared/hiring-costs.js'
+import { calculateHiringCosts, HIRING_COST_RULES_VERSION, localizeHiringAssumption } from '@shared/hiring-costs.js'
+import { hiringDecimal } from '@shared/hiring-money.js'
+import { csvCell, type CsvValue } from './csv.js'
 import type { SavedHiringBudget } from '@shared/hiring-budget.js'
 import type { Language } from '@shared/i18n.js'
-import { hiringCostAssumptionTranslations } from '@shared/locales/hiring-costs-assumptions.js'
 
-type CsvValue = string | { numeric: string }
 const labels: Record<string, [string, string]> = {
   field: ['Field', 'الحقل'], value: ['Value', 'القيمة'], unit: ['Unit', 'الوحدة'],
   plan: ['Hiring budget plan', 'خطة ميزانية التوظيف'], company: ['Company', 'الشركة'], job: ['Job', 'الوظيفة'],
@@ -16,7 +16,7 @@ const labels: Record<string, [string, string]> = {
   scheme: ['GOSI scheme', 'نظام التأمينات'], selectedMonth: ['Selected planning month', 'شهر التخطيط المختار'], periodStart: ['Budget period start', 'بداية فترة الميزانية'], periodEnd: ['Budget period end', 'نهاية فترة الميزانية'],
   employmentStartMonth: ['Expected employment start month', 'شهر بدء العمل المتوقع'], serviceMonthsAtStart: ['Elapsed service months at employment start', 'أشهر الخدمة المنقضية عند بدء العمل'], headcount: ['Headcount', 'عدد الموظفين'], approvedBudgetHalala: ['Approved budget for headcount and period', 'الميزانية المعتمدة لعدد الموظفين والفترة'],
   gosi: ['GOSI', 'التأمينات الاجتماعية'], minimumWageHalala: ['Minimum contribution wage', 'الحد الأدنى لأجر الاشتراك'], maximumWageHalala: ['Maximum contribution wage', 'الحد الأعلى لأجر الاشتراك'], limitNote: ['Basis for configured wage limits', 'أساس حدود أجر الاشتراك المحددة'],
-  registeredWageHalala: ['Verified registered wage override', 'أجر الاشتراك المسجل المتحقق منه'], registeredWageNote: ['Basis for registered wage override', 'أساس تجاوز أجر الاشتراك المسجل'],
+  registeredWageHalala: ['Verified registered wage override', 'أجر الاشتراك المسجل المتحقق منه'], registeredWageNote: ['Basis for registered wage override', 'أساس التحقق من أجر الاشتراك المسجل'],
   eos: ['End-of-service provision', 'مخصص نهاية الخدمة'], includeBasic: ['Include basic in eligible EOS wage', 'تضمين الأساسي في أجر نهاية الخدمة'], includeHousing: ['Include housing in eligible EOS wage', 'تضمين السكن في أجر نهاية الخدمة'], includeTransport: ['Include transport in eligible EOS wage', 'تضمين النقل في أجر نهاية الخدمة'], notes: ['Notes', 'ملاحظات'],
   grossHalala: ['Gross salary', 'الراتب الإجمالي'], gosiBaseHalala: ['Basic plus housing before wage ceiling', 'الأساسي والسكن قبل سقف أجر الاشتراك'], gosiWageHalala: ['GOSI contribution wage', 'أجر الاشتراك في التأمينات'], eosWageHalala: ['Eligible EOS wage', 'الأجر المؤهل لنهاية الخدمة'], gosiWageSource: ['GOSI wage source', 'مصدر أجر الاشتراك'], gosiCeilingApplied: ['Contribution ceiling applied', 'تطبيق سقف أجر الاشتراك'],
   scenarios: ['Scenarios', 'السيناريوهات'], month: ['Month', 'الشهر'], rates: ['Contribution rates', 'نسب الاشتراك'], effectiveDate: ['Rate effective date', 'تاريخ سريان النسبة'],
@@ -31,19 +31,6 @@ const labels: Record<string, [string, string]> = {
 }
 
 
-function csvCell(value: CsvValue): string {
-  let text = typeof value === 'string' ? value : value.numeric
-  if (typeof value === 'string' && (/^[\s]*[=+@-]/u.test(text) || /^[\t\r\n]/u.test(text))) text = `'${text}`
-  return `"${text.replace(/"/g, '""')}"`
-}
-
-/** Preserve all halalas even at the upper safe-integer boundary. */
-function hundredths(value: number): string {
-  const integer = BigInt(value)
-  const absolute = integer < 0n ? -integer : integer
-  return `${integer < 0n ? '-' : ''}${absolute / 100n}.${String(absolute % 100n).padStart(2, '0')}`
-}
-
 /** A long-form CSV keeps the complete auditable forecast and original inputs. */
 export function hiringBudgetCsv(plan: SavedHiringBudget, companyName: string, jobTitle: string, language: Language): string {
   if (plan.calculationVersion !== HIRING_COST_RULES_VERSION) throw new Error('Unsupported hiring budget calculation version.')
@@ -55,7 +42,7 @@ export function hiringBudgetCsv(plan: SavedHiringBudget, companyName: string, jo
     const field = path.map(l).join(' / ')
     if (value === null) rows.push([field, l('notSet'), ''])
     else if (typeof value === 'boolean') rows.push([field, l(value ? 'yes' : 'no'), ''])
-    else if (typeof value === 'number') rows.push([field, { numeric: /(?:Halala|Bps)$/.test(key) ? hundredths(value) : String(value) }, key.endsWith('Halala') ? l('SAR') : key.endsWith('Bps') ? '%' : ''])
+    else if (typeof value === 'number') rows.push([field, { numeric: /(?:Halala|Bps)$/.test(key) ? hiringDecimal(value) : String(value) }, key.endsWith('Halala') ? l('SAR') : key.endsWith('Bps') ? '%' : ''])
     else rows.push([field, typeof value === 'string' ? (['scheme', 'mode', 'gosiWageSource', 'reason'].includes(key) ? l(value) : value) : String(value), ''])
   }
   const walk = (path: string[], value: unknown): void => {
@@ -64,10 +51,7 @@ export function hiringBudgetCsv(plan: SavedHiringBudget, companyName: string, jo
     else row(path, value)
   }
   walk(['plan'], { id: plan.id, companyId: plan.companyId, company: companyName, jobId: plan.jobId, job: jobTitle, name: plan.name, calculationVersion: plan.calculationVersion, createdAt: new Date(plan.createdAt).toISOString(), updatedAt: new Date(plan.updatedAt).toISOString() })
-  const assumptions = language !== 'ar' ? result.assumptions : result.assumptions.map((assumption) => {
-    if (hiringCostAssumptionTranslations[assumption]) return hiringCostAssumptionTranslations[assumption]
-    return assumption.replace(/^Verified registered GOSI wage override: /, 'تجاوز أجر الاشتراك المسجل المتحقق منه: ').replace(/^Configured contribution-wage limits: /, 'حدود أجر الاشتراك المحددة: ')
-  })
+  const assumptions = result.assumptions.map((assumption) => localizeHiringAssumption(language, assumption))
   walk([], { ...result, assumptions })
   return `\ufeff${rows.map((cells) => cells.map(csvCell).join(',')).join('\r\n')}\r\n`
 }

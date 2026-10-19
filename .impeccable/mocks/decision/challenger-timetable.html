@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Qumaa · The Timetable</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{width:1440px;height:900px;overflow:hidden;background:#f4f1f8;color:#2b2733;font:13px/1.5 "IBM Plex Sans","IBM Plex Sans Arabic",sans-serif}
+:root{--ink:#2b2733;--paper:#f4f1f8;--white:#fff;--rule:#cfc8dc;--rule2:#2b2733;--dim:#5e5870;--faint:#8a8398;--violet:#6d3fb0;--red:#b3403f;--green:#1f7a54}
+.ar{font-family:"IBM Plex Sans Arabic",sans-serif}
+.caps{text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+header{height:52px;background:var(--ink);color:#fff;display:flex;align-items:center;gap:32px;padding:0 24px 0 92px}
+.brand{display:flex;align-items:center;gap:8px;direction:rtl}.brand b{font:600 20px "IBM Plex Sans Arabic"}
+nav{display:flex;gap:0;align-self:stretch}nav a{display:flex;align-items:center;padding:0 14px;color:#c9c2d8;font-weight:500}nav a.on{color:var(--ink);background:var(--paper);font-weight:700}
+main{display:grid;grid-template-columns:236px 1fr;height:848px}
+aside{border-right:2px solid var(--rule2);padding:20px 0;background:var(--white)}
+.lbl{padding:0 20px 8px;color:var(--faint)}
+.filter{margin:0 20px 14px;padding:7px 10px;border:1px solid var(--rule2);display:flex;justify-content:space-between}
+.job{padding:10px 20px;border-top:1px solid var(--rule)}.job.on{background:var(--ink);color:#fff}.job b{font-weight:700;display:block}.job span{color:var(--faint)}.job.on span{color:#c9c2d8}
+.mark{display:inline-block;width:11px;height:11px;border:2px solid currentColor;border-radius:50%;vertical-align:-1px;margin-right:5px}.mark.f{background:currentColor}
+section{padding:22px 32px 0;min-width:0}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;border-bottom:2px solid var(--rule2);padding-bottom:14px}
+h1{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}.title{font-weight:700;font-size:13px}
+.btn{display:inline-flex;align-items:center;height:30px;padding:0 12px;border:1px solid var(--rule2);color:var(--ink);font-weight:600;white-space:nowrap;background:var(--white)}
+.btn.p{background:var(--ink);color:#fff}.btn.q{border-color:var(--rule);color:var(--dim);font-weight:500}.actions{display:flex;gap:6px}
+.ctx{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:24px;padding:12px 0;border-bottom:1px solid var(--rule)}
+.ctx em{display:block;font-style:normal;color:var(--faint)}.ctx b{font-weight:700}.ctx span{color:var(--faint);display:block}
+.tabs{display:flex;gap:0;margin-top:14px;border-bottom:2px solid var(--rule2)}.tabs a{padding:6px 12px;color:var(--dim)}.tabs a.on{background:var(--ink);color:#fff;font-weight:700}
+.tools{display:flex;gap:8px;margin:12px 0 10px}.tools .in{flex:1;height:30px;border:1px solid var(--rule);background:var(--white);padding:0 10px;display:flex;align-items:center;color:var(--faint)}
+table{width:100%;border-collapse:collapse;background:var(--white);border:1px solid var(--rule2)}
+th{text-align:left;padding:8px 10px;border-bottom:2px solid var(--rule2);color:var(--ink);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+th.c,td.c{text-align:center;width:54px;border-left:1px solid var(--rule)}
+td{padding:9px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+tr.on td{background:var(--paper)}tr.on td:first-child{box-shadow:inset 3px 0 var(--ink)}
+.name{font-weight:700}.sub{color:var(--faint)}
+.score{font-weight:700;font-variant-numeric:tabular-nums}
+.k{font-size:13px;line-height:1}.k.f::before{content:"●";color:var(--ink)}.k.h::before{content:"○";color:var(--dim)}.k.x::before{content:"✕";color:var(--red);font-weight:700}.k.v::before{content:"✓";color:var(--green);font-weight:700}
+.rev{font-weight:500}.rev.sl{color:var(--green)}.rev.mb{color:var(--violet)}.rev.no{color:var(--red)}
+.row-actions a{display:inline-block;margin-right:10px;text-decoration:underline;text-underline-offset:3px;color:var(--ink)}
+.key{display:flex;gap:18px;color:var(--faint);padding:10px 0}
+.foot{display:flex;justify-content:space-between;color:var(--faint);padding:4px 0}
+</style></head><body>
+<header><div class="brand"><svg width="24" height="24" viewBox="0 0 100 100"><rect x="28" y="10" width="52" height="14" rx="5" fill="#fff" opacity=".4"/><rect x="22" y="21" width="60" height="14" rx="5" fill="#fff" opacity=".68"/><polygon points="14,34 86,34 57,70 57,90 43,90 43,70" fill="#fff"/></svg><b>قُمع</b></div>
+<nav><a class="on">JOBS</a><a>COMPANIES</a><a>RECRUITER DESK</a><a>LIBRARY · 8</a><a>SETTINGS</a></nav></header>
+<main><aside>
+<div class="lbl caps">Saved jobs · 2</div><div class="filter"><span>All companies</span><span>▾</span></div>
+<div class="job"><b>HR Business Partner</b><span><i class="mark f"></i>OPEN · 0 shortlisted</span></div>
+<div class="job on"><b>Senior Accountant</b><span>Dunes Hospitality Group</span><br><span><i class="mark f"></i>OPEN · 2 shortlisted</span></div>
+<div class="lbl" style="padding-top:16px">◉ Saved locally on this device</div></aside>
+<section>
+<div class="head"><div><h1>Senior Accountant</h1><div><span class="caps" style="color:var(--green)">● Open</span> · Dunes Hospitality Group · 4 criteria · last matched Oct 11, 12:00</div></div>
+<div class="actions"><span class="btn">EDIT JOB</span><span class="btn p">REFRESH MATCHES</span><span class="btn q">Rerank with Sonnet 5</span></div></div>
+<div class="ctx"><div><em class="caps">Hiring company</em><b>Dunes Hospitality Group</b><span>Hospitality · Food &amp; Beverage · Riyadh</span></div><div><em class="caps">Salary budget</em><b>14,000–18,000 SAR</b><span>per month</span></div><div><em class="caps">Matched</em><b>8 candidates</b><span>3 reviewed</span></div><div><em class="caps">Shortlisted</em><b>2</b><span>0 contacted</span></div></div>
+<div class="tabs"><a class="on">CANDIDATES 8</a><a>SHORTLIST 2</a><a>COMPARE 0/4</a><a>TARGET COMPANIES</a><a>PIPELINE</a><a>CLIENT PACK</a></div>
+<div class="tools"><div class="in">Search name, contact, skills, or tags…</div><span class="btn q">All review states ▾</span><span class="btn q">Filters</span></div>
+<table><tr><th>Candidate</th><th>Match</th><th class="c">5y+</th><th class="c">IFRS</th><th class="c">SOCPA</th><th class="c">ERP</th><th>Review</th><th></th></tr>
+<tr class="on"><td><div class="name">Layla Haddad</div><div class="sub">Riyadh · 9 years · IFRS, Audit, VAT, SAP +4</div></td><td class="score">92</td><td class="c"><span class="k v"></span></td><td class="c"><span class="k f"></span></td><td class="c"><span class="k f"></span></td><td class="c"><span class="k f"></span></td><td class="rev sl">SHORTLISTED</td><td class="row-actions"><a>Review</a><a>Remove</a><a>Pipeline</a></td></tr>
+<tr><td><div class="name ar">فيصل العتيبي</div><div class="sub">الرياض · 8 years · IFRS, Audit, Oracle +3</div></td><td class="score">88</td><td class="c"><span class="k f"></span></td><td class="c"><span class="k f"></span></td><td class="c"><span class="k f"></span></td><td class="c"><span class="k f"></span></td><td class="rev sl">SHORTLISTED</td><td class="row-actions"><a>Review</a><a>Remove</a><a>Pipeline</a></td></tr>
+<tr><td><div class="name">Omar Al-Rashid</div><div class="sub">Jeddah · 6 years · Budgeting, Forecasting, Oracle +4</div></td><td class="score">71</td><td class="c"><span class="k f"></span></td><td class="c"><span class="k h"></span></td><td class="c"><span class="k h"></span></td><td class="c"><span class="k f"></span></td><td class="rev mb">MAYBE</td><td class="row-actions"><a>Review</a><a>Shortlist</a><a>Pipeline</a></td></tr>
+<tr><td><div class="name">Nadia Qureshi</div><div class="sub">Riyadh · 8 years · Workforce planning, SAP SuccessFactors +4</div></td><td class="score">40</td><td class="c"><span class="k h"></span></td><td class="c"><span class="k h"></span></td><td class="c"><span class="k h"></span></td><td class="c"><span class="k f"></span></td><td class="rev" style="color:var(--faint)">UNREVIEWED</td><td class="row-actions"><a>Review</a><a>Shortlist</a><a>Pipeline</a></td></tr>
+<tr><td><div class="name">Tariq Mansour</div><div class="sub">Dammam · 7 years · Go, TypeScript, PostgreSQL +5</div></td><td class="score">18</td><td class="c"><span class="k x"></span></td><td class="c"><span class="k h"></span></td><td class="c"><span class="k h"></span></td><td class="c"><span class="k h"></span></td><td class="rev no">NOT PROCEEDING</td><td class="row-actions"><a>Review</a><a>Shortlist</a></td></tr>
+<tr><td><div class="name">Hana Suleiman</div><div class="sub">Riyadh · 10 years · Emergency care, Triage, Critical care +3</div></td><td class="score">12</td><td class="c"><span class="k h"></span></td><td class="c"><span class="k h"></span></td><td class="c"><span class="k h"></span></td><td class="c"><span class="k h"></span></td><td class="rev" style="color:var(--faint)">UNREVIEWED</td><td class="row-actions"><a>Review</a><a>Shortlist</a><a>Pipeline</a></td></tr>
+</table>
+<div class="key"><span><span class="k f"></span> evidence found</span><span><span class="k h"></span> not stated</span><span><span class="k x"></span> contradicted</span><span><span class="k v"></span> recruiter confirmed</span></div>
+<div class="foot"><span>1–8 of 8 candidates · Scores are relative, not eligibility decisions.</span><span>PREVIOUS · 1 / 1 · NEXT</span></div>
+</section></main></body></html>

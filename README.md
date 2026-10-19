@@ -14,12 +14,26 @@ keep their original language. Arabic and Persian digits are accepted in
 experience fields, and Arabic exports include bundled fonts for offline use.
 
 **Nothing leaves your machine by default.** Embeddings are computed locally by a
-bundled ONNX model, and with no API key configured the app opens no network
-sockets at runtime. The one exception is opt-in and off by default: an optional
-AI rerank of the shortlist through Anthropic or OpenAI, which only runs once you
-paste that provider's API key into Settings and switch it on.
+bundled ONNX model. Optional AI reranking is off by default: connect an
+Anthropic/OpenAI API key or an eligible ChatGPT subscription in Settings, then
+enable it. Each send requires reviewing the evidence and native confirmation.
+ChatGPT sign-in and model discovery contact OpenAI only when you connect or
+refresh; startup and ordinary matching do not contact an AI provider.
 
 ## Requirements
+
+### Installed app
+
+| | macOS | Windows |
+|---|---|---|
+| Operating system | macOS 12 or later | Windows 10 or 11, 64-bit |
+| Processor | Apple Silicon (M1 or later) | x64 |
+| Memory | 4 GB (8 GB recommended) | 4 GB (8 GB recommended) |
+| Disk | 550 MB plus the library | 680 MB plus the library |
+| Display | 940 × 620 or larger | 940 × 620 or larger |
+| Network | None (optional AI reranking needs internet access) | None (optional AI reranking needs internet access) |
+
+### Building from source
 
 Node 22+ (`nvm use` picks it up from `.nvmrc`). Electron 43 and better-sqlite3 13
 both require it.
@@ -39,7 +53,8 @@ gitignored. It downloads from the immutable revision in
 including an existing CI cache. Packaging also runs `verify-model` and fails
 before producing an installer if a model file is missing or has changed.
 
-Qumaa accepts digital PDF, DOCX, and Markdown (`.md` or `.markdown`) resumes.
+Qumaa accepts digital PDF, DOCX, and Markdown (`.md` or `.markdown`) resumes,
+by drag and drop, a file picker, a watched folder, or pasted text.
 PDFs must contain a usable text layer. Image-only scans and other file types are
 outside the supported scope. OCR is outside the product scope and is not planned.
 
@@ -202,12 +217,15 @@ v12 require app build beta.5 or a newer compatible build, regardless of the
 retained GitHub release name. The earlier beta.3 query-composition change marks saved
 matches stale; refresh them while keeping recruiter reviews.
 
-Choose **Settings → AI reranking → AI provider**, then **AI model**:
+Choose **Settings → AI reranking → AI provider**. OpenAI offers two connection
+modes: **API key** for separate API billing, or **ChatGPT subscription** using
+**Continue with ChatGPT** in your system browser. Then choose **AI model**:
 
 | Provider | Models |
 |---|---|
 | Anthropic | Sonnet 5, Opus 5, Fable 5.1 |
 | OpenAI | GPT-4o mini, GPT-5.6, GPT-6 Astra |
+| ChatGPT subscription | Available models are discovered for the connected account |
 
 Each provider retains its own protected API key and selected model. Existing
 installations default to Sonnet 5. Jobs shows the selected model on its rerank
@@ -216,6 +234,20 @@ another rerank without refreshing local matches. Each provider/model requires
 its own initial data review, with **See exported data** collapsed by default,
 followed by native confirmation naming the destination and model. OpenAI requests
 use `store: false`. No request automatically retries or switches providers.
+
+ChatGPT plan usage draws from the connected account's existing allowance or
+credits, with eligibility and limits controlled by OpenAI. **Manage usage** opens
+ChatGPT's usage settings. Qumaa does not switch to API billing when a plan limit
+is reached. You can reconnect, switch saved accounts, refresh the model list,
+or sign out in Settings; connecting alone never enables reranking. The first
+plan-enabled connection shows a welcome notice. Saved AI results retain their
+connection mode and model without storing account identities in result snapshots.
+
+This uses OpenAI's supported [open-source Sign in with ChatGPT flow](https://developers.openai.com/siwc/token-sharing-open-source/sign-in),
+with OS-protected local credentials, PKCE and a temporary loopback callback.
+OpenAI's [eligibility guidance](https://developers.openai.com/cookbook/articles/sign-in-with-chatgpt)
+requires approval before offering this flow in paid or remotely hosted apps.
+The implementation targets this repository's open-source desktop distribution.
 
 Model IDs were verified against the [Anthropic model catalog](https://platform.claude.com/docs/en/models/overview)
 and [OpenAI model catalog](https://developers.openai.com/api/docs/models).
@@ -229,13 +261,16 @@ and [OpenAI model catalog](https://developers.openai.com/api/docs/models).
 | `npm run verify-model` | Verify the complete local model without using the network |
 | `npm test` | Unit tests + the ranking sanity suite |
 | `npm run smoke` | Integration check inside Electron: DB, embedder, real PDF/DOCX, search, PDF export, and wipe |
-| `npm run test:ui` | Playwright flow through the real Electron UI and hardened preload boundary |
+| `npm run test:ui` | Build, then run the Playwright workflows through the real Electron UI |
+| `npm run test:ui:built` | The same workflows against whatever is in `out/`, or a packaged app with `QUMAA_E2E_EXECUTABLE=<binary>` |
 | `npm run verify` | Unit, Electron smoke, and UI suites together |
 | `npm run seed` | Dev only: fill the library with the ten-person test corpus |
 | `npm run bench` | Capacity benchmark: ingest, duplicate scan, and search at 500/1500/3000 resumes |
+| `npm run eval` | Ranking quality against a labelled local corpus; see [the evaluation README](eval/README.md) |
 | `npm run eval:domains` | Frozen cross-profession quality checks in a disposable library; see [evaluation instructions](eval/cross-domain/README.md) |
 | `npm run build:mac` | Produce `release/Qumaa-<version>-arm64.dmg` (Apple Silicon) |
 | `npm run build:win` | Produce `release/Qumaa-<version>-Setup-x64.exe` (Windows 10/11 x64) |
+| `npm run package:dir:mac` / `package:dir:win` | Unpacked app folders for inspection or UI tests, without installers |
 
 Each successful `build:mac` or `build:win` removes superseded local installers for
 that platform. Cleanup can also be run with `node scripts/prune-releases.mjs mac`
@@ -288,8 +323,8 @@ whether to remove the folder, defaulting to keeping it.
 That step is not optional. `sharp` ships one binary package per platform, and npm
 refuses to install a package whose `os` field does not match the host, so a plain
 `npm install` on macOS never fetches the Windows one. Without it the build still
-succeeds and the app then dies on launch, because `transformers.node.cjs` requires
-sharp at module load. The script fails loudly rather than letting that ship.
+succeeds and the app then dies on launch (see [Packaging notes](#packaging-notes)
+for why sharp must ship). The script fails loudly rather than letting that ship.
 
 `better-sqlite3` and `onnxruntime-node` need no equivalent: each ships every
 platform's prebuilt binaries in a single package.
@@ -341,7 +376,7 @@ startup, any required reindex, and derived-data backfills to finish.
   version. When aliases or domains improve, stored resumes are re-extracted from
   their retained text before search opens, so existing libraries receive the
   same skill coverage as new imports.
-- **Optional AI rerank in Jobs.** Off unless you add an API key and enable it
+- **Optional AI rerank in Jobs.** Off unless you connect an API key or ChatGPT plan and enable it
   in Settings. The first use shows a plain-language data summary; **See exported
   data** reveals the exact request when needed. Approval is remembered, and
   every send requires native confirmation. It reorders the top 15 local results
@@ -390,15 +425,20 @@ booting an app.
 ## Layout
 
 ```
-src/main/ingest/    extract → normalize → sections → chunk → fields → pipeline
-                    plus duplicates.ts (near-duplicate scan)
-src/main/search/    scoring.ts (pure math) + rank.ts (orchestration) + rerank.ts
-src/main/embed/     utility-process client, worker, shared protocol, reindex
-src/main/export/    branded shortlist PDF
-src/main/db/        schema, migrations, vector (de)serialisation, queries
-src/main/recruiting/ saved jobs, candidate profiles, reviews, and version history
-src/renderer/       React UI (Jobs / Library / Settings)
-test/               vitest suites + Electron Playwright flows + PDF/DOCX fixtures
+src/main/ingest/      extract → normalize → sections → chunk → fields → pipeline,
+                      plus duplicates.ts (near-duplicate scan), watcher.ts, source-file.ts
+src/main/search/      scoring.ts (pure math), rank.ts (orchestration), sessions.ts,
+                      rerank*.ts (AI reranking: privacy, consent, settings, ordering)
+src/main/embed/       utility-process client, worker, shared protocol, reindex
+src/main/chatgpt/     Sign in with ChatGPT (OAuth in main, safeStorage tokens)
+src/main/export/      shortlist PDF and CSV, client presentation PDF, hiring-budget CSV
+src/main/db/          schema, migrations, stored-data limits, backup and restore
+src/main/recruiting/  companies, saved jobs, reviews, recruiter desk, pipelines, budgets
+src/main/smoke*.ts, seed.ts, bench.ts, eval*.ts   development-only entry points
+src/preload/          the contextBridge surface
+src/shared/           types, i18n and the Arabic catalogs, pure domain helpers
+src/renderer/         React UI: Jobs, Companies, Recruiter desk, Library, Settings
+test/                 vitest suites, Electron Playwright flows, PDF/DOCX fixtures
 ```
 
 ## Brand
@@ -439,23 +479,36 @@ operations in `src/preload/index.ts`; `ipcRenderer` is never exposed. A CSP
 restricts the page to its own origin, navigation away from the local page is
 blocked, and attempts to open additional windows are denied.
 
-With no API key configured the app opens no network sockets at runtime.
+Startup and ordinary local matching make no AI-provider network requests.
 `env.allowRemoteModels = false` stops transformers.js reaching the Hugging Face
 hub on a cache miss, and the model is vendored at build time. Matching itself is
 entirely local: no resume text is transmitted anywhere.
 
-The optional AI rerank is the only code path that leaves the machine, and it
-is inert until the user supplies a key and enables it. When it does run it sends
+Optional AI reranking stays inert until the user connects a credential and
+enables it. When it does run it sends
 the structured posting and the top 15 candidates' redacted evidence to the
-selected Anthropic or OpenAI API. New keys are stored separately through Electron's `safeStorage`; an older
+selected Anthropic or OpenAI service. ChatGPT sign-in, model discovery, token
+refresh and sign-out also contact OpenAI; these requests contain account
+credentials, not candidate evidence. API keys and ChatGPT tokens are stored
+separately through Electron's `safeStorage`; an older
 plaintext key cannot be used until the user protects or removes it.
+The renderer receives connection status only. API keys, ChatGPT tokens, account
+registrations and host identifiers are excluded from portable backups and
+removed by restore or full wipe. Sign-out also attempts to revoke the ChatGPT
+refresh token; if OpenAI cannot confirm revocation, Settings directs the user
+to their ChatGPT account controls. Late login or refresh work cannot restore
+credentials after a library replacement.
 
 ### Known advisories
 
-`npm audit` reports **4 high-severity CVEs in libvips**, reachable through
-`sharp`. They are image-decoding bugs, and there is no fixed release.
+`npm audit` on 19 October 2026 lists 23 advisories. The 2 critical and most of
+the 11 moderate ones sit in development tooling that never ships (vitest and its
+pool, electron-builder and its downloaders). Of the 10 high ones, the only
+runtime-reachable packages are **libvips** (through `sharp`) and `undici`;
+the libvips advisories are image-decoding bugs with no fixed release, and the
+`mammoth` entry is its unused command-line parser.
 
-They are not reachable in this app. `sharp` is present only because
+The libvips advisories are not reachable in this app. `sharp` is present only because
 `transformers.node.cjs` requires it at module load; no code path passes an image
 to it, and the app never decodes images at all. The one place sharp is genuinely
 called is `scripts/make-icon.mjs`, at build time, on an SVG string this repo
@@ -486,8 +539,10 @@ Both follow from the no-LLM constraint:
 2. **Matching finds similarity, not judgement.** It reliably surfaces resumes
    about the same kind of work as the posting. On its own it cannot infer
    seniority from accomplishments. That is what the optional AI rerank over
-   the top 15 is for, and it is the only feature that sends anything off the
-   machine.
+   the top 15 is for, and it is the only feature that sends candidate data off
+   the machine. ChatGPT sign-in, account switching, model and token refresh,
+   and sign-out send account credentials and a per-installation identifier,
+   never candidate data, and only as part of a user action.
 
 ## Packaging notes
 

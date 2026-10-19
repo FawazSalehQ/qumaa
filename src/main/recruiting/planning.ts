@@ -1,6 +1,6 @@
 /** Pure recruiter-workflow rules. Ranking weights and eligibility stay untouched. */
 import type { CandidateProfile, CandidateReview, CriterionEvidence, JobCriterion, JobPosting } from '@shared/recruiting.js'
-import type { Evidence, MatchResult, SectionKind } from '@shared/types.js'
+import type { MatchResult } from '@shared/types.js'
 import { scoreSemantics, type ScoredChunk } from '../search/scoring.js'
 import { splitRequirementClauses, stripRequirementBullet } from '@shared/job-requirements.js'
 
@@ -108,7 +108,6 @@ function normalize(value: string): string {
 function tokens(value: string): string[] {
   return [...new Set((normalize(value).match(/[\p{L}\p{N}+#]+(?:\.[\p{L}\p{N}]+)*/gu) ?? []).filter((word) => word.length > 1 && !STOP_WORDS.has(word)))]
 }
-export interface EvidencePassage { section: SectionKind; text: string }
 
 /** A bounded verbatim window with offsets measured in the original CV text. */
 export function passageExcerpt(text: string, query: string, maxChars = 1_500): string {
@@ -130,26 +129,6 @@ export function passageExcerpt(text: string, query: string, maxChars = 1_500): s
   return Buffer.from(text.slice(offset, end)).toString('utf8')
 }
 
-/** A lexical suggestion from actual CV text; lack of overlap says nothing about eligibility. */
-export function suggestCriterionEvidence(criteria: JobCriterion[], passages: EvidencePassage[]): Array<{ criterionId: string; passage: Evidence | null }> {
-  const prepared = passages.map((passage) => ({ ...passage, tokens: new Set(tokens(passage.text)) }))
-  return criteria.map((criterion) => {
-    const words = tokens(criterion.text)
-    let best: (typeof prepared)[number] | undefined
-    let overlap = 0
-    for (const passage of prepared) {
-      const count = words.filter((word) => passage.tokens.has(word)).length
-      if (count > overlap || (count > 0 && count === overlap && passage.section === 'experience' && best?.section !== 'experience')) {
-        overlap = count
-        best = passage
-      }
-    }
-    if (!best || overlap === 0 || words.length === 0) return { criterionId: criterion.id, passage: null }
-    // Bound repeated scorecard excerpts while retaining a verbatim window near
-    // a matching term. This is a suggestion, never an automatic assessment.
-    return { criterionId: criterion.id, passage: { section: best.section, text: passageExcerpt(best.text, criterion.text, 1_200), similarity: overlap / words.length } }
-  })
-}
 
 /**
  * Retrieve each requirement's nearest passage using the same section weighting

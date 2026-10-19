@@ -187,3 +187,30 @@ describe('portable CRM reference checks', () => {
     expect(() => assertTalentReferences(data, new Set(), new Set(), new Set([key(1)]))).toThrow('more than one contact')
   })
 })
+
+describe('saved-search review membership', () => {
+  const prospect = (value: number, fields: Partial<Person>): Person => ({ ...person(value), ...fields })
+  const savedSearch: TalentPool = { id: id(90), name: 'Platform engineers', note: '', mode: 'search', filters: { ...EMPTY_TALENT_FILTERS, skill: 'TypeScript' }, members: [{ personId: id(1), addedAt: 20 }], lastReviewedAt: 20, createdAt: 1, updatedAt: 20 }
+
+  it('flags an existing prospect who newly matches after an edit, without flagging routine edits to a reviewed match', () => {
+    const reviewed = prospect(1, { skills: ['TypeScript'], note: 'Updated recruiter note', updatedAt: 30 })
+    const changed = prospect(2, { skills: ['TypeScript'], updatedAt: 30 })
+    const noMatch = prospect(3, { updatedAt: 30 })
+    const matches = peopleInPool(savedSearch, [reviewed, changed, noMatch], [])
+    expect(matches).toEqual([reviewed, changed])
+    expect(newPoolPeople(savedSearch, matches)).toEqual([changed])
+  })
+
+  it('flags an older prospect who becomes eligible after linking a CV', () => {
+    const pool = { ...savedSearch, filters: { ...EMPTY_TALENT_FILTERS, hasCv: 'yes' as const }, members: [] }
+    const before = prospect(4, {})
+    expect(peopleInPool(pool, [before], [])).toEqual([])
+    const after = { ...before, recordKeys: [key(1)], updatedAt: 30 }
+    expect(newPoolPeople(pool, peopleInPool(pool, [after], []))).toEqual([after])
+  })
+
+  it('clears new matches once the search is reviewed', () => {
+    const candidate = prospect(2, { skills: ['TypeScript'] })
+    expect(newPoolPeople({ ...savedSearch, members: [...savedSearch.members, { personId: candidate.id, addedAt: 30 }], lastReviewedAt: 30 }, [candidate])).toEqual([])
+  })
+})

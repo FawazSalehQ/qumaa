@@ -10,7 +10,7 @@
  * one vector per resume instead of every chunk keeps the scan cheap at the
  * library sizes this app targets.
  */
-import { blobToVector, getDb } from '../db/index.js'
+import { blobToVector, getDb, vectorToBlob } from '../db/index.js'
 import { EMBEDDING_DIM } from '../embed/protocol.js'
 
 /** A matching email or phone is strong evidence, but still needs the documents
@@ -253,7 +253,7 @@ export function backfillDocumentVectors(): number {
       const rows = chunksFor.all(id) as Array<{ embedding: Buffer }>
       if (rows.length === 0) continue
       const mean = documentVector(rows.map((r) => blobToVector(r.embedding)))
-      update.run(Buffer.from(mean.buffer, mean.byteOffset, mean.byteLength), id)
+      update.run(vectorToBlob(mean), id)
     }
   })()
 

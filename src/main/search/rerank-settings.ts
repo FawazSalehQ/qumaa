@@ -2,6 +2,9 @@ import {
   DEFAULT_RERANK_CONFIG,
   DEFAULT_RERANK_MODELS,
   RERANK_MODELS,
+  RERANK_CONSENT_VERSION,
+  isChatGptConfig,
+  isChatGptModelId,
   isRerankConfig,
   rerankConsentKey,
   type RerankConfig,
@@ -10,9 +13,12 @@ import {
 } from '../../shared/rerank.js'
 import { getDb, getSetting, setSetting } from '../db/index.js'
 import { hasApiKey } from '../secrets.js'
+import { getChatGptStatus, getChatGptCredentialRevision } from '../chatgpt/index.js'
 
 export const RERANK_ENABLED_KEY = 'rerankEnabled'
 const PROVIDER_KEY = 'rerankProvider'
+const AUTH_MODE_KEY = 'rerankAuthMode:openai'
+const CHATGPT_MODEL_KEY = 'rerankModel:chatgpt'
 const modelKey = (provider: RerankProvider): string => `rerankModel:${provider}`
 
 /** Validate stored choices as well as IPC input; old installs default to Anthropic. */
@@ -31,7 +37,32 @@ export function getRerankConfig(): RerankConfig {
   const provider = stored === 'anthropic' || stored === 'openai'
     ? stored
     : DEFAULT_RERANK_CONFIG.provider
+  if (provider === 'openai' && getSetting(AUTH_MODE_KEY) === 'chatgpt') {
+    return { provider, model: getChatGptModel(), authMode: 'chatgpt' }
+  }
   return { provider, model: getRerankModels()[provider] }
+}
+
+export function getChatGptModel(): string {
+  const stored = getSetting(CHATGPT_MODEL_KEY)
+  const models = getChatGptStatus().models
+  if (stored && isChatGptModelId(stored) && (!models.length || models.some((model) => model.id === stored))) return stored
+  return models[0]?.id ?? ''
+}
+
+/** Checks public metadata only; opening Settings must never unlock the keychain. */
+export function hasRerankCredential(config: RerankConfig): boolean {
+  if (!isChatGptConfig(config)) return hasApiKey(config.provider)
+  const status = getChatGptStatus()
+  return status.accounts.some((account) => account.id === status.activeAccountId && account.connected && account.planUsageEnabled) &&
+    status.models.some((model) => model.id === config.model)
+}
+
+/** Plan approval belongs to a logical account connection, not a rotating token. */
+export function rerankConsentValue(config: RerankConfig): string {
+  return isChatGptConfig(config)
+    ? `${RERANK_CONSENT_VERSION}:${getChatGptCredentialRevision()}`
+    : RERANK_CONSENT_VERSION
 }
 
 /** Write the provider and its remembered model together, never mismatched pairs. */
@@ -39,9 +70,10 @@ export function setRerankConfig(config: RerankConfig): void {
   if (!isRerankConfig(config)) throw new Error('Choose a supported model for this AI provider.')
   getDb().transaction(() => {
     setSetting(PROVIDER_KEY, config.provider)
-    setSetting(modelKey(config.provider), config.model)
+    if (config.provider === 'openai') setSetting(AUTH_MODE_KEY, config.authMode ?? 'api-key')
+    setSetting(isChatGptConfig(config) ? CHATGPT_MODEL_KEY : modelKey(config.provider), config.model)
     // A saved preference or key never turns network access on automatically.
-    if (!hasApiKey(config.provider)) setSetting(RERANK_ENABLED_KEY, 'false')
+    if (!hasRerankCredential(config)) setSetting(RERANK_ENABLED_KEY, 'false')
   })()
 }
 

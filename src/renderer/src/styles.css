@@ -1,49 +1,84 @@
 /*
- * Qumaa identity. Colour and type values come from brand/tokens.json and
- * brand/BRAND.md; do not hand-tune them here. `paper` is the surface tone,
- * `ink` carries headings, and `violet` is reserved for accents and rules.
+ * Qumaa interface: Wayfinding.
+ *
+ * The visual world is Riyadh's bilingual transit wayfinding, and it lends
+ * exactly four things: type (IBM Plex at signage weights, Plex Mono for the
+ * numerals), palette (a graphite chrome derived from brand ink, paper and white
+ * grounds in light, a tonal graphite ladder in dark, and line colours that do
+ * real jobs), density (a station board: generous rows, strong separation) and
+ * one signature move (line badges on jobs, clients, stages and states, with the
+ * hiring funnel drawn as a line of stops). Navigation, layout and controls stay
+ * the standard web ones.
+ *
+ * Brand values come from brand/tokens.json and brand/BRAND.md; do not hand-tune
+ * them. Role tokens below are the only thing a theme redefines.
  */
 :root {
   color-scheme: light;
+
   /* Brand tokens, verbatim */
   --ink: #2b2733;
   --ink-soft: #3d3949;
   --violet: #6d3fb0;
+  --violet-300: #8f5fd6;
+  --violet-200: #c0a3ea;
   --violet-100: #d3bef1;
   --paper: #f4f1f8;
 
-  /* Applied roles.
-     Ink-forward, per BRAND.md: violet is for accents and rules, not fields.
-     Surfaces are white and separation comes from hairlines rather than from a
-     tinted background or elevation, which is what keeps a dense table legible. */
-  --bg: #ffffff;
-  --bg-chrome: #ffffff;
+  /* Grounds. Paper is the page, white is the panel; the chrome is ink in both
+     themes, which is what gives the light theme its identity. */
+  --bg: var(--paper);
+  --bg-panel: #ffffff;
   --bg-raised: #ffffff;
   --bg-input: #ffffff;
-  /* `paper` earns its keep here instead: header strips, hover, zebra. */
-  --bg-hover: var(--paper);
-  --bg-strip: #faf9fc;
+  --bg-hover: #efebf5;
+  --bg-strip: #f9f7fc;
+  --bg-sunken: #ebe7f1;
+  --chrome: #1f1b27;
+  --chrome-text: #f7f4fb;
+  --chrome-dim: #b9b1c9;
+  --chrome-hover: #2b2635;
+  --chrome-line: #3b3447;
+  --accent-chrome: #a982e0;
 
-  /* Hairlines carry all the structure, so they must read at 1px. */
-  --border: #e2dfe8;
-  --border-strong: #c8c3d4;
+  --border: #e0dbe9;
+  --border-strong: #c5bdd3;
 
   --text: var(--ink);
-  --text-dim: var(--ink-soft);
-  --text-faint: #7d7789;
+  --text-dim: #59526a;
+  --text-faint: #716a81;
 
   --accent: var(--violet);
   --accent-hover: #5a3395;
   --accent-soft: #efe9f8;
   --accent-border: var(--violet-100);
+  --accent-ink: #ffffff;
 
-  --good: #1f7a54;
-  --good-soft: #e7f4ee;
-  --good-border: #a4d8c1;
+  /* Line colours. Identity lines (clients and their jobs) draw from violet,
+     blue, teal and orange; states draw from green, amber, red and blue. Every
+     value here reads at 4.5:1 as text on the panel ground. */
+  --line-violet: #6d3fb0;
+  --line-blue: #1d6fd1;
+  --line-teal: #0f8b8d;
+  --line-orange: #c84d1c;
+  --line-green: #1a7f52;
+  --line-amber: #9a6207;
+  --line-red: #c0392b;
+  --line-neutral: #716a81;
+  --badge-ink: #ffffff;
 
-  --bad: #b3403f;
+  --good: var(--line-green);
+  --good-soft: #e4f3ea;
+  --good-border: #a7d8bf;
+  --bad: var(--line-red);
+  --bad-soft: #f9e6e4;
 
-  /* Type */
+  --shadow-panel: 0 24px 56px -16px rgba(31, 27, 39, 0.38), 0 2px 8px -2px rgba(31, 27, 39, 0.18);
+  --shadow-pop: 0 14px 36px -10px rgba(31, 27, 39, 0.3), 0 1px 3px rgba(31, 27, 39, 0.1);
+  --scrim: rgba(23, 19, 31, 0.42);
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
   --font-latin: 'IBM Plex Sans Variable', 'IBM Plex Sans', system-ui, sans-serif;
   --font-arabic: 'IBM Plex Sans Arabic', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
@@ -54,6 +89,7 @@
   --fs-base: 14px;
   --fs-lg: 16px;
   --fs-xl: 20px;
+  --fs-2xl: 24px;
 
   --s1: 4px;
   --s2: 8px;
@@ -62,68 +98,70 @@
   --s5: 24px;
   --s6: 32px;
 
-  /* Two values only. The brand tile keeps its 22% curve; UI surfaces stay
-     nearly square, which is what separates an instrument from a consumer app. */
-  --radius: 4px;
-  --radius-sm: 3px;
+  --control-h: 34px;
+  --control-h-sm: 28px;
 
-  /* The detail panel is the only elevated surface. */
-  --shadow-panel: -14px 0 44px rgba(43, 39, 51, 0.18);
+  --radius-sm: 5px;
+  --radius: 8px;
+  --radius-lg: 10px;
+  --radius-badge: 6px;
+  --radius-pill: 999px;
+
+  --panel-entry: 24px;
 }
 
 /*
- * Dark theme. Not an invention: the brand kit ships lockup-rtl-dark and a
- * mark-white variant, so ink-as-surface is a sanctioned context. Only the role
- * tokens are redefined; the brand values above stay fixed.
+ * Dark theme. The brand kit ships a white mark and a dark lockup, so ink as a
+ * surface is sanctioned. Only role tokens change.
  */
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --bg: #1c1922;
-  --bg-chrome: #1c1922;
-  --bg-raised: #1c1922;
-  --bg-input: #232029;
-  --bg-hover: #262230;
-  --bg-strip: #232029;
+  --bg: #181620;
+  --bg-panel: #1f1c28;
+  --bg-raised: #262231;
+  --bg-input: #1c1925;
+  --bg-hover: #2a2636;
+  --bg-strip: #1c1925;
+  --bg-sunken: #131118;
+  --chrome: #110f16;
+  --chrome-text: #f7f4fb;
+  --chrome-dim: #a79fb8;
+  --chrome-hover: #1d1a25;
+  --chrome-line: #2a2634;
 
-  --border: #35303f;
-  --border-strong: #4a4356;
+  --border: #2f2a3a;
+  --border-strong: #443d52;
 
   --text: #f1eef6;
-  --text-dim: #b7b0c4;
-  --text-faint: #8d8699;
+  --text-dim: #b9b2c6;
+  --text-faint: #948ca5;
 
-  /* The base violet is too dark to read on ink, so accents move up the ramp to
-     violet-300, which is the same hue at a usable lightness. */
   --accent: #a982e0;
   --accent-hover: #c0a3ea;
-  --accent-soft: #352c46;
-  --accent-border: #574569;
+  --accent-soft: #302944;
+  --accent-border: #54466a;
+  --accent-ink: #161320;
 
-  --good: #6cc79b;
-  --good-soft: #24382f;
-  --good-border: #3c6b53;
+  --line-violet: #a982e0;
+  --line-blue: #6ea8f5;
+  --line-teal: #4fc1c3;
+  --line-orange: #f28b5f;
+  --line-green: #5ec993;
+  --line-amber: #e6b94a;
+  --line-red: #ef7b73;
+  --line-neutral: #948ca5;
+  --badge-ink: #161320;
 
-  --bad: #e08585;
-  --shadow-panel: -14px 0 44px rgba(0, 0, 0, 0.5);
+  --good-soft: #1f3328;
+  --good-border: #35604a;
+  --bad-soft: #3b2426;
+
+  --shadow-panel: 0 24px 56px -16px rgba(0, 0, 0, 0.7), 0 2px 8px -2px rgba(0, 0, 0, 0.4);
+  --shadow-pop: 0 14px 36px -10px rgba(0, 0, 0, 0.6), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --scrim: rgba(0, 0, 0, 0.55);
 }
 
-/* The wordmark is ink-coloured by default, which vanishes on a dark surface. */
-:root[data-theme='dark'] .brand-name {
-  color: var(--text);
-}
-
-/* Brand rule: the ink tile is for light surfaces, the white mark for dark. */
-.brand-mark-dark {
-  display: none;
-}
-
-:root[data-theme='dark'] .brand-mark-light {
-  display: none;
-}
-
-:root[data-theme='dark'] .brand-mark-dark {
-  display: inline-flex;
-}
+/* ---------- base ---------- */
 
 * {
   box-sizing: border-box;
@@ -156,17 +194,49 @@ body {
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
+  caret-color: var(--accent);
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+/* The parts nobody draws still carry the design. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-faint);
 }
 
 button {
   font: inherit;
   cursor: pointer;
+  color: inherit;
 }
 
-/* One on-brand focus ring everywhere, replacing the OS default. */
+a {
+  color: var(--accent);
+  text-underline-offset: 3px;
+}
+
 :focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
 
@@ -177,6 +247,107 @@ button {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ---------- shared vocabulary: line badges and state pills ---------- */
+
+/* The signature move. A rounded-square badge in a line colour carries an
+   identity (a job's or client's initials) or a stop number; a pill carries a
+   state. Both exist in exactly one shape each, everywhere. */
+.lb {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: var(--radius-badge);
+  background: var(--tone, var(--line-neutral));
+  color: var(--badge-ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  flex: none;
+  white-space: nowrap;
+}
+
+.lb.sm {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 5px;
+  font-size: 10px;
+}
+
+.lb.lg {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 7px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.lb svg {
+  width: 12px;
+  height: 12px;
+}
+
+.lb.violet { --tone: var(--line-violet); }
+.lb.blue { --tone: var(--line-blue); }
+.lb.teal { --tone: var(--line-teal); }
+.lb.orange { --tone: var(--line-orange); }
+.lb.green { --tone: var(--line-green); }
+.lb.amber { --tone: var(--line-amber); }
+.lb.red { --tone: var(--line-red); }
+.lb.neutral { --tone: var(--line-neutral); }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 22px;
+  padding: 0 9px;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--tone, var(--text-dim));
+  background: color-mix(in srgb, var(--tone, var(--text-faint)) 13%, transparent);
+}
+
+.pill::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--tone, var(--text-faint));
+  flex: none;
+}
+
+.pill.violet { --tone: var(--line-violet); }
+.pill.blue { --tone: var(--line-blue); }
+.pill.teal { --tone: var(--line-teal); }
+.pill.orange { --tone: var(--line-orange); }
+.pill.green { --tone: var(--line-green); }
+.pill.amber { --tone: var(--line-amber); }
+.pill.red { --tone: var(--line-red); }
+.pill.neutral { --tone: var(--line-neutral); }
+
+/* Field labels: the small tracked mono label the brand specifies. */
+.recruit-eyebrow,
+.company-eyebrow,
+.talent-eyebrow {
+  display: block;
+  margin: 0 0 var(--s1);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--text-faint);
 }
 
 /* ---------- shell ---------- */
@@ -191,19 +362,20 @@ button {
 .topbar {
   flex: 0 0 auto;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: var(--s5);
   padding: 0 var(--s5);
-  background: var(--bg-chrome);
-  border-bottom: 1px solid var(--border);
-  min-height: 64px;
+  min-height: 56px;
+  background: var(--chrome);
+  color: var(--chrome-text);
+  border-bottom: 1px solid var(--chrome-line);
 }
 
-/* macOS hides its title bar, so the header itself drags the window. Interactive
-   children opt back out below. */
+/* macOS hides its title bar, so the header drags the window. Interactive
+   children opt back out. The traffic lights are always at the physical left. */
 .topbar.draggable {
   -webkit-app-region: drag;
-  /* native controls */ padding-left: 84px; /* clear the traffic lights */
+  padding-left: 84px;
 }
 
 .topbar.draggable button,
@@ -211,89 +383,123 @@ button {
   -webkit-app-region: no-drag;
 }
 
-/* Arabic lockup: dir="rtl" on the element puts the mark to the RIGHT of the
-   wordmark, which the brand rules require. */
+.topbar :focus-visible {
+  outline-color: var(--accent-chrome);
+}
+
 .brand {
   display: flex;
   align-items: center;
   gap: var(--s2);
-  padding: var(--s3) 0;
+  align-self: center;
 }
 
 .qumaa-appicon {
   display: block;
-  border-radius: 22%; /* brand: icon corner radius is 22% of size */
+  border-radius: 22%;
   flex: 0 0 auto;
 }
 
+/* The chrome is ink in both themes, so the white mark is the only mark. */
+.brand-mark-light {
+  display: none;
+}
+
+.brand-mark-dark {
+  display: inline-flex;
+}
+
 .brand-name {
-  /* Plex Sans has no Arabic glyphs, so the wordmark needs the Arabic family
-     explicitly. Sized up because Arabic reads smaller at equal point size, and
-     letter-spacing stays 0 because spacing out a connected script breaks it. */
   font-family: var(--font-arabic);
   font-size: var(--fs-xl);
   font-weight: 600;
   letter-spacing: 0;
   line-height: 1;
-  color: var(--ink);
+  color: var(--chrome-text);
   white-space: nowrap;
 }
 
 .tabs {
   display: flex;
-  gap: var(--s1);
+  gap: 2px;
   align-self: stretch;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
   background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--text-dim);
+  border: 0;
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  padding: 0 var(--s4);
+  color: var(--chrome-dim);
   font-weight: 500;
-  padding: var(--s4);
-  transition: color 0.12s, background 0.12s;
+  font-size: var(--fs-base);
+  border-radius: 0;
+  transition: color 0.12s ease, background 0.12s ease;
 }
 
-.tab:hover {
-  color: var(--text);
-  background: var(--bg-strip);
+@media (hover: hover) {
+  .tab:hover:not(:disabled) {
+    color: var(--chrome-text);
+    background: var(--chrome-hover);
+  }
 }
 
 .tab.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
+  color: var(--chrome-text);
+  border-bottom-color: var(--accent-chrome);
   font-weight: 600;
 }
 
+.tab:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .tab .count {
-  color: var(--text-faint);
-  margin-inline-start: var(--s1);
-  font-variant-numeric: tabular-nums;
-  font-weight: 500;
-  display: inline-block;
+  display: inline-grid;
+  place-items: center;
   min-width: 22px;
-  padding: 1px 5px;
-  border-radius: var(--radius-sm);
-  background: var(--bg-hover);
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-badge);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--chrome-text);
+  font-family: var(--font-mono);
   font-size: var(--fs-xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.tab.active .count {
+  background: var(--accent-chrome);
+  color: var(--chrome);
 }
 
 .view {
   flex: 1 1 auto;
   overflow-y: auto;
   scrollbar-gutter: stable;
-  padding: var(--s6) clamp(20px, 3vw, 44px) 48px;
+  padding: var(--s5) clamp(20px, 2.5vw, 36px) 48px;
   min-height: 0;
 }
 
 .view-head {
-  margin-bottom: var(--s5);
+  margin-bottom: var(--s4);
+}
+
+.view-head h2 {
+  margin-bottom: 2px;
 }
 
 .view-head .sub {
   max-width: 76ch;
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
 /* ---------- generic ---------- */
@@ -303,21 +509,31 @@ button {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 38px;
-  background: var(--bg-chrome);
+  min-height: var(--control-h);
+  padding: 0 14px;
+  background: var(--bg-raised);
   border: 1px solid var(--border-strong);
   color: var(--text);
   font-weight: 500;
-  padding: var(--s2) 15px;
+  font-size: var(--fs-md);
   border-radius: var(--radius-sm);
   white-space: nowrap;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease, transform 0.16s var(--ease-out);
 }
 
-.btn:hover:not(:disabled) {
-  background: var(--bg-hover);
-  border-color: var(--accent);
-  color: var(--accent);
+.btn svg {
+  flex: none;
+}
+
+@media (hover: hover) {
+  .btn:hover:not(:disabled) {
+    background: var(--bg-hover);
+    border-color: var(--text-faint);
+  }
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .btn:disabled {
@@ -328,48 +544,262 @@ button {
 .btn.primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #ffffff;
+  color: var(--accent-ink);
   font-weight: 600;
 }
 
-.btn.primary:hover:not(:disabled) {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
-  color: #ffffff;
-}
+@media (hover: hover) {
+  .btn.primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: var(--accent-ink);
+  }
 
-:where(:root[data-theme='dark']) .btn.primary,
-:where(:root[data-theme='dark']) .btn.primary:hover:not(:disabled) {
-  color: var(--ink);
-}
-
-.btn.danger:hover:not(:disabled) {
-  border-color: var(--bad);
-  color: var(--bad);
+  .btn.danger:hover:not(:disabled) {
+    border-color: var(--bad);
+    color: var(--bad);
+    background: var(--bad-soft);
+  }
 }
 
 .btn.sm {
-  padding: var(--s1) 10px;
+  min-height: var(--control-h-sm);
+  padding: 0 10px;
   font-size: var(--fs-sm);
-  min-height: 30px;
 }
 
 .icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
   background: none;
-  border: none;
+  border: 0;
   color: var(--text-faint);
-  font-size: var(--fs-xl);
-  line-height: 1;
-  padding: var(--s1) var(--s2);
   border-radius: var(--radius-sm);
   align-self: flex-start;
-  min-width: 30px;
-  min-height: 30px;
+  flex: none;
+  transition: background 0.12s ease, color 0.12s ease, transform 0.16s var(--ease-out);
 }
 
-.icon-btn:hover {
-  background: var(--bg-hover);
-  color: var(--text);
+@media (hover: hover) {
+  .icon-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text);
+  }
+}
+
+.icon-btn:active {
+  transform: scale(0.94);
+}
+
+/* ---------- disclosures: stops on the line ---------- */
+
+/* A <details> is a stop on the line. Closed, the summary is a quiet row: a
+   14px chevron marker pointing along the reading direction and a 500 label in
+   Text Dim. Open, the chevron turns to the body and takes the accent, the
+   label steps to full ink, and the body hangs from a 1px Border Strong rail
+   under the chevron, like a quoted passage. The browser triangle never shows.
+
+   Markup (DisclosureSummary.tsx renders the head; body children need no wrapper):
+     <details class="disclosure [inline|entry] <site-class>">
+       <summary><svg class="disclosure-chevron"/><span class="disclosure-label">…</span></summary>
+       …
+     </details>
+   Base: a full-width row at control height. inline: a fit-content row at
+   small-control height for a bar, a notice or a field. entry: a list entry
+   that is itself a card. --disclosure-inset is the hover-wash overhang.
+   ::details-content and interpolate-size need Chromium 131+; Electron 43
+   ships 150. */
+
+.disclosure {
+  --disclosure-inset: 8px;
+  --disclosure-turn: -90deg;
+  min-inline-size: 0;
+  interpolate-size: allow-keywords;
+}
+
+:root[dir='rtl'] .disclosure {
+  --disclosure-turn: 90deg;
+}
+
+/* Keyword interpolation stays on the fold itself; a body descendant that later
+   transitions to an auto size must not animate it. */
+.disclosure > :not(summary) {
+  interpolate-size: numeric;
+}
+
+.disclosure > summary:first-of-type {
+  --disclosure-ink: var(--text-dim);
+  --disclosure-mark: var(--text-faint);
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  min-block-size: var(--control-h);
+  margin-inline: calc(-1 * var(--disclosure-inset));
+  padding: 4px var(--disclosure-inset);
+  border-radius: var(--radius-sm);
+  list-style: none;
+  color: var(--disclosure-ink);
+  font-size: var(--fs-md);
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.disclosure > summary:first-of-type::marker {
+  content: '';
+}
+
+/* ChevronDownIcon is symmetric and never carries directional-icon, whose
+   scaleX(-1) would fight the turn. */
+.disclosure-chevron {
+  flex: none;
+  inline-size: 14px;
+  block-size: 14px;
+  color: var(--disclosure-mark);
+  transform: rotate(var(--disclosure-turn));
+  transition: transform 0.2s var(--ease-out), color 0.12s ease;
+}
+
+.disclosure-label {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  transition: transform 0.16s var(--ease-out);
+}
+
+.disclosure[open] > summary:first-of-type {
+  --disclosure-ink: var(--text);
+  --disclosure-mark: var(--accent);
+}
+
+.disclosure[open] > summary:first-of-type > .disclosure-chevron {
+  transform: rotate(0deg);
+}
+
+@media (hover: hover) {
+  .disclosure > summary:first-of-type:hover {
+    --disclosure-ink: var(--text);
+    --disclosure-mark: var(--text);
+    background: var(--bg-hover);
+  }
+
+  .disclosure[open] > summary:first-of-type:hover {
+    --disclosure-mark: var(--accent);
+  }
+}
+
+/* The label presses, not the row: a full-width row at 0.97 would pull its far
+   edge in by 20px or more. */
+.disclosure > summary:first-of-type:active > .disclosure-label {
+  transform: scale(0.97);
+}
+
+/* The body. Content-box so block-size: 0 closes it; the paddings and a short
+   fade animate with the size, and content-visibility transitions discretely so
+   the content stays painted to the last frame of the close. Nothing here keys
+   on details[open], which is removed as the close begins. The rail sits at
+   7px, under the centre of the 14px chevron; text starts at 22px, level with
+   the label. The 4px end paddings keep input halos and checkbox focus rings
+   inside the clip and stop the last child's margin collapsing through the box. */
+.disclosure::details-content {
+  box-sizing: content-box;
+  block-size: 0;
+  overflow: clip;
+  margin-inline-start: 7px;
+  border-inline-start: 1px solid var(--border-strong);
+  padding-block: 0;
+  padding-inline: 14px 4px;
+  opacity: 0;
+  transition:
+    block-size 0.2s var(--ease-out),
+    padding-block 0.2s var(--ease-out),
+    opacity 0.16s ease,
+    content-visibility 0.2s allow-discrete;
+}
+
+.disclosure[open]::details-content {
+  block-size: auto;
+  padding-block: 12px 4px;
+  opacity: 1;
+}
+
+/* The rail box's padding is the body's gap: the first and last children drop
+   their outer margins, whatever a site stylesheet gives them. */
+.disclosure > summary:first-of-type + * {
+  margin-block-start: 0;
+}
+
+.disclosure > :not(summary):last-child {
+  margin-block-end: 0;
+}
+
+/* inline: a fit-content row inside a facts bar, a status bar, a notice or
+   under a field. */
+.disclosure.inline > summary:first-of-type {
+  inline-size: fit-content;
+  max-inline-size: calc(100% + 2 * var(--disclosure-inset));
+  min-block-size: var(--control-h-sm);
+  padding-block: 2px;
+  font-size: var(--fs-sm);
+}
+
+.disclosure.inline[open]::details-content {
+  padding-block: 8px 4px;
+}
+
+/* entry: a list entry that is itself the card. The host card keeps its border,
+   radius, ground and margin; the details drops the card padding so the head
+   fills the closed card, the wash runs edge to edge and a hairline parts head
+   from body when open. The label is a name: full ink, and copyable. */
+.disclosure.entry {
+  --disclosure-inset: 13px;
+  padding: 0;
+}
+
+.disclosure.entry > summary:first-of-type {
+  --disclosure-ink: var(--text);
+  margin-inline: 0;
+  padding: var(--disclosure-inset);
+  border-block-end: 1px solid transparent;
+  border-radius: calc(var(--radius) - 1px);
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.disclosure.entry[open] > summary:first-of-type {
+  border-block-end-color: var(--border);
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.disclosure.entry .disclosure-label {
+  user-select: text;
+}
+
+.disclosure.entry::details-content {
+  margin-inline: calc(var(--disclosure-inset) + 7px) 0;
+  padding-inline: 14px var(--disclosure-inset);
+}
+
+.disclosure.entry[open]::details-content {
+  padding-block: 12px var(--disclosure-inset);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The global shortcut above matches elements and ::before/::after, never
+     ::details-content, so the fold is collapsed here explicitly. */
+  .disclosure > summary:first-of-type,
+  .disclosure-chevron,
+  .disclosure-label,
+  .disclosure::details-content {
+    transition: none;
+  }
+
+  .disclosure > summary:first-of-type:active > .disclosure-label {
+    transform: none;
+  }
 }
 
 .row {
@@ -394,10 +824,11 @@ button {
 }
 
 h2 {
-  font-size: var(--fs-xl);
+  font-size: var(--fs-2xl);
   margin: 0 0 var(--s1);
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: -0.015em;
+  line-height: 1.2;
 }
 
 h3 {
@@ -405,6 +836,13 @@ h3 {
   margin: 0 0 var(--s2);
   font-weight: 600;
   letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+h4 {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  margin: 0 0 var(--s2);
 }
 
 .sub {
@@ -417,10 +855,20 @@ h3 {
   color: var(--text-faint);
   font-size: var(--fs-sm);
   margin: var(--s2) 0 0;
+  line-height: 1.55;
+}
+
+.muted {
+  color: var(--text-faint);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  text-align: end;
 }
 
 .card {
-  background: var(--bg-raised);
+  background: var(--bg-panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: var(--s4);
@@ -429,8 +877,8 @@ h3 {
 .empty {
   text-align: center;
   padding: 56px var(--s5);
-  background: var(--bg-raised);
-  border: 1px dashed var(--border-strong);
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   line-height: 1.6;
 }
@@ -465,56 +913,90 @@ h3 {
   flex-wrap: wrap;
 }
 
+code {
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  word-break: break-all;
+  font-family: var(--font-mono);
+}
+
+:root[data-theme='dark'] code {
+  color: var(--accent);
+}
+
+/* ---------- controls ---------- */
+
+input:not([type='checkbox']):not([type='radio']):not([type='range']),
+select,
 textarea {
-  width: 100%;
-  background: var(--bg-input);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
-  color: var(--text);
-  padding: var(--s3) var(--s4);
-  font: inherit;
-  resize: vertical;
-  min-height: 80px;
-  line-height: 1.6;
-  transition: border-color 0.12s;
-}
-
-textarea:focus {
-  border-color: var(--accent);
-}
-
-textarea::placeholder,
-input[type='text']::placeholder,
-input[type='password']::placeholder {
-  color: var(--text-faint);
-}
-
-input[type='text'],
-input[type='password'],
-select {
   background: var(--bg-input);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   color: var(--text);
-  padding: var(--s2) var(--s3);
+  padding: 0 10px;
   font: inherit;
-  min-height: 38px;
+  font-size: var(--fs-md);
+  min-height: var(--control-h);
   min-width: 0;
   max-width: 100%;
-  transition: border-color 0.12s;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
 
-input[type='text']:focus,
-input[type='password']:focus,
-select:focus {
+textarea {
+  width: 100%;
+  padding: 9px 10px;
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.6;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-faint);
+  opacity: 1;
+}
+
+input:not([type='checkbox']):not([type='radio']):focus,
+select:focus,
+textarea:focus {
+  outline: none;
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 input:disabled,
 textarea:disabled,
 select:disabled {
-  opacity: 0.65;
+  opacity: 0.6;
   cursor: not-allowed;
+}
+
+select {
+  appearance: none;
+  padding-inline-end: 30px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238a8398' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+}
+
+:root[dir='rtl'] select {
+  background-position: left 10px center;
+}
+
+input[type='checkbox'] {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  margin: 0;
+}
+
+input[type='search']::-webkit-search-cancel-button {
+  cursor: pointer;
 }
 
 /* ---------- drop overlay ---------- */
@@ -523,7 +1005,7 @@ select:disabled {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: color-mix(in srgb, var(--bg) 94%, transparent);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
   border: 2px dashed var(--accent);
   display: flex;
   align-items: center;
@@ -559,7 +1041,8 @@ select:disabled {
 .progress .bar > div {
   height: 100%;
   background: var(--accent);
-  transition: width 0.15s;
+  border-radius: 3px;
+  transition: width 0.15s ease;
 }
 
 /* ---------- chips ---------- */
@@ -574,47 +1057,57 @@ select:disabled {
 .chip {
   font-size: var(--fs-xs);
   font-weight: 500;
-  padding: 3px 10px;
-  border-radius: 20px;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
   background: var(--accent-soft);
-  border: 1px solid var(--accent-border);
   color: var(--accent-hover);
   white-space: nowrap;
 }
 
+:root[data-theme='dark'] .chip {
+  color: var(--accent);
+}
+
 .chip.matched {
   background: var(--good-soft);
-  border-color: var(--good-border);
   color: var(--good);
 }
 
 .chip.missing {
   background: transparent;
-  border-color: var(--border-strong);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
   color: var(--text-faint);
   text-decoration: line-through;
 }
 
-/* ---------- score ring ---------- */
+/* ---------- score ---------- */
 
-.score-ring {
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  position: relative;
+.detail-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--accent);
+  flex: none;
 }
 
-.score-ring svg {
-  transform: rotate(-90deg);
+.detail-score strong {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
-.score-ring .val {
-  position: absolute;
-  font-weight: 700;
-  color: var(--accent-hover);
+.detail-score span {
+  font-size: 10px;
+  margin-top: 3px;
+  color: var(--text-dim);
 }
-
-/* ---------- score bars ---------- */
 
 .score-bars {
   display: flex;
@@ -625,7 +1118,7 @@ select:disabled {
 
 .score-bar {
   display: grid;
-  grid-template-columns: 72px 1fr 32px;
+  grid-template-columns: 96px 1fr 32px;
   align-items: center;
   gap: var(--s3);
 }
@@ -636,9 +1129,9 @@ select:disabled {
 }
 
 .score-bar-track {
-  height: 8px;
-  border-radius: 4px;
-  background: var(--accent-soft);
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-sunken);
   overflow: hidden;
 }
 
@@ -646,7 +1139,7 @@ select:disabled {
   display: block;
   height: 100%;
   background: var(--accent);
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 .score-bar-value {
@@ -661,26 +1154,29 @@ select:disabled {
   margin: 0;
   color: var(--text-dim);
   font-size: var(--fs-md);
+  line-height: 1.6;
 }
 
 /* ---------- evidence ---------- */
 
 .evidence {
-  border-inline-start: 3px solid var(--accent-border);
-  padding-block: var(--s1);
-  padding-inline: var(--s3) 0;
   margin: 0 0 var(--s2);
+  padding: var(--s3) var(--s3);
+  border-radius: var(--radius-sm);
+  background: var(--bg-strip);
+  border: 1px solid var(--border);
   color: var(--text-dim);
   font-size: var(--fs-md);
+  line-height: 1.6;
 }
 
 .evidence .tag {
   color: var(--text-faint);
   font-size: 10.5px;
-  font-weight: 600;
+  font-weight: 500;
   text-transform: uppercase;
   display: block;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
   font-family: var(--font-mono);
   letter-spacing: 0.24em;
 }
@@ -692,34 +1188,32 @@ select:disabled {
 /* ---------- tables ---------- */
 
 /* `border-collapse: separate` and no `overflow: hidden`: clipping the table
-   would break the sticky header, and collapsed borders do not paint on sticky
-   cells. Corners are rounded per-cell instead. */
+   breaks the sticky header, and collapsed borders do not paint on sticky
+   cells. Corners are rounded per cell instead. */
 table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   font-size: var(--fs-md);
-  background: var(--bg-raised);
+  background: var(--bg-panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }
 
 th {
   text-align: start;
-  color: var(--text-dim);
-  font-weight: 600;
-  font-size: var(--fs-xs);
+  color: var(--text-faint);
+  font-weight: 500;
+  font-size: 10.5px;
   text-transform: uppercase;
-  padding: var(--s3);
-  border-bottom: 1px solid var(--border-strong);
+  letter-spacing: 0.24em;
+  font-family: var(--font-mono);
+  padding: 10px var(--s3);
+  border-bottom: 1px solid var(--border);
   background: var(--bg-strip);
   position: sticky;
   top: 0;
   z-index: 1;
-  font-family: var(--font-mono);
-  /* The kit's 0.24em tracking is for standalone section labels. At column-header
-     size it smears the word, so headers take a tighter setting. */
-  letter-spacing: 0.08em;
 }
 
 th:first-child {
@@ -731,16 +1225,13 @@ th:last-child {
 }
 
 td {
-  padding: 11px var(--s3);
+  padding: 12px var(--s3);
   border-bottom: 1px solid var(--border);
   vertical-align: top;
 }
 
-/* Numerals are data. Mono with tabular figures so a column of scores or years
-   aligns on the digit and can be compared by eye down the page. */
 td.num,
 .score-bar-value,
-.score-ring .val,
 .tab .count {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
@@ -759,12 +1250,18 @@ tbody tr:last-child td:last-child {
   border-end-end-radius: var(--radius);
 }
 
-tbody tr:hover {
-  background: var(--bg-hover);
+@media (hover: hover) {
+  tbody tr:hover td {
+    background: var(--bg-hover);
+  }
 }
 
 tbody tr.clickable {
   cursor: pointer;
+}
+
+tbody tr.selected td {
+  background: var(--accent-soft);
 }
 
 .cell-title {
@@ -783,13 +1280,42 @@ tbody tr.clickable {
   justify-content: flex-end;
 }
 
-.num {
-  font-variant-numeric: tabular-nums;
-  text-align: end;
+.sort-header {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s1);
+  border-radius: 3px;
 }
 
-.muted {
-  color: var(--text-faint);
+@media (hover: hover) {
+  .sort-header:hover {
+    color: var(--accent);
+  }
+}
+
+.sort-header.active {
+  color: var(--accent);
+}
+
+.sort-arrow {
+  display: inline-grid;
+  place-items: center;
+  width: 12px;
+  height: 12px;
+}
+
+.selection-count {
+  font-size: var(--fs-md);
+  font-weight: 500;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------- detail slide-over ---------- */
@@ -798,8 +1324,8 @@ tbody tr.clickable {
   position: fixed;
   inset: 0;
   z-index: 150;
-  background: rgba(23, 35, 63, 0.28);
-  animation: fade-in 0.16s ease-out;
+  background: var(--scrim);
+  transition: opacity 0.16s ease;
 }
 
 .detail {
@@ -807,25 +1333,23 @@ tbody tr.clickable {
   top: 0;
   inset-inline-end: 0;
   bottom: 0;
-  width: min(560px, 92vw);
+  width: min(580px, 92vw);
   z-index: 151;
   display: flex;
   flex-direction: column;
-  background: var(--bg-chrome);
+  background: var(--bg-panel);
   border-inline-start: 1px solid var(--border);
   box-shadow: var(--shadow-panel);
-  animation: slide-in 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.24s var(--ease-out), opacity 0.2s ease;
 }
 
-@keyframes fade-in {
-  from {
+@starting-style {
+  .scrim {
     opacity: 0;
   }
-}
 
-@keyframes slide-in {
-  from {
-    transform: translateX(var(--panel-entry, 16px));
+  .detail {
+    transform: translateX(var(--panel-entry));
     opacity: 0;
   }
 }
@@ -878,9 +1402,9 @@ tbody tr.clickable {
   display: flex;
   align-items: center;
   gap: var(--s2);
-  padding: var(--s4) var(--s5);
+  padding: var(--s3) var(--s5);
   border-top: 1px solid var(--border);
-  background: var(--bg);
+  background: var(--bg-strip);
   flex-wrap: wrap;
 }
 
@@ -908,7 +1432,7 @@ tbody tr.clickable {
 .raw-text {
   margin: 0 0 var(--s2);
   padding: var(--s3);
-  background: var(--bg);
+  background: var(--bg-strip);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-family: inherit;
@@ -917,6 +1441,7 @@ tbody tr.clickable {
   white-space: pre-wrap;
   max-height: 220px;
   overflow: hidden;
+  line-height: 1.6;
 }
 
 .raw-text.expanded {
@@ -931,28 +1456,49 @@ tbody tr.clickable {
   inset-inline-end: 20px;
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 8px;
   z-index: 200;
   max-width: min(380px, calc(100vw - 40px));
 }
 
 .toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s2);
   background: var(--bg-raised);
   border: 1px solid var(--border);
-  border-inline-start: 3px solid var(--accent);
-  border-radius: var(--radius-sm);
-  padding: 11px var(--s3);
+  border-radius: var(--radius);
+  padding: 10px var(--s3);
   font-size: var(--fs-md);
   cursor: pointer;
   overflow-wrap: anywhere;
+  box-shadow: var(--shadow-pop);
+  transition: transform 0.24s var(--ease-out), opacity 0.2s ease;
 }
 
-.toast.error {
-  border-inline-start-color: var(--bad);
+.toast::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex: none;
+  background: var(--line-blue);
 }
 
-.toast.success {
-  border-inline-start-color: var(--good);
+.toast.error::before {
+  background: var(--bad);
+}
+
+.toast.success::before {
+  background: var(--good);
+}
+
+@starting-style {
+  .toast {
+    transform: translateY(12px);
+    opacity: 0;
+  }
 }
 
 /* ---------- settings ---------- */
@@ -989,8 +1535,8 @@ tbody tr.clickable {
   color: var(--text-dim);
   background: var(--bg-strip);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
   font-size: var(--fs-xs);
 }
 
@@ -1008,8 +1554,8 @@ tbody tr.clickable {
   color: var(--text-dim);
   font-size: var(--fs-md);
   margin: 0 0 var(--s4);
-  line-height: 1.65;
-  max-width: 90ch;
+  line-height: 1.6;
+  max-width: 80ch;
 }
 
 .setting .api-key-input {
@@ -1037,58 +1583,81 @@ tbody tr.clickable {
   gap: var(--s1);
 }
 
-.ai-model-selectors select { width: 100%; }
+.ai-model-selectors select {
+  width: 100%;
+}
+
+.chatgpt-connection .setting-actions + .setting-actions,
+.chatgpt-signing-in {
+  margin-block-start: var(--s3);
+}
+
+.chatgpt-request-help {
+  flex-basis: 100%;
+}
 
 .segmented {
   display: inline-flex;
-  gap: 3px;
+  gap: 2px;
   padding: 3px;
-  background: var(--bg-strip);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: var(--bg-sunken);
+  border-radius: var(--radius-sm);
 }
 
 .segmented .btn {
   border-color: transparent;
   background: transparent;
   min-width: 72px;
+  color: var(--text-dim);
 }
 
 .segmented .btn.primary {
-  background: var(--bg-raised);
-  border-color: var(--border-strong);
-  color: var(--accent);
+  background: var(--bg-panel);
+  border-color: transparent;
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(31, 27, 39, 0.12);
 }
 
-.segmented .btn.primary:hover:not(:disabled) {
-  color: var(--accent);
-  border-color: var(--accent);
-  background: var(--bg-raised);
+@media (hover: hover) {
+  .segmented .btn:hover:not(:disabled) {
+    border-color: transparent;
+    background: color-mix(in srgb, var(--bg-panel) 55%, transparent);
+    color: var(--text);
+  }
+
+  .segmented .btn.primary:hover:not(:disabled) {
+    background: var(--bg-panel);
+    color: var(--text);
+  }
 }
 
 .model-status {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: var(--s2);
   font-size: var(--fs-md);
   font-weight: 500;
   color: var(--text-dim);
-  padding-top: var(--s1);
+  padding: 4px 10px 4px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-strip);
   overflow-wrap: anywhere;
 }
 
 .model-status.ready {
   color: var(--good);
+  background: var(--good-soft);
 }
 
 .model-status.error {
   color: var(--bad);
+  background: var(--bad-soft);
 }
 
 .status-dot {
-  flex: 0 0 7px;
-  width: 7px;
-  height: 7px;
+  flex: 0 0 8px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: currentColor;
 }
@@ -1114,6 +1683,7 @@ tbody tr.clickable {
   font-size: var(--fs-lg);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
 }
 
 .setting .setting-path {
@@ -1183,76 +1753,47 @@ tbody tr.clickable {
   display: inline-flex;
   align-items: center;
   gap: var(--s2);
-  min-height: 38px;
-  padding: var(--s2) var(--s3);
-  border: 1px solid var(--border);
+  min-height: var(--control-h);
+  padding: 0 var(--s3);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   color: var(--text-dim);
   font-size: var(--fs-md);
   font-weight: 500;
   text-decoration: none;
-  transition: color 0.12s, border-color 0.12s, background 0.12s;
+  transition: color 0.12s ease, border-color 0.12s ease, background 0.12s ease, transform 0.16s var(--ease-out);
 }
 
-.creator-link:hover {
-  color: var(--accent);
-  border-color: var(--accent-border);
-  background: var(--accent-soft);
+@media (hover: hover) {
+  .creator-link:hover {
+    color: var(--accent);
+    border-color: var(--accent-border);
+    background: var(--accent-soft);
+  }
 }
 
-code {
-  background: var(--accent-soft);
-  color: var(--accent-hover);
-  padding: 2px 7px;
-  border-radius: 5px;
-  font-size: var(--fs-sm);
-  word-break: break-all;
+.creator-link:active {
+  transform: scale(0.97);
 }
 
-/* ---------- library sorting and selection ---------- */
-
-.sort-header {
-  background: none;
-  border: none;
-  padding: 0;
-  font: inherit;
-  color: inherit;
-  letter-spacing: inherit;
-  text-transform: inherit;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s1);
-}
-
-.sort-header:hover,
-.sort-header.active {
-  color: var(--accent);
-}
-
-.sort-arrow {
-  font-size: 10px;
-  width: 8px;
-}
-
-tbody tr.selected {
-  background: var(--accent-soft);
-}
-
-.selection-count {
-  font-size: var(--fs-md);
-  font-weight: 500;
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
-}
-
-input[type='checkbox'] {
-  accent-color: var(--accent);
-  width: 15px;
-  height: 15px;
+.toggle {
+  gap: var(--s2);
   cursor: pointer;
+  font-size: var(--fs-md);
 }
 
-/* ---------- optional Claude rerank ---------- */
+.credential-warning {
+  border: 1px solid var(--bad);
+  border-radius: var(--radius);
+  padding: var(--s3);
+  background: var(--bad-soft);
+}
+
+.credential-warning p {
+  margin: 0 0 10px;
+}
+
+/* ---------- optional AI rerank ---------- */
 
 /* Visually distinct from .evidence: that is quoted source text, this is a
    model's judgement, and conflating them would misrepresent both. */
@@ -1268,17 +1809,11 @@ input[type='checkbox'] {
 .llm-reason .tag {
   display: block;
   font-family: var(--font-mono);
-  font-size: var(--fs-xs);
+  font-size: 10.5px;
   text-transform: uppercase;
   letter-spacing: 0.24em;
   color: var(--accent);
   margin-bottom: var(--s1);
-}
-
-.toggle {
-  gap: var(--s1);
-  cursor: pointer;
-  font-size: var(--fs-md);
 }
 
 .consent-backdrop {
@@ -1288,7 +1823,7 @@ input[type='checkbox'] {
   display: grid;
   place-items: center;
   padding: var(--s5);
-  background: rgba(31, 27, 38, 0.62);
+  background: var(--scrim);
 }
 
 .consent-dialog {
@@ -1296,6 +1831,7 @@ input[type='checkbox'] {
   max-height: min(760px, calc(100vh - 48px));
   overflow: auto;
   box-shadow: var(--shadow-panel);
+  border-radius: var(--radius-lg);
 }
 
 .consent-dialog h3 {
@@ -1348,7 +1884,7 @@ input[type='checkbox'] {
   padding: var(--s3);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: var(--bg-input);
+  background: var(--bg-sunken);
   color: var(--text-dim);
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
@@ -1357,23 +1893,14 @@ input[type='checkbox'] {
   overflow-wrap: anywhere;
 }
 
-.credential-warning {
-  border: 1px solid var(--bad);
-  border-radius: var(--radius);
-  padding: var(--s3);
-  background: color-mix(in srgb, var(--bad) 8%, transparent);
-}
-
-.credential-warning p {
-  margin: 0 0 10px;
-}
-
 .consent-actions {
   align-items: center;
   justify-content: flex-end;
   gap: var(--s2);
   flex-wrap: wrap;
 }
+
+/* ---------- narrow windows ---------- */
 
 @media (max-width: 800px) {
   .topbar {
@@ -1386,7 +1913,7 @@ input[type='checkbox'] {
   }
 
   .view {
-    padding: var(--s5) var(--s4) var(--s6);
+    padding: var(--s4) var(--s4) var(--s6);
   }
 
   .setting {
@@ -1402,7 +1929,7 @@ input[type='checkbox'] {
   }
 
   .detail {
-    width: min(560px, 100vw);
+    width: min(580px, 100vw);
   }
 
   .settings-creator {
@@ -1410,38 +1937,94 @@ input[type='checkbox'] {
   }
 }
 
+/* ---------- Arabic interface ---------- */
 
-/* Interface direction follows the chosen language; candidate content keeps its own direction. */
+/* Interface direction follows the chosen language; candidate content keeps its
+   own direction. Connected script is never tracked or case-transformed. */
 :root[lang='ar'] {
   --font-latin: 'IBM Plex Sans Arabic', 'IBM Plex Sans Variable', system-ui, sans-serif;
   --font-mono: 'IBM Plex Sans Arabic', 'IBM Plex Mono', monospace;
-  --panel-entry: -16px;
-  --shadow-panel: 14px 0 44px rgba(43, 39, 51, 0.18);
+  --panel-entry: -24px;
 }
-:root[lang='ar'] body { line-height: 1.7; }
-:root[lang='ar'] :is(h1, h2, h3, h4, .tag, .label, .tab, .chip, .score-bar-label, th, .creator-label, .setting-badge) {
+
+:root[lang='ar'] body {
+  line-height: 1.7;
+}
+
+:root[lang='ar'] :is(h1, h2, h3, h4, .tag, .label, .tab, .chip, .score-bar-label, th, .creator-label, .setting-badge, .recruit-eyebrow, .company-eyebrow, .talent-eyebrow, .evidence .tag, .llm-reason .tag) {
   letter-spacing: normal;
   text-transform: none;
 }
-:root[dir='rtl'] .topbar.draggable { padding-inline-start: var(--s5); padding-left: 84px; }
-.setting-path, .api-key-input, .consent-payload {
+
+:root[lang='ar'] :is(.lb, .pill) {
+  letter-spacing: normal;
+}
+
+.setting-path,
+.api-key-input,
+.consent-payload {
   direction: ltr;
   unicode-bidi: isolate;
 }
-bdi, [dir='auto'] { unicode-bidi: isolate; }
-.setting-path, .api-key-input { text-align: start; }
-:root[lang='ar'] :is(input, textarea, select) { font: inherit; }
-input:not([type='checkbox']):not([type='radio']), textarea { min-width: 0; }
-.topbar .tabs { min-width: 0; flex-wrap: wrap; }
-.row, .setting-actions { min-width: 0; }
-.setting-path { max-width: 100%; overflow-wrap: anywhere; }
-.detail-sub, .toast { overflow-wrap: anywhere; }
-:root[lang='ar'] .detail { width: min(620px, 94vw); }
-:root[lang='ar'] .btn { white-space: normal; }
-:root[lang='ar'] .tab { white-space: nowrap; }
-:root[lang='ar'] .score-bar-label { width: 90px; }
-:root[dir='rtl'] .directional-icon { transform: scaleX(-1); }
-.raw-text[dir='auto'] { unicode-bidi: plaintext; text-align: start; }
+
+bdi,
+[dir='auto'] {
+  unicode-bidi: isolate;
+}
+
+.setting-path,
+.api-key-input {
+  text-align: start;
+}
+
+
+.setting-path {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.detail-sub,
+.toast {
+  overflow-wrap: anywhere;
+}
+
+:root[lang='ar'] .detail {
+  width: min(640px, 94vw);
+}
+
+:root[lang='ar'] .btn {
+  white-space: normal;
+}
+
+:root[lang='ar'] .tab {
+  white-space: nowrap;
+}
+
+:root[dir='rtl'] .directional-icon {
+  transform: scaleX(-1);
+}
+
+.raw-text[dir='auto'] {
+  unicode-bidi: plaintext;
+  text-align: start;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .detail, .scrim, .toast { animation: none; }
+  .detail,
+  .toast {
+    transition: opacity 0.12s ease;
+  }
+
+  @starting-style {
+    .detail,
+    .toast {
+      transform: none;
+    }
+  }
+
+  .btn:active:not(:disabled),
+  .icon-btn:active,
+  .creator-link:active {
+    transform: none;
+  }
 }

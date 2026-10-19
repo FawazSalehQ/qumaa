@@ -3,7 +3,6 @@ import type { MatchResult } from '../src/shared/types.js'
 import { RERANK_MODELS, RERANK_CONSENT_VERSION, type RerankConfig } from '../src/shared/rerank.js'
 import {
   buildRerankPreview,
-  CLAUDE_RERANK_CONSENT_VERSION,
   redactCandidateText,
   requestCandidateIndex
 } from '../src/main/search/rerankPrivacy.js'
@@ -67,7 +66,7 @@ describe('Claude rerank privacy', () => {
     const preview = buildRerankPreview('Senior platform engineer', [candidate()])
     const serialized = JSON.stringify(preview)
 
-    expect(preview.consentVersion).toBe(CLAUDE_RERANK_CONSENT_VERSION)
+    expect(preview.consentVersion).toBe(RERANK_CONSENT_VERSION)
     expect(preview.provider).toBe('Anthropic')
     expect(preview.model).toBe('claude-sonnet-5')
     expect(preview.candidateCount).toBe(1)
@@ -188,5 +187,21 @@ describe('provider-neutral preview privacy and schema', () => {
     const openai = buildRerankPreview('Job text', [result], { provider: 'openai', model: 'gpt-5.6' }).requestBody as Record<string, any>
     expect(anthropic.messages[0].content).toBe(openai.input[0].content)
     expect(JSON.parse(openai.input[0].content).candidates[0].passages.reduce((size: number, passage: { text: string }) => size + passage.text.length, 0)).toBe(2500)
+  })
+
+  it('keeps ChatGPT plan previews redacted and compatible with plan-backed Responses', () => {
+    const result = candidate()
+    const api = buildRerankPreview('Job text', [result], { provider: 'openai', model: 'gpt-5.6' })
+    const plan = buildRerankPreview('Job text', [result], { provider: 'openai', model: 'gpt-plan-catalog-model', authMode: 'chatgpt' })
+    expect(plan).toMatchObject({ provider: 'ChatGPT', authMode: 'chatgpt', model: 'gpt-plan-catalog-model', candidateCount: 1 })
+    const request = plan.requestBody as Record<string, any>
+    expect(request.input).toEqual(api.requestBody.input)
+    expect(request.instructions).toBe(api.requestBody.instructions)
+    expect(request.text).toEqual(api.requestBody.text)
+    expect(request.store).toBe(false)
+    expect(request.stream).toBe(true)
+    expect(Object.keys(request).sort()).toEqual(['input', 'instructions', 'model', 'store', 'stream', 'text'])
+    expect(JSON.stringify(plan)).not.toMatch(/Noura Al-Qahtani|noura@example.com|987654|\/Users\/noura/)
+    expect(() => structuredClone(plan)).not.toThrow()
   })
 })

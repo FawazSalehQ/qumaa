@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { DbStats, ModelStatus, ThemeChoice } from '@shared/types.js'
-import { DEFAULT_RERANK_CONFIG, DEFAULT_RERANK_MODELS, PROVIDER_LABELS, RERANK_MODELS, type RerankConfig, type RerankModel, type RerankProvider } from '@shared/rerank.js'
+import type { AppSettings, DbStats, ModelStatus, ThemeChoice } from '@shared/types.js'
+import { DEFAULT_RERANK_CONFIG, DEFAULT_RERANK_MODELS, PROVIDER_LABELS, RERANK_MODELS, isChatGptConfig, rerankProviderLabel, type RerankConfig, type RerankModel, type RerankProvider } from '@shared/rerank.js'
+import type { ChatGptStatus } from '@shared/chatgpt.js'
 import type { Toast } from '../components/Toasts.js'
+import ChatGptWelcome from '../components/ChatGptWelcome.js'
 import { useI18n } from '../i18n.js'
 import { displayError } from '@shared/i18n.js'
 
@@ -29,9 +31,15 @@ export default function SettingsView({
   const [keyDraft, setKeyDraft] = useState('')
   const [rerankConfig, setRerankConfig] = useState<RerankConfig>(DEFAULT_RERANK_CONFIG)
   const [rerankModels, setRerankModels] = useState<Record<RerankProvider, RerankModel>>(DEFAULT_RERANK_MODELS)
+  const [chatGpt, setChatGpt] = useState<ChatGptStatus>({ accounts: [], activeAccountId: null, signingIn: false, models: [], welcomePending: false })
+  const [chatGptModel, setChatGptModel] = useState('')
+  const [hasCredential, setHasCredential] = useState(false)
+  const [signingIn, setSigningIn] = useState(false)
+  const [cancellingSignIn, setCancellingSignIn] = useState(false)
   const [aiBusy, setAiBusy] = useState(false)
   const [aiReady, setAiReady] = useState(false)
   const aiMutationInFlight = useRef(false)
+  const signInCancelled = useRef(false)
   const loadEpoch = useRef(0)
   const [stats, setStats] = useState<DbStats | null>(null)
   const [dataAction, setDataAction] = useState<'backup' | 'restore' | null>(null)
@@ -39,27 +47,36 @@ export default function SettingsView({
     ? 'Show in Finder'
     : 'Show in Explorer'
   const [model, setModel] = useState<ModelStatus | null>(null)
-  const providerLabel = PROVIDER_LABELS[rerankConfig.provider]
-  const aiDisabled = !aiReady || aiBusy || dataAction !== null
+  const providerLabel = rerankProviderLabel(rerankConfig)
+  const useChatGpt = isChatGptConfig(rerankConfig)
+  const selectedAccount = chatGpt.accounts.find((account) => account.id === chatGpt.activeAccountId)
+  const waitingForSignIn = signingIn || chatGpt.signingIn
+  const aiDisabled = !aiReady || aiBusy || waitingForSignIn || dataAction !== null
+  const modelChoices = useChatGpt ? chatGpt.models : RERANK_MODELS[rerankConfig.provider]
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (): Promise<AppSettings> => {
     const epoch = ++loadEpoch.current
     const [settings, s, m] = await Promise.all([
       window.api.settings.get(),
       window.api.settings.stats(),
       window.api.settings.modelStatus()
     ])
-    if (epoch !== loadEpoch.current) return
+    // A newer load owns the state now; still hand back what this one fetched.
+    if (epoch !== loadEpoch.current) return settings
     setWatched(settings.watchedFolder)
     setHasKey(settings.hasApiKey)
     setKeyStatus(settings.apiKeyStatus)
     setRerankOn(settings.rerankEnabled)
     setConsentGranted(settings.rerankConsentGranted)
-    setRerankConfig({ provider: settings.rerankProvider, model: settings.rerankModel })
+    setRerankConfig({ provider: settings.rerankProvider, model: settings.rerankModel, ...(settings.rerankAuthMode === 'chatgpt' ? { authMode: 'chatgpt' as const } : {}) })
     setRerankModels(settings.rerankModels)
+    setChatGpt(settings.chatGpt)
+    setChatGptModel(settings.chatGptModel)
+    setHasCredential(settings.hasRerankCredential)
     setAiReady(true)
     setStats(s)
     setModel(m)
+    return settings
   }, [])
 
   useEffect(() => {
@@ -67,6 +84,14 @@ export default function SettingsView({
       onToast([{ id: crypto.randomUUID(), kind: 'error', message: displayError(language, error, 'Could not load settings') }])
     })
   }, [load])
+
+  // Signing in can outlive this screen. Reading status does not unlock tokens or
+  // contact the provider; returning to Settings reconnects to the pending flow.
+  useEffect(() => {
+    if (!chatGpt.signingIn || signingIn) return
+    const timer = window.setInterval(() => { void load().catch(() => {}) }, 1000)
+    return () => window.clearInterval(timer)
+  }, [chatGpt.signingIn, signingIn, load])
 
   const changeAiSetting = async (action: () => Promise<unknown>, fallback: string, success?: string): Promise<void> => {
     if (aiMutationInFlight.current || !aiReady || dataAction !== null) return
@@ -85,6 +110,37 @@ export default function SettingsView({
     }
   }
 
+  const signIn = async (accountId?: string): Promise<void> => {
+    if (aiDisabled) return
+    signInCancelled.current = false
+    setSigningIn(true)
+    await changeAiSetting(async () => {
+      try { await window.api.settings.chatGptSignIn(accountId) }
+      catch (error) { if (!signInCancelled.current) throw error }
+    }, 'Could not connect to ChatGPT')
+    setSigningIn(false)
+  }
+
+  const cancelSignIn = async (): Promise<void> => {
+    signInCancelled.current = true
+    setCancellingSignIn(true)
+    try {
+      await window.api.settings.chatGptCancelSignIn()
+      await load()
+    } catch (error) {
+      onToast([{ id: crypto.randomUUID(), kind: 'error', message: errorMessage(error, 'Could not cancel ChatGPT sign-in') }])
+    } finally { setCancellingSignIn(false) }
+  }
+
+  const signOut = async (accountId: string): Promise<void> => {
+    await changeAiSetting(async () => {
+      const result = await window.api.settings.chatGptSignOut(accountId)
+      onToast([{ id: crypto.randomUUID(), kind: 'success', message: t(result.remoteRevocationConfirmed
+        ? 'Signed out of ChatGPT.'
+        : 'ChatGPT credentials were removed from this device. Remote sign-out could not be confirmed; manage access in ChatGPT.') }])
+    }, 'Could not sign out of ChatGPT')
+  }
+
   /**
    * Main owns the confirmation dialog, so this only reacts to the answer.
    * Nothing is written back afterwards, including the theme: re-saving a
@@ -94,11 +150,6 @@ export default function SettingsView({
   const wipe = useCallback(async () => {
     const done = await window.api.settings.deleteAll()
     if (!done) return
-    setWatched(null)
-    setHasKey(false)
-    setKeyStatus('none')
-    setRerankOn(false)
-    setConsentGranted(false)
     setKeyDraft('')
     await Promise.all([load(), onChanged(true)])
     onToast([{ id: crypto.randomUUID(), kind: 'success', message: t('All data deleted.') }])
@@ -154,15 +205,9 @@ export default function SettingsView({
     try {
       const result = await window.api.settings.restore()
       if (!result) return
-      const restoredSettings = await window.api.settings.get()
-      setWatched(restoredSettings.watchedFolder)
-      setHasKey(restoredSettings.hasApiKey)
-      setKeyStatus(restoredSettings.apiKeyStatus)
-      setRerankOn(restoredSettings.rerankEnabled)
-      setConsentGranted(restoredSettings.rerankConsentGranted)
       setKeyDraft('')
+      const [restoredSettings] = await Promise.all([load(), onChanged(true)])
       onThemeChange(restoredSettings.theme)
-      await Promise.all([load(), onChanged(true)])
       onToast([
         {
           id: crypto.randomUUID(),
@@ -187,13 +232,11 @@ export default function SettingsView({
     <>
       <header className="view-head">
         <h2>{t("Settings")}</h2>
-        <p className="sub">{t("Manage your workspace, appearance, and local data.")}</p>
       </header>
 
       <div className="settings-grid">
         <section className="card setting setting-wide" aria-labelledby="language-heading">
           <h3 id="language-heading">{t('Language')}</h3>
-          <p className="desc">{t('Choose your interface language. Your CVs and saved work keep their original text.')}</p>
           <div className="row segmented" role="group" aria-label={t('Language')}>
             {(['en', 'ar'] as const).map((choice) => <button key={choice} className={`btn sm ${language === choice ? 'primary' : ''}`} lang={choice} dir={choice === 'ar' ? 'rtl' : 'ltr'} aria-pressed={language === choice} disabled={changingLanguage} onClick={async () => {
               setChangingLanguage(true)
@@ -205,7 +248,7 @@ export default function SettingsView({
         </section>
         <section className="card setting setting-wide" aria-labelledby="watched-folder-heading">
           <h3 id="watched-folder-heading">{t("Watched folder")}</h3>
-          <div className="desc">{t("New resumes dropped into this folder are imported automatically. Files added while the app was closed are picked up on the next launch.")}</div>
+          <div className="desc">{t('Files added here are imported automatically, or at the next launch if Qumaa is closed.')}</div>
           {watched ? (
             <div className="row setting-actions">
               <code className="setting-path" dir="ltr">{watched}</code>
@@ -220,7 +263,6 @@ export default function SettingsView({
 
         <section className="card setting" aria-labelledby="appearance-heading">
           <h3 id="appearance-heading">{t("Appearance")}</h3>
-          <div className="desc">{t("Choose a theme, or follow your device’s appearance automatically.")}</div>
           <div className="row segmented" role="group" aria-label={t("Appearance")}>
             {(['system', 'light', 'dark'] as ThemeChoice[]).map((choice) => (
               <button
@@ -237,7 +279,6 @@ export default function SettingsView({
 
         <section className="card setting" aria-labelledby="matching-heading">
           <h3 id="matching-heading">{t("Local matching")}</h3>
-          <div className="desc">{t("Your resumes and standard matching stay on this device.")}</div>
           {/* The model's identity is an implementation detail. Its *state* is not:
               a failure has to stay visible, or a broken search looks like a
               ranking problem rather than a model that never loaded. */}
@@ -257,7 +298,6 @@ export default function SettingsView({
             <h3 id="rerank-heading">{t('AI reranking')}</h3>
             <span className="setting-badge">{t('Optional')}</span>
           </div>
-          <p className="desc">{t('Choose a provider and model. Each provider uses its own API key, protected by your operating system.')}</p>
           <fieldset className="ai-settings" disabled={aiDisabled} aria-busy={aiBusy}>
             <legend className="sr-only">{t('AI reranking')}</legend>
             <div className="ai-model-selectors">
@@ -271,18 +311,61 @@ export default function SettingsView({
                   {Object.entries(PROVIDER_LABELS).map(([provider, label]) => <option key={provider} value={provider}>{label}</option>)}
                 </select>
               </label>
+              {rerankConfig.provider === 'openai' && <label htmlFor="rerank-auth-mode">
+                <span className="label">{t('OpenAI connection')}</span>
+                <select id="rerank-auth-mode" value={useChatGpt ? 'chatgpt' : 'api-key'} onChange={(event) => {
+                  const subscription = event.target.value === 'chatgpt'
+                  setKeyDraft('')
+                  void changeAiSetting(() => window.api.settings.setRerankConfig(subscription
+                    ? { provider: 'openai', model: chatGptModel, authMode: 'chatgpt' }
+                    : { provider: 'openai', model: rerankModels.openai }), 'Could not change the AI provider or model')
+                }}>
+                  <option value="api-key">{t('API key')}</option>
+                  <option value="chatgpt">{t('ChatGPT subscription')}</option>
+                </select>
+              </label>}
               <label htmlFor="rerank-model">
                 <span className="label">{t('AI model')}</span>
-                <select id="rerank-model" value={rerankConfig.model} onChange={(event) => {
+                <select id="rerank-model" value={rerankConfig.model} disabled={useChatGpt && modelChoices.length === 0} onChange={(event) => {
                   const model = event.target.value as RerankModel
-                  void changeAiSetting(() => window.api.settings.setRerankConfig({ provider: rerankConfig.provider, model }), 'Could not change the AI provider or model')
+                  void changeAiSetting(() => window.api.settings.setRerankConfig({ ...rerankConfig, model }), 'Could not change the AI provider or model')
                 }}>
-                  {RERANK_MODELS[rerankConfig.provider].map((entry) => <option key={entry.id} value={entry.id}>{entry.label}</option>)}
+                  {useChatGpt && !modelChoices.some((entry) => entry.id === rerankConfig.model) && <option value={rerankConfig.model} disabled>{rerankConfig.model || t(selectedAccount?.connected ? 'Refresh models to choose a model' : 'Connect to see available models')}</option>}
+                  {modelChoices.map((entry) => <option key={entry.id} value={entry.id}>{entry.label}</option>)}
                 </select>
               </label>
             </div>
             <p className="desc">{t('Reranking sends the job posting and redacted evidence from up to {count} candidates to {provider}. You review what will be sent before first use with each model, and confirm every send. Local matching stays on your device.', { count: 15, provider: providerLabel })}</p>
-            {keyStatus === 'migration-needed' ? (
+            {useChatGpt ? <div className="chatgpt-connection">
+              <p className="desc">{t('Using your ChatGPT plan. Availability and usage limits depend on your plan. API billing is separate; Qumaa never switches to API credits automatically.')}</p>
+              {chatGpt.accounts.length > 0 && <div className="ai-model-selectors">
+                <label htmlFor="chatgpt-account"><span className="label">{t('ChatGPT account')}</span>
+                  <select id="chatgpt-account" value={chatGpt.activeAccountId ?? ''} onChange={(event) => {
+                    const accountId = event.target.value
+                    void changeAiSetting(() => window.api.settings.chatGptSelectAccount(accountId), 'Could not switch ChatGPT accounts')
+                  }}>
+                    {!chatGpt.activeAccountId && <option value="" disabled>{t('Choose an account')}</option>}
+                    {chatGpt.accounts.map((account) => <option key={account.id} value={account.id}>{account.label}</option>)}
+                  </select>
+                </label>
+              </div>}
+              {selectedAccount && <p className="desc" role="status"><bdi>{selectedAccount.label}</bdi>{' · '}{t(selectedAccount.connected ? 'Connected' : 'Reconnect to continue')}</p>}
+              {selectedAccount?.connected && !selectedAccount.planUsageEnabled && <p className="credential-warning" role="status">{t('ChatGPT plan usage is not enabled for this account. Manage usage in ChatGPT or choose API key integration.')}</p>}
+              <div className="row setting-actions">
+                <button className="btn" type="button" onClick={() => { void signIn(selectedAccount?.id) }}>{t('Continue with ChatGPT')}</button>
+                {chatGpt.accounts.length > 0 && <button className="btn sm" type="button" onClick={() => { void signIn() }}>{t('Add another account')}</button>}
+                {selectedAccount && <button className="btn sm danger" type="button" onClick={() => { void signOut(selectedAccount.id) }}>{t('Sign out')}</button>}
+                <button className="btn sm" type="button" disabled={!selectedAccount?.connected} onClick={() => void changeAiSetting(() => window.api.settings.chatGptRefreshModels(), 'Could not refresh ChatGPT models')}>{t('Refresh models')}</button>
+                <button className="btn sm" type="button" onClick={() => void changeAiSetting(() => window.api.settings.chatGptManageUsage(), 'Could not open ChatGPT usage')}>{t('Manage usage')}</button>
+              </div>
+              {selectedAccount?.connected && <div className="row setting-actions">
+                <label className="row toggle"><input type="checkbox" checked={rerankOn} disabled={!hasCredential || !modelChoices.some((entry) => entry.id === rerankConfig.model)} onChange={(event) => {
+                  const enabled = event.target.checked
+                  void changeAiSetting(() => window.api.settings.setRerank(enabled), 'Could not change the rerank setting')
+                }} />{t('Enable reranking')}</label>
+                {consentGranted && <button className="btn sm" onClick={() => void changeAiSetting(() => window.api.settings.resetRerankConsent(), 'Could not reset the sharing review', 'Qumaa will show the sharing review for this model next time.')}>{t('Review sharing again')}</button>}
+              </div>}
+            </div> : keyStatus === 'migration-needed' ? (
               <div className="credential-warning" role="alert">
                 <p>{t('An older Qumaa version saved this API key without operating-system protection. Protect or remove it before AI reranking can be used.')}</p>
                 <div className="row">
@@ -330,6 +413,10 @@ export default function SettingsView({
               </div>
             )}
           </fieldset>
+          {waitingForSignIn && <div className="row setting-actions chatgpt-signing-in" role="status">
+            <span>{t('Complete sign-in in your browser.')}</span>
+            <button className="btn sm" type="button" disabled={cancellingSignIn} onClick={() => { void cancelSignIn() }}>{t('Cancel sign-in')}</button>
+          </div>}
         </section>
 
         <section className="card setting setting-wide" aria-labelledby="data-heading">
@@ -345,7 +432,7 @@ export default function SettingsView({
           {/* Uninstalling leaves this folder in place on both platforms, so the
               app has to be the thing that can remove it. */}
           <div className="desc">{t("Uninstalling the app does not remove this data.")}</div>
-          <div className="desc">{t("Portable backups include resume text, companies, jobs, contacts, activity, talent pools, pipelines, submissions, screening kits, recruiter profiles, review notes, and portable preferences. On restore, Qumaa rebuilds the search index; refresh your saved jobs to generate updated matches. API keys, watched folders, original-file paths, consent, and window position are excluded. Backup files are not encrypted, so store them securely.")}</div>
+          <div className="desc">{t('Backups hold resume text, recruiting records, theme and language. They leave out original files, API keys, ChatGPT connections, AI settings and watched folders. They are not encrypted. After a restore, refresh saved jobs to rebuild their matches.')}</div>
           <div className="row">
             <button className="btn sm" disabled={dataAction !== null || aiBusy} onClick={() => void backUp()}>
               {t(dataAction === 'backup' ? 'Backing up…' : 'Back up…')}
@@ -360,7 +447,7 @@ export default function SettingsView({
           <div className="setting-danger">
             <div>
               <div className="label">{t("Delete local data")}</div>
-              <p className="desc">{t("Remove all local CVs, companies, jobs, contacts, and recruiting records, and reset your preferences.")}</p>
+              <p className="desc">{t("Remove all local CVs, companies, jobs, contacts, and recruiting records, reset your preferences, and remove saved API keys and ChatGPT connections.")}</p>
             </div>
             <button className="btn sm danger" disabled={dataAction !== null || aiBusy} onClick={() => void wipe()}>{t("Delete all data…")}</button>
           </div>
@@ -398,6 +485,7 @@ export default function SettingsView({
           </a>
         </footer>
       </div>
+      {chatGpt.welcomePending && !waitingForSignIn && <ChatGptWelcome busy={aiBusy} onDismiss={() => changeAiSetting(() => window.api.settings.chatGptAcknowledgeWelcome(), 'Could not save the ChatGPT welcome preference')} onManageUsage={() => changeAiSetting(() => window.api.settings.chatGptManageUsage(), 'Could not open ChatGPT usage')} />}
     </>
   )
 }

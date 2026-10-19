@@ -17,10 +17,12 @@ export type Language = 'en' | 'ar'
 export type TranslationValues = Record<string, string | number>
 export type Translator = (message: string, values?: TranslationValues) => string
 
-export const arabicMessages: Readonly<Record<string, string>> = {
-  ...commonAr, ...recruitingAr, ...matchingAr, ...nativeAr, ...exportsAr, ...companiesAr, ...jobsCompanyAr,
-  ...talentAr, ...pipelineAr, ...clientPackAr, ...requirementsAr, ...hiringCostsAr, ...hiringCostAssumptionTranslations
-}
+/** Every Arabic catalog, in merge order; a later catalog's entry wins, so identical keys must carry identical Arabic. */
+export const arabicCatalogs: ReadonlyArray<Readonly<Record<string, string>>> = [
+  commonAr, recruitingAr, matchingAr, nativeAr, exportsAr, companiesAr, jobsCompanyAr,
+  talentAr, pipelineAr, clientPackAr, requirementsAr, hiringCostsAr, hiringCostAssumptionTranslations
+]
+export const arabicMessages: Readonly<Record<string, string>> = Object.assign({}, ...arabicCatalogs)
 
 export function normalizeLanguage(value: unknown): Language {
   return value === 'ar' ? 'ar' : 'en'
@@ -35,6 +37,28 @@ export function directionFor(language: Language): 'ltr' | 'rtl' {
   return language === 'ar' ? 'rtl' : 'ltr'
 }
 
+function validDate(value: number | Date): Date | undefined {
+  const date = value instanceof Date ? value : typeof value === 'number' ? new Date(value) : undefined
+  return date && Number.isFinite(date.getTime()) ? date : undefined
+}
+
+/** Malformed stored dates must not make the rest of the workspace inaccessible. */
+export function formatLocalizedDate(
+  language: Language,
+  value: number | Date,
+  options?: Intl.DateTimeFormatOptions
+): string {
+  const date = validDate(value)
+  return date
+    ? new Intl.DateTimeFormat(localeFor(language), options).format(date)
+    : translate(language, 'Unknown date')
+}
+
+/** Omit invalid machine-readable dates instead of throwing during rendering. */
+export function toIsoDateTime(value: number | Date): string | undefined {
+  return validDate(value)?.toISOString()
+}
+
 export function translate(language: Language, message: string, values: TranslationValues = {}): string {
   const template = language === 'ar' ? (arabicMessages[message] ?? message) : message
   return template.replace(/\{(\w+)\}/g, (placeholder, key: string) => {
@@ -44,9 +68,13 @@ export function translate(language: Language, message: string, values: Translati
   })
 }
 
+/** Removes Electron's IPC transport wrapper so the original message can be shown or translated. */
+export function stripIpcError(message: string): string {
+  return message.replace(/^Error invoking remote method '[^']+':\s*(?:Error:\s*)?/, '')
+}
+
 /** Preserve useful error details without showing Electron's transport wrapper. */
 export function displayError(language: Language, error: unknown, fallback: string): string {
   const message = error instanceof Error ? error.message : typeof error === 'string' ? error : fallback
-  const clean = message.replace(/^Error invoking remote method '[^']+':\s*(?:Error:\s*)?/, '')
-  return translate(language, clean || fallback)
+  return translate(language, stripIpcError(message) || fallback)
 }
