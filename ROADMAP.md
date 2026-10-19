@@ -35,7 +35,7 @@ suggestions, explicit recruiter assessments, and a frozen evaluation covering
 | --- | --- | --- | --- |
 | 1 | Matching and extraction quality across domains | Requirements/evidence workflows verified; 96 synthetic evaluation cases expose substantial cross-language recall gaps. | Independent review of requirements, translations and candidate relevance; better cross-language retrieval without regressions by profession; fresh held-out examples. |
 | 2 | Recruiter pilot | Blind relevance protocol and expanded workflow packet prepared; no human sessions recorded. | Recruiter judgments, observed task outcomes, platform/format coverage, fixes and retests. |
-| 3 | Release readiness | Beta.5 installers (16 October) predate the UI redesign, ChatGPT sign-in and the 19 October fixes; CI runs all 31 UI workflows on the packaged app on macOS arm64 and Windows x64. | A human install of the Windows installer, the native Arabic review, rebuilt installers, and closure of relevant quality/pilot findings. |
+| 3 | Release readiness | Installers rebuilt 19 October from `96fb54f` and published to the `v0.1.0-beta.2` release with minimum requirements; CI runs all 31 UI workflows on the packaged app on macOS arm64 and Windows x64. | A human install of the Windows installer, the native Arabic review, and closure of relevant quality/pilot findings. |
 | 4 | Online resume intake | Source choice pending: email attachments, candidate upload form or recruitment-platform exports. | Choose one first source; define explicit import, source tracking, duplicate handling and review before implementing its adapter. |
 
 ## Current milestone: quality
